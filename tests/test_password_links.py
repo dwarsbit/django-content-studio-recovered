@@ -380,10 +380,10 @@ class SetPasswordPageTests(LinkTestCase):
 
 class TranslatedMailTests(LinkTestCase):
     def test_invite_in_the_senders_language(self):
-        from django.utils import translation
-
-        with translation.override("nl"):
-            self.create(username="maya", email="maya@example.com")
+        # The sender works in Dutch: the admin's language comes from the
+        # request (content_studio.languages).
+        self.client.cookies["django_language"] = "nl"
+        self.create(username="maya", email="maya@example.com")
 
         message = mail.outbox[0]
         self.assertIn("Je bent uitgenodigd", message.subject)
@@ -392,14 +392,12 @@ class TranslatedMailTests(LinkTestCase):
         link_in(message)
 
     def test_password_link_in_the_senders_language(self):
-        from django.utils import translation
-
         user = staff("maya", email="maya@example.com")
         user.last_login = "2026-11-01T10:00:00Z"
         user.save()
 
-        with translation.override("nl"):
-            self.send(user)
+        self.client.cookies["django_language"] = "nl"
+        self.send(user)
 
         message = mail.outbox[0]
         self.assertIn("nieuw wachtwoord", message.subject)

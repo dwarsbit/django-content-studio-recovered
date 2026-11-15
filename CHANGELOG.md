@@ -4,6 +4,26 @@
 
 ### Features
 
+- **German, French, Spanish, Italian and Brazilian Portuguese.** The
+  admin is translated into five more languages, next to English and
+  Dutch: the interface, the date picker, Content Studio's field labels and
+  errors, and the invite, password and reset emails. The new translations
+  have not yet been reviewed by native speakers; corrections are welcome.
+  The 11 strings the Dutch catalog was missing are translated too.
+
+- **One language for the whole admin, and a language picker.** Content
+  Studio now picks the editor's language for its own URLs: the choice in
+  the new **Language** item of the user menu (Django's language cookie),
+  then the browser's languages, then `LANGUAGE_CODE`, then English, limited
+  to the project's `LANGUAGES`. The menus and the labels and errors from
+  Django now always match: before, the interface followed the browser
+  while Django followed `LANGUAGE_CODE` (or `LocaleMiddleware`), so a Dutch
+  browser on an English project mixed the two. No `LocaleMiddleware` is
+  needed, and the rest of the project is not affected. Emails sent from the
+  admin, such as invites, follow the editor's language. The picker shows
+  when the project allows more than one of the admin's languages. A new
+  docs page, Languages, covers it.
+
 - **Save and add another, and a save shortcut.** The edit page's Save
   button has a menu with "Save and add another", which opens an empty
   create form, and "Save and close", which goes back to the list, like the

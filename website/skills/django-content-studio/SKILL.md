@@ -570,6 +570,11 @@ Each is optional and has its own page:
   newest `BACKUP_KEEP` are kept; restore with `content_studio_restore`;
   keep the storage private):
   https://djangocontentstudio.org/docs/backups.md
+- Languages (English, Dutch, German, French, Spanish, Italian, Brazilian
+  Portuguese; each editor gets their own: the user menu's Language choice,
+  then the browser, then `LANGUAGE_CODE`; no `LocaleMiddleware` needed;
+  Django's `LANGUAGES` limits them; mark your own labels with
+  `gettext_lazy`): https://djangocontentstudio.org/docs/languages.md
 - Presence, the command palette, deployment and every system check:
   https://djangocontentstudio.org/docs/presence.md,
   https://djangocontentstudio.org/docs/command-palette.md,

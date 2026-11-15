@@ -1,5 +1,4 @@
 import { addYears } from "date-fns";
-import { enUS, nl } from "date-fns/locale";
 import * as React from "react";
 import {
   DayButton,
@@ -18,6 +17,7 @@ import {
 } from "react-icons/pi";
 
 import { Button, buttonVariants } from "@/components/ui/button";
+import { getDateLocale } from "@/lib/languages";
 import { cn } from "@/lib/utils";
 
 function Calendar({
@@ -37,7 +37,7 @@ function Calendar({
 
   return (
     <DayPicker
-      locale={i18n.language === "nl" ? nl : enUS}
+      locale={getDateLocale(i18n.language)}
       showOutsideDays={showOutsideDays}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
@@ -48,7 +48,7 @@ function Calendar({
       captionLayout={captionLayout}
       formatters={{
         formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
+          date.toLocaleString(i18n.language, { month: "short" }),
         ...formatters,
       }}
       classNames={{

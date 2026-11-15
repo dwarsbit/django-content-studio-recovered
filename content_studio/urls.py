@@ -1,6 +1,7 @@
 from django.urls import path, re_path
 
 from .devtools import wrap_urlpatterns
+from .languages import in_admin_language
 from .media_library.viewsets import MediaLibraryViewSet, MediaFolderViewSet
 from .password_links import SetPasswordCheckView, SetPasswordView
 from .router import content_studio_router
@@ -16,16 +17,21 @@ content_studio_router.register(
     "content_studio_media_library_folders",
 )
 
-# While developer tools are on, the admin API's requests are recorded.
+# While developer tools are on, the admin API's requests are recorded,
+# and every view runs in the editor's language (see content_studio.languages).
 urlpatterns = wrap_urlpatterns(
-    [
-        # The page that sets a password with an emailed link (an invite, or
-        # a link an admin sent): no login, the link's token is the gate.
-        path("api/set-password", SetPasswordView.as_view()),
-        path("api/set-password/check", SetPasswordCheckView.as_view()),
-        re_path(
-            "^(?!api).*$", ContentStudioWebAppView.as_view(), name="content_studio_web"
-        ),
-    ]
-    + content_studio_router.urls
+    in_admin_language(
+        [
+            # The page that sets a password with an emailed link (an invite, or
+            # a link an admin sent): no login, the link's token is the gate.
+            path("api/set-password", SetPasswordView.as_view()),
+            path("api/set-password/check", SetPasswordCheckView.as_view()),
+            re_path(
+                "^(?!api).*$",
+                ContentStudioWebAppView.as_view(),
+                name="content_studio_web",
+            ),
+        ]
+        + content_studio_router.urls
+    )
 )

@@ -1,10 +1,13 @@
 import "./index.css";
 import "./i18n";
-// Dayjs locales
-import "dayjs/locale/en";
-import "dayjs/locale/nl";
-import "dayjs/locale/fr";
+// Dayjs locales: one for each of the admin's languages.
 import "dayjs/locale/de";
+import "dayjs/locale/en";
+import "dayjs/locale/es";
+import "dayjs/locale/fr";
+import "dayjs/locale/it";
+import "dayjs/locale/nl";
+import "dayjs/locale/pt-br";
 
 import dayjs from "dayjs";
 import { useEffect } from "react";
@@ -23,7 +26,8 @@ export function App() {
   const { isError, error } = useAdminInfo();
 
   useEffect(() => {
-    dayjs.locale(i18n.language);
+    // Dayjs knows "pt-BR" as "pt-br".
+    dayjs.locale(i18n.language.toLowerCase());
   }, [i18n.language]);
 
   return (

@@ -1,0 +1,1611 @@
+# Translations of Django Content Studio.
+# This file is distributed under the same license as the django-content-studio package.
+msgid ""
+msgstr ""
+"Project-Id-Version: django-content-studio\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2026-11-20 11:31+0000\n"
+"PO-Revision-Date: 2026-11-15 22:00+0100\n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+#: actions.py:157
+msgid "Delete"
+msgstr "Elimina"
+
+#: actions.py:159
+msgid "Are you sure you want to delete the selected items?"
+msgstr "Vuoi davvero eliminare gli elementi selezionati?"
+
+#: actions.py:168
+msgid ""
+"The selected items will be moved to the trash, where they can be restored. "
+"Are you sure you want to delete?"
+msgstr ""
+"Gli elementi selezionati verranno spostati nel cestino, da cui potranno "
+"essere ripristinati. Vuoi davvero eliminarli?"
+
+#: actions.py:197
+msgid "Export"
+msgstr "Esporta"
+
+#: admin.py:604 admin.py:605 contrib/backups/status.py:21
+#: contrib/status/builtin.py:24
+msgid "Content Studio"
+msgstr "Content Studio"
+
+#: analytics/components.py:35 analytics/extensions.py:185
+#: analytics/extensions.py:233
+msgid "Analytics"
+msgstr "Statistiche"
+
+#: analytics/providers.py:27
+msgid "Visitors"
+msgstr "Visitatori"
+
+#: analytics/providers.py:28
+msgid "Pageviews"
+msgstr "Visualizzazioni di pagina"
+
+#: analytics/providers.py:29
+msgid "Visits"
+msgstr "Visite"
+
+#: analytics/providers.py:30
+msgid "Bounce rate"
+msgstr "Frequenza di rimbalzo"
+
+#: analytics/providers.py:31
+msgid "Visit duration"
+msgstr "Durata della visita"
+
+#: analytics/providers.py:37
+msgid "Pages"
+msgstr "Pagine"
+
+#: analytics/providers.py:38
+msgid "Entry pages"
+msgstr "Pagine di ingresso"
+
+#: analytics/providers.py:39
+msgid "Exit pages"
+msgstr "Pagine di uscita"
+
+#: analytics/providers.py:40
+msgid "Referrers"
+msgstr "Referrer"
+
+#: analytics/providers.py:41
+msgid "Channels"
+msgstr "Canali"
+
+#: analytics/providers.py:42
+msgid "Campaigns"
+msgstr "Campagne"
+
+#: analytics/providers.py:43
+msgid "Countries"
+msgstr "Paesi"
+
+#: analytics/providers.py:44
+msgid "Regions"
+msgstr "Regioni"
+
+#: analytics/providers.py:45
+msgid "Cities"
+msgstr "Città"
+
+#: analytics/providers.py:46
+msgid "Devices"
+msgstr "Dispositivi"
+
+#: analytics/providers.py:47
+msgid "Browsers"
+msgstr "Browser"
+
+#: analytics/providers.py:48
+msgid "Operating systems"
+msgstr "Sistemi operativi"
+
+#: analytics/widgets.py:23
+msgid "today"
+msgstr "oggi"
+
+#: analytics/widgets.py:24
+msgid "last 7 days"
+msgstr "ultimi 7 giorni"
+
+#: analytics/widgets.py:25
+msgid "last 30 days"
+msgstr "ultimi 30 giorni"
+
+#: analytics/widgets.py:26
+msgid "last 90 days"
+msgstr "ultimi 90 giorni"
+
+#: analytics/widgets.py:27
+msgid "last 12 months"
+msgstr "ultimi 12 mesi"
+
+#: analytics/widgets.py:95 analytics/widgets.py:157
+msgid "Analytics are unavailable"
+msgstr "Le statistiche non sono disponibili"
+
+#: analytics/widgets.py:105
+msgid "vs. the period before"
+msgstr "rispetto al periodo precedente"
+
+#: analytics/widgets.py:143
+msgid "Top pages"
+msgstr "Pagine principali"
+
+#: blocks.py:229
+msgid "Unknown related item."
+msgstr "Elemento collegato sconosciuto."
+
+#: blocks.py:270
+#, python-format
+msgid "block %(number)s"
+msgstr "blocco %(number)s"
+
+#: blocks.py:272
+#, python-format
+msgid "Block %(number)s"
+msgstr "Blocco %(number)s"
+
+#: blocks.py:478
+msgid "Enter a list of blocks."
+msgstr "Inserisci un elenco di blocchi."
+
+#: blocks.py:488
+#, python-format
+msgid "Block %(number)s is not a valid block."
+msgstr "Il blocco %(number)s non è un blocco valido."
+
+#: blocks.py:492
+#, python-format
+msgid "Block %(number)s has an unknown type: %(type)s."
+msgstr "Il blocco %(number)s ha un tipo sconosciuto: %(type)s."
+
+#: blocks.py:497
+#, python-format
+msgid "Block %(number)s has the same id as another block."
+msgstr "Il blocco %(number)s ha lo stesso id di un altro blocco."
+
+#: blocks.py:508
+#, python-format
+msgid "Add at least %(num)d block."
+msgid_plural "Add at least %(num)d blocks."
+msgstr[0] "Aggiungi almeno %(num)d blocco."
+msgstr[1] "Aggiungi almeno %(num)d blocchi."
+
+#: blocks.py:518
+#, python-format
+msgid "Use at most %(num)d block."
+msgid_plural "Use at most %(num)d blocks."
+msgstr[0] "Usa al massimo %(num)d blocco."
+msgstr[1] "Usa al massimo %(num)d blocchi."
+
+#: contrib/backups/apps.py:8
+msgid "Backups"
+msgstr "Backup"
+
+#: contrib/backups/models.py:18 dashboard/tasks.py:95
+msgid "Queued"
+msgstr "In coda"
+
+#: contrib/backups/models.py:19 dashboard/tasks.py:97
+msgid "Running"
+msgstr "In esecuzione"
+
+#: contrib/backups/models.py:20
+msgid "Done"
+msgstr "Completato"
+
+#: contrib/backups/models.py:21 contrib/huey.py:39 dashboard/tasks.py:99
+#: webhooks/models.py:124
+msgid "Failed"
+msgstr "Non riuscita"
+
+#: contrib/backups/models.py:29 dashboard/tasks.py:96
+msgid "Scheduled"
+msgstr "Pianificata"
+
+#: contrib/backups/models.py:30
+msgid "Back up now"
+msgstr "Esegui backup ora"
+
+#: contrib/backups/models.py:31
+msgid "Command"
+msgstr "Comando"
+
+#: contrib/backups/models.py:34
+msgid "database"
+msgstr "database"
+
+#: contrib/backups/models.py:36
+msgid "status"
+msgstr "stato"
+
+#: contrib/backups/models.py:39
+msgid "trigger"
+msgstr "origine"
+
+#: contrib/backups/models.py:42
+msgid "file"
+msgstr "file"
+
+#: contrib/backups/models.py:44
+msgid "size"
+msgstr "dimensione"
+
+#: contrib/backups/models.py:46
+msgid "manifest"
+msgstr "manifesto"
+
+#: contrib/backups/models.py:47
+msgid "error"
+msgstr "errore"
+
+#: contrib/backups/models.py:50
+msgid "created by"
+msgstr "creato da"
+
+#: contrib/backups/models.py:56 contrib/two_factor/models.py:31
+msgid "created at"
+msgstr "creato il"
+
+#: contrib/backups/models.py:57
+msgid "started at"
+msgstr "avviato il"
+
+#: contrib/backups/models.py:58
+msgid "finished at"
+msgstr "terminato il"
+
+#: contrib/backups/models.py:61
+msgid "backup"
+msgstr "backup"
+
+#: contrib/backups/models.py:62
+msgid "backups"
+msgstr "backup"
+
+#: contrib/backups/schedule.py:149
+#, python-format
+msgid "Daily at %(time)s"
+msgstr "Ogni giorno alle %(time)s"
+
+#: contrib/backups/schedule.py:151
+#, python-format
+msgid "Weekly on %(day)s at %(time)s"
+msgstr "Ogni settimana il %(day)s alle %(time)s"
+
+#: contrib/backups/schedule.py:156
+#, python-format
+msgid "Hourly at %(minute)s past"
+msgstr "Ogni ora ai %(minute)s"
+
+#: contrib/backups/schedule.py:163
+#, python-format
+msgid "Every %(hours)s hours"
+msgstr "Ogni %(hours)s ore"
+
+#: contrib/backups/schedule.py:165
+#, python-format
+msgid "Cron: %(expression)s"
+msgstr "Cron: %(expression)s"
+
+#: contrib/backups/status.py:22
+msgid "Back up the database"
+msgstr "Esegui il backup del database"
+
+#: contrib/backups/status.py:37
+msgid "No backup storage"
+msgstr "Nessuna archiviazione per i backup"
+
+#: contrib/backups/status.py:46
+msgid "No databases to back up"
+msgstr "Nessun database di cui eseguire il backup"
+
+#: contrib/backups/status.py:73
+#, python-format
+msgid "The last backup of %(database)s failed: %(error)s"
+msgstr "L’ultimo backup di %(database)s non è riuscito: %(error)s"
+
+#: contrib/backups/status.py:82
+msgid "No backup has been made yet."
+msgstr "Non è ancora stato eseguito alcun backup."
+
+#: contrib/backups/status.py:91
+#, python-format
+msgid "The backup of %(database)s is overdue by %(when)s."
+msgstr "Il backup di %(database)s è in ritardo di %(when)s."
+
+#: contrib/backups/status.py:96
+msgid "No backups yet"
+msgstr "Ancora nessun backup"
+
+#: contrib/backups/status.py:101
+#, python-format
+msgid "Last backup just now · %(size)s"
+msgstr "Ultimo backup proprio ora · %(size)s"
+
+#: contrib/backups/status.py:103
+#, python-format
+msgid "Last backup %(when)s ago · %(size)s"
+msgstr "Ultimo backup %(when)s fa · %(size)s"
+
+#: contrib/backups/status.py:112
+msgid "Backups are not scheduled."
+msgstr "I backup non sono pianificati."
+
+#: contrib/backups/status.py:150
+msgid "Database backups"
+msgstr "Backup del database"
+
+#: contrib/backups/views.py:101
+msgid "A backup is already queued or running."
+msgstr "Un backup è già in coda o in corso."
+
+#: contrib/backups/views.py:115
+msgid "There is no such backup."
+msgstr "Questo backup non esiste."
+
+#: contrib/backups/views.py:121
+msgid "The backup's file is no longer in the storage."
+msgstr "Il file del backup non è più nell’archiviazione."
+
+#: contrib/huey.py:40
+msgid "Timed out"
+msgstr "Tempo scaduto"
+
+#: contrib/huey.py:41
+msgid "Interrupted"
+msgstr "Interrotta"
+
+#: contrib/huey.py:42
+msgid "Canceled"
+msgstr "Annullata"
+
+#: contrib/huey.py:43
+msgid "Revoked"
+msgstr "Revocata"
+
+#: contrib/huey.py:44
+msgid "Expired"
+msgstr "Scaduta"
+
+#: contrib/huey.py:45
+msgid "Locked"
+msgstr "Bloccata"
+
+#: contrib/huey.py:46
+msgid "Rate-limited"
+msgstr "Limitata"
+
+#: contrib/huey.py:153
+#, python-format
+msgid "Huey · %(count)s queued"
+msgstr "Huey · %(count)s in coda"
+
+#: contrib/huey.py:194
+#, python-format
+msgid ""
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
+"Is the consumer running?"
+msgstr ""
+"Alcune attività aspettano da %(minutes)s minuti e nessun worker ne ha presa "
+"una. Il consumer è in esecuzione?"
+
+#: contrib/password_reset/tasks.py:65
+msgid "Your password reset code"
+msgstr "Il tuo codice per reimpostare la password"
+
+#: contrib/password_reset/tasks.py:66
+msgid "Your password reset code is: "
+msgstr "Il tuo codice per reimpostare la password è: "
+
+#: contrib/password_reset/tasks.py:84
+msgid "Your password has been reset"
+msgstr "La tua password è stata reimpostata"
+
+#: contrib/password_reset/tasks.py:86
+msgid ""
+"Your password has been reset. If you did not do this, please contact your "
+"administrator."
+msgstr ""
+"La tua password è stata reimpostata. Se non sei stato tu, contatta il tuo "
+"amministratore."
+
+#: contrib/status/apps.py:8
+msgid "System status"
+msgstr "Stato del sistema"
+
+#: contrib/status/builtin.py:34
+msgid "Database cache"
+msgstr "Cache su database"
+
+#: contrib/status/builtin.py:35
+msgid "File cache"
+msgstr "Cache su file"
+
+#: contrib/status/builtin.py:36 contrib/status/builtin.py:47
+msgid "Local memory"
+msgstr "Memoria locale"
+
+#: contrib/status/builtin.py:40
+msgid "File system"
+msgstr "File system"
+
+#: contrib/status/builtin.py:41
+msgid "Memory"
+msgstr "Memoria"
+
+#: contrib/status/builtin.py:46
+msgid "Console"
+msgstr "Console"
+
+#: contrib/status/builtin.py:48
+msgid "Files"
+msgstr "File"
+
+#: contrib/status/builtin.py:49
+msgid "Dummy"
+msgstr "Fittizio"
+
+#: contrib/status/builtin.py:54
+#, python-format
+msgid "Answered in %(seconds).1f seconds."
+msgstr "Risposta in %(seconds).1f secondi."
+
+#: contrib/status/builtin.py:65
+msgid "The connection is not usable."
+msgstr "La connessione non è utilizzabile."
+
+#: contrib/status/builtin.py:90
+msgid "Dummy cache"
+msgstr "Cache fittizia"
+
+#: contrib/status/builtin.py:90
+msgid "Nothing is cached."
+msgstr "Non viene memorizzato nulla nella cache."
+
+#: contrib/status/builtin.py:98
+msgid "A value that was stored could not be read back."
+msgstr "Non è stato possibile rileggere un valore salvato."
+
+#: contrib/status/builtin.py:123
+msgid "No task backend connected"
+msgstr "Nessun sistema di attività collegato"
+
+#: contrib/status/builtin.py:170
+#, python-format
+msgid "%(backend)s backend"
+msgstr "Backend %(backend)s"
+
+#: contrib/status/builtin.py:171
+msgid "Emails are not sent from this backend."
+msgstr "Questo backend non invia email."
+
+#: contrib/status/builtin.py:198
+#, python-format
+msgid "%(count)s not applied"
+msgstr "%(count)s non applicate"
+
+#: contrib/status/builtin.py:199
+msgid "Run manage.py migrate."
+msgstr "Esegui manage.py migrate."
+
+#: contrib/status/builtin.py:201
+msgid "Up to date"
+msgstr "Aggiornate"
+
+#: contrib/status/builtin.py:214
+msgid "Database"
+msgstr "Database"
+
+#: contrib/status/builtin.py:214
+#, python-format
+msgid "Database (%(alias)s)"
+msgstr "Database (%(alias)s)"
+
+#: contrib/status/builtin.py:222
+msgid "Cache"
+msgstr "Cache"
+
+#: contrib/status/builtin.py:229
+msgid "Media storage"
+msgstr "Archiviazione dei media"
+
+#: contrib/status/builtin.py:236
+msgid "Task queue"
+msgstr "Coda delle attività"
+
+#: contrib/status/builtin.py:243
+msgid "Email"
+msgstr "Email"
+
+#: contrib/status/builtin.py:251
+msgid "Migrations"
+msgstr "Migrazioni"
+
+#: contrib/status/runner.py:113
+#, python-format
+msgid "No answer within %(seconds)s seconds."
+msgstr "Nessuna risposta entro %(seconds)s secondi."
+
+#: contrib/two_factor/apps.py:11
+msgid "Two-factor login"
+msgstr "Accesso in due passaggi"
+
+#: contrib/two_factor/models.py:28 contrib/two_factor/models.py:55
+msgid "user"
+msgstr "utente"
+
+#: contrib/two_factor/models.py:30
+msgid "secret"
+msgstr "segreto"
+
+#: contrib/two_factor/models.py:32
+msgid "last used at"
+msgstr "ultimo utilizzo il"
+
+#: contrib/two_factor/models.py:37
+msgid "authenticator"
+msgstr "autenticatore"
+
+#: contrib/two_factor/models.py:38
+msgid "authenticators"
+msgstr "autenticatori"
+
+#: contrib/two_factor/models.py:58
+msgid "used at"
+msgstr "utilizzato il"
+
+#: contrib/two_factor/models.py:61
+msgid "recovery code"
+msgstr "codice di recupero"
+
+#: contrib/two_factor/models.py:62
+msgid "recovery codes"
+msgstr "codici di recupero"
+
+#: contrib/two_factor/service.py:195
+#, python-format
+msgid "Your two-factor login for %(site)s was reset"
+msgstr "Il tuo accesso in due passaggi per %(site)s è stato reimpostato"
+
+#: contrib/two_factor/views.py:45
+msgid "This login has expired. Log in again."
+msgstr "Questo accesso è scaduto. Accedi di nuovo."
+
+#: contrib/two_factor/views.py:50
+msgid "Too many wrong codes. Wait a while, then log in again."
+msgstr "Troppi codici errati. Aspetta un po’, poi accedi di nuovo."
+
+#: contrib/two_factor/views.py:85
+msgid "Too many wrong codes. Log in again."
+msgstr "Troppi codici errati. Accedi di nuovo."
+
+#: contrib/two_factor/views.py:92
+#, python-format
+msgid "You have %(count)d more try."
+msgid_plural "You have %(count)d more tries."
+msgstr[0] "Ti resta %(count)d tentativo."
+msgstr[1] "Ti restano %(count)d tentativi."
+
+#: contrib/two_factor/views.py:119
+msgid "That recovery code is not right."
+msgstr "Questo codice di recupero non è corretto."
+
+#: contrib/two_factor/views.py:122 contrib/two_factor/views.py:166
+#: contrib/two_factor/views.py:251 contrib/two_factor/views.py:280
+msgid "That code is not right."
+msgstr "Questo codice non è corretto."
+
+#: contrib/two_factor/views.py:224 contrib/two_factor/views.py:240
+msgid "Two-factor login is already on."
+msgstr "L’accesso in due passaggi è già attivo."
+
+#: contrib/two_factor/views.py:245
+msgid "This setup has expired. Start again."
+msgstr "Questa configurazione è scaduta. Ricomincia."
+
+#: contrib/two_factor/views.py:267
+msgid "Two-factor login is off."
+msgstr "L’accesso in due passaggi è disattivato."
+
+#: contrib/two_factor/views.py:301
+msgid "Two-factor login is required for your account."
+msgstr "L’accesso in due passaggi è obbligatorio per il tuo account."
+
+#: dashboard/scheduled_tasks.py:29
+msgid "Scheduled tasks"
+msgstr "Attività pianificate"
+
+#: dashboard/scheduled_tasks.py:32
+msgid "Monitor and manage automated tasks"
+msgstr "Monitora e gestisci le attività automatiche"
+
+#: dashboard/tasks.py:98
+msgid "Succeeded"
+msgstr "Riuscita"
+
+#: dashboard/tasks.py:100
+msgid "Retried"
+msgstr "Ritentata"
+
+#: dashboard/tasks.py:108
+msgid "Periodic tasks"
+msgstr "Attività periodiche"
+
+#: dashboard/tasks.py:109
+msgid "Tasks that run on a schedule, with their latest run"
+msgstr ""
+"Attività eseguite secondo una pianificazione, con la loro ultima esecuzione"
+
+#: dashboard/tasks.py:113
+msgid "Recent runs"
+msgstr "Esecuzioni recenti"
+
+#: dashboard/tasks.py:114
+msgid "The latest tasks the workers ran"
+msgstr "Le ultime attività eseguite dai worker"
+
+#: dashboard/tasks.py:302
+msgid "Tasks"
+msgstr "Attività"
+
+#: export.py:202 importing.py:868
+msgid "Yes"
+msgstr "Sì"
+
+#: export.py:202 importing.py:871
+msgid "No"
+msgstr "No"
+
+#: fields.py:109
+msgid "Only accepts letters, numbers, underscores, hyphens and slashes."
+msgstr "Sono ammessi solo lettere, numeri, trattini bassi, trattini e barre."
+
+#: fields.py:115
+msgid "Consecutive slashes are not allowed."
+msgstr "Le barre consecutive non sono ammesse."
+
+#: form.py:442
+msgid "Activity"
+msgstr "Attività"
+
+#: history/apps.py:11
+msgid "History"
+msgstr "Cronologia"
+
+#: history/models.py:30
+msgid "version"
+msgstr "versione"
+
+#: history/models.py:31
+msgid "versions"
+msgstr "versioni"
+
+#: importing.py:515
+msgid "Excel files cannot be imported on this site."
+msgstr "Su questo sito non è possibile importare file Excel."
+
+#: importing.py:521
+msgid "Choose a CSV, Excel (.xlsx) or JSON file."
+msgstr "Scegli un file CSV, Excel (.xlsx) o JSON."
+
+#: importing.py:567 importing.py:610
+msgid "The file is empty."
+msgstr "Il file è vuoto."
+
+#: importing.py:569 importing.py:580
+msgid "The file is not a valid CSV file."
+msgstr "Il file non è un file CSV valido."
+
+#: importing.py:599
+msgid "The file is not a valid Excel file."
+msgstr "Il file non è un file Excel valido."
+
+#: importing.py:629
+msgid "The file is not valid JSON."
+msgstr "Il file non è un JSON valido."
+
+#: importing.py:632
+msgid "A JSON file must hold a list of objects."
+msgstr "Un file JSON deve contenere un elenco di oggetti."
+
+#: importing.py:837
+msgid "Enter valid JSON."
+msgstr "Inserisci un JSON valido."
+
+#: importing.py:874
+msgid "Enter true or false."
+msgstr "Inserisci true o false."
+
+#: importing.py:910
+#, python-format
+msgid "No %(model)s with %(field)s %(value)s."
+msgstr "Nessun %(model)s con %(field)s %(value)s."
+
+#: importing.py:921
+#, python-format
+msgid "More than one %(model)s has %(field)s %(value)s."
+msgstr "Più di un %(model)s ha %(field)s %(value)s."
+
+#: importing.py:1007
+#, python-format
+msgid "The file needs the column %(columns)s to match rows."
+msgid_plural "The file needs the columns %(columns)s to match rows."
+msgstr[0] "Il file deve avere la colonna %(columns)s per abbinare le righe."
+msgstr[1] "Il file deve avere le colonne %(columns)s per abbinare le righe."
+
+#: importing.py:1017
+msgid ""
+"The file has no column this import can set. Download the template for the "
+"columns."
+msgstr ""
+"Il file non ha colonne che questa importazione può impostare. Scarica il "
+"modello per vedere le colonne."
+
+#: importing.py:1111
+#, python-format
+msgid "You may not create %(model)s."
+msgstr "Non puoi creare %(model)s."
+
+#: importing.py:1124
+#, python-format
+msgid "You may not change this %(model)s."
+msgstr "Non puoi modificare questo %(model)s."
+
+#: importing.py:1202
+#, python-format
+msgid "The row matches more than one %(model)s."
+msgstr "La riga corrisponde a più di un %(model)s."
+
+#: importing.py:1212
+#, python-format
+msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
+msgstr "Nessun %(model)s con id %(value)s. Lascia vuoto l’id per crearne uno."
+
+#: importing.py:1459
+msgid "This model cannot be imported."
+msgstr "Questo modello non può essere importato."
+
+#: importing.py:1489
+msgid "The import failed. Try again, or ask a developer to check the logs."
+msgstr ""
+"L’importazione non è riuscita. Riprova, oppure chiedi a uno sviluppatore di "
+"controllare i log."
+
+#: importing.py:1533
+msgid "Import from a file"
+msgstr "Importa da un file"
+
+#: media_library/apps.py:11
+msgid "Media Library"
+msgstr "Libreria multimediale"
+
+#: media_library/models.py:25 media_library/models.py:26
+msgid "Media"
+msgstr "Media"
+
+#: media_library/models.py:28 media_library/models.py:77
+msgid "File"
+msgstr "File"
+
+#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:53
+msgid "Name"
+msgstr "Nome"
+
+#: media_library/models.py:38
+msgid "Alt text"
+msgstr "Testo alternativo"
+
+#: media_library/models.py:39
+msgid "Describes a picture for screen readers"
+msgstr "Descrive un’immagine per gli screen reader"
+
+#: media_library/models.py:42
+msgid "Tags"
+msgstr "Tag"
+
+#: media_library/models.py:50 media_library/models.py:128
+msgid "Folder"
+msgstr "Cartella"
+
+#: media_library/models.py:54
+msgid "File size"
+msgstr "Dimensione del file"
+
+#: media_library/models.py:61
+msgid "Metadata"
+msgstr "Metadati"
+
+#: media_library/models.py:62
+msgid "Read from the file, such as an image's width and height."
+msgstr "Letti dal file, come la larghezza e l’altezza di un’immagine."
+
+#: media_library/models.py:68
+msgid "Properties"
+msgstr "Proprietà"
+
+#: media_library/models.py:69
+msgid "Set by editors for some types of media, such as a focal point."
+msgstr ""
+"Impostate dai redattori per alcuni tipi di media, come un punto focale."
+
+#: media_library/models.py:74
+msgid "Image"
+msgstr "Immagine"
+
+#: media_library/models.py:75
+msgid "Video"
+msgstr "Video"
+
+#: media_library/models.py:76
+msgid "Audio"
+msgstr "Audio"
+
+#: media_library/models.py:80
+msgid "File type"
+msgstr "Tipo di file"
+
+#: media_library/models.py:129
+msgid "Folders"
+msgstr "Cartelle"
+
+#: media_library/serializers.py:50 media_library/serializers.py:58
+#: uploads.py:63
+msgid "Files of this type cannot be uploaded."
+msgstr "Non è possibile caricare file di questo tipo."
+
+#: media_library/serializers.py:54 uploads.py:59
+#, python-format
+msgid "The file is larger than %(size)s."
+msgstr "Il file supera %(size)s."
+
+#: media_library/serializers.py:196
+msgid "A folder cannot be moved into itself or its subfolders."
+msgstr ""
+"Una cartella non può essere spostata in sé stessa o nelle sue sottocartelle."
+
+#: models.py:40
+msgid "Created at"
+msgstr "Creato il"
+
+#: models.py:42
+msgid "Modified at"
+msgstr "Modificato il"
+
+#: models.py:55
+msgid "Edited by"
+msgstr "Modificato da"
+
+#: models.py:65
+msgid "Order key"
+msgstr "Chiave di ordinamento"
+
+#: models.py:97
+msgid "Removed at"
+msgstr "Rimosso il"
+
+#: models.py:137
+msgid "Singleton"
+msgstr "Singleton"
+
+#: notifications/apps.py:11 notifications/dashboard.py:48
+#: notifications/models.py:24
+msgid "Notifications"
+msgstr "Notifiche"
+
+#: notifications/dashboard.py:49
+msgid "Your latest notifications"
+msgstr "Le tue ultime notifiche"
+
+#: notifications/digest.py:123
+msgid "Someone"
+msgstr "Qualcuno"
+
+#: notifications/digest.py:137
+#, python-format
+msgid "%(actor)s created the %(model)s %(object)s"
+msgstr "%(actor)s ha creato %(object)s (%(model)s)"
+
+#: notifications/digest.py:138
+#, python-format
+msgid "%(actor)s updated the %(model)s %(object)s"
+msgstr "%(actor)s ha aggiornato %(object)s (%(model)s)"
+
+#: notifications/digest.py:139
+#, python-format
+msgid "%(actor)s deleted the %(model)s %(object)s"
+msgstr "%(actor)s ha eliminato %(object)s (%(model)s)"
+
+#: notifications/digest.py:140
+#, python-format
+msgid "%(actor)s restored the %(model)s %(object)s"
+msgstr "%(actor)s ha ripristinato %(object)s (%(model)s)"
+
+#: notifications/digest.py:141
+#, python-format
+msgid "%(actor)s moved the %(model)s %(object)s"
+msgstr "%(actor)s ha spostato %(object)s (%(model)s)"
+
+#: notifications/digest.py:146
+#, python-format
+msgid "%(actor)s created %(count)s %(models)s"
+msgid_plural "%(actor)s created %(count)s %(models)s"
+msgstr[0] "%(actor)s ha creato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha creato %(count)s %(models)s"
+
+#: notifications/digest.py:151
+#, python-format
+msgid "%(actor)s updated %(count)s %(models)s"
+msgid_plural "%(actor)s updated %(count)s %(models)s"
+msgstr[0] "%(actor)s ha aggiornato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha aggiornato %(count)s %(models)s"
+
+#: notifications/digest.py:156
+#, python-format
+msgid "%(actor)s deleted %(count)s %(models)s"
+msgid_plural "%(actor)s deleted %(count)s %(models)s"
+msgstr[0] "%(actor)s ha eliminato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha eliminato %(count)s %(models)s"
+
+#: notifications/digest.py:161
+#, python-format
+msgid "%(actor)s restored %(count)s %(models)s"
+msgid_plural "%(actor)s restored %(count)s %(models)s"
+msgstr[0] "%(actor)s ha ripristinato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha ripristinato %(count)s %(models)s"
+
+#: notifications/digest.py:166
+#, python-format
+msgid "%(actor)s reordered %(count)s %(models)s"
+msgid_plural "%(actor)s reordered %(count)s %(models)s"
+msgstr[0] "%(actor)s ha riordinato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha riordinato %(count)s %(models)s"
+
+#: notifications/digest.py:235
+#, python-format
+msgid "%(count)s change"
+msgid_plural "%(count)s changes"
+msgstr[0] "%(count)s modifica"
+msgstr[1] "%(count)s modifiche"
+
+#: notifications/digest.py:255
+#, python-format
+msgid "and %(count)s more"
+msgid_plural "and %(count)s more"
+msgstr[0] "e %(count)s altro"
+msgstr[1] "e altri %(count)s"
+
+#: notifications/digest.py:283
+#: templates/content_studio/notifications/digest.html:12
+#, python-format
+msgid "You have %(count)s unread notification"
+msgid_plural "You have %(count)s unread notifications"
+msgstr[0] "Hai %(count)s notifica non letta"
+msgstr[1] "Hai %(count)s notifiche non lette"
+
+#: notifications/models.py:23
+msgid "Notification"
+msgstr "Notifica"
+
+#: notifications/models.py:38
+msgid "Info"
+msgstr "Info"
+
+#: notifications/models.py:39 webhooks/models.py:123
+msgid "Success"
+msgstr "Successo"
+
+#: notifications/models.py:40
+msgid "Warning"
+msgstr "Avviso"
+
+#: notifications/models.py:41 webhooks/models.py:146
+msgid "Error"
+msgstr "Errore"
+
+#: notifications/models.py:47
+msgid "Recipient"
+msgstr "Destinatario"
+
+#: notifications/models.py:50 notifications/models.py:171
+msgid "Event"
+msgstr "Evento"
+
+#: notifications/models.py:55
+msgid "Level"
+msgstr "Livello"
+
+#: notifications/models.py:64
+msgid "Actor"
+msgstr "Autore"
+
+#: notifications/models.py:74 notifications/models.py:169
+#: notifications/models.py:214
+msgid "Model"
+msgstr "Modello"
+
+#: notifications/models.py:136
+msgid "Notification subscription"
+msgstr "Iscrizione alle notifiche"
+
+#: notifications/models.py:137
+msgid "Notification subscriptions"
+msgstr "Iscrizioni alle notifiche"
+
+#: notifications/models.py:154
+msgid "All objects"
+msgstr "Tutti gli oggetti"
+
+#: notifications/models.py:155
+msgid "Objects I created"
+msgstr "Oggetti creati da me"
+
+#: notifications/models.py:161 notifications/models.py:208
+#: preferences/models.py:24
+msgid "User"
+msgstr "Utente"
+
+#: notifications/models.py:177
+msgid "Scope"
+msgstr "Ambito"
+
+#: notifications/models.py:179
+msgid "Enabled"
+msgstr "Attiva"
+
+#: notifications/models.py:192
+msgid "Follow"
+msgstr "Elemento seguito"
+
+#: notifications/models.py:193
+msgid "Follows"
+msgstr "Elementi seguiti"
+
+#: oembed.py:167
+msgid "Enter a web address, starting with http."
+msgstr "Inserisci un indirizzo web che inizi con http."
+
+#: oembed.py:172
+msgid "No known provider embeds this address."
+msgstr "Nessun provider noto può incorporare questo indirizzo."
+
+#: oembed.py:195
+msgid "The provider has no preview for this address."
+msgstr "Il provider non ha un’anteprima per questo indirizzo."
+
+#: oembed.py:197 oembed.py:199 oembed.py:207
+msgid "The provider did not answer."
+msgstr "Il provider non ha risposto."
+
+#: password_links.py:175
+#, python-format
+msgid "%(count)d day"
+msgid_plural "%(count)d days"
+msgstr[0] "%(count)d giorno"
+msgstr[1] "%(count)d giorni"
+
+#: password_links.py:177
+#, python-format
+msgid "%(count)d hour"
+msgid_plural "%(count)d hours"
+msgstr[0] "%(count)d ora"
+msgstr[1] "%(count)d ore"
+
+#: password_links.py:198
+#, python-format
+msgid "You are invited to %(site)s"
+msgstr "Sei stato invitato su %(site)s"
+
+#: password_links.py:201
+#, python-format
+msgid "Set a new password for %(site)s"
+msgstr "Imposta una nuova password per %(site)s"
+
+#: password_links.py:238
+msgid "This link is no longer valid."
+msgstr "Questo link non è più valido."
+
+#: permission_matrix.py:199
+#, python-format
+msgid ""
+"You can only grant or revoke permissions you have yourself. Not allowed: "
+"%(permissions)s."
+msgstr ""
+"Puoi concedere o revocare solo i permessi che hai tu stesso. Non consentiti: "
+"%(permissions)s."
+
+#: permission_matrix.py:217
+#, python-format
+msgid ""
+"You can only add or remove groups whose permissions you all have yourself. "
+"Not allowed: %(groups)s."
+msgstr ""
+"Puoi aggiungere o rimuovere solo i gruppi di cui hai tu stesso tutti i "
+"permessi. Non consentiti: %(groups)s."
+
+#: preferences/apps.py:8
+msgid "Preferences"
+msgstr "Preferenze"
+
+#: preferences/models.py:13
+msgid "Save"
+msgstr "Salva"
+
+#: preferences/models.py:14
+msgid "Save and add another"
+msgstr "Salva e aggiungi un altro"
+
+#: preferences/models.py:15
+msgid "Save and close"
+msgstr "Salva e chiudi"
+
+#: preferences/models.py:32
+msgid "Default save action"
+msgstr "Azione di salvataggio predefinita"
+
+#: preferences/models.py:36 preferences/models.py:37
+msgid "user preferences"
+msgstr "preferenze utente"
+
+#: profile.py:341
+msgid "Your current password is not correct."
+msgstr "La password attuale non è corretta."
+
+#: profile.py:347
+msgid "Enter a new password."
+msgstr "Inserisci una nuova password."
+
+#: templates/content_studio/notifications/digest.html:13
+#: templates/content_studio/notifications/digest.txt:1
+#, python-format
+msgid "Hello %(name)s,"
+msgstr "Ciao %(name)s,"
+
+#: templates/content_studio/notifications/digest.html:22
+#: templates/content_studio/notifications/digest.txt:9
+#, python-format
+msgid "And %(count)s more."
+msgid_plural "And %(count)s more."
+msgstr[0] "E %(count)s altro."
+msgstr[1] "E altri %(count)s."
+
+#: templates/content_studio/notifications/digest.html:25
+msgid "See all notifications"
+msgstr "Vedi tutte le notifiche"
+
+#: templates/content_studio/notifications/digest.html:28
+msgid "You get this email because these notifications are unread."
+msgstr "Ricevi questa email perché queste notifiche non sono state lette."
+
+#: templates/content_studio/notifications/digest.html:28
+msgid "Turn these emails off in your notification settings."
+msgstr "Disattiva queste email nelle impostazioni delle notifiche."
+
+#: templates/content_studio/notifications/digest.txt:3
+#, python-format
+msgid "You have %(count)s unread notification in %(site_name)s:"
+msgid_plural "You have %(count)s unread notifications in %(site_name)s:"
+msgstr[0] "Hai %(count)s notifica non letta su %(site_name)s:"
+msgstr[1] "Hai %(count)s notifiche non lette su %(site_name)s:"
+
+#: templates/content_studio/notifications/digest.txt:11
+msgid "See all notifications:"
+msgstr "Vedi tutte le notifiche:"
+
+#: templates/content_studio/notifications/digest.txt:13
+msgid ""
+"You get this email because these notifications are unread. Turn these emails "
+"off in your notification settings:"
+msgstr ""
+"Ricevi questa email perché queste notifiche non sono state lette. Disattiva "
+"queste email nelle impostazioni delle notifiche:"
+
+#: templates/content_studio/users/invite.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s invited you to %(site_title)s. Set your password to log in:"
+msgstr ""
+"Ciao %(name)s,\n"
+"\n"
+"%(sender)s ti ha invitato su %(site_title)s. Imposta la tua password per accedere:"
+
+#: templates/content_studio/users/invite.txt:7
+#, python-format
+msgid ""
+"Your username is %(username)s. The link works once and expires in "
+"%(expires)s. If it has expired, ask %(sender)s for a new one."
+msgstr ""
+"Il tuo nome utente è %(username)s. Il link funziona una sola volta e scade "
+"tra %(expires)s. Se è scaduto, chiedine uno nuovo a %(sender)s."
+
+#: templates/content_studio/users/password_link.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s sent you a link to set a new password for %(site_title)s:"
+msgstr ""
+"Ciao %(name)s,\n"
+"\n"
+"%(sender)s ti ha inviato un link per impostare una nuova password per %(site_title)s:"
+
+#: templates/content_studio/users/password_link.txt:7
+#, python-format
+msgid ""
+"Your username is %(username)s. The link works once and expires in "
+"%(expires)s. If you did not expect this email, contact your administrator."
+msgstr ""
+"Il tuo nome utente è %(username)s. Il link funziona una sola volta e scade "
+"tra %(expires)s. Se non ti aspettavi questa email, contatta il tuo "
+"amministratore."
+
+#: templates/content_studio/users/two_factor_reset.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s reset your two-factor login for %(site_title)s. You log in with your password alone now, and your old recovery codes no longer work. If two-factor login is required, you set it up again the next time you log in."
+msgstr ""
+"Ciao %(name)s,\n"
+"\n"
+"%(sender)s ha reimpostato il tuo accesso in due passaggi per %(site_title)s. Ora accedi solo con la password, e i tuoi vecchi codici di recupero non funzionano più. Se l’accesso in due passaggi è obbligatorio, lo configurerai di nuovo al prossimo accesso."
+
+#: templates/content_studio/users/two_factor_reset.txt:5
+msgid "If you did not ask for this, contact your administrator."
+msgstr "Se non l’hai chiesto tu, contatta il tuo amministratore."
+
+#: uploads.py:105 uploads.py:117
+msgid "The upload has expired. Choose the file again."
+msgstr "Il caricamento è scaduto. Scegli di nuovo il file."
+
+#: uploads.py:111
+msgid "The upload is not valid."
+msgstr "Il caricamento non è valido."
+
+#: user_studios.py:67
+msgid "This user has not logged in yet."
+msgstr "Questo utente non ha ancora effettuato l’accesso."
+
+#: user_studios.py:73
+msgid "**Resend invite** in the more actions menu sends the invite again."
+msgstr ""
+"**Invia di nuovo l’invito** nel menu Altre azioni invia nuovamente l’invito."
+
+#: user_studios.py:96
+msgid "Two-factor login is on."
+msgstr "L’accesso in due passaggi è attivo."
+
+#: user_studios.py:103
+msgid "Lost their phone? **Reset two-factor login** in the more actions menu."
+msgstr ""
+"Telefono perso? **Reimposta l’accesso in due passaggi** si trova nel menu "
+"Altre azioni."
+
+#: user_studios.py:122
+msgid "Two-factor login is required: this user sets it up at their next login."
+msgstr ""
+"L’accesso in due passaggi è obbligatorio: questo utente lo configurerà al "
+"prossimo accesso."
+
+#: user_studios.py:214
+msgid "Account"
+msgstr "Account"
+
+#: user_studios.py:226
+msgid "Personal info"
+msgstr "Dati personali"
+
+#: user_studios.py:234
+msgid "Details"
+msgstr "Dettagli"
+
+#: user_studios.py:246
+msgid ""
+"A superuser has every permission. To pick permissions one by one, turn off "
+"superuser status first."
+msgstr ""
+"Un superutente ha tutti i permessi. Per scegliere i permessi uno per uno, "
+"disattiva prima lo stato di superutente."
+
+#: user_studios.py:262
+msgid "Profile"
+msgstr "Profilo"
+
+#: user_studios.py:265
+msgid "Permissions"
+msgstr "Permessi"
+
+#: user_studios.py:275
+msgid "Inactive users cannot log in."
+msgstr "Gli utenti inattivi non possono accedere."
+
+#: user_studios.py:284
+msgid "Only staff users can log in to the admin."
+msgstr "Solo gli utenti dello staff possono accedere all’amministrazione."
+
+#: user_studios.py:296 webhooks/models.py:138
+msgid "Status"
+msgstr "Stato"
+
+#: user_studios.py:307
+msgid "Important dates"
+msgstr "Date importanti"
+
+#: users.py:185
+msgid "Enter an email address: the invite is sent to it."
+msgstr "Inserisci un indirizzo email: l’invito viene inviato lì."
+
+#: users.py:204
+msgid ""
+"No invite was sent: only active staff users can log in. Send one from the "
+"user's page once they can."
+msgstr ""
+"Nessun invito inviato: solo gli utenti attivi dello staff possono accedere. "
+"Invialo dalla pagina dell’utente quando sarà possibile."
+
+#: users.py:210
+#, python-format
+msgid "Invite sent to %(email)s."
+msgstr "Invito inviato a %(email)s."
+
+#: users.py:220
+msgid "Enter a password."
+msgstr "Inserisci una password."
+
+#: users.py:223
+msgid "This password is too long."
+msgstr "Questa password è troppo lunga."
+
+#: validators.py:18
+msgid "Enter a valid value."
+msgstr "Inserisci un valore valido."
+
+#: validators.py:50
+msgid "One or more values are not valid choices."
+msgstr "Uno o più valori non sono scelte valide."
+
+#: validators.py:102
+msgid "Enter a valid color."
+msgstr "Inserisci un colore valido."
+
+#: validators.py:103
+msgid "Transparent colors are not allowed."
+msgstr "I colori trasparenti non sono ammessi."
+
+#: views.py:279
+msgid "Pass the address to preview as url."
+msgstr "Passa l’indirizzo da mostrare in anteprima come url."
+
+#: views.py:349
+msgid "This language is not available."
+msgstr "Questa lingua non è disponibile."
+
+#: views.py:434
+msgid "Content"
+msgstr "Contenuti"
+
+#: viewsets.py:488
+#, python-format
+msgid "The file is too large; it can be %(size)s at most."
+msgstr "Il file è troppo grande; può essere al massimo %(size)s."
+
+#: viewsets.py:526
+#, python-format
+msgid ""
+"The file has %(count)s rows; at most %(max)s can be imported at once. Split "
+"it into smaller files."
+msgstr ""
+"Il file ha %(count)s righe; se ne possono importare al massimo %(max)s alla "
+"volta. Dividilo in file più piccoli."
+
+#: webhooks/admin.py:29
+#, python-format
+msgid "Delivered: the webhook responded with %(status)s."
+msgstr "Consegnato: il webhook ha risposto con %(status)s."
+
+#: webhooks/admin.py:34
+#, python-format
+msgid "The delivery failed and is retried later: %(error)s"
+msgstr "La consegna non è riuscita e verrà ritentata più tardi: %(error)s"
+
+#: webhooks/admin.py:38
+#, python-format
+msgid "The delivery failed: %(error)s"
+msgstr "La consegna non è riuscita: %(error)s"
+
+#: webhooks/admin.py:42
+msgid "Trigger now"
+msgstr "Attiva ora"
+
+#: webhooks/admin.py:57
+msgid "Regenerate secret"
+msgstr "Rigenera il segreto"
+
+#: webhooks/admin.py:60
+msgid ""
+"Requests are signed with the new secret from now on: receivers that check the"
+" signature need the new secret. Regenerate it?"
+msgstr ""
+"D’ora in poi le richieste saranno firmate con il nuovo segreto: i destinatari"
+" che verificano la firma ne avranno bisogno. Rigenerarlo?"
+
+#: webhooks/admin.py:70
+msgid "The secret was regenerated."
+msgstr "Il segreto è stato rigenerato."
+
+#: webhooks/admin.py:74
+msgid "Retry"
+msgstr "Riprova"
+
+#: webhooks/admin.py:87
+msgid "The delivery is already being retried."
+msgstr "La consegna è già in fase di nuovo tentativo."
+
+#: webhooks/admin.py:139
+msgid "The webhook was created. Copy its secret now: it is not shown again."
+msgstr ""
+"Il webhook è stato creato. Copia ora il suo segreto: non verrà più mostrato."
+
+#: webhooks/apps.py:11 webhooks/dashboard.py:30 webhooks/models.py:50
+msgid "Webhooks"
+msgstr "Webhook"
+
+#: webhooks/dashboard.py:31
+msgid "The latest delivery of each webhook"
+msgstr "L’ultima consegna di ogni webhook"
+
+#: webhooks/dashboard.py:69
+msgid "Paused"
+msgstr "In pausa"
+
+#: webhooks/extensions.py:28
+msgid "Deploy"
+msgstr "Pubblica"
+
+#: webhooks/extensions.py:30
+msgid "Trigger the webhooks to rebuild the site?"
+msgstr "Attivare i webhook per ricostruire il sito?"
+
+#: webhooks/extensions.py:77
+msgid "There are no active webhooks to trigger."
+msgstr "Non ci sono webhook attivi da attivare."
+
+#: webhooks/extensions.py:83
+#, python-format
+msgid "Triggered %(count)d webhook. Its delivery log shows how it responded."
+msgid_plural ""
+"Triggered %(count)d webhooks. Their delivery logs show how they responded."
+msgstr[0] ""
+"%(count)d webhook attivato. Il suo registro delle consegne mostra come ha "
+"risposto."
+msgstr[1] ""
+"%(count)d webhook attivati. I loro registri delle consegne mostrano come "
+"hanno risposto."
+
+#: webhooks/failures.py:31
+msgid "Webhook delivery failed"
+msgstr "Consegna del webhook non riuscita"
+
+#: webhooks/failures.py:33
+msgid ""
+"A webhook delivery failed after its last attempt. Only editors who may change"
+" webhooks are notified."
+msgstr ""
+"La consegna di un webhook non è riuscita dopo l’ultimo tentativo. Ricevono la"
+" notifica solo i redattori che possono modificare i webhook."
+
+#: webhooks/failures.py:89
+#, python-format
+msgid "Webhook %(name)s failed"
+msgstr "Il webhook %(name)s non è riuscito"
+
+#: webhooks/failures.py:90
+#, python-format
+msgid "The last attempt failed: %(error)s"
+msgstr "L’ultimo tentativo non è riuscito: %(error)s"
+
+#: webhooks/models.py:34
+msgid "Created"
+msgstr "Creato"
+
+#: webhooks/models.py:35
+msgid "Updated"
+msgstr "Aggiornato"
+
+#: webhooks/models.py:36
+msgid "Deleted"
+msgstr "Eliminato"
+
+#: webhooks/models.py:37
+msgid "Restored"
+msgstr "Ripristinato"
+
+#: webhooks/models.py:38
+msgid "Reordered"
+msgstr "Riordinato"
+
+#: webhooks/models.py:49 webhooks/models.py:131
+msgid "Webhook"
+msgstr "Webhook"
+
+#: webhooks/models.py:55
+msgid "URL"
+msgstr "URL"
+
+#: webhooks/models.py:60
+msgid "Secret"
+msgstr "Segreto"
+
+#: webhooks/models.py:61
+msgid "Signs every request, so the receiver can verify it."
+msgstr "Firma ogni richiesta, così il destinatario può verificarla."
+
+#: webhooks/models.py:65
+msgid "Events"
+msgstr "Eventi"
+
+#: webhooks/models.py:66
+msgid "The changes that trigger the webhook; empty for all."
+msgstr "Le modifiche che attivano il webhook; vuoto per tutte."
+
+#: webhooks/models.py:72
+msgid "Models"
+msgstr "Modelli"
+
+#: webhooks/models.py:73
+msgid "The models whose changes trigger the webhook; empty for all."
+msgstr "I modelli le cui modifiche attivano il webhook; vuoto per tutti."
+
+#: webhooks/models.py:81
+msgid "Tenant"
+msgstr "Tenant"
+
+#: webhooks/models.py:82
+msgid "Only changes in this tenant trigger the webhook; empty for all."
+msgstr ""
+"Solo le modifiche in questo tenant attivano il webhook; vuoto per tutti."
+
+#: webhooks/models.py:84
+msgid "Active"
+msgstr "Attivo"
+
+#: webhooks/models.py:116
+msgid "Webhook delivery"
+msgstr "Consegna webhook"
+
+#: webhooks/models.py:117
+msgid "Webhook deliveries"
+msgstr "Consegne webhook"
+
+#: webhooks/models.py:122
+msgid "Pending"
+msgstr "In attesa"
+
+#: webhooks/models.py:133
+msgid "Payload"
+msgstr "Contenuto"
+
+#: webhooks/models.py:140
+msgid "Attempts"
+msgstr "Tentativi"
+
+#: webhooks/models.py:143
+msgid "Response status"
+msgstr "Stato della risposta"
+
+#: webhooks/models.py:145
+msgid "Response"
+msgstr "Risposta"

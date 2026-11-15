@@ -6,7 +6,7 @@ from django.contrib.auth.password_validation import password_validators_help_tex
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
 from django.utils.decorators import method_decorator
-from django.utils.translation import gettext_lazy as _
+from django.utils.translation import get_language, gettext_lazy as _
 from django.views.decorators.cache import never_cache
 from django.views.generic import TemplateView
 from rest_framework import serializers
@@ -21,6 +21,12 @@ from . import __version__, devtools
 from .admin import AdminSerializer, ModelStudio, ModelGroup
 from .exceptions import NotConfigured
 from .extensions import MainMenuButton
+from .languages import (
+    LANGUAGES,
+    get_enabled_languages,
+    get_locale,
+    match_language,
+)
 from .media_library.cropping import get_crop_hook
 from .media_library.metadata import get_metadata_attr, get_properties_attr
 from .media_library.sizes import get_size_specs
@@ -47,6 +53,14 @@ class ContentStudioWebAppView(TemplateView):
         # setups only; production installs never see it.
         context["debug"] = settings.DEBUG
         context["devtools"] = devtools.is_enabled()
+        # The editor's language (content_studio.languages picked it) and
+        # the ones the language picker offers.
+        language = get_language()
+        context["language"] = get_locale(language)
+        context["languages"] = [
+            {"code": code, "locale": get_locale(code), "name": LANGUAGES[code]}
+            for code in get_enabled_languages()
+        ]
         return context
 
 
@@ -318,6 +332,35 @@ class AdminApiViewSet(ViewSet):
         devtools.run_system_checks()
 
         return Response(status=204)
+
+    @action(methods=["post"], detail=False, url_path="language")
+    def set_language(self, request):
+        """
+        Sets the editor's language: Django's language cookie, which
+        content_studio.languages reads first. The page reloads after it.
+        """
+
+        language = match_language(
+            str(request.data.get("language") or ""), get_enabled_languages()
+        )
+
+        if not language:
+            return Response(
+                {"language": [_("This language is not available.")]}, status=400
+            )
+
+        response = Response({"language": language})
+        response.set_cookie(
+            settings.LANGUAGE_COOKIE_NAME,
+            language,
+            max_age=settings.LANGUAGE_COOKIE_AGE,
+            path=settings.LANGUAGE_COOKIE_PATH,
+            domain=settings.LANGUAGE_COOKIE_DOMAIN,
+            secure=settings.LANGUAGE_COOKIE_SECURE,
+            httponly=settings.LANGUAGE_COOKIE_HTTPONLY,
+            samesite=settings.LANGUAGE_COOKIE_SAMESITE,
+        )
+        return response
 
     @action(methods=["get"], detail=False, url_path="me")
     def me(self, request):
