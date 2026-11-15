@@ -112,7 +112,15 @@
     "unique_set_warning_hint": "Saving will fail unless you change one of them.",
     "unsaved_changes": "Unsaved changes",
     "duplicate": "Duplicate",
-    "duplicate_notice": "A copy of \"{{object}}\". Nothing is saved until you create it."
+    "duplicate_notice": "A copy of \"{{object}}\". Nothing is saved until you create it.",
+    "save_options": "More save options",
+    "save_and_add_another": "Save and add another",
+    "create_and_add_another": "Create and add another",
+    "save_and_close": "Save and close",
+    "create_and_close": "Create and close",
+    "saved": "\"{{object}}\" was saved.",
+    "created": "\"{{object}}\" was created.",
+    "open": "Open"
   },
   "list_view": {
     "table_view": "Table view",

@@ -74,6 +74,14 @@
 
 ### Features
 
+- **Save and add another, and a save shortcut.** The edit page's Save
+  button has a menu with "Save and add another", which opens an empty
+  create form, and "Save and close", which goes back to the list, like the
+  classic Django admin's buttons. Save itself still keeps you on the
+  object. A message says what was saved, with a link to open it. Save and
+  add another needs add permission; singletons and dialogs keep a single
+  Save button. ⌘S on macOS, or Ctrl S elsewhere, saves from anywhere in the
+  form, also inside a dialog, instead of opening the browser's "Save page".
 - **Two-factor login.** The new `content_studio.contrib.two_factor` app
   asks for a six-digit code from an authenticator app after the password.
   Editors turn it on from their profile page by scanning a QR code, and

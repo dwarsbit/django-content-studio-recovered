@@ -35,6 +35,7 @@ import type {
 
 import { Conditional } from "./conditional";
 import { ComponentRenderer } from "./form-field";
+import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
 
 export function Header({
@@ -47,6 +48,7 @@ export function Header({
   readOnly = false,
   canDelete = true,
   presence = [],
+  saveOptions = {},
   onDuplicate,
   onSave,
   onDelete,
@@ -64,13 +66,15 @@ export function Header({
   canDelete?: boolean;
   // The other users who have the object open.
   presence?: PresenceUser[];
+  // The Save menu's options: save and add another, save and close.
+  saveOptions?: { addAnother?: boolean; close?: boolean };
   // Offers Duplicate in the more actions menu.
   onDuplicate?: VoidFunction;
   // Whether the editor renders inside a Dialog: the title then is a
   // DialogTitle and the close button confirms unsaved changes itself;
   // routed editors rely on the navigation guard instead.
   dialog?: boolean;
-  onSave(): Promise<void>;
+  onSave(mode?: SaveMode): Promise<void>;
   onDelete?: VoidFunction;
   onClose?: VoidFunction;
 }) {
@@ -394,23 +398,19 @@ export function Header({
                     </DropdownMenu>
                   )}
                 {!readOnly && (
-                  <Button
-                    className="min-w-20"
-                    onClick={async () => {
+                  <SaveButton
+                    create={isCreate && !isSingleton}
+                    isSaving={isSaving}
+                    addAnother={saveOptions.addAnother}
+                    close={saveOptions.close}
+                    onSave={async (mode) => {
                       try {
-                        await onSave();
+                        await onSave(mode);
                       } catch {
                         // Errors are already surfaced by the save flow.
                       }
                     }}
-                    isLoading={isSaving}
-                  >
-                    {t(
-                      isCreate && !isSingleton
-                        ? "common.create"
-                        : "common.save",
-                    )}
-                  </Button>
+                  />
                 )}
               </>
             }

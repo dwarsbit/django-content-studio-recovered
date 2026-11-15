@@ -41,7 +41,7 @@ test("edits code and key-value fields, refusing invalid input", async ({
     .last()
     .fill("again");
 
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText(/is used more than once/)).toBeVisible();
   expect(saves).toHaveLength(0);
 
@@ -52,7 +52,7 @@ test("edits code and key-value fields, refusing invalid input", async ({
     (response) =>
       ["PUT", "POST"].includes(response.request().method()) && response.ok(),
   );
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   await saved;
 
   await page.reload();

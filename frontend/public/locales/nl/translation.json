@@ -112,7 +112,15 @@
     "unique_set_warning_hint": "Opslaan mislukt tenzij je een ervan wijzigt.",
     "unsaved_changes": "Niet-opgeslagen wijzigingen",
     "duplicate": "Dupliceren",
-    "duplicate_notice": "Een kopie van \"{{object}}\". Er wordt niets opgeslagen totdat je het aanmaakt."
+    "duplicate_notice": "Een kopie van \"{{object}}\". Er wordt niets opgeslagen totdat je het aanmaakt.",
+    "save_options": "Meer opslagopties",
+    "save_and_add_another": "Opslaan en nieuwe toevoegen",
+    "create_and_add_another": "Aanmaken en nieuwe toevoegen",
+    "save_and_close": "Opslaan en sluiten",
+    "create_and_close": "Aanmaken en sluiten",
+    "saved": "\"{{object}}\" is opgeslagen.",
+    "created": "\"{{object}}\" is aangemaakt.",
+    "open": "Openen"
   },
   "list_view": {
     "table_view": "Tabelweergave",
