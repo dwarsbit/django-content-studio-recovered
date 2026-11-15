@@ -30,10 +30,12 @@ export function fieldNames(
   entries: (FormField | FormLayout | FormSet)[],
 ): string[] {
   return entries.flatMap((entry) => {
-    if ("fields" in entry) {
-      return fieldNames(entry.fields);
+    // Form fields and components have a type (a Button's own fields
+    // belong to its dialog); layouts and form sets hold fields.
+    if ("type" in entry) {
+      return entry.type === "field" ? [entry.name] : [];
     }
 
-    return entry.type === "field" ? [entry.name] : [];
+    return fieldNames(entry.fields);
   });
 }

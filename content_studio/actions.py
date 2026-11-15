@@ -18,6 +18,7 @@ from django.utils import timezone
 from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 
+from .action_forms import ActionForm, get_action_form
 from .signals import DELETED, record_change
 from ._types import StrOrPromise
 
@@ -30,6 +31,12 @@ DELETE_ACTION_ID = "delete"
 
 # The id of the built-in export action.
 EXPORT_ACTION_ID = "export"
+
+# The id of the built-in duplicate row action.
+DUPLICATE_ACTION_ID = "duplicate"
+
+# The row actions a studio offers unless it lists its own.
+DEFAULT_ROW_ACTIONS = (DUPLICATE_ACTION_ID, DELETE_ACTION_ID)
 
 # The permission names an action may list in allowed_permissions,
 # mirroring the classic admin.
@@ -45,6 +52,9 @@ class BulkActionMeta:
     confirm: Optional[StrOrPromise]
     allowed_permissions: tuple[str, ...]
     destructive: bool
+    # The inputs the action asks for before it runs: field names and
+    # Field objects. Empty: it runs right away (after the confirm).
+    fields: tuple = ()
 
 
 def bulk_action(
@@ -53,6 +63,7 @@ def bulk_action(
     confirm=None,
     allowed_permissions=None,
     destructive=False,
+    fields=None,
 ):
     """
     Declare a bulk action on a ModelStudio method. The method receives
@@ -68,6 +79,15 @@ def bulk_action(
     it lists; by default the action needs change permission. An empty
     list opens it to anyone who can see the list. destructive marks
     actions that cannot be undone.
+
+    fields makes the action ask for values in a dialog first: names of
+    model fields, and Field(name, form_field=forms.CharField()) for
+    inputs that are not on the model. The method then also receives
+    the validated values:
+
+        @bulk_action(label="Assign", fields=["author"])
+        def assign(self, request, queryset, data):
+            queryset.update(author=data["author"])
     """
 
     def decorator(func):
@@ -81,6 +101,7 @@ def bulk_action(
                 else tuple(allowed_permissions)
             ),
             destructive=destructive,
+            fields=tuple(fields or ()),
         )
         return func
 
@@ -101,6 +122,8 @@ class BulkAction:
     id: str
     handler: Callable
     meta: BulkActionMeta
+    # The dialog's inputs, when the action declares fields.
+    form: Optional[ActionForm] = None
 
     @property
     def label(self):
@@ -125,7 +148,17 @@ class BulkAction:
         if self.formats is not None:
             data["formats"] = list(self.formats)
 
+        if self.form is not None:
+            data["fields"] = self.form.serialize()
+
         return data
+
+    def run(self, request, queryset, data=None):
+        """Run the handler; an action with fields also gets the values."""
+        if self.form is not None:
+            return self.handler(request, queryset, data or {})
+
+        return self.handler(request, queryset)
 
 
 def _delete_action(studio):
@@ -198,6 +231,34 @@ _EXPORT_META = BulkActionMeta(
     icon="ph-bold ph-download-simple",
     confirm=None,
     allowed_permissions=("view",),
+    destructive=False,
+)
+
+
+_ROW_DELETE_META = BulkActionMeta(
+    label=_DELETE_META.label,
+    icon=_DELETE_META.icon,
+    confirm=_("Are you sure you want to delete this item?"),
+    allowed_permissions=("delete",),
+    destructive=True,
+)
+
+_ROW_SOFT_DELETE_META = BulkActionMeta(
+    label=_DELETE_META.label,
+    icon=_DELETE_META.icon,
+    confirm=_(
+        "The item will be moved to the trash, where it can be restored. "
+        "Are you sure you want to delete it?"
+    ),
+    allowed_permissions=("delete",),
+    destructive=False,
+)
+
+_DUPLICATE_META = BulkActionMeta(
+    label=_("Duplicate"),
+    icon="ph-bold ph-copy",
+    confirm=None,
+    allowed_permissions=("add",),
     destructive=False,
 )
 
@@ -276,18 +337,7 @@ def get_bulk_actions(studio, request=None) -> list[BulkAction]:
                 formats=tuple(get_export_formats()),
             )
         elif name == DELETE_ACTION_ID:
-            # The built-in delete honors a configured soft_delete: it
-            # moves the selection to the trash instead of removing it.
-            if getattr(studio, "soft_delete", ""):
-                action = BulkAction(
-                    id=name,
-                    handler=_soft_delete_action(studio.soft_delete),
-                    meta=_SOFT_DELETE_META,
-                )
-            else:
-                action = BulkAction(
-                    id=name, handler=_delete_action(studio), meta=_DELETE_META
-                )
+            action = _builtin_delete(studio)
         else:
             handler = declared.get(name)
 
@@ -295,12 +345,94 @@ def get_bulk_actions(studio, request=None) -> list[BulkAction]:
             if handler is None:
                 continue
 
-            action = BulkAction(id=name, handler=handler, meta=handler.bulk_action)
+            action = _declared_action(studio, name, handler)
 
         if request is None or _allowed(studio, request, action.meta):
             actions.append(action)
 
     return actions
+
+
+def _builtin_delete(studio) -> BulkAction:
+    """The built-in delete. It honors a configured soft_delete: it moves
+    the selection to the trash instead of removing it."""
+    if getattr(studio, "soft_delete", ""):
+        return BulkAction(
+            id=DELETE_ACTION_ID,
+            handler=_soft_delete_action(studio.soft_delete),
+            meta=_SOFT_DELETE_META,
+        )
+
+    return BulkAction(
+        id=DELETE_ACTION_ID, handler=_delete_action(studio), meta=_DELETE_META
+    )
+
+
+def get_row_actions(studio, request=None) -> list[BulkAction]:
+    """
+    The actions each row of the list offers in its menu, in the
+    configured order: they run on that one object.
+
+    The studio's row_actions attribute selects them by name, like
+    actions does for the bulk bar: None (the default) offers the
+    built-in duplicate and delete, an empty list none, and an explicit
+    list exactly those names ("duplicate" and "delete" naming the
+    built-ins, other names @bulk_action methods). Actions the user lacks
+    permission for are left out. The duplicate has no handler: it opens
+    the create form with a copy.
+    """
+    from .admin import is_duplicable
+
+    declared = declared_bulk_actions(studio)
+    names = getattr(studio, "row_actions", None)
+
+    if names is None:
+        names = DEFAULT_ROW_ACTIONS
+
+    actions = []
+
+    for name in names:
+        if name == DUPLICATE_ACTION_ID:
+            if not is_duplicable(studio):
+                continue
+
+            action = BulkAction(id=name, handler=None, meta=_DUPLICATE_META)
+        elif name == DELETE_ACTION_ID:
+            delete = _builtin_delete(studio)
+            # Asked about the one row, not a selection.
+            action = BulkAction(
+                id=name,
+                handler=delete.handler,
+                meta=(
+                    _ROW_SOFT_DELETE_META
+                    if delete.meta is _SOFT_DELETE_META
+                    else _ROW_DELETE_META
+                ),
+            )
+        else:
+            handler = declared.get(name)
+
+            # Unresolvable names are reported by the system checks.
+            if handler is None:
+                continue
+
+            action = _declared_action(studio, name, handler)
+
+        if request is None or _allowed(studio, request, action.meta):
+            actions.append(action)
+
+    return actions
+
+
+def _declared_action(studio, name, handler) -> BulkAction:
+    meta = handler.bulk_action
+
+    return BulkAction(
+        id=name,
+        handler=handler,
+        meta=meta,
+        form=get_action_form(studio.model, meta.fields),
+    )
 
 
 def _allowed(studio, request, meta: BulkActionMeta, obj=None) -> bool:

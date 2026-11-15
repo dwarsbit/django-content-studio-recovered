@@ -4,15 +4,17 @@ import { PiImage } from "react-icons/pi";
 import { useNavigate } from "react-router";
 
 import { PresenceIndicator } from "@/components/presence";
-import { MoveMenu, Reorderable, RowDragHandle } from "@/components/reorderable";
+import { Reorderable, RowDragHandle } from "@/components/reorderable";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useReorderableRow } from "@/hooks/use-reorderable-row";
+import { useRunAction } from "@/hooks/use-run-action";
 import { getEdges } from "@/lib/reorder";
 import { cn } from "@/lib/utils";
-import type { Model, PresenceUser, Resource } from "@/types";
+import type { BulkAction, Model, PresenceUser, Resource } from "@/types";
 
 import { ListEmptyState } from "./empty-state";
+import { RowMenu } from "./row-menu";
 import type { ReorderProps } from "./table-view";
 
 /**
@@ -48,6 +50,10 @@ export function ListView({
   // Once one item has a thumbnail, every row reserves the slot, so the
   // titles stay aligned and items without one show a placeholder.
   const thumbnails = items.some((item) => !!item.list_item_display?.thumbnail);
+  const rowActions = model.admin.list.row_actions ?? [];
+  const { runAction, dialog } = useRunAction(model);
+  const onRunAction = (action: BulkAction, id: string, name?: string) =>
+    runAction(action, [id], { name });
 
   return (
     <div className="w-full flex-1 border rounded-lg overflow-hidden">
@@ -73,6 +79,8 @@ export function ListView({
               onToggle={onToggle}
               presence={presence?.[String(item.id)]}
               thumbnails={thumbnails}
+              rowActions={rowActions}
+              onRunAction={onRunAction}
             />
           ))}
         </Reorderable>
@@ -86,9 +94,12 @@ export function ListView({
             onToggle={onToggle}
             presence={presence?.[String(item.id)]}
             thumbnails={thumbnails}
+            rowActions={rowActions}
+            onRunAction={onRunAction}
           />
         ))
       )}
+      {dialog}
     </div>
   );
 }
@@ -116,6 +127,8 @@ function ListViewRow({
   edges,
   presence,
   thumbnails,
+  rowActions,
+  onRunAction,
 }: {
   item: Resource;
   model: Model;
@@ -129,6 +142,8 @@ function ListViewRow({
   presence?: PresenceUser[];
   // Whether the rows reserve the thumbnail slot.
   thumbnails?: boolean;
+  rowActions: BulkAction[];
+  onRunAction(action: BulkAction, id: string, name?: string): void;
 }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -190,11 +205,20 @@ function ListViewRow({
           {display.meta}
         </Badge>
       ) : null}
-      {reorder && (
-        <MoveMenu
-          disabledReason={reorder.disabledReason}
-          onMove={(move) => reorder.onMove(item.id, move)}
-          {...edges}
+      {(reorder || rowActions.length > 0) && (
+        <RowMenu
+          model={model}
+          id={item.id}
+          name={item.__str__}
+          actions={rowActions}
+          onRunAction={onRunAction}
+          move={
+            reorder && {
+              disabledReason: reorder.disabledReason,
+              onMove: (move) => reorder.onMove(item.id, move),
+              ...edges,
+            }
+          }
         />
       )}
     </div>

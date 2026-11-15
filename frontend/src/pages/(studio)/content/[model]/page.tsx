@@ -484,7 +484,7 @@ export function ModelListPage() {
 
       {selected.size > 0 && actions.length > 0 && (
         <ContentBulkBar
-          modelLabel={model.label}
+          model={model}
           actions={actions}
           ids={Array.from(selected)}
           ordering={effectiveOrdering}

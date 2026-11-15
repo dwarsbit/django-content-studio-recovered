@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.request import HttpRequest
 
 from . import widgets, formats, fields, blocks
-from .actions import get_bulk_actions
+from .actions import get_bulk_actions, get_row_actions
 from .exceptions import AlreadyRegistered, NotRegistered
 from .export import get_export_formats, is_exportable
 from .importing import serialize_import
@@ -392,6 +392,13 @@ class ModelStudio(BaseStudio[T]):
     # empty list disables bulk actions entirely, and an explicit list
     # offers exactly those names (with "delete" naming the built-in).
     actions: Optional[list[str]] = None
+
+    # The actions in each list row's menu, run on that one object: None
+    # (the default) offers the built-in duplicate (when allow_duplication
+    # is on) and delete, an empty list removes the menu, and an explicit
+    # list offers exactly those names ("duplicate" and "delete" naming
+    # the built-ins, other names @bulk_action methods).
+    row_actions: Optional[list[str]] = None
 
     # The columns that may be sorted on; None allows all.
     sortable_by: Optional[list[str]] = None
@@ -1606,6 +1613,10 @@ class AdminSerializer:
                 "actions": [
                     action.serialize()
                     for action in get_bulk_actions(admin_class, request)
+                ],
+                "row_actions": [
+                    action.serialize()
+                    for action in get_row_actions(admin_class, request)
                 ],
             },
             "permissions": serialize_permissions(admin_class, request),

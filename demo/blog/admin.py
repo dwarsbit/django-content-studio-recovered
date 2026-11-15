@@ -4,6 +4,7 @@ Content Studio registration for the demo project — the documented pattern:
 configured in CONTENT_STUDIO (demo.blog.studio.admin_site).
 """
 
+from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
 from django.db.models.functions import Now
@@ -183,6 +184,10 @@ class ArticleStudio(ModelStudio):
         "published_at",
     ]
     import_lookups = {"author": "username", "categories": "name"}
+    # Each row's menu: publish or assign that one article, duplicate it,
+    # or move it to the trash.
+    row_actions = ["publish", "assign", "duplicate", "delete"]
+    allow_duplication = True
     search_fields = ["title"]
     inlines = [ReviewInline]
     # The slug follows the title while an article is created.
@@ -257,6 +262,47 @@ class ArticleStudio(ModelStudio):
     def publish(self, request, queryset):
         queryset.update(status=models.Article.Status.PUBLISHED)
         return f"Published {queryset.count()} articles."
+
+    # An action with an input form: the dialog asks for an author (a
+    # model field, with the edit form's picker) and an optional note,
+    # and offers to email the author once a note is written.
+    @bulk_action(
+        label="Assign",
+        icon="ph-bold ph-user-switch",
+        fields=[
+            "author",
+            Field(
+                "note",
+                form_field=forms.CharField(
+                    label="Note for the author",
+                    required=False,
+                    widget=forms.Textarea,
+                ),
+            ),
+            Field(
+                "notify",
+                form_field=forms.BooleanField(
+                    label="Email the note to the author", required=False
+                ),
+                when=~Q(note=""),
+            ),
+        ],
+    )
+    def assign(self, request, queryset, data):
+        count = queryset.update(author=data["author"])
+        return f"Assigned {count} articles to {data['author'] or 'nobody'}."
+
+    @bulk_action(
+        label="Set status",
+        icon="ph-bold ph-flag",
+        fields=["status", Field("published_at", when=Q(status="published"))],
+    )
+    def set_status(self, request, queryset, data):
+        values = {"status": data["status"]}
+        if "published_at" in data:
+            values["published_at"] = data["published_at"]
+        count = queryset.update(**values)
+        return f"Updated {count} articles."
 
 
 @register(models.SiteSettings)
