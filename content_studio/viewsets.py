@@ -28,7 +28,7 @@ from .actions import (
     EXPORT_ACTION_ID,
     check_object_permissions,
     get_bulk_actions,
-    get_row_actions,
+    get_single_object_actions,
 )
 from .admin import get_relation_display_for, is_duplicable
 from .dashboard.activity_log import LogEntrySerializer
@@ -1163,14 +1163,16 @@ class BaseModelViewSet(ModelViewSet):
         }
         action = actions.get(action_id)
 
-        # A row action runs here too, on its one row. The duplicate has
-        # no handler: it opens the create form.
+        # A row action or an edit page action runs here too, on its one
+        # object.
         if action is None and len(ids) == 1:
             action = next(
                 (
                     action
-                    for action in get_row_actions(self._admin_model, request)
-                    if action.id == action_id and action.handler is not None
+                    for action in get_single_object_actions(
+                        self._admin_model, request
+                    )
+                    if action.id == action_id
                 ),
                 None,
             )

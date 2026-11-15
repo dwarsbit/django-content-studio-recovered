@@ -167,6 +167,8 @@ export interface Model {
       row_actions?: BulkAction[];
     };
     edit: {
+      // The studio's edit_actions, in the more actions menu.
+      actions?: BulkAction[];
       // Components in the edit page's header, next to the save button.
       header?: FormField[];
       main: FormSetGroup[];

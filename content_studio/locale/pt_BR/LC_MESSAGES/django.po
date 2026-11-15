@@ -28,6 +28,26 @@ msgstr ""
 "Os itens selecionados serão movidos para a lixeira, de onde podem ser "
 "restaurados. Tem certeza de que deseja excluí-los?"
 
+#: actions.py
+msgid "Are you sure you want to delete this item?"
+msgstr "Tem certeza de que deseja excluir este item?"
+
+#: actions.py
+msgid ""
+"The item will be moved to the trash, where it can be restored. Are you sure "
+"you want to delete it?"
+msgstr ""
+"O item será movido para a lixeira, de onde pode ser restaurado. Tem "
+"certeza de que deseja excluí-lo?"
+
+#: actions.py
+msgid "Duplicate"
+msgstr "Duplicar"
+
+#: action_forms.py
+msgid "This field is required."
+msgstr "Este campo é obrigatório."
+
 #: actions.py:197
 msgid "Export"
 msgstr "Exportar"

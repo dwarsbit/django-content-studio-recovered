@@ -10,12 +10,16 @@ import { ComponentButton } from "@/components/form-components/button";
 import { Form } from "@/components/ui/form";
 import { ValueDialogProvider } from "@/components/value-dialog-provider";
 import type { FormField, Model } from "@/types";
+import { FieldType } from "@/types";
 
 const httpMock = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }));
 const toastMock = vi.hoisted(() => ({ success: vi.fn(), error: vi.fn() }));
 
 vi.mock("@/hooks/use-http", () => ({ useHttp: () => httpMock }));
 vi.mock("sonner", () => ({ toast: toastMock }));
+vi.mock("@/hooks/use-admin-info", () => ({
+  useAdminInfo: () => ({ data: undefined }),
+}));
 vi.mock("react-i18next", () => ({
   useTranslation: () => ({ t: (key: string) => key }),
 }));
@@ -188,5 +192,79 @@ describe("Button component", () => {
     );
 
     await waitFor(() => expect(toastMock.error).toHaveBeenCalled());
+  });
+});
+
+describe("Button component with fields", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    httpMock.get.mockResolvedValue({ data: { visible: true } });
+  });
+
+  function PrefilledHarness({ children }: { children: ReactNode }) {
+    const form = useForm({ defaultValues: { id: "abc-123", title: "Old" } });
+
+    return <Form {...form}>{children}</Form>;
+  }
+
+  it("asks for its values, starting from the object's, and sends them", async () => {
+    httpMock.post.mockResolvedValue({
+      data: { message: "Done.", value: null },
+    });
+    const user = userEvent.setup();
+    const formField = makeButton({
+      label: "Rename",
+      confirm: "Rename the article.",
+      fields: [
+        {
+          type: "field",
+          name: "title",
+          label: null,
+          readonly: false,
+          col_span: 1,
+          widget: null,
+          component_id: "",
+          component_type: "Button",
+          copy: false,
+          icon: "",
+          input: { type: FieldType.CharField, verbose_name: "Title" },
+        },
+      ],
+    });
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <ConfirmDialogProvider>
+          <ValueDialogProvider>
+            <PrefilledHarness>
+              <ComponentButton model={model} formField={formField} />
+            </PrefilledHarness>
+          </ValueDialogProvider>
+        </ConfirmDialogProvider>
+      </QueryClientProvider>,
+    );
+
+    await user.click(await screen.findByRole("button", { name: "Rename" }));
+
+    // The confirm text describes the dialog instead of a separate confirm.
+    expect(await screen.findByText("Rename the article.")).toBeInTheDocument();
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveValue("Old");
+
+    await user.clear(input);
+    await user.type(input, "New");
+    await user.click(screen.getAllByRole("button", { name: "Rename" }).at(-1)!);
+
+    await waitFor(() =>
+      expect(httpMock.post).toHaveBeenCalledWith(`${STATE}/run`, {
+        data: { title: "New" },
+      }),
+    );
+    await waitFor(() =>
+      expect(toastMock.success).toHaveBeenCalledWith("Done."),
+    );
   });
 });

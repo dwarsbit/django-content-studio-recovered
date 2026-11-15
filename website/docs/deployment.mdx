@@ -103,7 +103,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E004` | Two dashboard widgets with the same ID, on the start page and the [dashboard pages](/docs/extensions#dashboardpage) together. Pass a `widget_id` to tell them apart. |
 | `content_studio.E005` | Two components with the same ID on one studio, or on an inline and the inlined model's own studio. Pass a `component_id` to tell them apart; the same component class may serve several studios. |
 | `content_studio.E006` | `table_display` entries that are not field names or `TableColumn` objects, duplicate columns, columns that are not a model field, a model property, `__str__` or a studio method, and formats that are not `content_studio.formats` classes or instances. Inlines are checked too. |
-| `content_studio.E007` | Bulk actions: an `actions` list with unknown or duplicate names, a `@bulk_action` that replaces the built-in delete or export, `"export"` in `actions` without export, or an unknown permission. |
+| `content_studio.E007` | Bulk actions: an `actions`, `row_actions` or `edit_actions` list with unknown or duplicate names, a `@bulk_action` that replaces the built-in delete, export or duplicate, `"export"` in `actions` without export, or an unknown permission. |
 | `content_studio.E008` | `soft_delete` naming an unknown field, or a field that is not a nullable date or date and time. |
 | `content_studio.E009` | A `FOCAL_POINT_ATTR` setting, which is removed: the focal point is one of a media item's [properties](/docs/media-library#properties). |
 | `content_studio.E010` | Edit page fields that are not model fields or properties, which would show as empty read-only boxes, and `Field(widget=...)` values that are not `content_studio.widgets` classes or instances. |
@@ -147,6 +147,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E048` | Import: an `import_fields` that is not a list of fields the edit page writes (or names one twice), an `import_id_fields` entry that is not a concrete field or, other than the primary key, not an import field, or an `import_lookups` entry that is not a relation or names no field of the related model. |
 | `content_studio.E049` | A [`DEVTOOLS`](/docs/settings#devtools) that is not `True` or `False`, or a [`DEVTOOLS_LOGGERS`](/docs/settings#devtools_loggers) that is not a list of logger names. |
 | `content_studio.E050` | A [backup](/docs/backups#settings) setting that cannot work: `BACKUP_STORAGE` not in `STORAGES`, an alias in `BACKUP_DATABASES` not in `DATABASES`, a `BACKUP_SCHEDULE` that is not a cron expression, a `BACKUP_KEEP` below 1, or an unknown app or model in `BACKUP_EXCLUDE`. |
+| `content_studio.E051` | The [`fields`](/docs/list-page#asking-for-values-first) of a `@bulk_action` or `Button`: a name that is not a model field and has no `form_field`, a field that cannot be edited or is excluded, a `form_field` the dialog cannot show, a condition that reads another field or uses a `Condition`, or a method without the `data` argument. |
 
 ### Warnings
 

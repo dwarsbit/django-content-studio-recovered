@@ -10,6 +10,7 @@ from importlib import import_module
 from django.apps import apps
 from django.conf import settings
 from django.contrib.auth import get_user_model
+from django import forms
 from django.core import checks
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models
@@ -18,6 +19,7 @@ from . import formats, widgets
 from .actions import (
     BULK_ACTION_PERMISSIONS,
     DELETE_ACTION_ID,
+    DUPLICATE_ACTION_ID,
     EXPORT_ACTION_ID,
     declared_bulk_actions,
 )
@@ -38,6 +40,7 @@ from .extensions import DashboardPage
 from .conditions import referenced_fields
 from .form import (
     BaseText,
+    Button,
     Component,
     Field,
     FieldLayout,
@@ -378,7 +381,205 @@ def bulk_action_errors(studio) -> list[tuple[str, str]]:
                 )
             )
 
+    errors.extend(_action_list_errors(studio, declared))
+
     return errors
+
+
+def _action_list_errors(studio, declared) -> list[tuple[str, str]]:
+    """
+    An explicit row_actions list must name the built-in duplicate or
+    delete, or a declared @bulk_action method; edit_actions only
+    declared methods (the edit page has its own duplicate and delete).
+    Each name only once; a declared action may not shadow the built-in
+    duplicate.
+    """
+    errors = []
+    name = studio.__class__.__name__
+
+    if DUPLICATE_ACTION_ID in declared:
+        errors.append(
+            (
+                "content_studio.E007",
+                f"{name}.bulk action {DUPLICATE_ACTION_ID!r} shadows the "
+                "built-in duplicate row action; give it another name.",
+            )
+        )
+
+    for attribute, builtins in (
+        ("row_actions", (DELETE_ACTION_ID, DUPLICATE_ACTION_ID)),
+        ("edit_actions", ()),
+    ):
+        names = getattr(studio, attribute, None)
+
+        if names is None:
+            continue
+
+        seen = set()
+
+        for action in names:
+            if action not in builtins and action not in declared:
+                errors.append(
+                    (
+                        "content_studio.E007",
+                        f"{name}.{attribute} contains {action!r}, which is not "
+                        "a @bulk_action method"
+                        + (
+                            " (or the built-in duplicate or delete)."
+                            if builtins
+                            else "."
+                        ),
+                    )
+                )
+
+            if action in seen:
+                errors.append(
+                    (
+                        "content_studio.E007",
+                        f"{name}.{attribute} contains {action!r} more than once.",
+                    )
+                )
+            seen.add(action)
+
+    return errors
+
+
+def action_form_errors(studio) -> list[tuple[str, str]]:
+    """
+    Misconfigured action dialogs, as (check id, message) pairs: the
+    fields of @bulk_action methods and of Buttons on the edit page.
+    """
+    from .action_forms import get_form_field_type
+    from .conditions import iter_conditions
+
+    model = getattr(studio, "model", None)
+
+    if model is None:
+        return []
+
+    owners = [
+        (f"bulk action {name!r}", handler.bulk_action.fields, handler)
+        for name, handler in declared_bulk_actions(studio).items()
+    ] + [
+        (f"Button {component.label!r}", component.fields, component.handle)
+        for component in iter_components(studio)
+        if isinstance(component, Button)
+    ]
+
+    errors = []
+    excluded = set(getattr(studio, "exclude", None) or [])
+
+    def error(owner, message):
+        errors.append(
+            ("content_studio.E051", f"{config_name(studio)}: {owner} {message}")
+        )
+
+    for owner, fields, handler in owners:
+        if not fields:
+            continue
+
+        entries = []
+
+        for entry in fields:
+            if isinstance(entry, str):
+                entry = Field(entry)
+
+            if not isinstance(entry, Field):
+                error(owner, f"has {entry!r} in fields: use names or Field objects.")
+                continue
+
+            entries.append(entry)
+
+            if entry.form_field is not None:
+                if not isinstance(entry.form_field, forms.Field):
+                    error(
+                        owner,
+                        f"gives Field({entry.name!r}) a form_field that is not "
+                        "a Django form field.",
+                    )
+                elif get_form_field_type(entry.form_field) is None:
+                    error(
+                        owner,
+                        f"gives Field({entry.name!r}) a "
+                        f"{entry.form_field.__class__.__name__}, which the "
+                        "dialog cannot show.",
+                    )
+                continue
+
+            try:
+                model_field = model._meta.get_field(entry.name)
+            except FieldDoesNotExist:
+                model_field = None
+
+            if model_field is None or not getattr(model_field, "concrete", False):
+                error(
+                    owner,
+                    f"has {entry.name!r} in fields, which is not a field of "
+                    f"{model._meta.label_lower}; give it a form_field.",
+                )
+            elif (
+                not model_field.editable
+                or model_field.primary_key
+                or entry.name in excluded
+            ):
+                error(
+                    owner,
+                    f"has {entry.name!r} in fields, which is not editable or "
+                    "is excluded, so the dialog cannot set it.",
+                )
+
+        names = [entry.name for entry in entries]
+
+        if len(set(names)) != len(names):
+            error(owner, "lists a field more than once.")
+
+        for entry in entries:
+            if entry.when is None:
+                continue
+
+            if any(iter_conditions(entry.when)):
+                error(
+                    owner,
+                    f"uses a Condition in the when= of Field({entry.name!r}); "
+                    "action dialogs take Q objects only.",
+                )
+
+            for name in referenced_fields(entry.when):
+                if name not in names:
+                    error(
+                        owner,
+                        f"has a condition on Field({entry.name!r}) that reads "
+                        f"{name!r}, which is not one of its fields.",
+                    )
+
+        if not _takes_data(handler):
+            error(
+                owner,
+                "has fields, so its handler receives their values as an extra "
+                "argument (data); add it.",
+            )
+
+    return errors
+
+
+def _takes_data(handler) -> bool:
+    """Whether a bound handler takes three arguments: (request,
+    queryset, data) or (obj, request, data)."""
+    import inspect
+
+    try:
+        parameters = list(inspect.signature(handler).parameters.values())
+    except (TypeError, ValueError):
+        return True
+
+    if any(p.kind == p.VAR_POSITIONAL for p in parameters):
+        return True
+
+    positional = [
+        p for p in parameters if p.kind in (p.POSITIONAL_ONLY, p.POSITIONAL_OR_KEYWORD)
+    ]
+
+    return len(positional) >= 3
 
 
 def list_config_errors(studio) -> list[tuple[str, str]]:
@@ -3620,6 +3821,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in bulk_action_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        for check_id, error in action_form_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in soft_delete_errors(studio):

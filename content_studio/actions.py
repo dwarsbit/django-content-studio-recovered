@@ -424,6 +424,43 @@ def get_row_actions(studio, request=None) -> list[BulkAction]:
     return actions
 
 
+def get_edit_actions(studio, request=None) -> list[BulkAction]:
+    """
+    The actions the edit page's more actions menu offers on the object,
+    in the configured order: the @bulk_action methods the studio's
+    edit_actions attribute names. None (the default) and an empty list
+    offer none; the edit page has its own duplicate and delete. Actions
+    the user lacks permission for are left out.
+    """
+    declared = declared_bulk_actions(studio)
+    actions = []
+
+    for name in getattr(studio, "edit_actions", None) or []:
+        handler = declared.get(name)
+
+        # Unresolvable names are reported by the system checks.
+        if handler is None:
+            continue
+
+        action = _declared_action(studio, name, handler)
+
+        if request is None or _allowed(studio, request, action.meta):
+            actions.append(action)
+
+    return actions
+
+
+def get_single_object_actions(studio, request=None) -> list[BulkAction]:
+    """The actions that run on one object: the row actions and the edit
+    page's actions, without the duplicate, which runs no handler."""
+    return [
+        action
+        for action in get_row_actions(studio, request)
+        + get_edit_actions(studio, request)
+        if action.handler is not None
+    ]
+
+
 def _declared_action(studio, name, handler) -> BulkAction:
     meta = handler.bulk_action
 

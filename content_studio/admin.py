@@ -10,7 +10,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework.request import HttpRequest
 
 from . import widgets, formats, fields, blocks
-from .actions import get_bulk_actions, get_row_actions
+from .actions import get_bulk_actions, get_edit_actions, get_row_actions
 from .exceptions import AlreadyRegistered, NotRegistered
 from .export import get_export_formats, is_exportable
 from .importing import serialize_import
@@ -399,6 +399,10 @@ class ModelStudio(BaseStudio[T]):
     # list offers exactly those names ("duplicate" and "delete" naming
     # the built-ins, other names @bulk_action methods).
     row_actions: Optional[list[str]] = None
+
+    # The @bulk_action methods the edit page's more actions menu offers,
+    # run on the object being edited. None (the default) offers none.
+    edit_actions: Optional[list[str]] = None
 
     # The columns that may be sorted on; None allows all.
     sortable_by: Optional[list[str]] = None
@@ -1311,6 +1315,10 @@ def iter_conditions(studio):
         for child in getattr(entry, "formsets", None) or []:
             yield from visit(child)
 
+        # A Button's fields belong to its dialog, not to the edit page.
+        if isinstance(entry, Component):
+            return
+
         for child in getattr(entry, "fields", None) or []:
             yield from visit(child)
 
@@ -1552,6 +1560,11 @@ class AdminSerializer:
                 # Whether the edit page offers Duplicate; it also needs
                 # add permission.
                 "duplicate": is_duplicable(admin_class),
+                # The studio's edit_actions, in the more actions menu.
+                "actions": [
+                    action.serialize()
+                    for action in get_edit_actions(admin_class, request)
+                ],
                 "width": admin_class.edit_width,
                 "inlines": [
                     {

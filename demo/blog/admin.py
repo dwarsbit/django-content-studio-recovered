@@ -187,6 +187,8 @@ class ArticleStudio(ModelStudio):
     # Each row's menu: publish or assign that one article, duplicate it,
     # or move it to the trash.
     row_actions = ["publish", "assign", "duplicate", "delete"]
+    # The edit page's more actions menu offers these on the article.
+    edit_actions = ["assign", "set_status"]
     allow_duplication = True
     search_fields = ["title"]
     inlines = [ReviewInline]

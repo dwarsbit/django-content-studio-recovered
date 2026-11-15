@@ -704,6 +704,40 @@ again. Unsaved changes on the edit page are kept: the new values then appear
 after you save or reload. Record the changes your button makes with
 `record_change`, so they appear in the object's history.
 
+A button can ask for values first. Its `fields` work like a
+[bulk action's](/docs/list-page#asking-for-values-first): model field names
+and `Field(name, form_field=...)` for other inputs. The dialog starts from
+the object's current values, and `handle` receives the validated values as a
+third argument:
+
+```python
+class ScheduleButton(Button):
+    label = "Schedule"
+    icon = "ph-bold ph-calendar"
+    fields = ["published_at"]
+
+    def handle(self, obj, request, data):
+        obj.published_at = data["published_at"]
+        obj.save(update_fields=["published_at"])
+        return "Scheduled."
+```
+
+### Actions in the menu
+
+The ⋯ menu next to Save can offer `@bulk_action` methods too, run on the
+object being edited. The studio's `edit_actions` attribute names them:
+
+```python
+@register(Article)
+class ArticleStudio(ModelStudio):
+    edit_actions = ["publish", "assign"]
+```
+
+They show above Duplicate and Delete, with the same permission checks,
+confirmation and [dialog](/docs/list-page#asking-for-values-first) as in the
+list. By default the menu offers none. After an action runs, the edit page
+shows the object's new values, unless it has unsaved changes.
+
 ### The header
 
 Components in `edit_header` appear in the edit page's header, next to the

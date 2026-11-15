@@ -191,7 +191,15 @@ class ArticleStudio(ModelStudio):
 
 Bulk actions need change permission unless `allowed_permissions` says
 otherwise, and record nothing in the history by themselves: call
-`record_change`. Docs: https://djangocontentstudio.org/docs/list-page.md.
+`record_change`. With `fields=[...]` an action asks for values in a dialog
+first and the method takes a third argument, `data`: model field names
+validate like the edit page, `Field(name, form_field=forms.CharField())`
+adds other inputs, `when=` takes `Q` over the dialog's values. `Button`
+takes the same `fields` (`handle(obj, request, data)`). `row_actions` picks
+the actions in each list row's ⋯ menu (default `["duplicate", "delete"]`,
+duplicate only with `allow_duplication`); `edit_actions` picks the
+`@bulk_action` methods in the edit page's ⋯ menu (default none). Docs:
+https://djangocontentstudio.org/docs/list-page.md.
 
 ## Edit page
 

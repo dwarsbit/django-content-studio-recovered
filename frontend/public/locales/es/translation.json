@@ -1157,5 +1157,12 @@
       "done": "Terminada",
       "failed": "Fallida"
     }
+  },
+  "actions": {
+    "selected": "{{count}} {{name}} seleccionados."
+  },
+  "row_actions": {
+    "menu": "Acciones",
+    "menu_for": "Acciones para {{name}}"
   }
 }

@@ -18,7 +18,9 @@ from django.core.exceptions import FieldDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.db import models
 from rest_framework import serializers
+from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import ValidationError
+from rest_framework.fields import SkipField
 from rest_framework.settings import api_settings
 
 from . import conditions
@@ -186,13 +188,23 @@ class ActionForm:
         if field is None or field.read_only:
             raise serializers.ValidationError("This field cannot be set.")
 
-        value = raw.get(name, serializers.empty)
+        value = raw.get(name)
+        model_field = self.model._meta.get_field(name)
 
-        # An empty value of an optional field is no value.
-        if value in ("", None) and not field.required and field.allow_null:
+        # Like the edit form: blank=False makes a field required, also
+        # when it has a default.
+        if value in ("", None, []):
+            if not model_field.blank:
+                raise serializers.ValidationError(_("This field is required."))
+
+            # An empty value of an optional field is no value.
+            if getattr(field, "allow_null", False):
+                return None
+
+        try:
+            return field.run_validation(value)
+        except SkipField:
             return None
-
-        return field.run_validation(value)
 
     def _clean_form_field(self, request, form_field, value):
         form_field = copy.deepcopy(form_field)

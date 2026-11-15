@@ -135,6 +135,28 @@
   System checks `content_studio.E048` and `content_studio.W026` report
   misconfigured import options.
 
+- **Actions that ask for values.** `@bulk_action` and `Button` take
+  `fields`: the action opens a dialog with those fields before it runs, and
+  the method receives the validated values as a `data` argument (`def
+  assign(self, request, queryset, data)`). Model field names look and
+  validate like on the edit page (widgets, choices, related object pickers
+  limited to what the editor may see); `Field(name, form_field=...)` adds
+  inputs that are not on the model, validated by the Django form field.
+  `when=` shows a field only for some values. Errors show under the fields.
+  A `Button`'s dialog starts from the object's values.
+
+- **Row actions.** Each row of the list has a ⋯ menu with actions on that
+  object: by default Delete, and Duplicate for studios with
+  `allow_duplication`. The new `row_actions` attribute picks `@bulk_action`
+  methods and the built-ins by name; `row_actions = []` removes the menu.
+  On reorderable lists the moves join the same menu.
+
+- **Actions on the edit page.** The new `edit_actions` attribute lists
+  `@bulk_action` methods the edit page's ⋯ menu offers on the object.
+
+- System check `content_studio.E051` reports misconfigured action fields;
+  `content_studio.E007` now also checks `row_actions` and `edit_actions`.
+
 ## 1.16.0 (2026-11-16)
 
 ### Features

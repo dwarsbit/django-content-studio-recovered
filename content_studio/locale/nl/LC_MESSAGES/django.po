@@ -34,6 +34,26 @@ msgstr ""
 "De geselecteerde items worden verplaatst naar de prullenbak, waar ze hersteld"
 " kunnen worden. Weet je zeker dat je ze wilt verwijderen?"
 
+#: actions.py
+msgid "Are you sure you want to delete this item?"
+msgstr "Weet je zeker dat je dit item wilt verwijderen?"
+
+#: actions.py
+msgid ""
+"The item will be moved to the trash, where it can be restored. Are you sure "
+"you want to delete it?"
+msgstr ""
+"Het item wordt verplaatst naar de prullenbak, waar het hersteld kan worden. "
+"Weet je zeker dat je het wilt verwijderen?"
+
+#: actions.py
+msgid "Duplicate"
+msgstr "Dupliceren"
+
+#: action_forms.py
+msgid "This field is required."
+msgstr "Dit veld is verplicht."
+
 #: actions.py:197
 msgid "Export"
 msgstr "Exporteren"
