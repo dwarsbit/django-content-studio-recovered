@@ -28,6 +28,7 @@ import {
 import { applyFieldErrors, getFieldErrors } from "@/lib/server-errors";
 import { cn, getErrorMessage } from "@/lib/utils";
 
+import { PreferencesCard } from "./preferences-card";
 import { ProfileCard, ProfileHeader } from "./profile-header";
 import { TwoFactorCard } from "./two-factor-card";
 
@@ -114,11 +115,17 @@ export function EditProfile({ profile }: { profile?: Profile }) {
                 </Form>
               </Card>
             )}
-            {(profile.password || profile.two_factor) && (
+            {(profile.password ||
+              profile.two_factor ||
+              profile.preferences) && (
               <div className="grid gap-5">
                 {profile.password && <PasswordCard />}
                 {profile.two_factor && (
                   <TwoFactorCard state={profile.two_factor} />
+                )}
+                {/* With the preferences app. */}
+                {profile.preferences && (
+                  <PreferencesCard preferences={profile.preferences} />
                 )}
               </div>
             )}

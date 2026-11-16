@@ -761,7 +761,11 @@ describe("Editor", () => {
         expect.objectContaining({ title: "Hello World", is_published: true }),
       ),
     );
-    expect(httpMock.get).not.toHaveBeenCalled();
+    // Nothing loads the object; the page only reads the profile's
+    // default save action.
+    expect(
+      httpMock.get.mock.calls.filter(([url]) => url !== "/profile"),
+    ).toEqual([]);
     expect(httpMock.put).not.toHaveBeenCalled();
     await waitFor(() => expect(onSave).toHaveBeenCalled());
     expect(onClose).not.toHaveBeenCalled();

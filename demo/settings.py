@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.status",
     "content_studio.notifications",
     "content_studio.history",
+    "content_studio.preferences",
     "demo.blog",
 ]
 

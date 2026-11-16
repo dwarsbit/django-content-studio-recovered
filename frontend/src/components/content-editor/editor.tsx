@@ -16,6 +16,7 @@ import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { usePresence } from "@/hooks/use-presence";
+import { usePreferences } from "@/hooks/use-profile";
 import { useShowResult } from "@/hooks/use-show-result";
 import { contentFormSchema } from "@/lib/invalid-input";
 import { applyFieldErrors, getNonFieldErrors } from "@/lib/server-errors";
@@ -150,6 +151,11 @@ function EditorForm({
   const navigate = useNavigate();
   const modelLabel = model.label;
   const isSingleton = model?.admin.is_singleton ?? false;
+  // Only full edit pages have a choice of save actions.
+  const preferences = usePreferences({
+    enabled:
+      !dialog && !inlineOf && !isSingleton && !!(onAddAnother || onClose),
+  });
   // Inline models are managed through the inline endpoints of their parent,
   // not the content endpoints (which only exist for registered models).
   const resourcePath = inlineOf
@@ -427,6 +433,8 @@ function EditorForm({
     addAnother:
       isPage && !!onAddAnother && model.admin.permissions.add_permission,
     close: isPage && !!onClose,
+    // The button's action, chosen on the profile.
+    defaultMode: preferences.save_action,
   };
 
   async function saveWith(mode: SaveMode = "save") {

@@ -16,6 +16,7 @@ from rest_framework.test import APIClient
 
 from content_studio.checks import profile_field_errors
 from content_studio.form import Field
+from content_studio.preferences.models import UserPreferences
 from content_studio.settings import cs_settings
 from content_studio.token_backends.jwt import create_access_token
 from tests.testapp.models import Article, Category
@@ -59,6 +60,99 @@ class ProfileTestCase(TestCase):
             auth_models.Permission.objects.get(codename="view_article")
         )
         self.client = client_for(self.user)
+
+
+class PreferencesTests(ProfileTestCase):
+    def test_defaults_without_a_choice(self):
+        data = self.client.get("/api/profile").json()
+
+        self.assertEqual(data["preferences"], {"save_action": "save"})
+        self.assertFalse(UserPreferences.objects.exists())
+
+    def test_saves_the_default_save_action(self):
+        response = self.client.post(
+            "/api/profile/preferences", {"save_action": "close"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.assertEqual(response.json(), {"save_action": "close"})
+        self.assertEqual(
+            UserPreferences.objects.get(user=self.user).save_action, "close"
+        )
+        self.assertEqual(
+            self.client.get("/api/profile").json()["preferences"],
+            {"save_action": "close"},
+        )
+
+        self.client.post(
+            "/api/profile/preferences", {"save_action": "add_another"}, format="json"
+        )
+        self.assertEqual(UserPreferences.objects.count(), 1)
+        self.assertEqual(
+            UserPreferences.objects.get(user=self.user).save_action, "add_another"
+        )
+
+    def test_refuses_an_unknown_save_action(self):
+        response = self.client.post(
+            "/api/profile/preferences", {"save_action": "publish"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("save_action", response.json())
+        self.assertFalse(UserPreferences.objects.exists())
+
+    def test_are_the_users_own(self):
+        other = auth_models.User.objects.create_user(username="sam", is_staff=True)
+        UserPreferences.objects.create(user=other, save_action="close")
+
+        self.client.post(
+            "/api/profile/preferences", {"save_action": "add_another"}, format="json"
+        )
+
+        self.assertEqual(UserPreferences.objects.get(user=other).save_action, "close")
+        self.assertEqual(
+            self.client.get("/api/profile").json()["preferences"]["save_action"],
+            "add_another",
+        )
+
+    def test_are_not_logged(self):
+        self.client.post(
+            "/api/profile/preferences", {"save_action": "close"}, format="json"
+        )
+
+        self.assertFalse(LogEntry.objects.exists())
+
+    def test_requires_staff(self):
+        visitor = auth_models.User.objects.create_user(username="visitor")
+
+        response = client_for(visitor).post(
+            "/api/profile/preferences", {"save_action": "close"}, format="json"
+        )
+
+        self.assertIn(response.status_code, (401, 403))
+
+
+class WithoutPreferencesAppTests(ProfileTestCase):
+    def setUp(self):
+        super().setUp()
+        patcher = mock.patch(
+            "content_studio.profile.preferences_installed", return_value=False
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
+    def test_profile_has_no_preferences(self):
+        data = self.client.get("/api/profile").json()
+
+        self.assertIsNone(data["preferences"])
+
+    def test_saving_preferences_is_not_found(self):
+        response = self.client.post(
+            "/api/profile/preferences", {"save_action": "close"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 404)
+        self.assertFalse(UserPreferences.objects.exists())
 
 
 class ProfileDetailsTests(ProfileTestCase):

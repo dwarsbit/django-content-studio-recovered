@@ -832,6 +832,20 @@
       "confirm": "Bevestig nieuw wachtwoord",
       "mismatch": "De nieuwe wachtwoorden komen niet overeen.",
       "changed": "Wachtwoord gewijzigd"
+    },
+    "preferences": {
+      "title": "Voorkeuren",
+      "save_action": "Standaard opslagactie",
+      "save_action_help": "Wat de knop Opslaan op bewerkpagina's doet. De andere staan in het menu ernaast, en {{shortcut}} slaat altijd op en blijft op de pagina.",
+      "saved": "Voorkeuren opgeslagen",
+      "save_actions": {
+        "save": "Opslaan",
+        "save_help": "Blijf op het object.",
+        "add_another": "Opslaan en nieuwe toevoegen",
+        "add_another_help": "Open een leeg formulier voor de volgende.",
+        "close": "Opslaan en sluiten",
+        "close_help": "Ga terug naar de lijst."
+      }
     }
   },
   "history": {

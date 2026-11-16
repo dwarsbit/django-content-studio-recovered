@@ -67,7 +67,12 @@ export function Header({
   // The other users who have the object open.
   presence?: PresenceUser[];
   // The Save menu's options: save and add another, save and close.
-  saveOptions?: { addAnother?: boolean; close?: boolean };
+  // The button does the editor's default save action.
+  saveOptions?: {
+    addAnother?: boolean;
+    close?: boolean;
+    defaultMode?: SaveMode;
+  };
   // Offers Duplicate in the more actions menu.
   onDuplicate?: VoidFunction;
   // Whether the editor renders inside a Dialog: the title then is a
@@ -403,6 +408,7 @@ export function Header({
                     isSaving={isSaving}
                     addAnother={saveOptions.addAnother}
                     close={saveOptions.close}
+                    defaultMode={saveOptions.defaultMode}
                     onSave={async (mode) => {
                       try {
                         await onSave(mode);

@@ -10,6 +10,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -23,15 +24,26 @@ import { isMac } from "@/lib/shortcuts";
 // empty create form, or go back to the list.
 export type SaveMode = "save" | "add_another" | "close";
 
+const LABELS: Record<SaveMode, { save: string; create: string }> = {
+  save: { save: "common.save", create: "common.create" },
+  add_another: {
+    save: "editor.save_and_add_another",
+    create: "editor.create_and_add_another",
+  },
+  close: { save: "editor.save_and_close", create: "editor.create_and_close" },
+};
+
 /**
- * The editor's Save button. Full edit pages split it: the menu next to
- * it saves and adds another, or saves and closes.
+ * The editor's Save button. Full edit pages split it: the button does
+ * the editor's default save action (a preference on the profile), the
+ * menu next to it the others. ⌘S/Ctrl S always saves and stays.
  */
 export function SaveButton({
   create,
   isSaving,
   addAnother = false,
   close = false,
+  defaultMode = "save",
   onSave,
 }: {
   // A create form: the buttons say Create.
@@ -39,30 +51,50 @@ export function SaveButton({
   isSaving: boolean;
   addAnother?: boolean;
   close?: boolean;
+  // What the button does; one the editor does not offer falls back to
+  // a plain save.
+  defaultMode?: SaveMode;
   onSave(mode: SaveMode): void;
 }) {
   const { t } = useTranslation();
   const mac = isMac();
+  const shortcut = mac ? "⌘S" : "Ctrl S";
+  const modes: SaveMode[] = [
+    "save",
+    ...(addAnother ? (["add_another"] as const) : []),
+    ...(close ? (["close"] as const) : []),
+  ];
+  const main = modes.includes(defaultMode) ? defaultMode : "save";
+  const label = (mode: SaveMode) => t(LABELS[mode][create ? "create" : "save"]);
 
-  const save = (
-    <Tooltip>
-      <TooltipTrigger asChild>
-        <Button
-          className="min-w-20"
-          isLoading={isSaving}
-          aria-keyshortcuts={mac ? "Meta+S" : "Control+S"}
-          onClick={() => onSave("save")}
-        >
-          {t(create ? "common.create" : "common.save")}
-        </Button>
-      </TooltipTrigger>
-      <TooltipContent side="bottom" sideOffset={6}>
-        <kbd className="font-sans">{mac ? "⌘S" : "Ctrl S"}</kbd>
-      </TooltipContent>
-    </Tooltip>
+  const button = (
+    <Button
+      className="min-w-20"
+      isLoading={isSaving}
+      aria-keyshortcuts={
+        main === "save" ? (mac ? "Meta+S" : "Control+S") : undefined
+      }
+      onClick={() => onSave(main)}
+    >
+      {label(main)}
+    </Button>
   );
 
-  if (!addAnother && !close) {
+  // The shortcut shows where it applies: on the button when it saves
+  // and stays, in the menu otherwise.
+  const save =
+    main === "save" ? (
+      <Tooltip>
+        <TooltipTrigger asChild>{button}</TooltipTrigger>
+        <TooltipContent side="bottom" sideOffset={6}>
+          <kbd className="font-sans">{shortcut}</kbd>
+        </TooltipContent>
+      </Tooltip>
+    ) : (
+      button
+    );
+
+  if (modes.length === 1) {
     return save;
   }
 
@@ -82,20 +114,18 @@ export function SaveButton({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
-          {addAnother && (
-            <DropdownMenuItem onSelect={() => onSave("add_another")}>
-              {t(
-                create
-                  ? "editor.create_and_add_another"
-                  : "editor.save_and_add_another",
-              )}
-            </DropdownMenuItem>
-          )}
-          {close && (
-            <DropdownMenuItem onSelect={() => onSave("close")}>
-              {t(create ? "editor.create_and_close" : "editor.save_and_close")}
-            </DropdownMenuItem>
-          )}
+          {modes
+            .filter((mode) => mode !== main)
+            .map((mode) => (
+              <DropdownMenuItem key={mode} onSelect={() => onSave(mode)}>
+                {label(mode)}
+                {mode === "save" && (
+                  <DropdownMenuShortcut className="pl-4 tracking-normal">
+                    {shortcut}
+                  </DropdownMenuShortcut>
+                )}
+              </DropdownMenuItem>
+            ))}
         </DropdownMenuContent>
       </DropdownMenu>
     </ButtonGroup>

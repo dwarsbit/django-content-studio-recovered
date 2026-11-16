@@ -104,6 +104,33 @@ the edit tab has a **Two-factor login** card.
 Turning it on or off logs the editor out on every other device; the
 browser they changed it in stays logged in.
 
+## Preferences
+
+With the preferences app installed, the edit tab has a **Preferences**
+card where editors choose their own settings. They are kept on the
+account, so they follow the editor to every device.
+
+1. Add the preferences app to your project:
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.preferences",
+   ]
+   ```
+
+2. Run `manage.py migrate` to create its table.
+
+**Default save action** picks what the Save button on edit pages does:
+**Save** (stay on the object, the default), **Save and add another** or
+**Save and close**. The menu next to the button offers the others, and ⌘S
+or Ctrl S always saves and stays. Where an action is not offered, such as
+Save and add another without add permission, the button saves.
+
+Without the app, the card is not there and the Save button saves.
+
 ## Related pages
 
 - [Authentication](/docs/authentication)

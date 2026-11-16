@@ -183,10 +183,15 @@ function renderEditor(path: string) {
 
 const hello = { id: 7, title: "Hello", slug: "hello", __str__: "Hello" };
 
-function mockApi() {
+function mockApi(saveAction = "save") {
   httpMock.get.mockImplementation((url: string) =>
     Promise.resolve({
-      data: url === "/content/testapp.article/7" ? hello : [],
+      data:
+        url === "/content/testapp.article/7"
+          ? hello
+          : url === "/profile"
+            ? { preferences: { save_action: saveAction } }
+            : [],
     }),
   );
   httpMock.put.mockImplementation((_url: string, values: object) =>
@@ -342,6 +347,76 @@ describe("Save options", () => {
 
     await waitFor(() => expect(toast.error).toHaveBeenCalled());
     expect(router.state.location.pathname).toBe("/content/testapp.article/7");
+  });
+});
+
+describe("Default save action", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    useDiscoverMock.mockReturnValue({ data: makeDiscover(makeModel()) });
+  });
+
+  it("makes the button save and close, with Save in the menu", async () => {
+    mockApi("close");
+    const user = userEvent.setup();
+    const router = renderEditor("/content/testapp.article/7");
+    await screen.findByDisplayValue("hello");
+
+    await openSaveMenu(user);
+    expect(
+      await screen.findByRole("menuitem", { name: /common\.save/ }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "editor.save_and_add_another" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("menuitem", { name: "editor.save_and_close" }),
+    ).not.toBeInTheDocument();
+    await user.keyboard("{Escape}");
+
+    await user.click(
+      await screen.findByRole("button", { name: "editor.save_and_close" }),
+    );
+
+    expect(await screen.findByText("list page")).toBeInTheDocument();
+    expect(router.state.location.pathname).toBe("/content/testapp.article");
+  });
+
+  it("keeps Ctrl+S a plain save", async () => {
+    mockApi("add_another");
+    const router = renderEditor("/content/testapp.article/7");
+    const title = await screen.findByDisplayValue("Hello");
+    await screen.findByRole("button", { name: "editor.save_and_add_another" });
+
+    title.dispatchEvent(
+      new KeyboardEvent("keydown", {
+        key: "s",
+        ctrlKey: true,
+        bubbles: true,
+        cancelable: true,
+      }),
+    );
+
+    await waitFor(() => expect(httpMock.put).toHaveBeenCalled());
+    expect(router.state.location.pathname).toBe("/content/testapp.article/7");
+  });
+
+  it("falls back to Save where add another is not offered", async () => {
+    mockApi("add_another");
+    useDiscoverMock.mockReturnValue({
+      data: makeDiscover(makeModel({ addPermission: false })),
+    });
+    renderEditor("/content/testapp.article/7");
+    await screen.findByDisplayValue("hello");
+    // The preference has loaded once the editor shows the object.
+    await waitFor(() => expect(httpMock.get).toHaveBeenCalledWith("/profile"));
+
+    expect(
+      screen.getByRole("button", { name: "common.save" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "editor.save_and_add_another" }),
+    ).not.toBeInTheDocument();
   });
 });
 

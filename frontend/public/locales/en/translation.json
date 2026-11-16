@@ -832,6 +832,20 @@
       "confirm": "Confirm new password",
       "mismatch": "The new passwords do not match.",
       "changed": "Password changed"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "save_action": "Default save action",
+      "save_action_help": "What the Save button on edit pages does. The others stay in the menu next to it, and {{shortcut}} always saves and stays.",
+      "saved": "Preferences saved",
+      "save_actions": {
+        "save": "Save",
+        "save_help": "Stay on the object.",
+        "add_another": "Save and add another",
+        "add_another_help": "Open an empty form for the next one.",
+        "close": "Save and close",
+        "close_help": "Go back to the list."
+      }
     }
   },
   "history": {

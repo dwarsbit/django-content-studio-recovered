@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "content_studio.webhooks",
     "content_studio.notifications",
     "content_studio.history",
+    "content_studio.preferences",
     "tests.testapp",
 ]
 
