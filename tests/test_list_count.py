@@ -16,7 +16,7 @@ from rest_framework.test import APIRequestFactory
 
 from content_studio.admin import ModelStudio
 from content_studio.checks import list_config_errors
-from content_studio import paginators
+from content_studio import devtools, paginators
 from content_studio.paginators import ContentPagination, estimate_count
 from tests.testapp.models import Article
 
@@ -63,7 +63,6 @@ def test_exact_counts_every_list(articles):
         "current": 1,
         "pages": 3,
         "has_next": True,
-        "slow_count": None,
     }
     assert counted(queries)
 
@@ -78,7 +77,6 @@ def test_none_pages_without_counting(articles):
         "current": 1,
         "pages": None,
         "has_next": True,
-        "slow_count": None,
     }
     assert not counted(queries)
 
@@ -127,7 +125,6 @@ def test_estimated_reports_the_estimate_for_large_tables(articles):
         "current": 1,
         "pages": 460_000,
         "has_next": True,
-        "slow_count": None,
     }
     assert not counted(queries)
 
@@ -224,21 +221,44 @@ def test_a_slow_count_is_logged_once_per_studio(articles, slow_counts, caplog):
     assert 'list_count = "estimated" on ArticleStudio' in caplog.messages[0]
 
 
-def test_a_slow_count_is_returned_while_debug_is_on(articles, slow_counts, settings):
+def slow_count_issues():
+    return [
+        issue for issue in devtools.store.get_issues() if issue["code"] == "slow_count"
+    ]
+
+
+@pytest.fixture
+def devtools_store():
+    devtools.store.reset()
+    yield devtools.store
+    devtools.store.reset()
+
+
+def test_a_slow_count_shows_in_the_developer_tools(
+    articles, slow_counts, settings, devtools_store
+):
     settings.DEBUG = True
 
-    _, pagination, _ = paginate("exact")
+    paginate("exact")
+    paginate("exact")
 
-    assert pagination["slow_count"]["studio"] == "ArticleStudio"
-    assert pagination["slow_count"]["seconds"] >= 0
+    [issue] = slow_count_issues()
+    assert issue["title"] == "Slow count on ArticleStudio"
+    assert issue["count"] == 2
+    assert issue["studio"] == "ArticleStudio"
+    assert 'list_count = "estimated"' in issue["snippet"]
+    assert issue["docs"].endswith("/list-page#large-tables")
 
 
-def test_a_slow_count_is_not_returned_without_debug(articles, slow_counts, settings):
+def test_a_slow_count_is_not_collected_without_debug(
+    articles, slow_counts, settings, devtools_store
+):
     settings.DEBUG = False
 
     _, pagination, _ = paginate("exact")
 
-    assert pagination["slow_count"] is None
+    assert "slow_count" not in pagination
+    assert not slow_count_issues()
 
 
 @pytest.mark.parametrize(
@@ -250,24 +270,24 @@ def test_a_slow_count_is_not_returned_without_debug(articles, slow_counts, setti
     ],
 )
 def test_no_slow_count_hint_where_list_count_cannot_help(
-    articles, slow_counts, settings, caplog, kwargs
+    articles, slow_counts, settings, caplog, kwargs, devtools_store
 ):
     settings.DEBUG = True
 
     with caplog.at_level("WARNING", logger="content_studio.paginators"):
-        _, pagination, _ = paginate("exact", **kwargs)
+        paginate("exact", **kwargs)
 
-    assert pagination["slow_count"] is None
+    assert not slow_count_issues()
     assert not caplog.records
 
 
-def test_a_fast_count_has_no_hint(articles, settings, caplog):
+def test_a_fast_count_has_no_hint(articles, settings, caplog, devtools_store):
     settings.DEBUG = True
 
     with caplog.at_level("WARNING", logger="content_studio.paginators"):
-        _, pagination, _ = paginate("exact")
+        paginate("exact")
 
-    assert pagination["slow_count"] is None
+    assert not slow_count_issues()
     assert not caplog.records
 
 

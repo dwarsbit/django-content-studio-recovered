@@ -602,17 +602,6 @@ describe("ModelListPage", () => {
     );
   });
 
-  it("hints at list_count when the server reports a slow count", async () => {
-    httpGetMock.mockResolvedValue({
-      data: makePaginated(articles, {
-        slow_count: { seconds: 2.4, studio: "ArticleStudio" },
-      }),
-    });
-    renderListPage(makeModel());
-
-    expect(await screen.findByText("list_view.slow_count")).toBeInTheDocument();
-  });
-
   it("does not render pagination for single-page responses", async () => {
     renderListPage(makeModel());
 

@@ -143,7 +143,6 @@
     "page": "Pagina {{current, number}}",
     "previous_page": "Vorige pagina",
     "next_page": "Volgende pagina",
-    "slow_count": "Het tellen van deze lijst duurde {{seconds, number}} s. Zet list_count = \"estimated\" op {{studio}} om bij grote tabellen een schatting te tonen. Zichtbaar zolang DEBUG aan staat.",
     "view": "Weergave",
     "more_actions": "Meer acties"
   },

@@ -17,7 +17,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from . import __version__
+from . import __version__, devtools
 from .admin import AdminSerializer, ModelStudio, ModelGroup
 from .exceptions import NotConfigured
 from .extensions import MainMenuButton
@@ -46,6 +46,7 @@ class ContentStudioWebAppView(TemplateView):
         # Development tooling (the UI showcase) is enabled for Django debug
         # setups only; production installs never see it.
         context["debug"] = settings.DEBUG
+        context["devtools"] = devtools.is_enabled()
         return context
 
 
@@ -262,6 +263,55 @@ class AdminApiViewSet(ViewSet):
             return Response(fetch_oembed(url))
         except OEmbedError as exc:
             return Response({"detail": str(exc)}, status=exc.status)
+
+    @action(methods=["get"], detail=False, url_path="devtools")
+    def get_devtools(self, request):
+        """
+        The developer tools: the issues to act on, the user's recent
+        requests to the admin API and the environment. Only while DEBUG
+        is on; a 404 otherwise.
+        """
+        if not devtools.is_enabled():
+            raise NotFound()
+
+        devtools.ensure_system_checks()
+
+        return Response(
+            {
+                "seq": devtools.store.seq,
+                "issues": devtools.store.get_issues(),
+                "requests": devtools.store.get_requests(request.user.pk),
+                "info": devtools.get_info(self.admin_site),
+            }
+        )
+
+    @action(methods=["delete"], detail=False, url_path="devtools/issues")
+    def clear_devtools_issues(self, request):
+        if not devtools.is_enabled():
+            raise NotFound()
+
+        devtools.store.remove()
+
+        return Response(status=204)
+
+    @action(methods=["delete"], detail=False, url_path="devtools/requests")
+    def clear_devtools_requests(self, request):
+        if not devtools.is_enabled():
+            raise NotFound()
+
+        devtools.store.clear_requests(request.user.pk)
+
+        return Response(status=204)
+
+    @action(methods=["post"], detail=False, url_path="devtools/checks")
+    def run_devtools_checks(self, request):
+        """Runs the system checks again, as after a code change."""
+        if not devtools.is_enabled():
+            raise NotFound()
+
+        devtools.run_system_checks()
+
+        return Response(status=204)
 
     @action(methods=["get"], detail=False, url_path="me")
     def me(self, request):

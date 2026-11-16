@@ -2,12 +2,24 @@ import { useEffect, useState } from "react";
 import { Outlet } from "react-router";
 
 import { CommandPalette } from "@/components/command-palette";
+import Devtools from "@/components/devtools/devtools";
 import { NotificationSync } from "@/components/notifications/sync";
 import { NotificationToasts } from "@/components/notifications/toasts";
+import { http } from "@/hooks/use-http";
 import { useNotificationsEnabled } from "@/hooks/use-notifications";
+import { installDevtools, isDevtoolsEnabled } from "@/lib/devtools";
 import { TenantProvider } from "@/tenant";
 
 import { MainMenu } from "./_components/main-menu";
+
+// The developer tools run only while they are on (DEBUG). They are not
+// a lazy chunk: they share most of their modules with the entry, which
+// a lazy chunk may not import (see vite.config.ts).
+const devtoolsEnabled = isDevtoolsEnabled();
+
+if (devtoolsEnabled) {
+  installDevtools(http);
+}
 
 export function StudioLayout() {
   const [paletteOpen, setPaletteOpen] = useState(false);
@@ -43,6 +55,7 @@ export function StudioLayout() {
             <NotificationToasts />
           </>
         )}
+        {devtoolsEnabled && <Devtools />}
       </>
     </TenantProvider>
   );
