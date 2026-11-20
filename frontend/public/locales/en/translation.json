@@ -138,6 +138,7 @@
     "sort_descending": "Sort descending",
     "trash": "Trash",
     "filters": {
+      "add": "Filter",
       "all": "All",
       "yes": "Yes",
       "no": "No",

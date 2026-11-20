@@ -50,7 +50,8 @@ test("custom filters and filters across relations narrow the list", async ({
   await expect(page.getByText("Tips and tricks for inlines")).toBeVisible();
 
   // ReachFilter, a custom filter: its options come from the server.
-  await page.getByRole("button", { name: /^Reach/ }).click();
+  await page.getByRole("button", { name: "Filter", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Reach" }).click();
   await page
     .getByRole("menuitemcheckbox", { name: "Steady (100 to 999)" })
     .click();
@@ -65,7 +66,8 @@ test("custom filters and filters across relations narrow the list", async ({
   await page.getByRole("button", { name: "Clear all filters" }).first().click();
 
   // review__stars, a number range across the reviews of an article.
-  await page.getByRole("button", { name: /^Review stars/ }).click();
+  await page.getByRole("button", { name: "Filter", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Review stars" }).click();
   await page.getByRole("spinbutton", { name: "Min" }).fill("5");
   await page.keyboard.press("Enter");
 

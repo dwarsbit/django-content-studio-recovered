@@ -1,10 +1,18 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { PiPlusBold } from "react-icons/pi";
 
 import { CustomFilter } from "@/components/filters/custom-filter";
 import { FilterRenderer } from "@/components/filters/renderer";
 import type { FilterChanges, FilterValues } from "@/components/filters/types";
 import { Search } from "@/components/search";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { getListFilters, matchFilter } from "@/lib/list-filters";
 import type { Model } from "@/types";
 
@@ -68,10 +76,26 @@ export function Filters({
     onValuesChange(next);
   };
 
+  // Only filters with a value show, as chips. The others wait in the
+  // "Filter" menu; the one picked there shows until it has a value,
+  // with its options open.
+  const [added, setAdded] = useState<string | null>(null);
+  const shown = filters.filter(
+    (filter) =>
+      filter.name === added || Object.keys(valuesOf(filter.name)).length > 0,
+  );
+  const hidden = filters.filter((filter) => !shown.includes(filter));
+
   return (
-    <div className="flex items-start flex-wrap gap-x-4 gap-y-2 min-w-0">
-      {model.admin.list.search && <Search />}
-      {filters.map((filter) =>
+    <div className="flex flex-1 items-center flex-wrap gap-x-1.5 gap-y-2 min-w-0">
+      {model.admin.list.search && <Search variant="plain" />}
+      {model.admin.list.search && filters.length > 0 && (
+        <span
+          aria-hidden
+          className="hidden sm:block h-5 w-px bg-border mx-1.5"
+        />
+      )}
+      {shown.map((filter) =>
         filter.kind === "custom" ? (
           <CustomFilter
             key={filter.name}
@@ -81,6 +105,7 @@ export function Filters({
             model={model}
             values={valuesOf(filter.name)}
             onChange={(changes) => change(filter.name, changes)}
+            defaultOpen={filter.name === added}
           />
         ) : (
           <FilterRenderer
@@ -90,11 +115,42 @@ export function Filters({
             model={model}
             values={valuesOf(filter.name)}
             onValueChange={(changes) => change(filter.name, changes)}
+            defaultOpen={filter.name === added}
           />
         ),
       )}
+      {hidden.length > 0 && (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="ghost" size="sm" className="text-muted-foreground">
+              <PiPlusBold />
+              {t("list_view.filters.add")}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent
+            align="start"
+            // The picked filter opens its own options: focus must not
+            // return to this trigger and close them.
+            onCloseAutoFocus={(event) => event.preventDefault()}
+          >
+            {hidden.map((filter) => (
+              <DropdownMenuItem
+                key={filter.name}
+                onSelect={() => setAdded(filter.name)}
+              >
+                <span className="first-letter:uppercase">{filter.label}</span>
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
       {Object.keys(values).length > 0 && (
-        <Button variant="ghost" onClick={() => onValuesChange({})}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-muted-foreground"
+          onClick={() => onValuesChange({})}
+        >
           {t("list_view.clear_all_filters")}
         </Button>
       )}

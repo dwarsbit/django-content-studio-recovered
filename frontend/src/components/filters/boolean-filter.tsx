@@ -24,6 +24,7 @@ export function BooleanFilter({
   field,
   values,
   onChange,
+  defaultOpen,
 }: FilterComponentProps) {
   const { t } = useTranslation();
   const value = values[""] ?? ALL;
@@ -36,7 +37,7 @@ export function BooleanFilter({
   const label = options.find(([key]) => key === value)?.[1];
 
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger asChild>
         <FilterTrigger
           label={field.verbose_name}

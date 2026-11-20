@@ -25,6 +25,18 @@
   - Password reset codes are left out of backups, so a backup never
     holds a code that still works.
 
+### Changes
+
+- **List pages: the toolbar sits on the list.** Search, filters, the
+  list view's sorting and the table/list toggle moved from the page
+  header onto the card that holds the list, so the header is one bar
+  with the title and the actions, and the controls stay in place when
+  switching between the table and the list view. Filters with a value
+  show as chips ("Status is Published", with a clear button); the
+  others are picked from a **Filter** menu, which opens the chosen
+  filter's options right away. The count of matching objects moved
+  from the title to the toolbar.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

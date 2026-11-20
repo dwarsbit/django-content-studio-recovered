@@ -26,6 +26,7 @@ export function DateRangeFilter({
   field,
   values,
   onChange,
+  defaultOpen,
 }: FilterComponentProps) {
   const { t } = useTranslation();
   const isDateTime = field.type === FieldType.DateTimeField;
@@ -40,7 +41,7 @@ export function DateRangeFilter({
     .join(" – ");
 
   return (
-    <Popover>
+    <Popover defaultOpen={defaultOpen}>
       <PopoverTrigger asChild>
         <FilterTrigger
           label={field.verbose_name}

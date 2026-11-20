@@ -32,6 +32,7 @@ export function ListView({
   onClear,
   reorder,
   presence,
+  className,
 }: {
   items: Resource[];
   model: Model;
@@ -46,6 +47,8 @@ export function ListView({
   reorder?: ReorderProps;
   // The other users who have objects open, by id.
   presence?: Record<string, PresenceUser[]>;
+  // Overrides the frame: the list card drops the view's own border.
+  className?: string;
 }) {
   // Once one item has a thumbnail, every row reserves the slot, so the
   // titles stay aligned and items without one show a placeholder.
@@ -56,7 +59,12 @@ export function ListView({
     runAction(action, [id], { name });
 
   return (
-    <div className="w-full flex-1 border rounded-lg overflow-hidden">
+    <div
+      className={cn(
+        "w-full flex-1 border rounded-lg overflow-hidden",
+        className,
+      )}
+    >
       {items.length === 0 && (
         <ListEmptyState model={model} filtered={!!filtered} onClear={onClear} />
       )}
