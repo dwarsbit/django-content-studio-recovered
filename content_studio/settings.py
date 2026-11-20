@@ -175,6 +175,9 @@ DEFAULTS = {
     # App labels ("app") or models ("app.Model") left out of backups, on
     # top of content types, permissions and sessions.
     "BACKUP_EXCLUDE": [],
+    # The largest file a superuser may upload on the Backups page to
+    # restore, in bytes; None has no limit (the web server may have one).
+    "BACKUP_UPLOAD_MAX_SIZE": 1024**3,
     # Days read notifications are kept; None keeps them.
     "NOTIFICATION_RETENTION": 90,
     # Days unread notifications are kept; None (the default) keeps them.

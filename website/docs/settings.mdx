@@ -464,6 +464,11 @@ The aliases in `DATABASES` that are backed up. Default: `["default"]`.
 App labels (`"analytics"`) or models (`"shop.Cart"`) left out of backups,
 on top of content types, permissions and sessions. Default: `[]`.
 
+### BACKUP_UPLOAD_MAX_SIZE {#backup_upload_max_size}
+
+The largest file, in bytes, a superuser can upload on the Backups page to
+restore. `None` sets no limit. Default: `1024 ** 3` (1 GB).
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}

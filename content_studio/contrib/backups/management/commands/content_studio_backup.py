@@ -25,7 +25,7 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, databases=None, list_backups=False, **options):
-        from ...backup import BackupError, get_databases, make_backup
+        from ...backup import BackupError, clean_uploads, get_databases, make_backup
         from ...models import Backup
 
         if list_backups:
@@ -57,6 +57,8 @@ class Command(BaseCommand):
                 self.stdout.write(
                     f"{alias}: {backup.file} ({filesizeformat(backup.size)})"
                 )
+
+        clean_uploads()
 
         if failed:
             raise CommandError(f"The backup of {', '.join(failed)} failed.")

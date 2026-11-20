@@ -912,6 +912,15 @@ class ContentStudioSite:
         """
         return bool(request.user.is_active and request.user.is_superuser)
 
+    def has_restore_permission(self, request: HttpRequest) -> bool:
+        """
+        Who may restore a backup or an uploaded file from the Backups page,
+        replacing the whole database: whoever has_backup_permission() lets
+        in, unless overridden. Return False to leave restoring to the
+        content_studio_restore command.
+        """
+        return bool(self.has_backup_permission(request))
+
     def _register_default_user_studio(self):
         from .user_studios import GroupStudio, UserStudio
 

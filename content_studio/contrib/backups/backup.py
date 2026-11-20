@@ -6,6 +6,9 @@ natural foreign keys, so loaddata reads it back on any database engine.
 Beside it in the storage lies its manifest (`<name>.manifest.json`): the
 versions, the database engine, the applied migrations and the rows per
 model, which a restore checks before it loads anything.
+
+A restore also takes any JSON file manage.py dumpdata writes: see
+fixtures.py for how its content type and permission ids are matched.
 """
 
 import datetime
@@ -16,7 +19,7 @@ import posixpath
 import secrets
 import shutil
 import tempfile
-from typing import Iterable, Optional
+from typing import Callable, Iterable, Optional
 
 import django
 from django.apps import apps
@@ -30,6 +33,8 @@ from django.db.migrations.recorder import MigrationRecorder
 from django.utils import timezone
 
 from ...settings import cs_settings
+from .fixtures import SUFFIXES, FixtureError, fixture_suffix
+from .fixtures import load as load_fixture
 from .models import Backup
 
 logger = logging.getLogger("content_studio.backups")
@@ -241,6 +246,9 @@ def queue_backup(alias: str, trigger: str, user=None) -> Backup:
     if is_running(alias):
         raise BackupRunning(f"A backup of {alias!r} is already queued or running.")
 
+    if is_restoring(alias):
+        raise BackupRunning(f"A restore of {alias!r} is queued or running.")
+
     return Backup.objects.using(records_database()).create(
         database=alias,
         trigger=trigger,
@@ -405,19 +413,42 @@ def prune(alias: str) -> int:
 # Restoring a backup
 
 
+def database_name(alias: str) -> str:
+    """
+    The name a restore asks to type: the database's NAME, or the file's
+    name for a database in a file (SQLite).
+    """
+    name = str(connections[alias].settings_dict.get("NAME") or alias)
+
+    if "/" in name or "\\" in name:
+        name = os.path.basename(name.replace("\\", "/")) or name
+
+    return name
+
+
 def fetch(name: str, folder: str) -> tuple[str, Optional[dict]]:
     """
     The backup as a local file, with its manifest: name is a file on
-    disk, or a name in the backup storage.
+    disk, or a name in the backup storage. Any JSON fixture dumpdata
+    writes is taken: .json, .json.gz, .json.bz2, .json.xz or .json.lzma.
     """
-    path = os.path.join(folder, "restore" + EXTENSION)
+    suffix = fixture_suffix(name)
+
+    if suffix is None:
+        raise RestoreError(
+            f"{posixpath.basename(name)} is not a JSON fixture: only "
+            + ", ".join(SUFFIXES)
+            + " files can be restored."
+        )
+
+    path = os.path.join(folder, "restore" + suffix)
 
     if os.path.isfile(name):
         shutil.copyfile(name, path)
         manifest_path = manifest_name(name)
         manifest = None
 
-        if os.path.isfile(manifest_path):
+        if manifest_path != name and os.path.isfile(manifest_path):
             with open(manifest_path, encoding="utf-8") as file:
                 manifest = json.load(file)
 
@@ -433,7 +464,7 @@ def fetch(name: str, folder: str) -> tuple[str, Optional[dict]]:
 
     manifest = None
 
-    if storage.exists(manifest_name(name)):
+    if name.endswith(EXTENSION) and storage.exists(manifest_name(name)):
         with storage.open(manifest_name(name), "rb") as file:
             manifest = json.loads(file.read().decode("utf-8"))
     else:
@@ -474,10 +505,122 @@ def latest_backup(alias: str) -> Optional[Backup]:
     )
 
 
-def keep_records(records: list[Backup], using: str) -> None:
-    """Put the backup records back after a restore emptied their table."""
+def check_migrations(alias: str, manifest: Optional[dict]) -> dict:
+    """
+    How the backup's migrations compare with the database's: checked is
+    False without a manifest; missing and extra list "app.migration".
+    """
+    if not manifest:
+        return {"checked": False, "match": False, "missing": [], "extra": []}
+
+    missing, extra = migration_differences(alias, manifest)
+    applied = sum(len(names) for names in get_applied_migrations(alias).values())
+
+    return {
+        "checked": True,
+        "match": not missing and not extra,
+        "applied": applied,
+        "missing": [f"{app}.{name}" for app, name in missing],
+        "extra": [f"{app}.{name}" for app, name in extra],
+    }
+
+
+def build_preview(
+    alias: str,
+    manifest: Optional[dict],
+    counts: dict,
+    skipped: int = 0,
+    remapped: int = 0,
+    unknown_models: Optional[list] = None,
+) -> dict:
+    """What a restore of a file would load, as the restore dialog shows it."""
+    manifest = manifest or {}
+    models_ = sorted(
+        ({"label": label, "count": count} for label, count in counts.items()),
+        key=lambda item: (-item["count"], item["label"]),
+    )
+
+    return {
+        "database": alias,
+        "database_name": database_name(alias),
+        "manifest": bool(manifest),
+        "created_at": manifest.get("created_at"),
+        "content_studio": manifest.get("content_studio"),
+        "django": manifest.get("django"),
+        "engine": manifest.get("engine"),
+        "rows": sum(item["count"] for item in models_),
+        "models": models_,
+        "skipped": skipped,
+        "remapped": remapped,
+        "unknown_models": list(unknown_models or []),
+        "migrations": check_migrations(alias, manifest or None),
+    }
+
+
+def preview_file(path: str, alias: str, manifest: Optional[dict] = None) -> dict:
+    """Read the fixture at path and say what a restore would load."""
+    try:
+        fixture = load_fixture(path)
+    except FixtureError as exc:
+        raise RestoreError(str(exc)) from exc
+
+    return build_preview(
+        alias,
+        manifest,
+        fixture.counts,
+        skipped=fixture.skipped,
+        remapped=fixture.remapped,
+        unknown_models=fixture.unknown_models,
+    )
+
+
+def preview_backup(backup: Backup, alias: Optional[str] = None) -> dict:
+    """
+    What restoring a listed backup would load. Its manifest has the rows
+    per model, so the file is only read when there is no manifest.
+    """
+    alias = alias or backup.database
+    manifest = backup.manifest or None
+
+    if manifest and manifest.get("counts") is not None:
+        counts = {}
+        unknown = []
+
+        for label, count in manifest["counts"].items():
+            try:
+                apps.get_model(label)
+            except (LookupError, ValueError):
+                unknown.append(label)
+                continue
+            counts[label] = count or 0
+
+        return build_preview(alias, manifest, counts, unknown_models=unknown)
+
+    folder = tempfile.mkdtemp(prefix="content-studio-restore-")
+
+    try:
+        path, manifest = fetch(backup.file, folder)
+        return preview_file(path, alias, manifest)
+    finally:
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def snapshot_records(using: str) -> tuple[list, list]:
+    from .models import Restore
+
+    return (
+        list(Backup.objects.using(using).all()),
+        list(Restore.objects.using(using).all()),
+    )
+
+
+def keep_records(backups: list, restores: list, using: str) -> None:
+    """Put the backup and restore records back after a restore emptied them."""
     from django.contrib.auth import get_user_model
 
+    from .models import Restore
+
+    records = [*backups, *restores]
     user_ids = {record.created_by_id for record in records if record.created_by_id}
     known = set(
         get_user_model()
@@ -490,14 +633,31 @@ def keep_records(records: list[Backup], using: str) -> None:
         if record.created_by_id not in known:
             record.created_by_id = None
 
-    Backup.objects.using(using).bulk_create(records)
+    Backup.objects.using(using).bulk_create(backups)
+    Restore.objects.using(using).bulk_create(restores)
 
 
-def restore(name: str, alias: str = "default", ignore_migrations: bool = False):
+def clear_content_type_cache() -> None:
+    if apps.is_installed("django.contrib.contenttypes"):
+        from django.contrib.contenttypes.models import ContentType
+
+        ContentType.objects.clear_cache()
+
+
+def restore(
+    name: str,
+    alias: str = "default",
+    ignore_migrations: bool = False,
+    before_load: Optional[Callable[[dict], None]] = None,
+) -> dict:
     """
-    Replace the database's contents with a backup: every table is
-    emptied and the backup loaded, in one transaction. The backup
-    records themselves are kept as they are.
+    Replace the database's contents with a backup or a dumpdata file:
+    every table is emptied and the file loaded, in one transaction. The
+    backup and restore records themselves are kept as they are.
+
+    The file is read and checked first; before_load(preview) then runs
+    (the safety backup), and the database is replaced. Returns the
+    preview: rows per model, versions and the migration check.
     """
     if alias not in connections.databases:
         raise RestoreError(f"There is no database {alias!r}.")
@@ -507,42 +667,241 @@ def restore(name: str, alias: str = "default", ignore_migrations: bool = False):
     try:
         path, manifest = fetch(name, folder)
 
-        if manifest is None:
-            if not ignore_migrations:
+        if manifest and manifest.get("format", FORMAT) > FORMAT:
+            raise RestoreError("The backup was made by a newer Content Studio.")
+
+        try:
+            fixture = load_fixture(path)
+        except FixtureError as exc:
+            raise RestoreError(str(exc)) from exc
+
+        preview = build_preview(
+            alias,
+            manifest,
+            fixture.counts,
+            skipped=fixture.skipped,
+            remapped=fixture.remapped,
+            unknown_models=fixture.unknown_models,
+        )
+
+        if fixture.unknown_models:
+            raise RestoreError(
+                "The file holds models that are not installed: "
+                + ", ".join(fixture.unknown_models[:10])
+                + "."
+            )
+
+        migrations = preview["migrations"]
+
+        if not ignore_migrations:
+            if not migrations["checked"]:
                 raise RestoreError(
                     "The backup has no manifest, so its migrations cannot be "
                     "checked. Pass --ignore-migrations to restore it anyway."
                 )
-        elif manifest.get("format", FORMAT) > FORMAT:
-            raise RestoreError("The backup was made by a newer Content Studio.")
-        elif not ignore_migrations:
-            missing, extra = migration_differences(alias, manifest)
 
-            if missing or extra:
+            if not migrations["match"]:
                 lines = [
                     "The backup's migrations differ from the database's.",
-                    *(f"  Only in the backup: {a}.{n}" for a, n in missing[:10]),
-                    *(f"  Only in the database: {a}.{n}" for a, n in extra[:10]),
+                    *(f"  Only in the backup: {m}" for m in migrations["missing"][:10]),
+                    *(f"  Only in the database: {m}" for m in migrations["extra"][:10]),
                     "Migrate the database to the backup's state first, or pass "
                     "--ignore-migrations.",
                 ]
                 raise RestoreError("\n".join(lines))
 
+        prepared = None
+
+        if fixture.rows:
+            prepared = os.path.join(folder, "prepared" + EXTENSION)
+            fixture.write(prepared)
+
+        del fixture
+
+        if before_load is not None:
+            before_load(preview)
+
         using = records_database()
-        records = list(Backup.objects.using(using).all()) if using == alias else None
+        backups, restores = snapshot_records(using) if using == alias else ([], [])
 
-        with transaction.atomic(using=alias):
-            call_command("flush", database=alias, interactive=False, verbosity=0)
-            call_command("loaddata", path, database=alias, verbosity=0)
+        clear_content_type_cache()
 
-            if records:
-                keep_records(records, using)
+        try:
+            with transaction.atomic(using=alias):
+                call_command("flush", database=alias, interactive=False, verbosity=0)
+                # Migrate's handlers made the content types again, with
+                # new ids: nothing may use the ones cached before.
+                clear_content_type_cache()
+                if prepared:
+                    call_command("loaddata", prepared, database=alias, verbosity=0)
+
+                if backups or restores:
+                    keep_records(backups, restores, using)
+        except RestoreError:
+            raise
+        except Exception as exc:
+            raise RestoreError(f"{type(exc).__name__}: {exc}".rstrip(": ")) from exc
     finally:
         shutil.rmtree(folder, ignore_errors=True)
 
-    if apps.is_installed("django.contrib.contenttypes"):
-        from django.contrib.contenttypes.models import ContentType
+    clear_content_type_cache()
+    return preview
 
-        ContentType.objects.clear_cache()
 
-    return manifest
+# Restoring from the Backups page
+
+
+# Uploads not restored are deleted after this long.
+UPLOAD_LIFETIME = datetime.timedelta(days=1)
+
+
+def upload_name(filename: str) -> str:
+    """Where an uploaded file waits in the backup storage."""
+    from django.utils.text import get_valid_filename
+
+    base = get_valid_filename(posixpath.basename(filename)) or "upload.json"
+    token = secrets.token_hex(16)
+    return posixpath.join(cs_settings.BACKUP_FOLDER, "uploads", f"{token}-{base}")
+
+
+def delete_upload(record) -> None:
+    if record.source == record.UPLOAD and record.file:
+        try:
+            storage = get_storage()
+            if storage.exists(record.file):
+                storage.delete(record.file)
+        except Exception:
+            logger.warning(
+                "Could not delete the upload %s.", record.file, exc_info=True
+            )
+
+
+def clean_uploads() -> int:
+    """Delete uploads that waited UPLOAD_LIFETIME without a restore."""
+    from .models import Restore
+
+    old = Restore.objects.using(records_database()).filter(
+        status=Restore.PENDING,
+        created_at__lt=timezone.now() - UPLOAD_LIFETIME,
+    )
+    deleted = 0
+
+    for record in old:
+        delete_upload(record)
+        record.delete()
+        deleted += 1
+
+    return deleted
+
+
+def mark_stale_restores(alias: Optional[str] = None) -> None:
+    """Restores queued or running for STALE_AFTER did not finish."""
+    from .models import Restore
+
+    queryset = Restore.objects.using(records_database()).filter(
+        status__in=[Restore.QUEUED, Restore.RUNNING],
+        created_at__lt=timezone.now() - STALE_AFTER,
+    )
+
+    if alias is not None:
+        queryset = queryset.filter(database=alias)
+
+    queryset.update(
+        status=Restore.FAILED,
+        error="The restore did not finish.",
+        finished_at=timezone.now(),
+    )
+
+
+def is_restoring(alias: Optional[str] = None, exclude_pk=None) -> bool:
+    """Whether a restore is queued or running (for a database)."""
+    from .models import Restore
+
+    mark_stale_restores(alias)
+    queryset = Restore.objects.using(records_database()).filter(
+        status__in=[Restore.QUEUED, Restore.RUNNING]
+    )
+
+    if alias is not None:
+        queryset = queryset.filter(database=alias)
+
+    if exclude_pk is not None:
+        queryset = queryset.exclude(pk=exclude_pk)
+
+    return queryset.exists()
+
+
+def make_safety_backup(alias: str, user=None) -> Backup:
+    """
+    A backup of the database just before a restore replaces it. It skips
+    the "already running" check, which the restore itself trips.
+    """
+    record = Backup.objects.using(records_database()).create(
+        database=alias,
+        trigger=Backup.BEFORE_RESTORE,
+        status=Backup.QUEUED,
+        created_by=user if user is not None and user.pk else None,
+    )
+
+    try:
+        return make_backup(backup=record)
+    except BackupError as exc:
+        raise RestoreError(f"The backup made before the restore failed: {exc}")
+
+
+def run_restore(record) -> None:
+    """
+    Carry out a queued restore: the safety backup (unless turned off),
+    then the restore. Its outcome is saved on the record; an uploaded
+    file is deleted afterwards.
+    """
+    from .models import Restore
+
+    using = records_database()
+    record.refresh_from_db(using=using)
+
+    if record.status != Restore.QUEUED:
+        return
+
+    record.status = Restore.RUNNING
+    record.started_at = timezone.now()
+    record.save(using=using, update_fields=["status", "started_at"])
+    user = record.created_by
+
+    def before_load(_preview):
+        if record.make_safety_backup:
+            record.safety_backup = make_safety_backup(record.database, user)
+            record.save(using=using, update_fields=["safety_backup"])
+
+    try:
+        preview = restore(
+            record.file,
+            record.database,
+            ignore_migrations=record.ignore_migrations,
+            before_load=before_load,
+        )
+        record.status = Restore.DONE
+        record.rows = preview["rows"]
+        record.error = ""
+        logger.info(
+            "%s restored %s into %r.", user or "Someone", record.name, record.database
+        )
+    except Exception as exc:
+        logger.exception("The restore of %s failed.", record.name)
+        record.status = Restore.FAILED
+        record.error = (
+            str(exc)
+            if isinstance(exc, RestoreError)
+            else (f"{type(exc).__name__}: {exc}".rstrip(": "))
+        )
+    finally:
+        record.finished_at = timezone.now()
+        Restore.objects.using(using).filter(pk=record.pk).update(
+            status=record.status,
+            rows=record.rows,
+            error=record.error,
+            finished_at=record.finished_at,
+            started_at=record.started_at,
+            safety_backup=record.safety_backup,
+        )
+        delete_upload(record)

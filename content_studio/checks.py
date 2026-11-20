@@ -998,8 +998,8 @@ def backup_errors() -> list[tuple[str, str]]:
     """
     Backup settings that cannot work (E050): BACKUP_STORAGE not in
     STORAGES, an unknown alias in BACKUP_DATABASES, a BACKUP_SCHEDULE
-    that is not a cron expression, BACKUP_KEEP below 1, or an unknown
-    app or model in BACKUP_EXCLUDE.
+    that is not a cron expression, BACKUP_KEEP below 1, an unknown app
+    or model in BACKUP_EXCLUDE, or a BACKUP_UPLOAD_MAX_SIZE below 1.
     """
     from django.apps import apps
     from django.conf import settings
@@ -1048,6 +1048,15 @@ def backup_errors() -> list[tuple[str, str]]:
                 config.get_model(model_name)
         except LookupError:
             errors.append(f"BACKUP_EXCLUDE names {label!r}, no installed app or model.")
+
+    max_size = cs_settings.BACKUP_UPLOAD_MAX_SIZE
+
+    if max_size is not None and (
+        not isinstance(max_size, int) or isinstance(max_size, bool) or max_size < 1
+    ):
+        errors.append(
+            "BACKUP_UPLOAD_MAX_SIZE must be a number of bytes of 1 or more, or None."
+        )
 
     return [("content_studio.E050", error) for error in errors]
 
