@@ -367,6 +367,34 @@ def test_restore_brings_the_database_back(superuser):
     assert Backup.objects.filter(pk=backup.pk).exists()
 
 
+@pytest.mark.django_db(transaction=True)
+def test_backups_and_restores_after_a_restore_get_new_ids(superuser):
+    # Emptying the database resets its sequences; the records put back
+    # keep their ids, so the sequences must move past them again.
+    first = backups.make_backup()
+    second = backups.make_backup()
+    earlier = Restore.objects.create(
+        database="default",
+        source=Restore.UPLOAD,
+        name="old.json.gz",
+        status=Restore.DONE,
+    )
+
+    backups.restore(first.file)
+
+    after = backups.make_backup()
+    restore = Restore.objects.create(
+        database="default",
+        source=Restore.UPLOAD,
+        name="new.json.gz",
+        status=Restore.DONE,
+    )
+
+    assert after.status == Backup.DONE
+    assert after.pk > second.pk
+    assert restore.pk > earlier.pk
+
+
 @pytest.mark.django_db
 def test_restore_from_a_file_on_disk(tmp_path):
     Article.objects.create(title="On disk")

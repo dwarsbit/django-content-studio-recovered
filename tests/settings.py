@@ -70,6 +70,20 @@ DATABASES = {
     }
 }
 
+# Run the tests on PostgreSQL: TEST_POSTGRES_HOST=localhost pytest
+if os.environ.get("TEST_POSTGRES_HOST"):
+    DATABASES["default"] = {
+        "ENGINE": "django.db.backends.postgresql",
+        "HOST": os.environ["TEST_POSTGRES_HOST"],
+        "PORT": os.environ.get("TEST_POSTGRES_PORT", "5432"),
+        "NAME": os.environ.get("TEST_POSTGRES_DB", "content_studio"),
+        "USER": os.environ.get("TEST_POSTGRES_USER", "postgres"),
+        "PASSWORD": os.environ.get("TEST_POSTGRES_PASSWORD", "postgres"),
+        # The test app has no migrations and refers to auth's tables,
+        # which PostgreSQL checks at once: make every table in one go.
+        "TEST": {"MIGRATE": False},
+    }
+
 AUTH_PASSWORD_VALIDATORS = [
     {
         "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
