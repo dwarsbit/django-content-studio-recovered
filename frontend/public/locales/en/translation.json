@@ -104,6 +104,7 @@
     "empty_state": "No items yet",
     "back_to_list": "Back to the list",
     "more_actions": "More actions",
+    "view_on_site": "View on site",
     "unique_warning": "\"{{object}}\" ({{modelName}}) already uses this {{fieldName}}.",
     "unique_warning_trashed": "\"{{object}}\" ({{modelName}}, in the trash) already uses this {{fieldName}}.",
     "unique_warning_hidden": "Another object already uses this {{fieldName}}.",

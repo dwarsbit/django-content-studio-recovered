@@ -105,6 +105,7 @@
     "empty_state": "Aucun élément pour l’instant",
     "back_to_list": "Retour à la liste",
     "more_actions": "Plus d’actions",
+    "view_on_site": "Voir sur le site",
     "unique_warning": "« {{object}} » ({{modelName}}) utilise déjà cette valeur pour {{fieldName}}.",
     "unique_warning_trashed": "« {{object}} » ({{modelName}}, dans la corbeille) utilise déjà cette valeur pour {{fieldName}}.",
     "unique_warning_hidden": "Un autre objet utilise déjà cette valeur pour {{fieldName}}.",

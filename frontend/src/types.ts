@@ -638,6 +638,9 @@ export interface Resource {
   // What the edit page of a user offers besides the fields, on detail
   // responses of the user model.
   __user__?: UserInfo;
+  // The URL of the object's public page for the edit page's "View on
+  // site" button (the studio's view_on_site), on detail responses.
+  __view_on_site__?: string | null;
   [key: string]: unknown;
 }
 

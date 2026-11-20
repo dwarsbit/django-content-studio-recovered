@@ -105,6 +105,7 @@
     "empty_state": "Aún no hay elementos",
     "back_to_list": "Volver a la lista",
     "more_actions": "Más acciones",
+    "view_on_site": "Ver en el sitio",
     "unique_warning": "«{{object}}» ({{modelName}}) ya usa este valor de {{fieldName}}.",
     "unique_warning_trashed": "«{{object}}» ({{modelName}}, en la papelera) ya usa este valor de {{fieldName}}.",
     "unique_warning_hidden": "Otro objeto ya usa este valor de {{fieldName}}.",

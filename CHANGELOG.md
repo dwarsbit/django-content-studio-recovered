@@ -4,6 +4,15 @@
 
 ### Features
 
+- **View on site.** When a model has `get_absolute_url()`, the edit page
+  header shows a "View on site" button that opens the object's public page
+  in a new tab, as in the Django admin. Like Django, a studio sets
+  `view_on_site = False` to hide it, or a `view_on_site(obj)` method that
+  returns the URL (`None` hides it for that object). By default it follows
+  the studio's `get_link_url`, so a headless site that overrides it for
+  rich text links gets the right page here too. System check
+  `content_studio.E045` reports any other value.
+
 - **German, French, Spanish, Italian and Brazilian Portuguese.** The
   admin is translated into five more languages, next to English and
   Dutch: the interface, the date picker, Content Studio's field labels and

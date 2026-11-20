@@ -1422,6 +1422,29 @@ def edit_width_errors(studio) -> list[tuple[str, str]]:
     ]
 
 
+def view_on_site_errors(studio) -> list[tuple[str, str]]:
+    """
+    A view_on_site that is neither a boolean nor a method, as (check
+    id, message) pairs: anything else would silently turn the edit
+    page's "View on site" button on or off.
+    """
+    if not hasattr(studio, "view_on_site"):
+        return []
+
+    value = studio.view_on_site
+
+    if isinstance(value, bool) or callable(value):
+        return []
+
+    return [
+        (
+            "content_studio.E045",
+            f"{config_name(studio)}.view_on_site must be True, False or a "
+            "method that returns the URL of an object's public page.",
+        )
+    ]
+
+
 def duplication_errors(studio) -> list[tuple[str, str]]:
     """
     A misconfigured duplicate_inlines, as (check id, message) pairs: it
@@ -3645,6 +3668,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in duplication_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        for check_id, error in view_on_site_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in export_errors(studio):
