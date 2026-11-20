@@ -64,8 +64,9 @@ export interface DevtoolsData {
   info: DevtoolsInfo;
 }
 
-export function isDevtoolsEnabled() {
-  return window.DCS_DEVTOOLS === true || import.meta.env.DEV;
+/** On under the vite dev server, or when discover says the server has them on. */
+export function isDevtoolsEnabled(serverEnabled: boolean | undefined) {
+  return serverEnabled === true || import.meta.env.DEV;
 }
 
 interface State {

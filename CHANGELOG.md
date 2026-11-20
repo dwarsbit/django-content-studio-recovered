@@ -104,6 +104,14 @@
   `http`, `https`, `mailto` and relative URLs, and hide the button
   otherwise.
 
+- **The public admin page named the version and DEBUG.** The page every
+  visitor gets, signed in or not, set `window.DCS_VERSION`, loaded its
+  files with `?v=<version>`, and set `DCS_DEBUG` and `DCS_DEVTOOLS` while
+  `DEBUG` was on. Its files are now cache-busted with a token made from
+  the version and the `SECRET_KEY` (`window.DCS_ASSET_TOKEN`), and the UI
+  showcase and the developer tools learn they are on from `discover`,
+  behind sign-in.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

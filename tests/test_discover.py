@@ -2,10 +2,12 @@
 Tests for the discover endpoint.
 """
 
+from unittest import mock
+
 from django.contrib.auth import models as auth_models
 from django.test import TestCase, override_settings
 
-from content_studio import VERSION
+from content_studio import VERSION, views
 from content_studio.token_backends.jwt import create_access_token
 
 
@@ -32,6 +34,24 @@ class DiscoverEndpointTests(TestCase):
 
     def test_discover_carries_the_version(self):
         self.assertEqual(self.client.get("/api/discover").json()["version"], VERSION)
+
+    def test_the_public_page_does_not_name_the_version(self):
+        """The page everyone gets busts caches with a token, not the version."""
+        html = self.client_class().get("/").content.decode()
+
+        self.assertNotIn(VERSION, html)
+        self.assertNotIn("DCS_VERSION", html)
+        self.assertIn(f'?v={views.asset_token()}"', html)
+        self.assertIn(f'window.DCS_ASSET_TOKEN = "{views.asset_token()}"', html)
+
+    def test_the_asset_token_changes_with_the_version(self):
+        token = views.asset_token()
+
+        with mock.patch.object(views, "__version__", "0.0.1"):
+            self.assertNotEqual(views.asset_token(), token)
+
+        with override_settings(SECRET_KEY="another-secret-key"):
+            self.assertNotEqual(views.asset_token(), token)
 
     def test_discover_with_default_configuration(self):
         """Discover works with no extensions, media library, dashboard or tenancy."""

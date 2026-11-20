@@ -10,14 +10,12 @@
         window.DCS_STATIC_PREFIX = "{% get_static_prefix %}content_studio/";
         window.DCS_BASENAME = "{% url 'content_studio_web' %}";
         window.DCS_LANGUAGE = "{{ language|escapejs }}";
-        window.DCS_VERSION = "{{ version|escapejs }}";
-        {% if debug %}window.DCS_DEBUG = true;{% endif %}
-        {% if devtools %}window.DCS_DEVTOOLS = true;{% endif %}
+        window.DCS_ASSET_TOKEN = "{{ asset_token|escapejs }}";
     </script>
-    <script type="module" crossorigin src="{% static 'content_studio/assets/index.js' %}?v={{ version }}"></script>
-    <link rel="stylesheet" crossorigin href="{% static 'content_studio/assets/index.css' %}?v={{ version }}">
-    <link rel="stylesheet" crossorigin href="{% static 'content_studio/fonts/inter/index.css' %}?v={{ version }}">
-    <link rel="stylesheet" crossorigin href="{% static 'content_studio/icons/pi/style.css' %}?v={{ version }}">
+    <script type="module" crossorigin src="{% static 'content_studio/assets/index.js' %}?v={{ asset_token }}"></script>
+    <link rel="stylesheet" crossorigin href="{% static 'content_studio/assets/index.css' %}?v={{ asset_token }}">
+    <link rel="stylesheet" crossorigin href="{% static 'content_studio/fonts/inter/index.css' %}?v={{ asset_token }}">
+    <link rel="stylesheet" crossorigin href="{% static 'content_studio/icons/pi/style.css' %}?v={{ asset_token }}">
     {{ languages|json_script:"dcs-languages" }}
 </head>
 <body>

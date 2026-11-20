@@ -25,14 +25,8 @@ import { NotificationsPage } from "@/pages/(studio)/notifications/page";
 import { NotificationSettingsPage } from "@/pages/(studio)/notifications/settings/page";
 import { ProfilePage } from "@/pages/(studio)/profile/page";
 import { StatusPage } from "@/pages/(studio)/status/page";
-import { UIPage } from "@/pages/(studio)/ui/page";
 
 const queryClient = new QueryClient();
-
-// The UI showcase is a development tool: available under the vite dev server
-// and on Django debug deployments (the template sets DCS_DEBUG); production
-// installs never see the route.
-const uiShowcaseEnabled = import.meta.env.DEV || window.DCS_DEBUG === true;
 
 const router = createBrowserRouter(
   [
@@ -78,9 +72,6 @@ const router = createBrowserRouter(
                   path: "backups",
                   element: <BackupsPage />,
                 },
-                ...(uiShowcaseEnabled
-                  ? [{ path: "ui", element: <UIPage /> }]
-                  : []),
                 {
                   path: "content/:model",
                   element: <ModelListLayout />,
