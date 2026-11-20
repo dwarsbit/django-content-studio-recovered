@@ -47,6 +47,15 @@
   - The Deployment page advises `X-Content-Type-Options: nosniff` for
     media files.
 
+- **Staff could take over accounts with more permissions.** An editor
+  with `change_user` could set the password, send a password link, reset
+  the two-factor login or change the email of any account that was not a
+  superuser's, such as a manager holding every permission, and then sign
+  in as them. These four now need the editor to outrank the account: a
+  superuser does, anyone else only when the account is not a superuser
+  and holds no permission they lack (their own or a group's, active or
+  not). Otherwise the email is read-only and the actions are not offered.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

@@ -634,6 +634,25 @@ class ResetTests(TwoFactorTestCase):
 
         self.assertEqual(response.status_code, 403)
 
+    def test_not_for_an_account_with_more_permissions(self):
+        editor = User.objects.create_user(
+            username="sam", password=PASSWORD, is_staff=True
+        )
+        editor.user_permissions.set(
+            auth_models.Permission.objects.filter(
+                codename__in=["view_user", "change_user"]
+            )
+        )
+        self.user.user_permissions.set(
+            auth_models.Permission.objects.filter(codename="delete_user")
+        )
+        self.enable()
+
+        response = self.reset(self.user, bearer(create_access_token(editor)))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Authenticator.objects.filter(user=self.user).exists())
+
     def test_not_the_own(self):
         secret, _ = self.enable(self.admin)
         access = self.verify(

@@ -3,10 +3,12 @@ Managing other users: the user model's studio, whichever class a project
 registers for it, gets a password that admins set, and a guard on what
 staff who are not superusers may change.
 
-The guard: only a superuser toggles is_superuser, and only a superuser
-changes the email or sets the password of a superuser. Either would let
-a staff member take over a superuser account (the email through a
-password reset), so neither is left to the change permission alone.
+The guard: only a superuser toggles is_superuser. And staff who are not
+superusers only take over the accounts they outrank (may_manage_account):
+not a superuser's, and not one holding a permission they lack. Setting
+the password, emailing a password link, resetting the two-factor login
+and changing the email (through a password reset) each hand over the
+account, so none is left to the change permission alone.
 """
 
 from typing import Optional
@@ -40,6 +42,56 @@ def _is_superuser(user) -> bool:
     return bool(getattr(user, "is_superuser", False))
 
 
+def permission_keys(user) -> set[str]:
+    """
+    Every permission user is given, as "app_label.codename": their own
+    and their groups', whether or not the account is active (an inactive
+    account is one change away from using them), plus what the
+    authentication backends grant an active one.
+    """
+    from django.contrib.auth.models import Permission
+
+    keys: set[str] = set()
+    model = type(user)
+
+    if _has_field(model, "user_permissions") and _has_field(model, "groups"):
+        rows = (
+            Permission.objects.filter(models.Q(user=user) | models.Q(group__user=user))
+            .values_list("content_type__app_label", "codename")
+            .distinct()
+        )
+        keys.update(f"{app_label}.{codename}" for app_label, codename in rows)
+
+    if getattr(user, "is_active", False) and callable(
+        getattr(user, "get_all_permissions", None)
+    ):
+        keys.update(user.get_all_permissions())
+
+    return keys
+
+
+def may_manage_account(user, target) -> bool:
+    """
+    Whether user may take over target's account: set its password, email
+    it a password link, reset its two-factor login or change its email.
+    A superuser may for everyone; anyone else only for an account that is
+    not a superuser and holds no permission user lacks, so nobody gains
+    permissions by signing in as someone else.
+    """
+    from .permission_matrix import held_permission_keys
+
+    if _is_superuser(user):
+        return True
+
+    if _is_superuser(target):
+        return False
+
+    if target.pk is not None and target.pk == getattr(user, "pk", None):
+        return True
+
+    return permission_keys(target) <= (held_permission_keys(user) or set())
+
+
 def guarded_field_names(
     model, request: Optional[HttpRequest], obj: Optional[models.Model] = None
 ) -> set[str]:
@@ -61,7 +113,7 @@ def guarded_field_names(
     if _has_field(model, "is_superuser"):
         names.add("is_superuser")
 
-    if obj is not None and _is_superuser(obj):
+    if obj is not None and not may_manage_account(user, obj):
         email_field = model.get_email_field_name()
 
         if _has_field(model, email_field):
@@ -85,8 +137,8 @@ def uses_password_login(site=None) -> bool:
 def can_set_password(studio, request: HttpRequest, obj) -> bool:
     """
     Whether the request may set obj's password: the site signs in with
-    passwords, the studio allows changing obj, and a superuser's
-    password is only set by a superuser. The own password is changed on
+    passwords, the studio allows changing obj, and the request's user
+    may manage obj's account (may_manage_account). The own password is changed on
     the profile page, which asks for the current one.
     """
     if not is_user_model(type(obj)) or not uses_password_login():
@@ -97,7 +149,7 @@ def can_set_password(studio, request: HttpRequest, obj) -> bool:
     if obj.pk == user.pk:
         return False
 
-    if _is_superuser(obj) and not _is_superuser(user):
+    if not may_manage_account(user, obj):
         return False
 
     return bool(studio.has_change_permission(request, obj))
@@ -121,8 +173,8 @@ def can_send_password_link(studio, request: HttpRequest, obj) -> bool:
 def can_reset_two_factor(studio, request: HttpRequest, obj) -> bool:
     """
     Whether the request may reset obj's two-factor login (a lost phone):
-    it is on, the studio allows changing obj, and a superuser's is only
-    reset by a superuser. The own is turned off on the profile page.
+    it is on, the studio allows changing obj, and the request's user may
+    manage obj's account (may_manage_account). The own is turned off on the profile page.
     """
     from .login import has_two_factor
 
@@ -134,7 +186,7 @@ def can_reset_two_factor(studio, request: HttpRequest, obj) -> bool:
     if obj.pk == user.pk:
         return False
 
-    if _is_superuser(obj) and not _is_superuser(user):
+    if not may_manage_account(user, obj):
         return False
 
     return bool(studio.has_change_permission(request, obj))

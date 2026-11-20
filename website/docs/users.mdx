@@ -5,7 +5,8 @@ Content Studio registers the user model and Django's groups when your
 project does not. On top of the fields, admins invite new users by email,
 send a link to set a new password or set one themselves, pick permissions
 in a matrix, and Content Studio keeps staff who are not superusers from
-taking over a superuser account or granting more than they have.
+taking over an account with more permissions than theirs, or granting more
+than they have.
 
 ## Invites and password links
 
@@ -70,7 +71,9 @@ new password from then on. The change is recorded in the activity log as
 - the editor may change the user: the user model studio's
   `has_change_permission(request, obj)`, by default Django's `change_user`
   permission,
-- the user is not a superuser, or the editor is one too,
+- the editor [outranks the user](#what-staff-who-are-not-superusers-can-change):
+  the editor is a superuser, or the user is not one and holds no
+  permission the editor lacks,
 - the user is not the editor. Editors change their own password on their
   [profile page](/docs/profile#password), which asks for the current one.
 
@@ -96,12 +99,20 @@ every field of every user, including `is_superuser`. A staff member could
 make themselves a superuser, or change a superuser's email address and then
 [reset the password](/docs/authentication#password-reset) sent to it.
 
-Content Studio closes both. For editors who are not superusers:
+Content Studio closes both. An editor who is not a superuser only takes
+over the accounts they outrank: not a superuser's, and not one that holds a
+permission the editor lacks, through the user or a group, active or not.
+For editors who are not superusers:
 
 - `is_superuser` is read-only, on the create page and on every user.
-- A superuser's email address is read-only.
-- A superuser's password cannot be set, and no password link can be sent
-  to them.
+- The email address of an account they do not outrank is read-only.
+- The password of an account they do not outrank cannot be set, no
+  password link can be sent to it, and its two-factor login cannot be
+  reset.
+
+So an editor with `change_user` can look after the accounts of editors
+with the same permissions or fewer, but not of a manager who also holds
+`delete_user`.
 
 Superusers can change everything. The fields show read-only on the edit
 page and the server does not save them either, whichever studio you

@@ -58,7 +58,7 @@ content_studio/
 ├── thumbnails.py        # Thumbnails of media images (Pillow, "small"/"large" WebP under THUMBNAIL_FOLDER)
 ├── presence.py          # Presence: who has an object open, kept in Django's cache (PRESENCE, PRESENCE_CACHE)
 ├── profile.py           # The profile page of the signed-in user: profile_fields (get_profile_fields), the activity overview and recent content from LogEntry, the password change (api/profile)
-├── users.py             # Managing other users: Set password (api/content/<user model>/<id>/password) and the guard on is_superuser and superusers' email for staff who are not superusers
+├── users.py             # Managing other users: Set password (api/content/<user model>/<id>/password) and the guard for staff who are not superusers: is_superuser, and may_manage_account (password, link, two-factor reset, email only on accounts holding a subset of their permissions)
 ├── password_links.py    # Invite and password links: Django's default_token_generator, the emails (a Django task, templates in templates/content_studio/users) and the public set-password endpoints (api/set-password)
 ├── permission_matrix.py # The permission matrix's options (api/content/<model>/permissions/<field>) and the guard: staff who are not superusers only grant permissions (and groups) they have
 ├── user_studios.py      # The default UserStudio and GroupStudio, registered when a project registers none
