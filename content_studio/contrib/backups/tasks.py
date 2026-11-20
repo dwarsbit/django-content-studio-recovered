@@ -9,6 +9,9 @@ and otherwise the backup runs in place.
 
 scheduled_backup is what Huey's periodic task runs on BACKUP_SCHEDULE
 (see huey.py), and what content_studio_backup runs from cron.
+
+restore_database carries out a restore started on the Backups page, the
+same way: on the task backend when there is one, in place otherwise.
 """
 
 import logging
@@ -45,10 +48,11 @@ def run_backup(backup_id: int) -> None:
 
 def scheduled_backup():
     """Back up the database (Content Studio's scheduled backup)."""
-    from .backup import make_backups
+    from .backup import clean_uploads, make_backups
     from .models import Backup
 
     make_backups(Backup.SCHEDULED)
+    clean_uploads()
 
 
 class _SynchronousTask:
@@ -100,3 +104,36 @@ def enqueue_backups(user=None) -> list:
 
     transaction.on_commit(enqueue)
     return queued
+
+
+def restore_database(restore_id: int) -> None:
+    """Carry out the queued restore with this id."""
+    from .backup import records_database, run_restore
+    from .models import Restore
+
+    record = Restore.objects.using(records_database()).filter(pk=restore_id).first()
+
+    if record is not None:
+        run_restore(record)
+
+
+restore_database_task = (
+    task(restore_database) if task is not None else _SynchronousTask(restore_database)
+)
+
+
+def enqueue_restore(record) -> None:
+    """Enqueue a queued restore's task once the request's transaction commits."""
+    from .models import Restore
+
+    def enqueue():
+        try:
+            restore_database_task.enqueue(record.pk)
+        except Exception as exc:
+            logger.exception("Could not enqueue the restore %s.", record.pk)
+            Restore.objects.filter(pk=record.pk).update(
+                status=Restore.FAILED,
+                error=f"{type(exc).__name__}: {exc}",
+            )
+
+    transaction.on_commit(enqueue)

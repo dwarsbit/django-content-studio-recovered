@@ -2,6 +2,30 @@
 
 ## 1.17.1 (unreleased)
 
+### Features
+
+- **Restore a backup on the Backups page.** Each finished backup has a
+  Restore button, and **Restore from a file…** uploads one. The dialog
+  shows what the file holds and whether its migrations match, backs up
+  the current data first (shown as *Before restore*), and asks for the
+  database's name and your password. The restore runs as a Django task;
+  the page shows it running and lists the latest restores. Override
+  `has_restore_permission(request)` on the admin site to decide who may
+  restore (superusers by default), and set `BACKUP_UPLOAD_MAX_SIZE` to
+  limit uploads (1 GB by default).
+- **Restore files made with `dumpdata`**, on the page and with
+  `content_studio_restore`: `.json`, `.json.gz`, `.json.bz2`, `.json.xz`
+  and `.json.lzma`. Content type and permission ids are matched by name,
+  so a plain dump without `--natural-foreign` loads too.
+- `content_studio_restore` backs up the current data before it restores.
+  `--no-safety-backup` skips it.
+
+### Fixes
+
+- `content_studio_restore` failed on a plain `dumpdata` file: a `.json`
+  file was read as gzip, and a `.json.gz` one clashed with the
+  permissions migrate makes.
+
 ### Security
 
 - **Backups could be downloaded by anyone who guessed the time.** With

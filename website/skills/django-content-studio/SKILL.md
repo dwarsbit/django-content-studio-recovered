@@ -579,7 +579,9 @@ Each is optional and has its own page:
 - Automatic database backups (`content_studio.contrib.backups`: a gzipped
   fixture per database in `BACKUP_STORAGE` on `BACKUP_SCHEDULE`, a cron
   expression run by Huey or by `content_studio_backup` from cron; the
-  newest `BACKUP_KEEP` are kept; restore with `content_studio_restore`;
+  newest `BACKUP_KEEP` are kept; superusers restore a backup or an
+  uploaded `dumpdata` file on the Backups page (`has_restore_permission`),
+  or run `content_studio_restore`;
   keep the storage private, `manage.py check` errors with E052 if it may
   be public):
   https://djangocontentstudio.org/docs/backups.md

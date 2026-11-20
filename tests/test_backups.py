@@ -27,7 +27,7 @@ from content_studio.checks import (
 from content_studio.contrib.backups import backup as backups
 from content_studio.contrib.backups import huey as backup_huey
 from content_studio.contrib.backups import schedule, status
-from content_studio.contrib.backups.models import Backup
+from content_studio.contrib.backups.models import Backup, Restore
 from content_studio.contrib.status import ServiceStatus
 from content_studio.contrib.status import registry as status_registry
 from content_studio.settings import cs_settings
@@ -651,6 +651,431 @@ def test_restore_command_asks_for_the_database_name():
 def test_restore_command_needs_a_backup():
     with pytest.raises(CommandError, match="--latest"):
         call_command("content_studio_restore", "--noinput")
+
+
+# Restoring dumpdata files
+
+
+def test_prepare_matches_content_types_and_permissions_by_name():
+    from content_studio.contrib.backups import fixtures
+
+    rows = [
+        {
+            "model": "contenttypes.contenttype",
+            "pk": 900,
+            "fields": {"app_label": "testapp", "model": "article"},
+        },
+        {
+            "model": "auth.permission",
+            "pk": 9001,
+            "fields": {
+                "name": "Can add article",
+                "content_type": 900,
+                "codename": "add_article",
+            },
+        },
+        {
+            "model": "auth.group",
+            "pk": 3,
+            "fields": {"name": "Editors", "permissions": [9001]},
+        },
+        {"model": "sessions.session", "pk": "abc", "fields": {}},
+        {"model": "content_studio_backups.backup", "pk": 1, "fields": {}},
+        {"model": "shop.order", "pk": 1, "fields": {}},
+    ]
+
+    fixture = fixtures.prepare(rows)
+
+    [group] = fixture.rows
+    assert group["fields"]["permissions"] == [["add_article", "testapp", "article"]]
+    assert fixture.counts == {"auth.Group": 1}
+    assert fixture.skipped == 4
+    assert fixture.remapped == 1
+    assert fixture.unknown_models == ["shop.order"]
+
+
+def test_prepare_refuses_an_id_the_file_does_not_hold():
+    from content_studio.contrib.backups import fixtures
+
+    rows = [
+        {"model": "auth.group", "pk": 3, "fields": {"name": "E", "permissions": [7]}}
+    ]
+
+    with pytest.raises(fixtures.FixtureError, match="permission 7"):
+        fixtures.prepare(rows)
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize("suffix", [".json", ".json.gz", ".json.bz2", ".json.xz"])
+def test_restore_a_plain_dumpdata_file(tmp_path, suffix, superuser):
+    group = auth_models.Group.objects.create(name="Editors")
+    group.permissions.add(auth_models.Permission.objects.get(codename="add_article"))
+    Article.objects.create(title="Dumped", author=superuser)
+    # A backup record in the file: the restore keeps its own records.
+    Backup.objects.create(status=Backup.DONE, file="old.json.gz")
+    path = str(tmp_path / f"site{suffix}")
+    call_command("dumpdata", output=path, verbosity=0)
+
+    Article.objects.all().delete()
+    group.delete()
+
+    with pytest.raises(backups.RestoreError, match="no manifest"):
+        backups.restore(path)
+
+    preview = backups.restore(path, ignore_migrations=True)
+
+    assert Article.objects.filter(title="Dumped").exists()
+    restored = auth_models.Group.objects.get(name="Editors")
+    assert list(restored.permissions.values_list("codename", flat=True)) == [
+        "add_article"
+    ]
+    assert preview["manifest"] is False
+    assert preview["rows"] >= 3
+    assert Backup.objects.count() == 1
+
+
+@pytest.mark.django_db
+def test_restore_refuses_other_files(tmp_path):
+    path = tmp_path / "site.xml"
+    path.write_text("<django-objects/>")
+
+    with pytest.raises(backups.RestoreError, match="not a JSON fixture"):
+        backups.restore(str(path), ignore_migrations=True)
+
+    path = tmp_path / "site.json"
+    path.write_text('{"not": "a list"}')
+
+    with pytest.raises(backups.RestoreError, match="not a Django fixture"):
+        backups.restore(str(path), ignore_migrations=True)
+
+
+@pytest.mark.django_db
+def test_restore_refuses_models_that_are_not_installed(tmp_path):
+    path = tmp_path / "site.json"
+    path.write_text(json.dumps([{"model": "shop.order", "pk": 1, "fields": {}}]))
+    Article.objects.create(title="Stays")
+
+    with pytest.raises(backups.RestoreError, match="not installed: shop.order"):
+        backups.restore(str(path), ignore_migrations=True)
+
+    assert Article.objects.filter(title="Stays").exists()
+
+
+@pytest.mark.django_db
+def test_before_load_runs_after_the_checks(tmp_path):
+    path = tmp_path / "site.json"
+    path.write_text(json.dumps([{"model": "shop.order", "pk": 1, "fields": {}}]))
+    before_load = mock.Mock()
+
+    with pytest.raises(backups.RestoreError):
+        backups.restore(str(path), ignore_migrations=True, before_load=before_load)
+
+    before_load.assert_not_called()
+
+
+@pytest.mark.django_db
+def test_the_name_to_type_is_the_database_file_name():
+    with mock.patch.dict(
+        backups.connections["default"].settings_dict, {"NAME": "/srv/blog/db.sqlite3"}
+    ):
+        assert backups.database_name("default") == "db.sqlite3"
+
+    with mock.patch.dict(
+        backups.connections["default"].settings_dict, {"NAME": "travel_magazine"}
+    ):
+        assert backups.database_name("default") == "travel_magazine"
+
+
+# Restoring from the Backups page
+
+IMMEDIATE = {"default": {"BACKEND": "django.tasks.backends.immediate.ImmediateBackend"}}
+
+
+def dumpdata_upload(name="site.json.gz"):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    out = io.StringIO()
+    call_command("dumpdata", stdout=out, verbosity=0)
+    content = out.getvalue().encode()
+
+    if name.endswith(".gz"):
+        content = gzip.compress(content)
+
+    return SimpleUploadedFile(name, content, content_type="application/gzip")
+
+
+def confirm_data(**extra):
+    return {
+        "confirm": backups.database_name("default"),
+        "password": "x",
+        **extra,
+    }
+
+
+@pytest.mark.django_db
+def test_the_page_says_who_may_restore(superuser):
+    data = client_for(superuser).get("/api/backups").json()
+
+    assert data["restore"]["enabled"] is True
+    assert data["restore"]["databases"] == [
+        {"alias": "default", "name": backups.database_name("default")}
+    ]
+    assert data["restore"]["max_upload_size"] == 1024**3
+    assert data["restores"] == []
+
+
+@pytest.mark.django_db
+def test_restoring_can_be_turned_off(superuser):
+    backup = backups.make_backup()
+    client = client_for(superuser)
+
+    with mock.patch.object(
+        type(cs_settings.ADMIN_SITE), "has_restore_permission", return_value=False
+    ):
+        assert client.get("/api/backups").json()["restore"]["enabled"] is False
+        assert client.get(f"/api/backups/{backup.pk}/inspect").status_code == 403
+        assert (
+            client.post("/api/backups/restore", {"backup": backup.pk}).status_code
+            == 403
+        )
+
+
+@pytest.mark.django_db
+def test_restore_endpoints_are_for_superusers(staff):
+    client = client_for(staff)
+
+    assert client.post("/api/backups/restore", {}).status_code == 403
+    assert client.post("/api/backups/uploads", {}).status_code == 403
+
+
+@pytest.mark.django_db
+def test_inspect_a_listed_backup(superuser):
+    Article.objects.create(title="One")
+    backup = backups.make_backup()
+
+    response = client_for(superuser).get(f"/api/backups/{backup.pk}/inspect")
+
+    assert response.status_code == 200
+    preview = response.json()["preview"]
+    assert preview["manifest"] is True
+    assert preview["migrations"]["match"] is True
+    assert {"label": "testapp.Article", "count": 1} in preview["models"]
+    assert preview["database_name"] == backups.database_name("default")
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(TASKS=IMMEDIATE)
+def test_restore_a_listed_backup(superuser):
+    Article.objects.create(title="Before")
+    backup = backups.make_backup()
+    Article.objects.all().delete()
+    Article.objects.create(title="After")
+    client = client_for(superuser)
+
+    response = client.post(
+        "/api/backups/restore",
+        {"backup": backup.pk, **confirm_data()},
+        format="json",
+    )
+
+    assert response.status_code == 202, response.json()
+    assert list(Article.objects.values_list("title", flat=True)) == ["Before"]
+    record = Restore.objects.get()
+    assert record.status == Restore.DONE
+    assert record.backup == backup
+    assert record.rows >= 2
+    assert record.created_by == superuser
+    safety = record.safety_backup
+    assert safety.trigger == Backup.BEFORE_RESTORE
+    assert safety.status == Backup.DONE
+
+    data = client.get("/api/backups").json()
+    [row] = data["restores"]
+    assert row["status"] == "done"
+    assert row["safety_backup"] == safety.file.rsplit("/", 1)[-1]
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(TASKS=IMMEDIATE)
+def test_restore_without_the_safety_backup(superuser):
+    backup = backups.make_backup()
+
+    response = client_for(superuser).post(
+        "/api/backups/restore",
+        {"backup": backup.pk, "safety_backup": False, **confirm_data()},
+        format="json",
+    )
+
+    assert response.status_code == 202
+    assert Restore.objects.get().safety_backup is None
+    assert not Backup.objects.filter(trigger=Backup.BEFORE_RESTORE).exists()
+
+
+@pytest.mark.django_db
+def test_restore_asks_for_the_name_and_the_password(superuser):
+    backup = backups.make_backup()
+
+    response = client_for(superuser).post(
+        "/api/backups/restore",
+        {"backup": backup.pk, "confirm": "wrong", "password": "wrong"},
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert set(response.json()) == {"confirm", "password"}
+    assert not Restore.objects.exists()
+
+
+@pytest.mark.django_db
+@override_settings(
+    TASKS={"default": {"BACKEND": "django.tasks.backends.dummy.DummyBackend"}}
+)
+def test_one_restore_at_a_time(superuser):
+    backup = backups.make_backup()
+    client = client_for(superuser)
+    data = {"backup": backup.pk, **confirm_data()}
+
+    assert client.post("/api/backups/restore", data, format="json").status_code == 202
+    assert client.post("/api/backups/restore", data, format="json").status_code == 409
+    # Back up now waits too.
+    assert client.post("/api/backups").status_code == 409
+
+
+@pytest.mark.django_db(transaction=True)
+@override_settings(TASKS=IMMEDIATE)
+def test_upload_and_restore_a_dumpdata_file(superuser, fresh_storage):
+    Article.objects.create(title="Uploaded", author=superuser)
+    upload = dumpdata_upload()
+    Article.objects.all().delete()
+    client = client_for(superuser)
+
+    response = client.post("/api/backups/uploads", {"file": upload}, format="multipart")
+
+    assert response.status_code == 201, response.json()
+    data = response.json()
+    preview = data["preview"]
+    assert preview["manifest"] is False
+    assert preview["migrations"]["checked"] is False
+    assert preview["skipped"] > 0
+    upload_id = data["upload"]["id"]
+    record = Restore.objects.get(pk=upload_id)
+    assert record.status == Restore.PENDING
+    assert fresh_storage.exists(record.file)
+    assert "/uploads/" in record.file
+
+    # The migrations cannot be checked: the dialog's box confirms it.
+    response = client.post(
+        "/api/backups/restore", {"upload": upload_id, **confirm_data()}, format="json"
+    )
+    assert response.status_code == 400
+    assert "ignore_migrations" in response.json()
+
+    response = client.post(
+        "/api/backups/restore",
+        {"upload": upload_id, "ignore_migrations": True, **confirm_data()},
+        format="json",
+    )
+
+    assert response.status_code == 202, response.json()
+    assert Article.objects.filter(title="Uploaded").exists()
+    record = Restore.objects.get(pk=upload_id)
+    assert record.status == Restore.DONE
+    assert record.source == Restore.UPLOAD
+    assert record.name == "site.json.gz"
+    assert not fresh_storage.exists(record.file)
+
+
+@pytest.mark.django_db
+def test_upload_refuses_other_files(superuser):
+    from django.core.files.uploadedfile import SimpleUploadedFile
+
+    client = client_for(superuser)
+    response = client.post(
+        "/api/backups/uploads",
+        {"file": SimpleUploadedFile("site.sql", b"DROP TABLE x;")},
+        format="multipart",
+    )
+
+    assert response.status_code == 400
+    assert "JSON fixtures" in response.json()["file"][0]
+
+    response = client.post(
+        "/api/backups/uploads",
+        {"file": SimpleUploadedFile("site.json", b"{oops")},
+        format="multipart",
+    )
+
+    assert response.status_code == 400
+    assert "not valid JSON" in response.json()["file"][0]
+    assert not Restore.objects.exists()
+
+
+@pytest.mark.django_db
+def test_upload_size_limit(superuser):
+    with mock.patch.object(cs_settings, "BACKUP_UPLOAD_MAX_SIZE", 10):
+        response = client_for(superuser).post(
+            "/api/backups/uploads", {"file": dumpdata_upload()}, format="multipart"
+        )
+
+    assert response.status_code == 400
+    assert "larger than" in response.json()["file"][0]
+
+
+@pytest.mark.django_db
+def test_cancel_an_upload(superuser, fresh_storage):
+    client = client_for(superuser)
+    upload_id = client.post(
+        "/api/backups/uploads", {"file": dumpdata_upload()}, format="multipart"
+    ).json()["upload"]["id"]
+    name = Restore.objects.get(pk=upload_id).file
+
+    assert client.delete(f"/api/backups/uploads/{upload_id}").status_code == 204
+    assert not Restore.objects.exists()
+    assert not fresh_storage.exists(name)
+
+
+@pytest.mark.django_db
+def test_old_uploads_are_cleaned_up(superuser, fresh_storage):
+    client = client_for(superuser)
+    upload_id = client.post(
+        "/api/backups/uploads", {"file": dumpdata_upload()}, format="multipart"
+    ).json()["upload"]["id"]
+    record = Restore.objects.get(pk=upload_id)
+    Restore.objects.filter(pk=upload_id).update(
+        created_at=timezone.now() - datetime.timedelta(days=2)
+    )
+
+    assert backups.clean_uploads() == 1
+    assert not fresh_storage.exists(record.file)
+
+
+@pytest.mark.django_db
+def test_restore_command_backs_up_first():
+    Article.objects.create(title="Back")
+    backups.make_backup()
+    Article.objects.all().delete()
+    Article.objects.create(title="Current")
+
+    call_command("content_studio_restore", "--latest", "--noinput", verbosity=0)
+
+    safety = Backup.objects.get(trigger=Backup.BEFORE_RESTORE)
+    assert safety.status == Backup.DONE
+    assert safety.manifest["counts"]["testapp.Article"] == 1
+
+
+@pytest.mark.django_db
+def test_restore_command_without_the_safety_backup():
+    backups.make_backup()
+
+    call_command(
+        "content_studio_restore",
+        "--latest",
+        "--noinput",
+        "--no-safety-backup",
+        verbosity=0,
+    )
+
+    assert not Backup.objects.filter(trigger=Backup.BEFORE_RESTORE).exists()
 
 
 # Huey
