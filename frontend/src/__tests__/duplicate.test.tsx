@@ -317,3 +317,71 @@ describe("Duplicate", () => {
     ).toBeNull();
   });
 });
+
+describe("Edit actions", () => {
+  beforeEach(() => {
+    vi.resetAllMocks();
+    mockApi();
+  });
+
+  function withEditActions(): Model {
+    const model = makeModel();
+
+    model.admin.edit.actions = [
+      {
+        id: "publish",
+        label: "Publish",
+        icon: null,
+        confirm: null,
+        destructive: false,
+      },
+    ];
+
+    return model;
+  }
+
+  it("runs the studio's edit actions on the object and reloads it", async () => {
+    useDiscoverMock.mockReturnValue({
+      data: makeDiscover(withEditActions()),
+    });
+    httpMock.post.mockResolvedValue({ data: { message: "Published." } });
+    const user = userEvent.setup();
+    renderEditor("/content/testapp.article/7");
+    await screen.findByDisplayValue("hello");
+
+    await user.click(
+      screen.getByRole("button", { name: "editor.more_actions" }),
+    );
+    await user.click(await screen.findByRole("menuitem", { name: "Publish" }));
+
+    await waitFor(() =>
+      expect(httpMock.post).toHaveBeenCalledWith(
+        "/content/testapp.article/bulk",
+        { action: "publish", ids: ["7"] },
+      ),
+    );
+    // The object is fetched again for its new values.
+    await waitFor(() =>
+      expect(
+        httpMock.get.mock.calls.filter(
+          ([url]) => url === "/content/testapp.article/7",
+        ).length,
+      ).toBeGreaterThan(1),
+    );
+  });
+
+  it("offers none by default", async () => {
+    useDiscoverMock.mockReturnValue({ data: makeDiscover(makeModel()) });
+    const user = userEvent.setup();
+    renderEditor("/content/testapp.article/7");
+    await screen.findByDisplayValue("hello");
+
+    await user.click(
+      screen.getByRole("button", { name: "editor.more_actions" }),
+    );
+
+    expect(
+      (await screen.findAllByRole("menuitem")).map((item) => item.textContent),
+    ).not.toContain("Publish");
+  });
+});

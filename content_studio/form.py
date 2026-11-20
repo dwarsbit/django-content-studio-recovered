@@ -48,6 +48,7 @@ class Field:
         readonly: bool = False,
         widget: Union[Type, object] | None = None,
         when: When = None,
+        form_field: Any = None,
     ):
         self.name = name
         self.col_span = col_span
@@ -61,9 +62,13 @@ class Field:
         # values. A hidden field is not saved: its value stays as it is.
         conditions.validate(when, f"Field({name!r})")
         self.when = when
+        # An input of an action's dialog that is not a model field: a
+        # Django form field (forms.CharField(), forms.ModelChoiceField(),
+        # ...). Only action fields take one.
+        self.form_field = form_field
 
     def serialize(self) -> dict[str, Any]:
-        return {
+        data: dict[str, Any] = {
             "type": "field",
             "name": self.name,
             "col_span": self.col_span,
@@ -72,6 +77,14 @@ class Field:
             "widget": as_instance(self.widget).serialize() if self.widget else None,
             "when": conditions.serialize(self.when),
         }
+
+        # A form field describes itself like a model field would.
+        if self.form_field is not None:
+            from .action_forms import serialize_form_field
+
+            data["input"] = serialize_form_field(self.form_field)
+
+        return data
 
 
 class FieldLayout:
@@ -389,9 +402,20 @@ class Button(Component):
     # Shown in the destructive style.
     destructive: bool = False
     allowed_permissions: Union[list[str], tuple[str, ...]] = ("change",)
+    # The inputs the button asks for in a dialog before it runs: names
+    # of model fields (starting from the object's values) and
+    # Field(name, form_field=...) for inputs that are not on the model.
+    # handle() then receives the validated values as a third argument.
+    fields: Union[list, tuple] = ()
 
     def get_id_parts(self) -> tuple[Any, ...]:
         return (self.label,)
+
+    def get_form(self, model):
+        """The button's ActionForm, or None without fields."""
+        from .action_forms import get_action_form
+
+        return get_action_form(model, self.fields)
 
     def is_visible(self, obj: Any, request) -> bool:
         return True
@@ -408,8 +432,11 @@ class Button(Component):
     def handle(self, obj: Any, request) -> Union[None, StrOrPromise, ButtonResult]:
         raise NotImplementedError("A button needs a handle(obj, request) method.")
 
-    def run(self, obj: Model, request) -> ButtonResult:
-        result = self.handle(obj, request)
+    def run(self, obj: Any, request, data=None) -> ButtonResult:
+        if self.fields:
+            result = self.handle(obj, request, data or {})
+        else:
+            result = self.handle(obj, request)
 
         if isinstance(result, ButtonResult):
             return result
@@ -423,6 +450,10 @@ class Button(Component):
             "icon": self.icon,
             "confirm": None if self.confirm is None else str(self.confirm),
             "destructive": self.destructive,
+            "fields": [
+                (field if isinstance(field, Field) else Field(field)).serialize()
+                for field in self.fields
+            ],
         }
 
 

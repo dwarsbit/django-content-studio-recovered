@@ -334,6 +334,97 @@ actions = ["publish", "delete"]  # exactly these, in this order
 System check `content_studio.E007` reports unknown or duplicate names and
 an action that would replace the built-in delete or export.
 
+### Asking for values first
+
+An action can ask editors for values before it runs: "assign to...", "set
+status to...". List them in `fields`, and the action opens a dialog with
+those fields; the method then also receives the values, as a dictionary:
+
+```python
+# blog/admin.py
+from django import forms
+from django.db.models import Q
+
+from content_studio import register
+from content_studio.actions import bulk_action
+from content_studio.admin import ModelStudio
+from content_studio.form import Field
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    @bulk_action(
+        label="Assign",
+        icon="ph-bold ph-user-switch",
+        fields=[
+            # A model field: the edit page's widget and validation.
+            "author",
+            # Anything else: a Django form field.
+            Field(
+                "note",
+                form_field=forms.CharField(required=False, widget=forms.Textarea),
+            ),
+            Field(
+                "notify",
+                form_field=forms.BooleanField(
+                    label="Email the note to the author", required=False
+                ),
+                # Shown once a note is written.
+                when=~Q(note=""),
+            ),
+        ],
+    )
+    def assign(self, request, queryset, data):
+        count = queryset.update(author=data["author"])
+        return f"Assigned {count} articles to {data['author']}."
+```
+
+- A field name refers to a model field. It looks and validates like on the
+  edit page: its label, help text, choices, widget, and the related objects
+  editors may pick. It is required unless the model field has `blank=True`.
+- `Field(name, form_field=...)` adds an input that is not on the model,
+  validated by the Django form field. Its `label`, `help_text`, `required`,
+  `initial` and `choices` are used; `ModelChoiceField` and
+  `ModelMultipleChoiceField` get the related object pickers, offering only
+  the objects editors may see. `widget=` picks another
+  [widget](/docs/widgets), as on the edit page.
+- `when=` shows a field only when the dialog's values meet a condition, like
+  [conditional fields](/docs/edit-page#conditional-fields) on the edit page
+  (`Q` objects only). A hidden field is left out of `data`.
+
+The values are validated on the server before the action runs; errors show
+under the fields and the action does not run. In `data`, related objects
+are model instances and dates are `date` and `datetime` objects. A
+`ValidationError` the method raises shows in the dialog too. The `confirm`
+text, when set, becomes the dialog's description.
+
+System check `content_studio.E051` reports fields that are not model fields
+and have no `form_field`, fields that cannot be edited, conditions that read
+other fields or use a `Condition`, and a method without the `data` argument.
+
+## Row actions
+
+Each row of the list has a ⋯ menu with actions on that one object. By
+default it offers Delete, and Duplicate when the studio
+[allows duplication](/docs/edit-page). The studio's `row_actions` attribute
+chooses them, by the same names as `actions`:
+
+```python
+row_actions = None                                       # the default: duplicate and delete
+row_actions = []                                         # no row menu
+row_actions = ["publish", "assign", "duplicate", "delete"]  # exactly these, in this order
+```
+
+`"duplicate"` and `"delete"` name the built-ins; other names are
+`@bulk_action` methods, which run on the row's object with the same
+permission checks, confirmation and [dialog](#asking-for-values-first) as in
+the bulk bar. A row action does not need to be in `actions`. When the list
+can be [reordered](#reordering), the moves join the same menu.
+
+System check `content_studio.E007` reports unknown or duplicate names.
+
 ## Soft delete and the trash
 
 By default, deleting an object removes it from the database. To move

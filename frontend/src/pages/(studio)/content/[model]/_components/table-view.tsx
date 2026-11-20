@@ -5,7 +5,7 @@ import { useNavigate } from "react-router";
 
 import { FormatRenderer } from "@/components/formats/renderer";
 import { PresenceIndicator } from "@/components/presence";
-import { MoveMenu, Reorderable, RowDragHandle } from "@/components/reorderable";
+import { Reorderable, RowDragHandle } from "@/components/reorderable";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -16,11 +16,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useReorderableRow } from "@/hooks/use-reorderable-row";
+import { useRunAction } from "@/hooks/use-run-action";
 import { getEdges, type Move } from "@/lib/reorder";
 import { cn } from "@/lib/utils";
-import { FieldType, type Id, type Model, type PresenceUser } from "@/types";
+import {
+  type BulkAction,
+  FieldType,
+  type Id,
+  type Model,
+  type PresenceUser,
+} from "@/types";
 
 import { ListEmptyState } from "./empty-state";
+import { RowMenu } from "./row-menu";
 
 type Row = { id: string; __str__?: string; [p: string]: unknown };
 
@@ -82,6 +90,13 @@ export function TableView({
   const fields = model.admin.list.display;
   const { sortable_by, display } = model.admin.list;
   const hasActions = (model.admin.list.actions ?? []).length > 0;
+  const rowActions = model.admin.list.row_actions ?? [];
+  // The last column holds each row's menu: its row actions, and the
+  // moves when the list can be reordered.
+  const hasMenu = !!reorder || rowActions.length > 0;
+  const { runAction, dialog } = useRunAction(model);
+  const onRunAction = (action: BulkAction, id: string, name?: string) =>
+    runAction(action, [id], { name });
   const allSelected =
     hasActions &&
     items.length > 0 &&
@@ -170,9 +185,9 @@ export function TableView({
                 </TableHead>
               );
             })}
-            {reorder && (
+            {hasMenu && (
               <TableHead className="sticky top-0 z-10 bg-muted w-10">
-                <span className="sr-only">{t("reorder.menu")}</span>
+                <span className="sr-only">{t("row_actions.menu")}</span>
               </TableHead>
             )}
           </TableRow>
@@ -182,7 +197,10 @@ export function TableView({
             <TableRow>
               <TableCell
                 colSpan={
-                  fields.length + (hasActions ? 1 : 0) + (reorder ? 2 : 0)
+                  fields.length +
+                  (hasActions ? 1 : 0) +
+                  (reorder ? 1 : 0) +
+                  (hasMenu ? 1 : 0)
                 }
                 className="text-center"
               >
@@ -213,6 +231,8 @@ export function TableView({
                   selected={!!selected?.has(item.id)}
                   onToggle={onToggle}
                   reorder={reorder}
+                  rowActions={rowActions}
+                  onRunAction={onRunAction}
                   presence={presence?.[String(item.id)]}
                 />
               ))}
@@ -226,12 +246,15 @@ export function TableView({
                 hasActions={hasActions}
                 selected={!!selected?.has(item.id)}
                 onToggle={onToggle}
+                rowActions={rowActions}
+                onRunAction={onRunAction}
                 presence={presence?.[String(item.id)]}
               />
             ))
           )}
         </TableBody>
       </Table>
+      {dialog}
     </div>
   );
 }
@@ -259,6 +282,8 @@ function TableViewRow({
   sortable,
   edges,
   presence,
+  rowActions,
+  onRunAction,
 }: {
   item: Row;
   model: Model;
@@ -266,6 +291,8 @@ function TableViewRow({
   selected: boolean;
   onToggle?: (id: string) => void;
   reorder?: ReorderProps;
+  rowActions: BulkAction[];
+  onRunAction(action: BulkAction, id: string, name?: string): void;
   presence?: PresenceUser[];
   sortable?: ReturnType<typeof useReorderableRow>;
   edges?: ReturnType<typeof getEdges>;
@@ -326,15 +353,24 @@ function TableViewRow({
           </div>
         </TableCell>
       ))}
-      {reorder && (
+      {(reorder || rowActions.length > 0) && (
         <TableCell
           className="w-10"
           onClick={(event) => event.stopPropagation()}
         >
-          <MoveMenu
-            disabledReason={reorder.disabledReason}
-            onMove={(move) => reorder.onMove(item.id, move)}
-            {...edges}
+          <RowMenu
+            model={model}
+            id={item.id}
+            name={item.__str__}
+            actions={rowActions}
+            onRunAction={onRunAction}
+            move={
+              reorder && {
+                disabledReason: reorder.disabledReason,
+                onMove: (move) => reorder.onMove(item.id, move),
+                ...edges,
+              }
+            }
           />
         </TableCell>
       )}

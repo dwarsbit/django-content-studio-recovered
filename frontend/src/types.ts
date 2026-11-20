@@ -163,8 +163,12 @@ export interface Model {
       // Import from a file; null when the studio offers none.
       import?: ImportConfig | null;
       actions: BulkAction[];
+      // The actions in each row's menu, run on that one object.
+      row_actions?: BulkAction[];
     };
     edit: {
+      // The studio's edit_actions, in the more actions menu.
+      actions?: BulkAction[];
       // Components in the edit page's header, next to the save button.
       header?: FormField[];
       main: FormSetGroup[];
@@ -240,6 +244,8 @@ export interface BulkAction {
   // The built-in export's formats: it downloads the selection instead
   // of running on it.
   formats?: ExportFormat[];
+  // The inputs the action asks for in a dialog before it runs.
+  fields?: FormField[];
 }
 
 export type ExportFormat = "csv" | "xlsx";
@@ -731,6 +737,10 @@ export interface FormField {
   // Button: a question to confirm first, and the destructive style.
   confirm?: string | null;
   destructive?: boolean;
+  // Button: the inputs it asks for in a dialog before it runs.
+  fields?: FormField[];
+  // An action's input that is not a model field: described like one.
+  input?: ModelField;
   // Text components: static text, or null when it is computed for the
   // object (per_object) and fetched from the component's endpoint.
   text?: string | null;

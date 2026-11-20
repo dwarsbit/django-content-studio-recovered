@@ -1124,5 +1124,12 @@
       "done": "Klaar",
       "failed": "Mislukt"
     }
+  },
+  "actions": {
+    "selected": "{{count}} {{name}} geselecteerd."
+  },
+  "row_actions": {
+    "menu": "Acties",
+    "menu_for": "Acties voor {{name}}"
   }
 }

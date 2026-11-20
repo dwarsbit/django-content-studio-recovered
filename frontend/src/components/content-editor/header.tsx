@@ -28,6 +28,7 @@ import { PageHeader } from "@/components/ui/page-header";
 import { useAdminInfo } from "@/hooks/use-admin-info";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useHttp } from "@/hooks/use-http";
+import { useRunAction } from "@/hooks/use-run-action";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type {
   DateTimeString,
@@ -129,12 +130,35 @@ export function Header({
   const showUserActions = showSetPassword || showSendLink || showResetTwoFactor;
   // The object's public page (the studio's view_on_site), once saved.
   const viewOnSiteUrl = !isCreate ? resource?.__view_on_site__ : null;
+  // The studio's edit_actions: @bulk_action methods run on this object.
+  const editActions =
+    !dialog && !isCreate && !isSingleton
+      ? (model?.admin.edit.actions ?? [])
+      : [];
+  const showEditActions = editActions.length > 0;
+  const { runAction, dialog: actionDialog } = useRunAction(model);
   const { isDirty } = form.formState;
   const editedAt =
     resource && info
       ? (resource[info.settings.edited_at_attr] as DateTimeString)
       : null;
   const queryClient = useQueryClient();
+
+  // After an edit action the object may have changed: show its new
+  // values, unless that would discard the editor's unsaved changes.
+  async function refreshObject() {
+    if (!resource?.id || form.formState.isDirty) {
+      return;
+    }
+
+    const { data } = await http.get<Resource>(`${resourcePath}/${resource.id}`);
+
+    form.reset({
+      ...data,
+      id: data.id != null ? String(data.id) : data.id,
+    });
+  }
+
   const { mutateAsync } = useMutation({
     async mutationFn(id: string) {
       await http.delete(`${resourcePath}/${id}`);
@@ -265,6 +289,7 @@ export function Header({
                   (showDelete ||
                     showDuplicate ||
                     showUserActions ||
+                    showEditActions ||
                     canFollow) && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -277,6 +302,7 @@ export function Header({
                             !showDelete &&
                               !showDuplicate &&
                               !showSetPassword &&
+                              !showEditActions &&
                               "lg:hidden",
                           )}
                         >
@@ -292,6 +318,30 @@ export function Header({
                             className="lg:hidden"
                           />
                         )}
+                        {editActions.map((action) => (
+                          <DropdownMenuItem
+                            key={action.id}
+                            variant={
+                              action.destructive ? "destructive" : "default"
+                            }
+                            className="justify-start"
+                            onSelect={() =>
+                              runAction(action, [String(resource!.id)], {
+                                name: resource!.__str__,
+                                onDone: refreshObject,
+                              })
+                            }
+                          >
+                            {action.icon && (
+                              <span className={cn(action.icon, "text-sm")} />
+                            )}
+                            {action.label}
+                          </DropdownMenuItem>
+                        ))}
+                        {showEditActions &&
+                          (showDuplicate || showUserActions) && (
+                            <DropdownMenuSeparator />
+                          )}
                         {showDuplicate && (
                           <DropdownMenuItem onSelect={onDuplicate!}>
                             {t("editor.duplicate")}
@@ -384,9 +434,10 @@ export function Header({
                             {t("users.reset_two_factor.menu")}
                           </DropdownMenuItem>
                         )}
-                        {(showDuplicate || showUserActions) && showDelete && (
-                          <DropdownMenuSeparator />
-                        )}
+                        {(showDuplicate ||
+                          showUserActions ||
+                          showEditActions) &&
+                          showDelete && <DropdownMenuSeparator />}
                         {showDelete && (
                           <DropdownMenuItem
                             className="text-destructive"
@@ -455,6 +506,7 @@ export function Header({
             name={resource.__str__}
           />
         )}
+        {actionDialog}
       </>
     )
   );

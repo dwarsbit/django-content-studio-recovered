@@ -66,7 +66,7 @@ test("custom filters and filters across relations narrow the list", async ({
 
   // review__stars, a number range across the reviews of an article.
   await page.getByRole("button", { name: /^Review stars/ }).click();
-  await page.getByLabel("Min").fill("5");
+  await page.getByRole("spinbutton", { name: "Min" }).fill("5");
   await page.keyboard.press("Enter");
 
   await expect(page.getByText("Hello, Content Studio")).toBeVisible();

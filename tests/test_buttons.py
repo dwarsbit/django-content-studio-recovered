@@ -85,6 +85,7 @@ def test_a_button_serializes_its_options():
         "icon": "ph-bold ph-paper-plane-tilt",
         "confirm": "Publish this article?",
         "destructive": False,
+        "fields": [],
     }
 
 

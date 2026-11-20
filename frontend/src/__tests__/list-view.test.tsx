@@ -1428,7 +1428,7 @@ describe("ModelListPage reordering", () => {
       screen.queryByRole("button", { name: "reorder.drag" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.queryByRole("button", { name: "reorder.menu" }),
+      screen.queryByRole("button", { name: /^row_actions\.menu/ }),
     ).not.toBeInTheDocument();
   });
 
@@ -1441,7 +1441,7 @@ describe("ModelListPage reordering", () => {
     expect(handles).toHaveLength(2);
     expect(handles[0]).not.toHaveAttribute("aria-disabled");
     expect(
-      screen.getAllByRole("button", { name: "reorder.menu" }),
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ }),
     ).toHaveLength(2);
   });
 
@@ -1456,7 +1456,7 @@ describe("ModelListPage reordering", () => {
     });
     expect(handles[0]).toHaveAttribute("aria-disabled", "true");
     expect(
-      screen.getAllByRole("button", { name: "reorder.menu" })[0],
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
     ).toBeDisabled();
   });
 
@@ -1493,7 +1493,7 @@ describe("ModelListPage reordering", () => {
 
     await screen.findByText("First Article");
     await user.click(
-      screen.getAllByRole("button", { name: "reorder.menu" })[1],
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[1],
     );
     await user.click(
       await screen.findByRole("menuitem", { name: "reorder.move_first" }),
@@ -1535,7 +1535,7 @@ describe("ModelListPage reordering", () => {
 
     await screen.findByText("First Article");
     await user.click(
-      screen.getAllByRole("button", { name: "reorder.menu" })[0],
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
     );
     await user.click(
       await screen.findByRole("menuitem", { name: "reorder.move_down" }),
@@ -1554,7 +1554,7 @@ describe("ModelListPage reordering", () => {
 
     await screen.findByText("First Article");
     await user.click(
-      screen.getAllByRole("button", { name: "reorder.menu" })[0],
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
     );
 
     expect(
@@ -1576,7 +1576,7 @@ describe("ModelListPage reordering", () => {
 
     await screen.findByText("First Article");
     await user.click(
-      screen.getAllByRole("button", { name: "reorder.menu" })[0],
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
     );
     await user.click(
       await screen.findByRole("menuitem", { name: "reorder.move_last" }),
@@ -1588,5 +1588,208 @@ describe("ModelListPage reordering", () => {
     reject({ response: { data: ["The target is not in this list."] } });
 
     await waitFor(() => expect(rowTitles()[0]).toContain("First Article"));
+  });
+});
+
+describe("action input forms and row actions", () => {
+  const assign = {
+    id: "assign",
+    label: "Assign",
+    icon: null,
+    confirm: null,
+    destructive: false,
+    fields: [
+      {
+        type: "field" as const,
+        name: "note",
+        label: null,
+        readonly: false,
+        col_span: 1,
+        widget: null,
+        when: null,
+        input: {
+          type: FieldType.CharField,
+          verbose_name: "Note",
+          required: true,
+        },
+      },
+      {
+        type: "field" as const,
+        name: "urgent",
+        label: null,
+        readonly: false,
+        col_span: 1,
+        widget: null,
+        // Shown once a note is written.
+        when: {
+          negated: true,
+          connector: "AND",
+          children: [{ field: "note", lookup: "exact", value: "" }],
+        },
+        input: { type: FieldType.CharField, verbose_name: "Urgency" },
+      },
+    ],
+  };
+  const publish = {
+    id: "publish",
+    label: "Publish",
+    icon: null,
+    confirm: null,
+    destructive: false,
+  };
+  const duplicate = {
+    id: "duplicate",
+    label: "Duplicate",
+    icon: null,
+    confirm: null,
+    destructive: false,
+  };
+  const remove = {
+    id: "delete",
+    label: "Delete",
+    icon: null,
+    confirm: "Delete this item?",
+    destructive: true,
+  };
+
+  beforeEach(() => {
+    httpGetMock.mockReset();
+    httpGetMock.mockResolvedValue({ data: makePaginated(articles) });
+    httpPostMock.mockReset();
+    useAdminInfoMock.mockReturnValue({ data: undefined });
+    confirmMock.mockReset();
+  });
+
+  it("asks for an action's values in a dialog and sends them along", async () => {
+    const user = userEvent.setup();
+    httpPostMock.mockResolvedValue({ data: { message: "Assigned." } });
+    renderListPage(makeModel({ list: { actions: [assign] as never } }));
+
+    await screen.findByText("First Article");
+    await user.click(screen.getAllByRole("checkbox")[1]);
+    await user.click(screen.getByRole("button", { name: "Assign" }));
+
+    const dialog = await screen.findByRole("dialog");
+    expect(dialog).toHaveTextContent("Note");
+    // The conditional field waits for a note.
+    expect(dialog).not.toHaveTextContent("Urgency");
+
+    await user.type(screen.getByRole("textbox"), "Check it");
+    expect(await screen.findByText("Urgency")).toBeInTheDocument();
+
+    await user.click(
+      screen.getAllByRole("button", { name: "Assign" }).at(-1) as HTMLElement,
+    );
+
+    await waitFor(() =>
+      expect(httpPostMock).toHaveBeenCalledWith(
+        "/content/testapp.article/bulk",
+        {
+          action: "assign",
+          ids: ["1"],
+          data: { note: "Check it", urgent: null },
+        },
+      ),
+    );
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("shows the server's errors under the dialog's fields", async () => {
+    const user = userEvent.setup();
+    const { AxiosError } = await import("axios");
+    httpPostMock.mockRejectedValue(
+      new AxiosError("Bad request", "400", undefined, undefined, {
+        status: 400,
+        data: { note: ["Too short."] },
+      } as never),
+    );
+    renderListPage(makeModel({ list: { actions: [assign] as never } }));
+
+    await screen.findByText("First Article");
+    await user.click(screen.getAllByRole("checkbox")[1]);
+    await user.click(screen.getByRole("button", { name: "Assign" }));
+    await user.type(await screen.findByRole("textbox"), "x");
+    await user.click(
+      screen.getAllByRole("button", { name: "Assign" }).at(-1) as HTMLElement,
+    );
+
+    expect(await screen.findByText("Too short.")).toBeInTheDocument();
+    expect(screen.getByRole("dialog")).toBeInTheDocument();
+  });
+
+  it("offers each row's actions in its menu and runs them on that row", async () => {
+    const user = userEvent.setup();
+    httpPostMock.mockResolvedValue({ data: { count: 1 } });
+    renderListPage(
+      makeModel({ list: { row_actions: [publish, duplicate, remove] } }),
+    );
+
+    await screen.findByText("First Article");
+    await user.click(
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[1],
+    );
+
+    const items = screen
+      .getAllByRole("menuitem")
+      .map((item) => item.textContent);
+    expect(items).toEqual(["Publish", "Duplicate", "Delete"]);
+
+    await user.click(screen.getByRole("menuitem", { name: "Publish" }));
+
+    await waitFor(() =>
+      expect(httpPostMock).toHaveBeenCalledWith(
+        "/content/testapp.article/bulk",
+        { action: "publish", ids: ["2"] },
+      ),
+    );
+  });
+
+  it("confirms a row's delete first", async () => {
+    const user = userEvent.setup();
+    confirmMock.mockResolvedValue(false);
+    renderListPage(makeModel({ list: { row_actions: [remove] } }));
+
+    await screen.findByText("First Article");
+    await user.click(
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Delete" }));
+
+    await waitFor(() =>
+      expect(confirmMock).toHaveBeenCalledWith({
+        description: "Delete this item?",
+      }),
+    );
+    expect(httpPostMock).not.toHaveBeenCalled();
+  });
+
+  it("opens a duplicate of the row", async () => {
+    const user = userEvent.setup();
+    renderListPage(makeModel({ list: { row_actions: [duplicate] } }));
+
+    await screen.findByText("First Article");
+    await user.click(
+      screen.getAllByRole("button", { name: /^row_actions\.menu/ })[0],
+    );
+    await user.click(screen.getByRole("menuitem", { name: "Duplicate" }));
+
+    expect(screen.getByTestId("location-pathname")).toHaveTextContent(
+      "/content/testapp.article/new",
+    );
+    expect(screen.getByTestId("location-search")).toHaveTextContent(
+      "?duplicate=1",
+    );
+  });
+
+  it("shows no row menu without row actions", async () => {
+    renderListPage(makeModel({ list: { row_actions: [] } }));
+
+    await screen.findByText("First Article");
+
+    expect(
+      screen.queryByRole("button", { name: /^row_actions\.menu/ }),
+    ).not.toBeInTheDocument();
   });
 });

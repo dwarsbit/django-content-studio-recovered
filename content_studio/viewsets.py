@@ -24,7 +24,12 @@ from rest_framework.response import Response
 from rest_framework.viewsets import ModelViewSet
 
 from .parsers import ObjectJSONParser
-from .actions import EXPORT_ACTION_ID, check_object_permissions, get_bulk_actions
+from .actions import (
+    EXPORT_ACTION_ID,
+    check_object_permissions,
+    get_bulk_actions,
+    get_single_object_actions,
+)
 from .admin import get_relation_display_for, is_duplicable
 from .dashboard.activity_log import LogEntrySerializer
 from .duplication import copy_inline_rows, represent_initial
@@ -881,7 +886,23 @@ class BaseModelViewSet(ModelViewSet):
         if not component.is_allowed(self._admin_model, obj, request):
             raise PermissionDenied()
 
-        return Response(component.run(obj, request).serialize())
+        # The values of the button's dialog, validated like a save of
+        # the object.
+        data = None
+        form = component.get_form(self._model)
+        if form is not None:
+            data = form.clean(
+                request,
+                self.get_serializer(instance=obj),
+                request.data.get("data") if hasattr(request.data, "get") else None,
+            )
+
+        try:
+            result = component.run(obj, request, data)
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+        return Response(result.serialize())
 
     @action(
         methods=["post"],
@@ -1142,6 +1163,18 @@ class BaseModelViewSet(ModelViewSet):
         }
         action = actions.get(action_id)
 
+        # A row action or an edit page action runs here too, on its one
+        # object.
+        if action is None and len(ids) == 1:
+            action = next(
+                (
+                    action
+                    for action in get_single_object_actions(self._admin_model, request)
+                    if action.id == action_id
+                ),
+                None,
+            )
+
         if action is None:
             raise NotFound("Unknown or unauthorized bulk action.")
 
@@ -1162,10 +1195,17 @@ class BaseModelViewSet(ModelViewSet):
         # selection must also pass them per object.
         check_object_permissions(self._admin_model, request, action.meta, queryset)
 
+        # The values of the action's dialog, validated like a save.
+        data = None
+        if action.form is not None:
+            data = action.form.clean(
+                request, self.get_serializer(), request.data.get("data")
+            )
+
         # A delete (the built-in one or a custom action's) blocked by
         # on_delete=PROTECT or RESTRICT is a conflict, not a crash.
         try:
-            result = action.handler(request, queryset)
+            result = action.run(request, queryset, data)
         except (models.ProtectedError, models.RestrictedError) as error:
             raise DeleteConflict.from_error(error)
         except DjangoValidationError as error:
