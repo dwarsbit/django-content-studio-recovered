@@ -1,5 +1,30 @@
 # Changelog
 
+## 1.17.1 (unreleased)
+
+### Security
+
+- **Backups could be downloaded by anyone who guessed the time.** With
+  the default `BACKUP_STORAGE` (the media storage) and a web server that
+  serves `MEDIA_ROOT`, a backup was public under a name made of the time
+  it started, such as `2026-11-21T030000Z.json.gz`, a few seconds after
+  the 03:00 schedule. A backup holds every password hash and two-factor
+  secret. Three changes:
+  - Each backup's name now ends in a random token
+    (`2026-11-21T030000Z-<32 hex characters>.json.gz`), so it cannot be
+    guessed. Backups made before keep their names: move them out of a
+    served folder, or delete them.
+  - A backup storage that may be public is now the error
+    `content_studio.E052` instead of the warning `content_studio.W027`:
+    a file system storage inside `MEDIA_ROOT`, or an object storage with
+    a public ACL or unsigned URLs. **Projects that install
+    `content_studio.contrib.backups` with the default storage now fail
+    `manage.py check`** until they set `BACKUP_STORAGE` to a private
+    storage, or silence `content_studio.E052` because their web server
+    refuses the backup folder. W027 is retired.
+  - Password reset codes are left out of backups, so a backup never
+    holds a code that still works.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

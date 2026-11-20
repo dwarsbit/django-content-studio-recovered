@@ -356,7 +356,8 @@ These settings take effect with
 
 The alias in Django's `STORAGES` that backups are saved in. Default:
 `"default"`, the media storage. A backup holds the whole database, so the
-storage must not serve it publicly; see
+storage must not serve it publicly: `manage.py check` reports
+`content_studio.E052` when it may. See
 [Keep the backups private](/docs/backups#keep-the-backups-private).
 
 ### BACKUP_FOLDER {#backup_folder}

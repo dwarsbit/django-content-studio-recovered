@@ -580,7 +580,8 @@ Each is optional and has its own page:
   fixture per database in `BACKUP_STORAGE` on `BACKUP_SCHEDULE`, a cron
   expression run by Huey or by `content_studio_backup` from cron; the
   newest `BACKUP_KEEP` are kept; restore with `content_studio_restore`;
-  keep the storage private):
+  keep the storage private, `manage.py check` errors with E052 if it may
+  be public):
   https://djangocontentstudio.org/docs/backups.md
 - Languages (English, Dutch, German, French, Spanish, Italian, Brazilian
   Portuguese; each editor gets their own: the user menu's Language choice,
