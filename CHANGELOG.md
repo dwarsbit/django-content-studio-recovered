@@ -118,6 +118,14 @@
   a plain conflict message; the details go to the `content_studio.viewsets`
   log (and the developer tools while `DEBUG` is on).
 
+- **Wrong passwords were only limited per IP address.** Guessing one
+  account's password from many addresses was not slowed down. Wrong
+  passwords are now also counted per username, under the new
+  **`LOGIN_ACCOUNT_THROTTLE_RATE`** (default `"20/hour"`, `None` turns it
+  off): once it is reached, that username cannot log in until the hour
+  has passed, not even with the right password. A malformed login rate is
+  the new check error `content_studio.E053`.
+
 - **Docs**: the Developer tools page warns that every staff user sees the
   same tracebacks and SQL, and advises `DEVTOOLS = False` on staging sites
   that run with `DEBUG`. The Authentication page says which secrets are

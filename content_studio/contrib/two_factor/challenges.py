@@ -16,6 +16,7 @@ from django.core.cache import caches
 from django.utils.crypto import constant_time_compare, salted_hmac
 
 from ...settings import cs_settings
+from ...throttling import parse_rate
 
 CHALLENGE_SALT = "content_studio.two_factor.challenge"
 SETUP_SALT = "content_studio.two_factor.setup"
@@ -99,11 +100,8 @@ def count_wrong_code(nonce) -> int:
     return max(MAX_TRIES - tries, 0)
 
 
-def _parse_rate(rate):
-    count, period = rate.split("/")
-    seconds = {"s": 1, "m": 60, "h": 3600, "d": 86400}[period.strip()[0]]
-
-    return int(count), seconds
+# Kept for imports of the old name.
+_parse_rate = parse_rate
 
 
 def account_locked(user) -> bool:

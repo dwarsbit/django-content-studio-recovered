@@ -194,6 +194,10 @@ DEFAULTS = {
     "PASSWORD_RESET_THROTTLE_RATE": "10/hour",
     # Rate limit for login attempts, per IP; None disables throttling.
     "LOGIN_THROTTLE_RATE": "10/min",
+    # Wrong passwords per account (per username, from any IP), such as
+    # "20/hour"; the account cannot log in once it is reached, until the
+    # period has passed. None turns the limit off.
+    "LOGIN_ACCOUNT_THROTTLE_RATE": "20/hour",
     # Who must log in with two-factor login (the two-factor app,
     # content_studio.contrib.two_factor): None (nobody, optional for
     # everyone), "superusers" or "all".

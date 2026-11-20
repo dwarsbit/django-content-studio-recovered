@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 15:02+0000\n"
+"POT-Creation-Date: 2026-11-20 15:06+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -832,6 +832,12 @@ msgstr ""
 #: importing.py:1642
 msgid "Import from a file"
 msgstr "Importeren uit een bestand"
+
+#: login_backends/username_password.py:66
+msgid "Too many failed logins for this account. Try again later."
+msgstr ""
+"Te veel mislukte aanmeldpogingen voor dit account. Probeer het later "
+"opnieuw."
 
 #: media_library/apps.py:11
 msgid "Media Library"

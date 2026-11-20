@@ -35,6 +35,21 @@ such as `"10/min"`. Default: `"10/min"`. `None` removes the limit. Attempts
 are counted in the cache: with the default per-process cache, every worker
 counts separately, so configure a shared cache.
 
+### LOGIN_ACCOUNT_THROTTLE_RATE {#login_account_throttle_rate}
+
+The maximum number of wrong passwords per username, from any IP address, as
+a rate string such as `"20/hour"`. Default: `"20/hour"`. `None` removes the
+limit. Once it is reached, the username cannot log in, not even with the
+right password, until the period has passed since the first wrong password;
+the right password before that clears the count. Usernames without an
+account are counted the same, so the limit does not reveal which exist.
+The count is kept in the [`TOKEN_CACHE`](#token_cache).
+
+Someone who keeps guessing can keep an editor locked out this way, which is
+the price of slowing down guesses from many addresses. Raise the rate, or
+set it to `None` and use a tool such as django-axes, if that does not suit
+your site.
+
 ### TWO_FACTOR_REQUIRED {#two_factor_required}
 
 Who must use [two-factor login](/docs/authentication#two-factor-login):

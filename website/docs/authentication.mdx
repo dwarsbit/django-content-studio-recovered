@@ -43,7 +43,9 @@ they expire.
 
 Editors log in with their username and password, like in the classic Django
 admin. Login attempts are limited per IP address
-([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate)).
+([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate)), and wrong
+passwords per account, from any address
+([`LOGIN_ACCOUNT_THROTTLE_RATE`](/docs/settings#login_account_throttle_rate)).
 
 :::note
 Username and password is the only supported way to log in. Custom login

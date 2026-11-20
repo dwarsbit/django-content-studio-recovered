@@ -50,6 +50,7 @@ from .form import (
     TableColumn,
 )
 from .settings import cs_settings
+from .throttling import parse_rate
 from .utils import as_instance, flatten, get_tenant_field_name
 
 LIST_VIEW_NAMES = {"table", "list"}
@@ -3306,10 +3307,8 @@ def two_factor_errors() -> list[tuple[str, str]]:
     rate = cs_settings.TWO_FACTOR_THROTTLE_RATE
 
     if rate is not None:
-        from .contrib.two_factor.challenges import _parse_rate
-
         try:
-            _parse_rate(rate)
+            parse_rate(rate)
         except Exception:
             errors.append(
                 (
@@ -3326,6 +3325,38 @@ def two_factor_errors() -> list[tuple[str, str]]:
 def check_two_factor(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
     return [
         checks.Error(message, id=check_id) for check_id, message in two_factor_errors()
+    ]
+
+
+def login_throttle_errors() -> list[str]:
+    """
+    Login rate limits that cannot be read, which would fail every login:
+    LOGIN_THROTTLE_RATE and LOGIN_ACCOUNT_THROTTLE_RATE are like
+    "10/min" or None.
+    """
+    errors = []
+
+    for name in ("LOGIN_THROTTLE_RATE", "LOGIN_ACCOUNT_THROTTLE_RATE"):
+        rate = getattr(cs_settings, name)
+
+        if rate is None:
+            continue
+
+        try:
+            parse_rate(rate)
+        except Exception:
+            errors.append(
+                f'{name} must be a rate such as "10/min" or None, not {rate!r}.'
+            )
+
+    return errors
+
+
+@checks.register(checks.Tags.security)
+def check_login_throttles(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
+    return [
+        checks.Error(message, id="content_studio.E053")
+        for message in login_throttle_errors()
     ]
 
 

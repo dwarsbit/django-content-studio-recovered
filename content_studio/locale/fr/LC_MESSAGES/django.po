@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 15:02+0000\n"
+"POT-Creation-Date: 2026-11-20 15:06+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -834,6 +834,10 @@ msgstr ""
 #: importing.py:1642
 msgid "Import from a file"
 msgstr "Importer depuis un fichier"
+
+#: login_backends/username_password.py:66
+msgid "Too many failed logins for this account. Try again later."
+msgstr "Trop de connexions échouées pour ce compte. Réessayez plus tard."
 
 #: media_library/apps.py:11
 msgid "Media Library"

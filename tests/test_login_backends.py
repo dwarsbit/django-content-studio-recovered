@@ -278,3 +278,111 @@ class LoginFieldLengthTests(DjangoTestCase):
         )
         assert serializer.is_valid()
         assert serializer.fields["username"].max_length == 150
+
+
+class AccountThrottleTests(DjangoTestCase):
+    """Wrong passwords are also counted per username, from any address
+    (LOGIN_ACCOUNT_THROTTLE_RATE), so guessing one account from many
+    addresses is slowed down too (security finding 12)."""
+
+    def setUp(self):
+        from unittest import mock
+
+        from django.contrib.auth.models import User
+
+        from content_studio.settings import cs_settings
+
+        User.objects.create_user(username="editor", password="secret", is_staff=True)
+        # The per-IP limit is off: every attempt comes from a new address.
+        patcher = mock.patch.multiple(
+            cs_settings,
+            LOGIN_THROTTLE_RATE=None,
+            LOGIN_ACCOUNT_THROTTLE_RATE="3/hour",
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+        self.address = 0
+
+    def _login(self, username="editor", password="wrong"):
+        self.address += 1
+        client = APIClient(REMOTE_ADDR=f"10.2.0.{self.address}")
+
+        return client.post(
+            "/api/login/usernamepassword",
+            {"username": username, "password": password},
+            format="json",
+        )
+
+    def test_wrong_passwords_from_many_addresses_lock_the_account(self):
+        statuses = [self._login().status_code for _ in range(3)]
+        locked = self._login(password="secret")
+
+        assert statuses == [403, 403, 403]
+        # Even the right password is refused while the account is locked,
+        # so guessing on cannot find it.
+        assert locked.status_code == 429
+        assert locked.json()["detail"] == (
+            "Too many failed logins for this account. Try again later."
+        )
+
+    def test_the_lock_is_per_username(self):
+        for _ in range(3):
+            self._login()
+
+        assert self._login(username="someone-else").status_code == 403
+
+    def test_other_capitals_count_for_the_same_username(self):
+        for username in ("editor", "EDITOR", "Editor"):
+            self._login(username=username)
+
+        assert self._login().status_code == 429
+
+    def test_unknown_usernames_are_counted_the_same(self):
+        # The limit does not tell which usernames have an account.
+        for _ in range(3):
+            self._login(username="nobody")
+
+        assert self._login(username="nobody").status_code == 429
+
+    def test_the_right_password_clears_the_count(self):
+        self._login()
+        self._login()
+
+        assert self._login(password="secret").status_code == 200
+
+        statuses = [self._login().status_code for _ in range(3)]
+        assert statuses == [403, 403, 403]
+
+    def test_the_lock_ends_with_the_window(self):
+        from django.core.cache import cache
+
+        for _ in range(3):
+            self._login()
+
+        cache.clear()
+
+        assert self._login(password="secret").status_code == 200
+
+    def test_the_limit_can_be_turned_off(self):
+        from unittest import mock
+
+        from content_studio.settings import cs_settings
+
+        with mock.patch.object(cs_settings, "LOGIN_ACCOUNT_THROTTLE_RATE", None):
+            statuses = [self._login().status_code for _ in range(5)]
+
+        assert statuses == [403] * 5
+
+    def test_a_malformed_rate_is_a_check_error(self):
+        from unittest import mock
+
+        from content_studio.checks import check_login_throttles
+        from content_studio.settings import cs_settings
+
+        assert check_login_throttles() == []
+
+        with mock.patch.object(cs_settings, "LOGIN_ACCOUNT_THROTTLE_RATE", "lots"):
+            errors = check_login_throttles()
+
+        assert [error.id for error in errors] == ["content_studio.E053"]
+        assert "LOGIN_ACCOUNT_THROTTLE_RATE" in errors[0].msg
