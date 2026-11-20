@@ -1,27 +1,42 @@
+import { useQueryClient } from "@tanstack/react-query";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
-import type { ReactNode } from "react";
+import { type ReactNode, useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   PiArchiveBold,
   PiArrowLeftBold,
   PiCalendarBlankBold,
+  PiClockCounterClockwiseBold,
   PiDatabaseBold,
+  PiDotsThreeBold,
   PiDownloadSimpleBold,
   PiHardDrivesBold,
   PiTerminalWindowBold,
+  PiUploadSimpleBold,
+  PiWarningBold,
 } from "react-icons/pi";
 import { Link } from "react-router";
 import { toast } from "sonner";
 
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { EmptyState } from "@/components/ui/empty-state";
 import { PageBody, PageHeader } from "@/components/ui/page-header";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  activeRestore,
   type Backup,
   type Backups,
+  isBackingUp,
+  type Restore,
   useBackUpNow,
   useBackups,
   useBackupsEnabled,
@@ -31,32 +46,17 @@ import { useStatusEnabled } from "@/hooks/use-status";
 import { getDownloadErrorMessage } from "@/lib/download";
 import { cn, getErrorMessage } from "@/lib/utils";
 
+import { formatBytes, formatSeconds } from "./_components/format";
+import {
+  RestoreDialog,
+  type RestoreSource,
+} from "./_components/restore-dialog";
+
 dayjs.extend(relativeTime);
-
-/** Bytes as "512 B", "3.4 MB" or "1.2 GB". */
-function formatBytes(bytes: number) {
-  const units = ["B", "KB", "MB", "GB", "TB"];
-  let value = bytes;
-  let unit = 0;
-
-  while (value >= 1024 && unit < units.length - 1) {
-    value /= 1024;
-    unit += 1;
-  }
-
-  return unit === 0
-    ? `${value} ${units[unit]}`
-    : `${value.toFixed(value < 10 ? 1 : 0)} ${units[unit]}`;
-}
-
-/** A run's time: "42 s" or "3 min". */
-function formatSeconds(seconds: number) {
-  return seconds < 60 ? `${seconds} s` : `${Math.round(seconds / 60)} min`;
-}
 
 /**
  * The Backups page, for superusers: the database backups with their
- * files to download, and Back up now. Restoring is a command.
+ * files to download, Back up now, and restoring a backup or a file.
  */
 export function BackupsPage() {
   const { t } = useTranslation();
@@ -64,10 +64,13 @@ export function BackupsPage() {
   const statusEnabled = useStatusEnabled();
   const { data, isError } = useBackups();
   const backUpNow = useBackUpNow();
-  const busy =
-    data?.backups.some(
-      (backup) => backup.status === "queued" || backup.status === "running",
-    ) ?? false;
+  const busy = isBackingUp(data);
+  const restoring = activeRestore(data);
+  const restoreInfo = data?.restore;
+  const canRestore = restoreInfo?.enabled === true;
+  const [source, setSource] = useState<RestoreSource | null>(null);
+
+  useRestoreFinished(data);
 
   async function onBackUpNow() {
     try {
@@ -101,17 +104,41 @@ export function BackupsPage() {
         actions={
           enabled &&
           !isError && (
-            <Button
-              disabled={busy || backUpNow.isPending || !data}
-              onClick={() => void onBackUpNow()}
-            >
-              {busy || backUpNow.isPending ? (
-                <Spinner className="size-4" />
-              ) : (
-                <PiArchiveBold />
+            <div className="flex items-center gap-2">
+              <Button
+                disabled={busy || !!restoring || backUpNow.isPending || !data}
+                onClick={() => void onBackUpNow()}
+              >
+                {busy || backUpNow.isPending ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  <PiArchiveBold />
+                )}
+                {busy ? t("backups.running") : t("backups.back_up_now")}
+              </Button>
+              {canRestore && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="icon"
+                      aria-label={t("backups.more_actions")}
+                    >
+                      <PiDotsThreeBold />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    <DropdownMenuItem
+                      disabled={busy || !!restoring}
+                      onSelect={() => setSource({ kind: "file" })}
+                    >
+                      <PiUploadSimpleBold />
+                      {t("backups.restore_from_file")}
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               )}
-              {busy ? t("backups.running") : t("backups.back_up_now")}
-            </Button>
+            </div>
           )
         }
       />
@@ -124,8 +151,40 @@ export function BackupsPage() {
           />
         ) : (
           <>
+            {restoring && (
+              <Alert variant="warning">
+                <Spinner className="size-4" />
+                <AlertTitle>
+                  {t("backups.restoring", {
+                    name: restoring.name,
+                    database: restoring.database,
+                  })}
+                </AlertTitle>
+                <AlertDescription>
+                  {t("backups.restoring_hint")}
+                </AlertDescription>
+              </Alert>
+            )}
             <Settings data={data} />
-            <BackupList data={data} />
+            <BackupList
+              data={data}
+              onRestore={
+                canRestore
+                  ? (backup) => setSource({ kind: "backup", backup })
+                  : undefined
+              }
+              restoreLocked={busy || !!restoring}
+            />
+            {data && (data.restores?.length ?? 0) > 0 && (
+              <RestoreList restores={data.restores ?? []} />
+            )}
+            {restoreInfo && canRestore && (
+              <RestoreDialog
+                source={source}
+                info={restoreInfo}
+                onClose={() => setSource(null)}
+              />
+            )}
           </>
         )}
       </PageBody>
@@ -196,7 +255,57 @@ function Fact({
   );
 }
 
-function BackupList({ data }: { data?: Backups }) {
+/**
+ * Tell when a restore that was running ends, and load everything again
+ * once the database holds other data.
+ */
+function useRestoreFinished(data?: Backups) {
+  const { t } = useTranslation();
+  const queryClient = useQueryClient();
+  const running = useRef<number | null>(null);
+
+  useEffect(() => {
+    const active = activeRestore(data);
+
+    if (active) {
+      running.current = active.id;
+      return;
+    }
+
+    if (running.current === null) {
+      return;
+    }
+
+    const ended = data?.restores?.find(
+      (restore) => restore.id === running.current,
+    );
+
+    running.current = null;
+
+    if (ended?.status === "done") {
+      toast.success(
+        t("backups.restore.done", {
+          name: ended.name,
+          database: ended.database,
+        }),
+      );
+      void queryClient.invalidateQueries();
+    } else if (ended?.status === "failed") {
+      toast.error(t("backups.restore.failed", { error: ended.error ?? "" }));
+    }
+  }, [data, queryClient, t]);
+}
+
+function BackupList({
+  data,
+  onRestore,
+  restoreLocked,
+}: {
+  data?: Backups;
+  // Set when the signed-in user may restore on this page.
+  onRestore?: (backup: Backup) => void;
+  restoreLocked: boolean;
+}) {
   const { t } = useTranslation();
 
   return (
@@ -226,14 +335,19 @@ function BackupList({ data }: { data?: Backups }) {
       ) : (
         <ul>
           {data.backups.map((backup) => (
-            <BackupRow key={backup.id} backup={backup} />
+            <BackupRow
+              key={backup.id}
+              backup={backup}
+              onRestore={onRestore}
+              restoreLocked={restoreLocked}
+            />
           ))}
         </ul>
       )}
       <div className="border-t bg-muted/50 px-4 py-2 text-xs text-muted-foreground flex items-center gap-1.5">
         <PiTerminalWindowBold className="shrink-0" />
         <span>
-          {t("backups.restore_hint")}{" "}
+          {onRestore ? t("backups.restore_note") : t("backups.restore_hint")}{" "}
           <code className="font-mono">manage.py content_studio_restore</code>
         </span>
       </div>
@@ -248,7 +362,15 @@ const STATUS_DOT: Record<Backup["status"], string> = {
   failed: "bg-destructive",
 };
 
-function BackupRow({ backup }: { backup: Backup }) {
+function BackupRow({
+  backup,
+  onRestore,
+  restoreLocked,
+}: {
+  backup: Backup;
+  onRestore?: (backup: Backup) => void;
+  restoreLocked: boolean;
+}) {
   const { t } = useTranslation();
   const download = useDownloadBackup();
   const when = dayjs(backup.finished_at ?? backup.created_at);
@@ -280,7 +402,8 @@ function BackupRow({ backup }: { backup: Backup }) {
         </div>
         <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
           <span>
-            {backup.created_by && backup.trigger === "manual"
+            {backup.created_by &&
+            (backup.trigger === "manual" || backup.trigger === "before_restore")
               ? t("backups.by", {
                   trigger: t(`backups.trigger.${backup.trigger}`),
                   user: backup.created_by,
@@ -328,6 +451,121 @@ function BackupRow({ backup }: { backup: Backup }) {
           )}
         </Button>
       )}
+      {backup.status === "done" && onRestore && (
+        <Button
+          variant="outline"
+          size="icon"
+          className="shrink-0"
+          aria-label={t("backups.restore_item", { name: backup.name })}
+          title={t("backups.restore_item", { name: backup.name })}
+          disabled={restoreLocked}
+          onClick={() => onRestore(backup)}
+        >
+          <PiClockCounterClockwiseBold />
+        </Button>
+      )}
     </li>
+  );
+}
+
+const RESTORE_DOT: Record<Restore["status"], string> = {
+  pending: "bg-muted-foreground/60",
+  queued: "bg-muted-foreground/60",
+  running: "",
+  done: "bg-success",
+  failed: "bg-destructive",
+};
+
+/** The latest restores, newest first. */
+function RestoreList({ restores }: { restores: Restore[] }) {
+  const { t } = useTranslation();
+
+  return (
+    <section className="rounded-lg border bg-card shadow-xs overflow-hidden">
+      <div className="px-4 py-3">
+        <h2 className="font-semibold">{t("backups.restores.title")}</h2>
+        <div className="text-xs text-muted-foreground">
+          {t("backups.restores.description")}
+        </div>
+      </div>
+      <ul>
+        {restores.map((restore) => {
+          const when = dayjs(restore.finished_at ?? restore.created_at);
+
+          return (
+            <li
+              key={restore.id}
+              data-status={restore.status}
+              className="border-t px-4 py-3 flex items-start gap-3"
+            >
+              <div className="flex-1 min-w-0 space-y-1">
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                  <span
+                    className="font-medium"
+                    title={when.format("YYYY-MM-DD HH:mm:ss")}
+                  >
+                    {when.format("D MMM YYYY, HH:mm")}
+                  </span>
+                  <Badge variant="outline" className="font-normal">
+                    {restore.database}
+                  </Badge>
+                </div>
+                <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+                  <span>
+                    {restore.created_by
+                      ? t("backups.restores.by", {
+                          source: t(
+                            `backups.restores.source.${restore.source}`,
+                          ),
+                          user: restore.created_by,
+                        })
+                      : t(`backups.restores.source.${restore.source}`)}
+                  </span>
+                  <span>{when.fromNow()}</span>
+                  {restore.rows != null && (
+                    <span>
+                      {t("backups.restores.rows", { count: restore.rows })}
+                    </span>
+                  )}
+                  {restore.duration != null && (
+                    <span>{formatSeconds(restore.duration)}</span>
+                  )}
+                  <span className="font-mono break-all">{restore.name}</span>
+                </div>
+                {restore.safety_backup && (
+                  <div className="text-xs text-muted-foreground break-all">
+                    {t("backups.restores.safety", {
+                      name: restore.safety_backup,
+                    })}
+                  </div>
+                )}
+                {restore.error && restore.status === "failed" && (
+                  <div className="text-xs text-destructive break-words flex items-start gap-1">
+                    <PiWarningBold className="shrink-0 mt-0.5" />
+                    {restore.error}
+                  </div>
+                )}
+              </div>
+              <Badge
+                variant="secondary"
+                className="gap-1.5 pl-1.5 shrink-0 mt-0.5"
+              >
+                {restore.status === "running" ? (
+                  <Spinner className="size-3" />
+                ) : (
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      RESTORE_DOT[restore.status],
+                    )}
+                  />
+                )}
+                {t(`backups.restores.status.${restore.status}`)}
+              </Badge>
+            </li>
+          );
+        })}
+      </ul>
+    </section>
   );
 }

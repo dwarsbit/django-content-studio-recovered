@@ -4,7 +4,8 @@ The backups app saves a copy of your database on a schedule. Each backup is
 a gzipped Django fixture in your media storage, such as an S3 bucket, and
 the newest 14 are kept. Superusers see the backups on the
 [system status page](/docs/system-status), download them and back up on
-demand on the Backups page. You restore a backup with a management command.
+demand on the Backups page. They restore a backup, or a file made with
+`dumpdata`, on that page or with a management command.
 
 ## Setup
 
@@ -191,28 +192,87 @@ prints the backups with their status, size and name.
 
 ## Restore a backup
 
-Restoring replaces everything in the database with the backup. There is no
-button for it: run the command on the server.
+Restoring replaces everything in the database with the backup. Superusers
+restore on the Backups page, and anyone with a shell on the server can run
+the command.
+
+### On the Backups page
+
+Each finished backup has a **Restore** button, and the **⋯** menu next to
+**Back up now** has **Restore from a file…** to upload one. Before anything
+changes, the dialog shows what the file holds: when it was made and with
+which versions, its rows per model, and whether its migrations match the
+database's. Then:
+
+1. **Back up the current data first** is on. The backup it makes shows up
+   in the list as *Before restore*, so a restore can be undone.
+2. When the migrations differ, or the file has no manifest, you tick
+   **Restore anyway**.
+3. You type the database's name (for SQLite, the file's name) and your
+   password. Accounts without a password, such as single sign-on ones, are
+   not asked for it.
+4. **Replace database** queues the restore as a Django task, like **Back up
+   now**. The page shows it running, pauses backups until it is done, and
+   reloads once the database holds the new data. **Restores** lists the
+   latest ones with who started them and their error.
+
+An uploaded file is saved in the backup storage under `uploads/` and
+deleted after the restore, or when you cancel. Uploads left behind are
+deleted after a day. [`BACKUP_UPLOAD_MAX_SIZE`](/docs/settings#backup_upload_max_size)
+limits their size (1 GB by default). Only one restore or backup runs at a
+time.
+
+Override `has_restore_permission(request)` on your admin site to decide who
+may restore. It defaults to `has_backup_permission`, so superusers:
+
+```python
+class BlogStudioSite(ContentStudioSite):
+    def has_restore_permission(self, request):
+        return False  # restore with the command only
+```
+
+### From the command line
 
 ```bash
 python manage.py content_studio_restore --latest
 python manage.py content_studio_restore content_studio/backups/default/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.json.gz
 python manage.py content_studio_restore /tmp/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.json.gz --database default
+python manage.py content_studio_restore /tmp/site.json.gz --ignore-migrations
 ```
 
-Name a backup as `--list` prints it, or a downloaded file on disk (keep its
+Name a backup as `--list` prints it, or a file on disk (keep a backup's
 manifest next to it). The command:
 
 1. Asks you to type the database's name. `--noinput` skips the question.
-2. Fetches the backup and its manifest.
-3. Compares the backup's migrations with the database's. When they differ
-   it stops: migrate the database to the backup's state first, or pass
-   `--ignore-migrations`.
-4. Empties every table and loads the backup, in one transaction, so a
-   failed load leaves the database as it was.
+2. Fetches the file and its manifest.
+3. Compares the backup's migrations with the database's. When they differ,
+   or there is no manifest, it stops: migrate the database to the backup's
+   state first, or pass `--ignore-migrations`.
+4. Backs up the current data, like **Back up the current data first** on
+   the page. `--no-safety-backup` skips it.
+5. Empties every table and loads the file, in one transaction, so a failed
+   load leaves the database as it was.
 
-The backup records are kept as they are, so the Backups page still lists
-every backup after a restore.
+The backup and restore records are kept as they are, so the Backups page
+still lists every backup after a restore.
+
+### Files made with dumpdata
+
+Besides Content Studio's own backups, a restore takes any JSON fixture made
+with `manage.py dumpdata`: `.json`, or compressed as `.json.gz`,
+`.json.bz2`, `.json.xz` or `.json.lzma`.
+
+```bash
+python manage.py dumpdata --natural-foreign -o site.json.gz
+```
+
+Content types and permissions get new ids when the database is emptied, so
+their rows in the file are left out and each reference to them by id is
+matched by name instead. This works without `--natural-foreign` as long as
+the file holds the content types and permissions it refers to. Sessions and
+the backups app's own records are left out too. A file with models that are
+not installed is refused. Such a file has no manifest, so its migrations
+cannot be checked: restore it into a database migrated to the same state.
 
 :::caution
 MySQL and MariaDB cannot roll back emptying a table. On those databases a
@@ -233,6 +293,7 @@ restore a backup of the old one into it.
 | [`BACKUP_KEEP`](/docs/settings#backup_keep) | `14` | Backups kept per database. |
 | [`BACKUP_DATABASES`](/docs/settings#backup_databases) | `["default"]` | The databases backed up. |
 | [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude) | `[]` | Apps and models left out. |
+| [`BACKUP_UPLOAD_MAX_SIZE`](/docs/settings#backup_upload_max_size) | `1073741824` | The largest file you can upload to restore, in bytes. |
 
 `manage.py check` reports settings that cannot work as
 `content_studio.E050`, and a backup storage that may be public as

@@ -84,7 +84,7 @@ content_studio/
 │   └── jwt.py           # JWT token backend
 ├── contrib/
 │   ├── huey.py          # HueyAdapter: the task dashboard for a Huey queue
-│   ├── backups/         # Optional automatic backups: the Backup record (models.py), dumping/pruning/restoring fixtures (backup.py), BACKUP_SCHEDULE cron parsing (schedule.py), Huey's periodic task (huey.py), the status page rows (status.py), the Backups page endpoints (views.py), content_studio_backup/content_studio_restore
+│   ├── backups/         # Optional automatic backups: the Backup and Restore records (models.py), dumping/pruning/restoring fixtures (backup.py), reading dumpdata files for a restore (fixtures.py), BACKUP_SCHEDULE cron parsing (schedule.py), Huey's periodic task (huey.py), the status page rows (status.py), the Backups page endpoints (views.py), content_studio_backup/content_studio_restore
 │   ├── status/          # Optional system status page: register_service/register_task_adapter/register_recurring_task (registry.py), the built-in checks (builtin.py), running and caching the checks (runner.py), the task lists from the task adapters (tasks.py), the endpoints (views.py)
 │   └── password_reset/  # Password reset functionality
 ├── static/              # Static files (compiled frontend)
