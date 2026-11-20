@@ -139,6 +139,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E043` | A [custom filter](/docs/list-page#custom-filters) without a `title`, a `parameter_name` or a `queryset()` method, or whose `parameter_name` is already a field in `list_filter`, another filter's, or a reserved name (`search`, `page`, `ordering`, ...). |
 | `content_studio.E044` | [`TWO_FACTOR_REQUIRED`](/docs/settings#two_factor_required) is not `None`, `"superusers"` or `"all"`, or is set without `content_studio.contrib.two_factor` in `INSTALLED_APPS`. |
 | `content_studio.E046` | An unknown [`list_count`](/docs/list-page#large-tables) value: use `"exact"`, `"estimated"` or `"none"`. |
+| `content_studio.E047` | A [system status](/docs/system-status#add-a-service) service or recurring task registered with a malformed key, without a callable check, or twice with different definitions. |
 
 ### Warnings
 

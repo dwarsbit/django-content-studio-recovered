@@ -4,6 +4,26 @@
 
 ### Features
 
+- **System status page.** The new `content_studio.contrib.status` app adds
+  a System status page to the user menu, for superusers. It shows the
+  services the site depends on with their status (the databases, the
+  cache, the media storage, the task queue, outgoing email and the
+  migrations are checked out of the box), the tasks that are queued,
+  running or finished, and the recurring tasks with their latest and next
+  run. Other apps add to it from `AppConfig.ready()` with
+  `status.register_service()`, `status.register_task_adapter()`,
+  `status.register_recurring_task()` and `status.register_task()`. The
+  services are checked when the page opens and on Refresh, side by side
+  with a time limit each, and the results are kept for
+  `STATUS_CACHE_TIMEOUT` seconds (60). A dot on the avatar and the menu
+  item shows while a service is degraded or down. Huey's queue shows
+  without setup when Huey is installed. Task adapters gain the optional
+  `get_pending_tasks()` and `get_health()`, `TaskStatus` gains `QUEUED`,
+  and a `TaskRow` can carry a `key`, a `source` and a `schedule`.
+  `has_status_permission()` on the admin site decides who may open the
+  page, and system check `content_studio.E047` reports malformed
+  registrations.
+
 - **Estimated counts for large tables.** Every list page ran an exact
   `COUNT(*)`, which is slow on tables with millions of rows. A studio's new
   `list_count` option takes `"estimated"` to show "About 2.3M orders" from

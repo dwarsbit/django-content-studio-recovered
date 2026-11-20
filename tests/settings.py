@@ -23,6 +23,7 @@ INSTALLED_APPS = [
     "content_studio",
     "content_studio.contrib.password_reset",
     "content_studio.contrib.two_factor",
+    "content_studio.contrib.status",
     "content_studio.media_library",
     "content_studio.webhooks",
     "content_studio.notifications",

@@ -23,6 +23,7 @@ import { MediaLibraryPage } from "@/pages/(studio)/media-library/[model]/page";
 import { NotificationsPage } from "@/pages/(studio)/notifications/page";
 import { NotificationSettingsPage } from "@/pages/(studio)/notifications/settings/page";
 import { ProfilePage } from "@/pages/(studio)/profile/page";
+import { StatusPage } from "@/pages/(studio)/status/page";
 import { UIPage } from "@/pages/(studio)/ui/page";
 
 const queryClient = new QueryClient();
@@ -67,6 +68,10 @@ const router = createBrowserRouter(
                 {
                   path: "profile/edit",
                   element: <ProfilePage tab="edit" />,
+                },
+                {
+                  path: "status",
+                  element: <StatusPage />,
                 },
                 ...(uiShowcaseEnabled
                   ? [{ path: "ui", element: <UIPage /> }]

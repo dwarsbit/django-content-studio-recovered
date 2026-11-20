@@ -17,7 +17,7 @@ class ScheduledTaskSerializer(serializers.Serializer):
     next_run_at = serializers.DateTimeField(allow_null=True)
     duration = serializers.IntegerField(allow_null=True)
     status = serializers.ChoiceField(
-        choices=["RUNNING", "SCHEDULED", "SUCCESS", "FAILURE"]
+        choices=["QUEUED", "RUNNING", "SCHEDULED", "SUCCESS", "FAILURE"]
     )
     error_message = serializers.CharField(
         allow_blank=True, allow_null=True, required=False
