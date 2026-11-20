@@ -89,6 +89,14 @@
   after a background check now removes the checked file at once, instead
   of leaving it until `content_studio_clear_uploads` runs.
 
+- **Rich text links could reveal the URL of any object.** The linked
+  model and id come from the editor's HTML, and rendering resolved them
+  on any installed model, without tenant scoping or a permission check:
+  an editor could link to an unpublished object, or another tenant's,
+  and the public page showed its URL. Rendering now only resolves models
+  with a linkable studio, and saving refuses new links to objects the
+  editor may not view.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

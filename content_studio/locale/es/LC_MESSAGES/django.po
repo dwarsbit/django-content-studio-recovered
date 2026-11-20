@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:42+0000\n"
+"POT-Creation-Date: 2026-11-20 14:51+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -683,11 +683,11 @@ msgstr "Las últimas tareas que ejecutaron los workers"
 msgid "Tasks"
 msgstr "Tareas"
 
-#: export.py:202 importing.py:868
+#: export.py:202 importing.py:954
 msgid "Yes"
 msgstr "Sí"
 
-#: export.py:202 importing.py:871
+#: export.py:202 importing.py:957
 msgid "No"
 msgstr "No"
 
@@ -715,53 +715,71 @@ msgstr "versión"
 msgid "versions"
 msgstr "versiones"
 
-#: importing.py:515
+#: importing.py:514
 msgid "Excel files cannot be imported on this site."
 msgstr "En este sitio no se pueden importar archivos de Excel."
 
-#: importing.py:521
+#: importing.py:520
 msgid "Choose a CSV, Excel (.xlsx) or JSON file."
 msgstr "Elija un archivo CSV, Excel (.xlsx) o JSON."
 
-#: importing.py:567 importing.py:610
+#: importing.py:551
+#, python-format
+msgid ""
+"The file has more than %(max)s rows; at most %(max)s can be imported at once."
+" Split it into smaller files."
+msgstr ""
+"El archivo tiene más de %(max)s filas; se pueden importar como máximo %(max)s"
+" a la vez. Divídelo en archivos más pequeños."
+
+#: importing.py:581
+#, python-format
+msgid "The file has more than %(max)s columns."
+msgstr "El archivo tiene más de %(max)s columnas."
+
+#: importing.py:618 importing.py:686
 msgid "The file is empty."
 msgstr "El archivo está vacío."
 
-#: importing.py:569 importing.py:580
+#: importing.py:620 importing.py:632
 msgid "The file is not a valid CSV file."
 msgstr "El archivo no es un CSV válido."
 
-#: importing.py:599
+#: importing.py:661 importing.py:675
 msgid "The file is not a valid Excel file."
 msgstr "El archivo no es un Excel válido."
 
-#: importing.py:629
+#: importing.py:664
+msgid "The Excel file is too large to import."
+msgstr "El archivo de Excel es demasiado grande para importarlo."
+
+#: importing.py:706
 msgid "The file is not valid JSON."
 msgstr "El archivo no es un JSON válido."
 
-#: importing.py:632
+#: importing.py:709
 msgid "A JSON file must hold a list of objects."
 msgstr "Un archivo JSON debe contener una lista de objetos."
 
-#: importing.py:837
+#: importing.py:923
 msgid "Enter valid JSON."
 msgstr "Introduzca un JSON válido."
 
-#: importing.py:874
+#: importing.py:960
 msgid "Enter true or false."
 msgstr "Introduzca true o false."
 
-#: importing.py:910
+#: importing.py:996
 #, python-format
 msgid "No %(model)s with %(field)s %(value)s."
 msgstr "No hay ningún %(model)s con %(field)s %(value)s."
 
-#: importing.py:921
+#: importing.py:1007
 #, python-format
 msgid "More than one %(model)s has %(field)s %(value)s."
 msgstr "Más de un %(model)s tiene %(field)s %(value)s."
 
-#: importing.py:1007
+#: importing.py:1093
 #, python-format
 msgid "The file needs the column %(columns)s to match rows."
 msgid_plural "The file needs the columns %(columns)s to match rows."
@@ -772,7 +790,7 @@ msgstr[1] ""
 msgstr[2] ""
 "El archivo necesita las columnas %(columns)s para emparejar las filas."
 
-#: importing.py:1017
+#: importing.py:1103
 msgid ""
 "The file has no column this import can set. Download the template for the "
 "columns."
@@ -780,38 +798,38 @@ msgstr ""
 "El archivo no tiene ninguna columna que esta importación pueda rellenar. "
 "Descargue la plantilla para ver las columnas."
 
-#: importing.py:1111
+#: importing.py:1197
 #, python-format
 msgid "You may not create %(model)s."
 msgstr "No puede crear %(model)s."
 
-#: importing.py:1124
+#: importing.py:1210
 #, python-format
 msgid "You may not change this %(model)s."
 msgstr "No puede cambiar este %(model)s."
 
-#: importing.py:1202
+#: importing.py:1288
 #, python-format
 msgid "The row matches more than one %(model)s."
 msgstr "La fila coincide con más de un %(model)s."
 
-#: importing.py:1212
+#: importing.py:1298
 #, python-format
 msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
 msgstr ""
 "No hay ningún %(model)s con id %(value)s. Deje el id vacío para crear uno."
 
-#: importing.py:1459
+#: importing.py:1551
 msgid "This model cannot be imported."
 msgstr "Este modelo no se puede importar."
 
-#: importing.py:1489
+#: importing.py:1585
 msgid "The import failed. Try again, or ask a developer to check the logs."
 msgstr ""
 "La importación ha fallado. Inténtelo de nuevo o pida a un desarrollador que "
 "revise los registros."
 
-#: importing.py:1533
+#: importing.py:1642
 msgid "Import from a file"
 msgstr "Importar desde un archivo"
 
@@ -889,11 +907,11 @@ msgid "Folders"
 msgstr "Carpetas"
 
 #: media_library/serializers.py:52 media_library/serializers.py:55
-#: media_library/serializers.py:63 uploads.py:65 uploads.py:73
+#: media_library/serializers.py:63 uploads.py:73 uploads.py:81
 msgid "Files of this type cannot be uploaded."
 msgstr "No se pueden subir archivos de este tipo."
 
-#: media_library/serializers.py:59 uploads.py:69
+#: media_library/serializers.py:59 uploads.py:77
 #, python-format
 msgid "The file is larger than %(size)s."
 msgstr "El archivo supera los %(size)s."
@@ -1212,6 +1230,10 @@ msgstr "Se ha cambiado tu dirección de correo para %(site)s"
 msgid "Enter a new password."
 msgstr "Introduzca una nueva contraseña."
 
+#: rich_text.py:345 rich_text.py:374
+msgid "A link points to something you cannot link to."
+msgstr "Un enlace apunta a algo a lo que no puedes enlazar."
+
 #: templates/content_studio/notifications/digest.html:13
 #: templates/content_studio/notifications/digest.txt:1
 #, python-format
@@ -1332,11 +1354,11 @@ msgstr ""
 msgid "If you did not ask for this, contact your administrator."
 msgstr "Si no lo ha pedido usted, póngase en contacto con su administrador."
 
-#: uploads.py:116 uploads.py:128
+#: uploads.py:124 uploads.py:136
 msgid "The upload has expired. Choose the file again."
 msgstr "La subida ha caducado. Vuelva a elegir el archivo."
 
-#: uploads.py:122
+#: uploads.py:130
 msgid "The upload is not valid."
 msgstr "La subida no es válida."
 
@@ -1465,12 +1487,12 @@ msgstr "Este idioma no está disponible."
 msgid "Content"
 msgstr "Contenido"
 
-#: viewsets.py:493
+#: viewsets.py:494
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "El archivo es demasiado grande; puede ocupar como máximo %(size)s."
 
-#: viewsets.py:531
+#: viewsets.py:533
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "

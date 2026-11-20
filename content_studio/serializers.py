@@ -329,11 +329,36 @@ class ContentSerializer(serializers.ModelSerializer):
         attrs = super().validate(attrs)
         # Staff who are not superusers grant only what they have.
         instance = self.instance if isinstance(self.instance, models.Model) else None
-        check_permission_changes(
-            self.Meta.model, instance, attrs, self.context.get("request")
-        )
+        request = self.context.get("request")
+        check_permission_changes(self.Meta.model, instance, attrs, request)
+        self._check_rich_text_links(instance, attrs, request)
 
         return attrs
+
+    def _check_rich_text_links(self, instance, attrs, request):
+        """
+        New links in rich text must point at objects the editor may see,
+        or the rendered page would reveal their URLs.
+        """
+        from .rich_text import check_links
+
+        if request is None or getattr(request, "user", None) is None:
+            return
+
+        errors = {}
+
+        for name, value in attrs.items():
+            if not isinstance(value, (str, dict, list)):
+                continue
+
+            previous = getattr(instance, name, None) if instance is not None else None
+            field_errors = check_links(request, value, previous)
+
+            if field_errors:
+                errors[name] = sorted(set(field_errors))
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
     def save(self, **kwargs):
         from .uploads import TemporaryUpload, discard_upload

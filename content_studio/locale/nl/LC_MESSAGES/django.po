@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:42+0000\n"
+"POT-Creation-Date: 2026-11-20 14:51+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -685,11 +685,11 @@ msgstr "De laatste taken die de workers hebben uitgevoerd"
 msgid "Tasks"
 msgstr "Taken"
 
-#: export.py:202 importing.py:868
+#: export.py:202 importing.py:954
 msgid "Yes"
 msgstr "Ja"
 
-#: export.py:202 importing.py:871
+#: export.py:202 importing.py:957
 msgid "No"
 msgstr "Nee"
 
@@ -719,53 +719,71 @@ msgstr "versie"
 msgid "versions"
 msgstr "versies"
 
-#: importing.py:515
+#: importing.py:514
 msgid "Excel files cannot be imported on this site."
 msgstr "Excel-bestanden kunnen op deze site niet worden geïmporteerd."
 
-#: importing.py:521
+#: importing.py:520
 msgid "Choose a CSV, Excel (.xlsx) or JSON file."
 msgstr "Kies een CSV-, Excel- (.xlsx) of JSON-bestand."
 
-#: importing.py:567 importing.py:610
+#: importing.py:551
+#, python-format
+msgid ""
+"The file has more than %(max)s rows; at most %(max)s can be imported at once."
+" Split it into smaller files."
+msgstr ""
+"Het bestand heeft meer dan %(max)s rijen; er kunnen er hoogstens %(max)s "
+"tegelijk worden geïmporteerd. Splits het in kleinere bestanden."
+
+#: importing.py:581
+#, python-format
+msgid "The file has more than %(max)s columns."
+msgstr "Het bestand heeft meer dan %(max)s kolommen."
+
+#: importing.py:618 importing.py:686
 msgid "The file is empty."
 msgstr "Het bestand is leeg."
 
-#: importing.py:569 importing.py:580
+#: importing.py:620 importing.py:632
 msgid "The file is not a valid CSV file."
 msgstr "Het bestand is geen geldig CSV-bestand."
 
-#: importing.py:599
+#: importing.py:661 importing.py:675
 msgid "The file is not a valid Excel file."
 msgstr "Het bestand is geen geldig Excel-bestand."
 
-#: importing.py:629
+#: importing.py:664
+msgid "The Excel file is too large to import."
+msgstr "Het Excel-bestand is te groot om te importeren."
+
+#: importing.py:706
 msgid "The file is not valid JSON."
 msgstr "Het bestand is geen geldige JSON."
 
-#: importing.py:632
+#: importing.py:709
 msgid "A JSON file must hold a list of objects."
 msgstr "Een JSON-bestand moet een lijst van objecten bevatten."
 
-#: importing.py:837
+#: importing.py:923
 msgid "Enter valid JSON."
 msgstr "Vul geldige JSON in."
 
-#: importing.py:874
+#: importing.py:960
 msgid "Enter true or false."
 msgstr "Vul true of false in."
 
-#: importing.py:910
+#: importing.py:996
 #, python-format
 msgid "No %(model)s with %(field)s %(value)s."
 msgstr "Geen %(model)s met %(field)s %(value)s."
 
-#: importing.py:921
+#: importing.py:1007
 #, python-format
 msgid "More than one %(model)s has %(field)s %(value)s."
 msgstr "Meer dan één %(model)s heeft %(field)s %(value)s."
 
-#: importing.py:1007
+#: importing.py:1093
 #, python-format
 msgid "The file needs the column %(columns)s to match rows."
 msgid_plural "The file needs the columns %(columns)s to match rows."
@@ -773,7 +791,7 @@ msgstr[0] "Het bestand heeft de kolom %(columns)s nodig om rijen te koppelen."
 msgstr[1] ""
 "Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen."
 
-#: importing.py:1017
+#: importing.py:1103
 msgid ""
 "The file has no column this import can set. Download the template for the "
 "columns."
@@ -781,37 +799,37 @@ msgstr ""
 "Het bestand heeft geen kolom die deze import kan vullen. Download het "
 "sjabloon voor de kolommen."
 
-#: importing.py:1111
+#: importing.py:1197
 #, python-format
 msgid "You may not create %(model)s."
 msgstr "Je mag geen %(model)s maken."
 
-#: importing.py:1124
+#: importing.py:1210
 #, python-format
 msgid "You may not change this %(model)s."
 msgstr "Je mag deze %(model)s niet wijzigen."
 
-#: importing.py:1202
+#: importing.py:1288
 #, python-format
 msgid "The row matches more than one %(model)s."
 msgstr "De rij past bij meer dan één %(model)s."
 
-#: importing.py:1212
+#: importing.py:1298
 #, python-format
 msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
 msgstr "Geen %(model)s met id %(value)s. Laat het id leeg om er een te maken."
 
-#: importing.py:1459
+#: importing.py:1551
 msgid "This model cannot be imported."
 msgstr "Dit model kan niet worden geïmporteerd."
 
-#: importing.py:1489
+#: importing.py:1585
 msgid "The import failed. Try again, or ask a developer to check the logs."
 msgstr ""
 "De import is mislukt. Probeer het opnieuw, of vraag een developer de logs te "
 "bekijken."
 
-#: importing.py:1533
+#: importing.py:1642
 msgid "Import from a file"
 msgstr "Importeren uit een bestand"
 
@@ -890,11 +908,11 @@ msgid "Folders"
 msgstr "Mappen"
 
 #: media_library/serializers.py:52 media_library/serializers.py:55
-#: media_library/serializers.py:63 uploads.py:65 uploads.py:73
+#: media_library/serializers.py:63 uploads.py:73 uploads.py:81
 msgid "Files of this type cannot be uploaded."
 msgstr "Bestanden van dit type kunnen niet worden geüpload."
 
-#: media_library/serializers.py:59 uploads.py:69
+#: media_library/serializers.py:59 uploads.py:77
 #, python-format
 msgid "The file is larger than %(size)s."
 msgstr "Het bestand is groter dan %(size)s."
@@ -1204,6 +1222,10 @@ msgstr "Je e-mailadres voor %(site)s is gewijzigd"
 msgid "Enter a new password."
 msgstr "Vul een nieuw wachtwoord in."
 
+#: rich_text.py:345 rich_text.py:374
+msgid "A link points to something you cannot link to."
+msgstr "Een link verwijst naar iets waar je niet naar kunt linken."
+
 #: templates/content_studio/notifications/digest.html:13
 #: templates/content_studio/notifications/digest.txt:1
 #, python-format
@@ -1321,11 +1343,11 @@ msgstr ""
 msgid "If you did not ask for this, contact your administrator."
 msgstr "Heb je hier niet om gevraagd? Neem dan contact op met je beheerder."
 
-#: uploads.py:116 uploads.py:128
+#: uploads.py:124 uploads.py:136
 msgid "The upload has expired. Choose the file again."
 msgstr "De upload is verlopen. Kies het bestand opnieuw."
 
-#: uploads.py:122
+#: uploads.py:130
 msgid "The upload is not valid."
 msgstr "De upload is niet geldig."
 
@@ -1452,12 +1474,12 @@ msgstr "Deze taal is niet beschikbaar."
 msgid "Content"
 msgstr "Content"
 
-#: viewsets.py:493
+#: viewsets.py:494
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Het bestand is te groot; het mag hoogstens %(size)s zijn."
 
-#: viewsets.py:531
+#: viewsets.py:533
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
