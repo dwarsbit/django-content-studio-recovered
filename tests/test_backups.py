@@ -19,7 +19,11 @@ from django.test import override_settings
 from django.utils import timezone
 from rest_framework.test import APIClient
 
-from content_studio.checks import backup_errors, backup_warnings
+from content_studio.checks import (
+    backup_errors,
+    backup_storage_errors,
+    backup_warnings,
+)
 from content_studio.contrib.backups import backup as backups
 from content_studio.contrib.backups import huey as backup_huey
 from content_studio.contrib.backups import schedule, status
@@ -175,6 +179,7 @@ def test_backup_saves_a_fixture_and_its_manifest(fresh_storage):
     assert "auth.permission" not in models
     assert "sessions.session" not in models
     assert "content_studio_backups.backup" not in models
+    assert "password_reset.passwordresetcode" not in models
 
     with fresh_storage.open(backups.manifest_name(backup.file), "rb") as file:
         manifest = json.loads(file.read())
@@ -184,6 +189,36 @@ def test_backup_saves_a_fixture_and_its_manifest(fresh_storage):
     assert manifest["engine"] == "sqlite"
     assert manifest["counts"]["testapp.Article"] == 1
     assert "0001_initial" in manifest["migrations"]["auth"]
+
+
+def test_backup_names_cannot_be_guessed_from_the_time():
+    moment = datetime.datetime(2026, 11, 21, 3, 0, 0, tzinfo=UTC)
+
+    first = backups.backup_name("default", moment)
+    second = backups.backup_name("default", moment)
+
+    assert first != second
+    assert first.startswith("content_studio/backups/default/2026-11-21T030000Z-")
+    assert first.endswith(".json.gz")
+    # 128 random bits between the time and the extension.
+    token = first.removeprefix(
+        "content_studio/backups/default/2026-11-21T030000Z-"
+    ).removesuffix(".json.gz")
+    assert len(token) == 32
+    assert backups.manifest_name(first) == first.removesuffix(".json.gz") + (
+        ".manifest.json"
+    )
+
+
+@pytest.mark.django_db
+def test_backup_leaves_out_password_reset_codes():
+    from content_studio.contrib.password_reset.models import PasswordResetCode
+
+    assert "password_reset.PasswordResetCode" in backups.get_excludes()
+    assert not any(
+        model is PasswordResetCode
+        for model in backups.get_models("default", backups.get_excludes())
+    )
 
 
 @pytest.mark.django_db
@@ -656,6 +691,7 @@ def test_huey_without_a_schedule_registers_nothing():
 
 def test_clean_settings_pass_the_checks():
     assert backup_errors() == []
+    assert backup_storage_errors() == []
     assert backup_warnings() == []
 
 
@@ -677,11 +713,45 @@ def test_misconfigured_backups_are_errors(setting, value, message):
     assert message in error
 
 
-def test_backups_in_served_media_are_a_warning():
+def test_backups_in_served_media_are_an_error():
     with mock.patch.object(cs_settings, "BACKUP_STORAGE", "default"):
-        [(check_id, warning)] = backup_warnings()
+        [(check_id, error)] = backup_storage_errors()
+        assert backup_warnings() == []
 
-    assert check_id == "content_studio.W027"
+    assert check_id == "content_studio.E052"
+    assert "SILENCED_SYSTEM_CHECKS" in error
+
+
+@pytest.mark.parametrize(
+    "attributes",
+    [{"default_acl": "public-read"}, {"querystring_auth": False}],
+)
+def test_backups_in_a_public_bucket_are_an_error(attributes):
+    storage = type("Bucket", (), attributes)()
+
+    with mock.patch("django.core.files.storage.storages", {"backups": storage}):
+        [(check_id, _error)] = backup_storage_errors()
+
+    assert check_id == "content_studio.E052"
+
+
+def test_a_private_bucket_passes():
+    storage = type("Bucket", (), {"default_acl": None, "querystring_auth": True})()
+
+    with mock.patch("django.core.files.storage.storages", {"backups": storage}):
+        assert backup_storage_errors() == []
+
+
+def test_the_storage_error_is_a_system_check_error():
+    from django.core import checks
+
+    from content_studio.checks import check_content_studio
+
+    with mock.patch.object(cs_settings, "BACKUP_STORAGE", "default"):
+        [message] = check_content_studio()
+
+    assert message.id == "content_studio.E052"
+    assert message.level == checks.ERROR
 
 
 def test_a_schedule_without_huey_is_a_warning():

@@ -26,7 +26,11 @@ python manage.py migrate
 ```
 
 Backups go to the default storage, in the folder `content_studio/backups`,
-every night at 03:00. Then decide what runs them.
+every night at 03:00. On most sites the default storage is the media
+storage, which the web server serves to anyone, so `manage.py check` stops
+with `content_studio.E052` until the backups have a private storage: see
+[Keep the backups private](#keep-the-backups-private). Then decide what
+runs them.
 
 ### With Huey
 
@@ -83,9 +87,14 @@ CONTENT_STUDIO = {
 }
 ```
 
-`manage.py check` warns with `content_studio.W027` when the backup storage
-is a file system storage inside `MEDIA_ROOT`, or an object storage with a
-public ACL or unsigned URLs.
+`manage.py check` reports `content_studio.E052`, an error, when the backup
+storage is a file system storage inside `MEDIA_ROOT`, or an object storage
+with a public ACL or unsigned URLs. If your web server refuses the backup
+folder, add `content_studio.E052` to `SILENCED_SYSTEM_CHECKS`.
+
+Each backup's name ends in a random token, so it cannot be guessed from the
+schedule. That is a second line of defence, not a reason to keep backups
+where they are served.
 
 Backups are not encrypted by Content Studio. Turn on your storage's own
 encryption at rest, such as S3's default server-side encryption.
@@ -100,6 +109,8 @@ Left out:
 
 - Content types and permissions: `migrate` creates them again.
 - Sessions: everyone signs in again after a restore.
+- Password reset codes ([`content_studio.contrib.password_reset`](/docs/authentication#password-reset)):
+  they are short-lived, and a backup should not hold codes that still work.
 - The backup records themselves.
 - Whatever you list in [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude),
   as app labels (`"analytics"`) or models (`"shop.Cart"`).
@@ -110,11 +121,12 @@ in. Protect them with the storage's own versioning or replication.
 Next to each backup the app saves its manifest,
 `<name>.manifest.json`: the Content Studio and Django versions, the database
 engine, the applied migrations and the number of rows per model. A backup of
-database `default` made on 20 November 2026 at 03:00 UTC is saved as:
+database `default` made on 20 November 2026 at 03:00 UTC is saved under the
+time it started and a random token:
 
 ```text
-content_studio/backups/default/2026-11-20T030000Z.json.gz
-content_studio/backups/default/2026-11-20T030000Z.manifest.json
+content_studio/backups/default/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.json.gz
+content_studio/backups/default/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.manifest.json
 ```
 
 The dump streams each table to a temporary file on the worker, which is
@@ -184,8 +196,8 @@ button for it: run the command on the server.
 
 ```bash
 python manage.py content_studio_restore --latest
-python manage.py content_studio_restore content_studio/backups/default/2026-11-20T030000Z.json.gz
-python manage.py content_studio_restore /tmp/2026-11-20T030000Z.json.gz --database default
+python manage.py content_studio_restore content_studio/backups/default/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.json.gz
+python manage.py content_studio_restore /tmp/2026-11-20T030000Z-4f1c2a9e0b7d4e6a8c3f5b1d2e9a7c04.json.gz --database default
 ```
 
 Name a backup as `--list` prints it, or a downloaded file on disk (keep its
@@ -223,4 +235,5 @@ restore a backup of the old one into it.
 | [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude) | `[]` | Apps and models left out. |
 
 `manage.py check` reports settings that cannot work as
-`content_studio.E050`.
+`content_studio.E050`, and a backup storage that may be public as
+`content_studio.E052`.

@@ -13,6 +13,7 @@ import json
 import logging
 import os
 import posixpath
+import secrets
 import shutil
 import tempfile
 from typing import Iterable, Optional
@@ -46,6 +47,12 @@ DEFAULT_EXCLUDE = [
     "content_studio_backups",
 ]
 
+# Left out when their app is installed: password reset codes are
+# short-lived, and a backup should not hold codes that are still valid.
+DEFAULT_EXCLUDE_IF_INSTALLED = {
+    "content_studio.contrib.password_reset": "password_reset.PasswordResetCode",
+}
+
 # A backup still queued or running after this long did not finish.
 STALE_AFTER = datetime.timedelta(hours=6)
 
@@ -78,8 +85,16 @@ def get_databases() -> list[str]:
 
 
 def backup_name(alias: str, moment: datetime.datetime) -> str:
+    """
+    The backup's name in the storage: the UTC time it started, so names
+    sort by age, and a random token, so a name cannot be guessed from the
+    schedule even where the storage serves its files.
+    """
     stamp = moment.astimezone(datetime.timezone.utc).strftime("%Y-%m-%dT%H%M%SZ")
-    return posixpath.join(cs_settings.BACKUP_FOLDER, alias, stamp + EXTENSION)
+    token = secrets.token_hex(16)
+    return posixpath.join(
+        cs_settings.BACKUP_FOLDER, alias, f"{stamp}-{token}{EXTENSION}"
+    )
 
 
 def manifest_name(name: str) -> str:
@@ -96,8 +111,16 @@ def get_excludes() -> list[str]:
     without those not installed (dumpdata refuses unknown ones).
     """
     excludes = []
+    defaults = [
+        *DEFAULT_EXCLUDE,
+        *(
+            label
+            for app, label in DEFAULT_EXCLUDE_IF_INSTALLED.items()
+            if apps.is_installed(app)
+        ),
+    ]
 
-    for label in [*DEFAULT_EXCLUDE, *(cs_settings.BACKUP_EXCLUDE or [])]:
+    for label in [*defaults, *(cs_settings.BACKUP_EXCLUDE or [])]:
         app_label, _dot, model_name = label.partition(".")
 
         try:

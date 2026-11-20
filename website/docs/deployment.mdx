@@ -148,6 +148,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E049` | A [`DEVTOOLS`](/docs/settings#devtools) that is not `True` or `False`, or a [`DEVTOOLS_LOGGERS`](/docs/settings#devtools_loggers) that is not a list of logger names. |
 | `content_studio.E050` | A [backup](/docs/backups#settings) setting that cannot work: `BACKUP_STORAGE` not in `STORAGES`, an alias in `BACKUP_DATABASES` not in `DATABASES`, a `BACKUP_SCHEDULE` that is not a cron expression, a `BACKUP_KEEP` below 1, or an unknown app or model in `BACKUP_EXCLUDE`. |
 | `content_studio.E051` | The [`fields`](/docs/list-page#asking-for-values-first) of a `@bulk_action` or `Button`: a name that is not a model field and has no `form_field`, a field that cannot be edited or is excluded, a `form_field` the dialog cannot show, a condition that reads another field or uses a `Condition`, or a method without the `data` argument. |
+| `content_studio.E052` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. Until 1.17.1 this was the warning `content_studio.W027`. See [Keep the backups private](/docs/backups#keep-the-backups-private); silence it only if your web server refuses the backup folder. |
 
 ### Warnings
 
@@ -179,7 +180,6 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W024` | A required model field that only shows under a [condition](/docs/edit-page#conditional-fields). A hidden field is not saved, so creating an object while it is hidden fails. |
 | `content_studio.W025` | A [`RichTextWidget`](/docs/widgets#rich-text) with the image feature without the media library, or with a `link_models` model or an `image_sizes` size that does not exist, has no URL or has no `search_fields`. |
 | `content_studio.W026` | `import_fields` or `allow_import` on a singleton, an empty `import_fields`, or `import_id_fields` that need not be unique. |
-| `content_studio.W027` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. See [Keep the backups private](/docs/backups#keep-the-backups-private). |
 | `content_studio.W028` | `BACKUP_SCHEDULE` is set but Huey is not installed to run it. Run `content_studio_backup` [from cron](/docs/backups#with-cron) and silence the warning. |
 
 ## Reporting a vulnerability

@@ -1048,55 +1048,67 @@ def is_inside_media_root(location) -> bool:
     return path == media_root or media_root in path.parents
 
 
+def is_public_storage(storage) -> bool:
+    """
+    Whether a storage may serve its files to anyone: a FileSystemStorage
+    inside MEDIA_ROOT (web servers serve it), or an object storage with a
+    public ACL or unsigned URLs.
+    """
+    from django.core.files.storage import FileSystemStorage
+
+    if isinstance(storage, FileSystemStorage):
+        return is_inside_media_root(storage.location)
+
+    return (
+        getattr(storage, "default_acl", None) in ("public-read", "public-read-write")
+        or getattr(storage, "querystring_auth", True) is False
+    )
+
+
+def backup_storage_errors() -> list[tuple[str, str]]:
+    """
+    Backups saved in a storage that may serve them publicly (E052). A
+    project whose web server refuses the backup folder silences it.
+    """
+    from django.apps import apps
+    from django.core.files.storage import InvalidStorageError, storages
+
+    if not apps.is_installed("content_studio.contrib.backups"):
+        return []
+
+    try:
+        storage = storages[cs_settings.BACKUP_STORAGE]
+    except InvalidStorageError:
+        # E050 reports it.
+        return []
+
+    if not is_public_storage(storage):
+        return []
+
+    return [
+        (
+            "content_studio.E052",
+            f"Backups are saved in the {cs_settings.BACKUP_STORAGE!r} storage, "
+            f"which may serve {cs_settings.BACKUP_FOLDER!r} publicly. A backup "
+            "holds the whole database, password hashes and two-factor secrets "
+            "included. Set BACKUP_STORAGE to a private storage in STORAGES, "
+            "outside MEDIA_ROOT. If your web server refuses the folder, add "
+            "content_studio.E052 to SILENCED_SYSTEM_CHECKS.",
+        )
+    ]
+
+
 def backup_warnings() -> list[tuple[str, str]]:
     """
-    Backups that may be public (W027): saved in a FileSystemStorage inside
-    MEDIA_ROOT, or in a storage with a public ACL or unsigned URLs. And a
-    BACKUP_SCHEDULE without Huey to run it (W028): run
+    A BACKUP_SCHEDULE without Huey to run it (W028): run
     content_studio_backup from cron, and silence the warning.
     """
     from django.apps import apps
-    from django.core.files.storage import FileSystemStorage, InvalidStorageError
-    from django.core.files.storage import storages
 
     if not apps.is_installed("content_studio.contrib.backups"):
         return []
 
     warnings = []
-
-    try:
-        storage = storages[cs_settings.BACKUP_STORAGE]
-    except InvalidStorageError:
-        storage = None
-
-    if storage is not None:
-        public = False
-
-        if isinstance(storage, FileSystemStorage):
-            # Web servers serve MEDIA_ROOT: backups inside it are public.
-            public = is_inside_media_root(storage.location)
-        elif (
-            getattr(storage, "default_acl", None)
-            in (
-                "public-read",
-                "public-read-write",
-            )
-            or getattr(storage, "querystring_auth", True) is False
-        ):
-            public = True
-
-        if public:
-            warnings.append(
-                (
-                    "content_studio.W027",
-                    f"Backups are saved in the {cs_settings.BACKUP_STORAGE!r} "
-                    f"storage, which may serve "
-                    f"{cs_settings.BACKUP_FOLDER!r} publicly. A backup holds "
-                    "the whole database, password hashes included: make sure "
-                    "the folder is not served, or set BACKUP_STORAGE to a "
-                    "private storage in STORAGES.",
-                )
-            )
 
     if cs_settings.BACKUP_SCHEDULE and not apps.is_installed("huey.contrib.djhuey"):
         warnings.append(
@@ -3958,7 +3970,7 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
     for check_id, error in status_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
-    for check_id, error in backup_errors():
+    for check_id, error in [*backup_errors(), *backup_storage_errors()]:
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, warning in backup_warnings():
