@@ -151,6 +151,30 @@ describe("StatusPage", () => {
     ).toBeVisible();
   });
 
+  it("links a service with a url", async () => {
+    respond({
+      "/status": {
+        ...services,
+        services: [
+          ...services.services,
+          service({
+            key: "content_studio.backups",
+            label: "Database backups",
+            url: "backups",
+          }),
+        ],
+      },
+    });
+    renderPage();
+
+    expect(
+      await screen.findByRole("link", { name: "Database backups" }),
+    ).toHaveAttribute("href", "/backups");
+    expect(
+      screen.queryByRole("link", { name: "Database" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("sums up what needs attention", async () => {
     renderPage();
 

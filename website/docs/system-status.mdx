@@ -61,6 +61,7 @@ service.
 | Task queue | What the task adapter reports, see [Tasks](#tasks). | No task backend is connected, or its adapter has no `get_health()`. |
 | Email | The SMTP server accepts a connection and the login. No email is sent. | The email backend is not SMTP. |
 | Migrations | Every migration is applied. Unapplied migrations are degraded. | |
+| Database backups | With the [backups app](/docs/backups#on-the-status-page) installed: the latest backup is not overdue and did not fail. | `BACKUP_SCHEDULE` is `None`. |
 
 ## Add a service
 
@@ -99,7 +100,7 @@ class ShopConfig(AppConfig):
         )
 ```
 
-`register_service(key, label, check, icon=None, group=None, timeout=5)`:
+`register_service(key, label, check, icon=None, group=None, timeout=5, url=None)`:
 
 - **`key`**: lowercase dotted words that start with your app, such as
   `"shop.payments"`.
@@ -111,6 +112,8 @@ class ShopConfig(AppConfig):
 - **`group`**: the heading the service is listed under. By default it is the
   name of the app the check is defined in.
 - **`timeout`**: the seconds the check may take.
+- **`url`**: makes the service's name a link, to a page of the admin
+  (`"backups"`) or to an `http(s)` address, which opens in a new tab.
 
 A check that raises an exception, or does not answer within its `timeout`,
 shows the service as down with the exception as its message. The checks run

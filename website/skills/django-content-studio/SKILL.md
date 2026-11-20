@@ -561,6 +561,12 @@ Each is optional and has its own page:
   recent and recurring tasks; apps add theirs with
   `status.register_service()` in `AppConfig.ready()`):
   https://djangocontentstudio.org/docs/system-status.md
+- Automatic database backups (`content_studio.contrib.backups`: a gzipped
+  fixture per database in `BACKUP_STORAGE` on `BACKUP_SCHEDULE`, a cron
+  expression run by Huey or by `content_studio_backup` from cron; the
+  newest `BACKUP_KEEP` are kept; restore with `content_studio_restore`;
+  keep the storage private):
+  https://djangocontentstudio.org/docs/backups.md
 - Presence, the command palette, deployment and every system check:
   https://djangocontentstudio.org/docs/presence.md,
   https://djangocontentstudio.org/docs/command-palette.md,

@@ -32,6 +32,9 @@ of the box, and the system checks that catch configuration mistakes.
   [`FileWidget`](/docs/widgets#files) but never saved stay in the upload
   folder until `manage.py content_studio_clear_uploads` removes them. Run it
   once a day, for example with cron.
+- **Back up the database.** With the [backups app](/docs/backups), backups
+  run on a schedule and are kept in your storage. Keep that storage private:
+  a backup holds every account's password hash.
 - **Configure a task backend** that runs Django tasks in a worker. Password
   reset emails are then sent outside the request, so its duration does not
   reveal whether an address has an account
@@ -141,6 +144,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E046` | An unknown [`list_count`](/docs/list-page#large-tables) value: use `"exact"`, `"estimated"` or `"none"`. |
 | `content_studio.E047` | A [system status](/docs/system-status#add-a-service) service or recurring task registered with a malformed key, without a callable check, or twice with different definitions. |
 | `content_studio.E048` | Import: an `import_fields` that is not a list of fields the edit page writes (or names one twice), an `import_id_fields` entry that is not a concrete field or, other than the primary key, not an import field, or an `import_lookups` entry that is not a relation or names no field of the related model. |
+| `content_studio.E049` | A [backup](/docs/backups#settings) setting that cannot work: `BACKUP_STORAGE` not in `STORAGES`, an alias in `BACKUP_DATABASES` not in `DATABASES`, a `BACKUP_SCHEDULE` that is not a cron expression, a `BACKUP_KEEP` below 1, or an unknown app or model in `BACKUP_EXCLUDE`. |
 
 ### Warnings
 
@@ -172,6 +176,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W024` | A required model field that only shows under a [condition](/docs/edit-page#conditional-fields). A hidden field is not saved, so creating an object while it is hidden fails. |
 | `content_studio.W025` | A [`RichTextWidget`](/docs/widgets#rich-text) with the image feature without the media library, or with a `link_models` model or an `image_sizes` size that does not exist, has no URL or has no `search_fields`. |
 | `content_studio.W026` | `import_fields` or `allow_import` on a singleton, an empty `import_fields`, or `import_id_fields` that need not be unique. |
+| `content_studio.W027` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. See [Keep the backups private](/docs/backups#keep-the-backups-private). |
+| `content_studio.W028` | `BACKUP_SCHEDULE` is set but Huey is not installed to run it. Run `content_studio_backup` [from cron](/docs/backups#with-cron) and silence the warning. |
 
 ## Reporting a vulnerability
 

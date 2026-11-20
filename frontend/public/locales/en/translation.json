@@ -1062,5 +1062,43 @@
       "failed": "Failed {{when}}",
       "never": "Not run yet"
     }
+  },
+  "backups": {
+    "title": "Backups",
+    "back": "Back to system status",
+    "back_up_now": "Back up now",
+    "running": "Backing up…",
+    "started": "The backup has started.",
+    "unavailable_title": "Backups are not available",
+    "unavailable_description": "Backups are not enabled on this site, or your account may not open them.",
+    "schedule": "Schedule",
+    "schedule_next": "{{schedule}} · next {{next}}",
+    "not_scheduled": "Not scheduled",
+    "kept": "Kept",
+    "keep_one": "The newest backup per database",
+    "keep_other": "The newest {{count}} per database",
+    "keep_all": "Every backup",
+    "storage": "Storage",
+    "no_storage": "No backup storage configured",
+    "list": {
+      "title": "Backups",
+      "description": "The latest backups, newest first",
+      "empty_title": "No backups yet",
+      "empty_description": "Backups appear here once one has run. Back up now to make the first one."
+    },
+    "restore_hint": "To restore a backup, run",
+    "by": "{{trigger}} by {{user}}",
+    "download": "Download {{name}}",
+    "trigger": {
+      "scheduled": "Scheduled",
+      "manual": "Back up now",
+      "command": "Command"
+    },
+    "status": {
+      "queued": "Queued",
+      "running": "Running",
+      "done": "Done",
+      "failed": "Failed"
+    }
   }
 }

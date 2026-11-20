@@ -24,6 +24,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.password_reset",
     "content_studio.contrib.two_factor",
     "content_studio.contrib.status",
+    "content_studio.contrib.backups",
     "content_studio.media_library",
     "content_studio.webhooks",
     "content_studio.notifications",
@@ -98,7 +99,17 @@ MEDIA_ROOT = tempfile.mkdtemp(prefix="content_studio_tests_")
 EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    # Backups (content_studio.contrib.backups) stay in memory.
+    "backups": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+}
+
 # Content Studio settings
 CONTENT_STUDIO = {
     "ADMIN_SITE": "content_studio.admin.admin_site",
+    "BACKUP_STORAGE": "backups",
+    # Scheduled backups are off; the tests set a schedule where needed.
+    "BACKUP_SCHEDULE": None,
 }

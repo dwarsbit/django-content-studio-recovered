@@ -14,6 +14,7 @@ import { ResetPasswordPage } from "@/pages/(auth)/reset-password/page";
 import { SetPasswordPage } from "@/pages/(auth)/set-password/page";
 import { DashboardPage } from "@/pages/(studio)/(dashboard)/page";
 import { CatchAllPage } from "@/pages/(studio)/[...slug]/page";
+import { BackupsPage } from "@/pages/(studio)/backups/page";
 import { ContentEditorPage } from "@/pages/(studio)/content/[model]/[id]/page";
 import { ModelListLayout } from "@/pages/(studio)/content/[model]/layout";
 import { ContentIndexPage } from "@/pages/(studio)/content/[model]/page";
@@ -72,6 +73,10 @@ const router = createBrowserRouter(
                 {
                   path: "status",
                   element: <StatusPage />,
+                },
+                {
+                  path: "backups",
+                  element: <BackupsPage />,
                 },
                 ...(uiShowcaseEnabled
                   ? [{ path: "ui", element: <UIPage /> }]

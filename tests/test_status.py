@@ -85,6 +85,8 @@ def test_builtin_services_are_registered():
         "content_studio.task_queue",
         "content_studio.email",
         "content_studio.migrations",
+        # Registered by the backups app, installed in the tests.
+        "content_studio.backups",
     ]
 
 
@@ -141,6 +143,7 @@ def test_results_carry_status_detail_message_and_group(clean_registry):
         "label": "Search",
         "group": "Shop",
         "icon": "ph-bold ph-magnifying-glass",
+        "url": None,
         "status": "degraded",
         "detail": "Elasticsearch 8",
         "message": "Slow.",

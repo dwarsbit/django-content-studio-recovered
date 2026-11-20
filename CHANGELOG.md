@@ -23,6 +23,24 @@
   `has_status_permission()` on the admin site decides who may open the
   page, and system check `content_studio.E047` reports malformed
   registrations.
+- **Automatic database backups.** The new `content_studio.contrib.backups`
+  app backs up the database on a schedule: a gzipped Django fixture (the
+  JSON `dumpdata` writes, with natural keys) per database in
+  `BACKUP_DATABASES`, saved in the media storage under
+  `content_studio/backups` (`BACKUP_STORAGE`, `BACKUP_FOLDER`) with a
+  manifest of the versions, migrations and rows per model. With Huey
+  installed a periodic task runs it on `BACKUP_SCHEDULE`, a cron expression
+  (`"0 3 * * *"`); otherwise `manage.py content_studio_backup` runs it from
+  cron. The newest `BACKUP_KEEP` backups (14) are kept. On the system status
+  page, a Database backups service shows whether the latest backup is
+  overdue or failed, and the backup shows as a recurring task. Superusers
+  download backups and back up now on the new Backups page
+  (`has_backup_permission()` on the admin site decides who may), and
+  `manage.py content_studio_restore` restores one after checking its
+  migrations. `status.register_service()` gains `url`, which makes the
+  service's name a link. System checks `content_studio.E049` (settings
+  that cannot work), `W027` (a backup storage that may serve backups
+  publicly) and `W028` (a schedule without Huey to run it).
 
 - **Estimated counts for large tables.** Every list page ran an exact
   `COUNT(*)`, which is slow on tables with millions of rows. A studio's new
