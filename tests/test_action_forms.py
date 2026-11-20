@@ -110,7 +110,9 @@ class SerializationTests(TestCase):
 
         fields = action.serialize()["fields"]
 
-        self.assertEqual([field["name"] for field in fields], ["author", "note", "notify"])
+        self.assertEqual(
+            [field["name"] for field in fields], ["author", "note", "notify"]
+        )
         # A model field is described by the model.
         self.assertNotIn("input", fields[0])
         # A form field describes itself like a model field.
@@ -198,16 +200,16 @@ class EndpointTests(AuthenticatedTestCase):
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(response.json(), {"message": "Assigned 2."})
-        self.assertEqual(received, {"author": self.author, "note": "Hi", "notify": True})
+        self.assertEqual(
+            received, {"author": self.author, "note": "Hi", "notify": True}
+        )
         self.assertEqual(
             set(Article.objects.values_list("author", flat=True)), {self.author.pk}
         )
 
     def test_a_hidden_field_is_left_out(self):
         with with_actions():
-            response = self.post(
-                "assign", {"author": None, "note": "", "notify": True}
-            )
+            response = self.post("assign", {"author": None, "note": "", "notify": True})
 
         self.assertEqual(response.status_code, 200, response.content)
         self.assertEqual(received, {"author": None, "note": ""})
@@ -261,9 +263,12 @@ class EndpointTests(AuthenticatedTestCase):
     def test_model_choice_form_fields_are_scoped_to_the_studio(self):
         category = Category.objects.create(name="Hidden")
 
-        with with_actions(), mock.patch(
-            "content_studio.serializers.studio_queryset",
-            lambda request, model, queryset: queryset.none(),
+        with (
+            with_actions(),
+            mock.patch(
+                "content_studio.serializers.studio_queryset",
+                lambda request, model, queryset: queryset.none(),
+            ),
         ):
             response = self.post("categorize", {"category": {"id": category.pk}})
 
@@ -501,6 +506,8 @@ class CheckTests(TestCase):
 
 class ActionFormTests(TestCase):
     def test_strings_become_fields(self):
-        form = ActionForm(Article, ["status", Field("note", form_field=forms.CharField())])
+        form = ActionForm(
+            Article, ["status", Field("note", form_field=forms.CharField())]
+        )
 
         self.assertEqual([field.name for field in form.fields], ["status", "note"])

@@ -241,4 +241,3 @@ def _messages(detail) -> list[str]:
 def get_action_form(model, fields) -> Optional[ActionForm]:
     """The action form for the fields an action declares, or None."""
     return ActionForm(model, fields) if fields else None
-

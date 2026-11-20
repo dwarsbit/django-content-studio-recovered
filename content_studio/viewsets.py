@@ -1169,9 +1169,7 @@ class BaseModelViewSet(ModelViewSet):
             action = next(
                 (
                     action
-                    for action in get_single_object_actions(
-                        self._admin_model, request
-                    )
+                    for action in get_single_object_actions(self._admin_model, request)
                     if action.id == action_id
                 ),
                 None,
