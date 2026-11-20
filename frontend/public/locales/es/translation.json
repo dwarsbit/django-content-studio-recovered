@@ -139,6 +139,7 @@
     "sort_descending": "Orden descendente",
     "trash": "Papelera",
     "filters": {
+      "add": "Filtro",
       "all": "Todos",
       "yes": "Sí",
       "no": "No",

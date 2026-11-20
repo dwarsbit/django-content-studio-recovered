@@ -139,6 +139,7 @@
     "sort_descending": "Ordine decrescente",
     "trash": "Cestino",
     "filters": {
+      "add": "Filtro",
       "all": "Tutti",
       "yes": "Sì",
       "no": "No",

@@ -1,5 +1,9 @@
 import { useTranslation } from "react-i18next";
-import { PiArrowDownBold, PiArrowUpBold } from "react-icons/pi";
+import {
+  PiArrowDownBold,
+  PiArrowsDownUpBold,
+  PiArrowUpBold,
+} from "react-icons/pi";
 
 import {
   Select,
@@ -43,7 +47,7 @@ export function SortSelect({
     name;
 
   return (
-    <div className="flex items-center gap-2">
+    <div className="flex items-center gap-0.5">
       <Select
         value={field ?? DEFAULT}
         onValueChange={(value) => {
@@ -54,7 +58,12 @@ export function SortSelect({
           }
         }}
       >
-        <SelectTrigger size="sm" aria-label={t("list_view.sort_by")}>
+        <SelectTrigger
+          size="sm"
+          aria-label={t("list_view.sort_by")}
+          className="border-transparent bg-transparent shadow-none font-medium hover:bg-muted dark:bg-transparent dark:hover:bg-muted"
+        >
+          <PiArrowsDownUpBold className="text-muted-foreground" />
           <SelectValue />
         </SelectTrigger>
         <SelectContent>
@@ -83,8 +92,8 @@ export function SortSelect({
           }
           onClick={() => onOrderingChange(descending ? field : `-${field}`)}
           className={cn(
-            "flex items-center justify-center size-8 rounded-md border cursor-pointer outline-none",
-            "hover:bg-foreground/5 text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
+            "flex items-center justify-center size-8 rounded-md cursor-pointer outline-none",
+            "hover:bg-muted text-muted-foreground focus-visible:ring-2 focus-visible:ring-ring",
           )}
         >
           {descending ? <PiArrowDownBold /> : <PiArrowUpBold />}

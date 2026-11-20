@@ -9,14 +9,22 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
+import { cn } from "@/lib/utils";
 
 /**
  * The list's search box: a debounced input that keeps its term in the
  * URL (`search`). A term that changes in the URL from elsewhere — a
  * "clear all filters", the browser's back button — flows back into
  * the box.
+ *
+ * The `plain` variant drops the box's own border, for a toolbar that
+ * already frames it (the list card's).
  */
-export function Search() {
+export function Search({
+  variant = "default",
+}: {
+  variant?: "default" | "plain";
+}) {
   const { t } = useTranslation();
   const [searchParams, setSearchParams] = useSearchParams();
   const param = searchParams.get("search") ?? "";
@@ -62,12 +70,20 @@ export function Search() {
   );
 
   return (
-    <InputGroup className="h-8 w-64 max-w-full shrink-0">
+    <InputGroup
+      className={cn(
+        "h-8 max-w-full shrink-0",
+        variant === "plain"
+          ? "w-full sm:w-56 border-transparent bg-transparent shadow-none dark:bg-transparent has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-[[data-slot=input-group-control]:focus-visible]:border-transparent has-[[data-slot=input-group-control]:focus-visible]:bg-muted"
+          : "w-64",
+      )}
+    >
       <InputGroupAddon>
         <PiMagnifyingGlassBold className="text-muted-foreground" />
       </InputGroupAddon>
       <InputGroupInput
         placeholder={t("common.search")}
+        aria-label={t("common.search")}
         value={local}
         onChange={(e) => {
           setLocal(e.target.value);

@@ -66,6 +66,7 @@ export function TableView({
   onClear,
   reorder,
   presence,
+  className,
 }: {
   items: Row[];
   model: Model;
@@ -85,6 +86,8 @@ export function TableView({
   reorder?: ReorderProps;
   // The other users who have objects open, by id.
   presence?: Record<string, PresenceUser[]>;
+  // Overrides the frame: the list card drops the view's own border.
+  className?: string;
 }) {
   const { t } = useTranslation();
   const fields = model.admin.list.display;
@@ -103,7 +106,12 @@ export function TableView({
     items.every((item) => selected?.has(item.id));
 
   return (
-    <div className="w-full flex-1 scrollbar overflow-auto border rounded-lg">
+    <div
+      className={cn(
+        "w-full flex-1 scrollbar overflow-auto border rounded-lg",
+        className,
+      )}
+    >
       <Table>
         <TableHeader>
           <TableRow>

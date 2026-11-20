@@ -28,4 +28,9 @@ export interface FilterComponentProps {
    * parameter.
    */
   onChange(changes: FilterChanges): void;
+  /**
+   * Opens the filter's dropdown when it mounts: a filter picked from
+   * the "Filter" menu continues straight into its options.
+   */
+  defaultOpen?: boolean;
 }

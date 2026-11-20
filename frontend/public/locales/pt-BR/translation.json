@@ -139,6 +139,7 @@
     "sort_descending": "Ordem decrescente",
     "trash": "Lixeira",
     "filters": {
+      "add": "Filtro",
       "all": "Todos",
       "yes": "Sim",
       "no": "Não",

@@ -14,13 +14,14 @@ export function MultiSelectFilter({
   field,
   values,
   onChange,
+  defaultOpen,
 }: FilterComponentProps) {
   const value = values[""] ?? "";
   const valueArray = value.split(",");
   const choices = R.fromPairs(field.choices ?? []);
 
   return (
-    <DropdownMenu>
+    <DropdownMenu defaultOpen={defaultOpen}>
       <DropdownMenuTrigger asChild>
         <FilterTrigger
           label={field.verbose_name}

@@ -138,6 +138,7 @@
     "sort_descending": "Aflopend sorteren",
     "trash": "Prullenbak",
     "filters": {
+      "add": "Filter",
       "all": "Alle",
       "yes": "Ja",
       "no": "Nee",

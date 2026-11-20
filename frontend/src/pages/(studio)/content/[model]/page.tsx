@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { HeaderTabs } from "@/components/header-tabs";
 import { ImportDialog } from "@/components/import-dialog";
 import { buttonVariants } from "@/components/ui/button";
-import { PageBody, PageHeader, Toolbar } from "@/components/ui/page-header";
+import { PageBody, PageHeader } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/pagination";
 import { Spinner } from "@/components/ui/spinner";
 import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
@@ -335,31 +335,6 @@ export function ModelListPage() {
           )
         }
         title={model.verbose_name_plural}
-        meta={
-          data.pagination.count !== null && (
-            <span
-              className="text-muted-foreground text-sm tabular-nums"
-              title={
-                data.pagination.approximate
-                  ? t("list_view.count_about", {
-                      total: formatNumber(data.pagination.count, {
-                        format: "full",
-                        locale: i18n.language,
-                      }),
-                      plural: model.verbose_name_plural,
-                    })
-                  : undefined
-              }
-            >
-              {data.pagination.approximate
-                ? `~${formatNumber(data.pagination.count, { locale: i18n.language })}`
-                : formatNumber(data.pagination.count, {
-                    format: "full",
-                    locale: i18n.language,
-                  })}
-            </span>
-          )
-        }
         description={model.admin.list.description}
         actions={
           <>
@@ -385,49 +360,6 @@ export function ModelListPage() {
         }
       >
         {model.admin.list.trash && <ListTabs model={model} current="list" />}
-        <Toolbar>
-          <Filters model={model} values={filters} onValuesChange={setFilters} />
-          <div className="ml-auto flex items-center gap-2">
-            {view === "list" && !R.isNil(sortableBy) && (
-              <SortSelect
-                model={model}
-                ordering={ordering}
-                onOrderingChange={setOrdering}
-              />
-            )}
-            {views.length > 1 && (
-              <ToggleGroup
-                type="single"
-                size="sm"
-                variant="outline"
-                value={view}
-                onValueChange={(next) => next && setView(next)}
-                aria-label={t("list_view.view")}
-              >
-                {views.includes("table") && (
-                  <ToggleGroupItem
-                    value="table"
-                    title={t("list_view.table_view")}
-                    aria-label={t("list_view.table_view")}
-                    className="min-w-8"
-                  >
-                    <PiTableBold />
-                  </ToggleGroupItem>
-                )}
-                {views.includes("list") && (
-                  <ToggleGroupItem
-                    value="list"
-                    title={t("list_view.list_view")}
-                    aria-label={t("list_view.list_view")}
-                    className="min-w-8"
-                  >
-                    <PiRowsBold />
-                  </ToggleGroupItem>
-                )}
-              </ToggleGroup>
-            )}
-          </div>
-        </Toolbar>
       </PageHeader>
       {importConfig?.can_import && (
         <ImportDialog
@@ -438,32 +370,112 @@ export function ModelListPage() {
       )}
 
       <PageBody className="space-y-3">
-        {view === "list" ? (
-          <ListView
-            items={data.results}
-            model={model}
-            selected={actions.length > 0 ? selected : undefined}
-            onToggle={actions.length > 0 ? toggle : undefined}
-            filtered={filtered}
-            onClear={clearContext}
-            reorder={reorder}
-            presence={presence}
-          />
-        ) : (
-          <TableView
-            items={data.results}
-            model={model}
-            selected={selected}
-            ordering={ordering}
-            onOrderingChange={setOrdering}
-            onToggle={toggle}
-            onToggleAll={toggleAll}
-            filtered={filtered}
-            onClear={clearContext}
-            reorder={reorder}
-            presence={presence}
-          />
-        )}
+        {/* One card: the toolbar (search, filters, sorting, the view
+            toggle) sits on the list it controls. */}
+        <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
+          <div className="min-h-12 p-2 flex items-start gap-2 border-b">
+            <Filters
+              key={model.label}
+              model={model}
+              values={filters}
+              onValuesChange={setFilters}
+            />
+            <div className="ml-auto h-8 shrink-0 flex items-center gap-1">
+              {data.pagination.count !== null && (
+                <span
+                  className="mr-2 text-muted-foreground text-sm tabular-nums select-none"
+                  title={
+                    data.pagination.approximate
+                      ? t("list_view.count_about", {
+                          total: formatNumber(data.pagination.count, {
+                            format: "full",
+                            locale: i18n.language,
+                          }),
+                          plural: model.verbose_name_plural,
+                        })
+                      : undefined
+                  }
+                >
+                  {data.pagination.approximate
+                    ? `~${formatNumber(data.pagination.count, { locale: i18n.language })}`
+                    : formatNumber(data.pagination.count, {
+                        format: "full",
+                        locale: i18n.language,
+                      })}
+                </span>
+              )}
+              {view === "list" && !R.isNil(sortableBy) && (
+                <SortSelect
+                  model={model}
+                  ordering={ordering}
+                  onOrderingChange={setOrdering}
+                />
+              )}
+              {views.length > 1 && (
+                <>
+                  <span aria-hidden className="h-5 w-px bg-border mx-1" />
+                  <ToggleGroup
+                    type="single"
+                    size="sm"
+                    value={view}
+                    onValueChange={(next) => next && setView(next)}
+                    aria-label={t("list_view.view")}
+                    className="gap-0.5"
+                  >
+                    {views.includes("table") && (
+                      <ToggleGroupItem
+                        value="table"
+                        title={t("list_view.table_view")}
+                        aria-label={t("list_view.table_view")}
+                        className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                      >
+                        <PiTableBold />
+                      </ToggleGroupItem>
+                    )}
+                    {views.includes("list") && (
+                      <ToggleGroupItem
+                        value="list"
+                        title={t("list_view.list_view")}
+                        aria-label={t("list_view.list_view")}
+                        className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                      >
+                        <PiRowsBold />
+                      </ToggleGroupItem>
+                    )}
+                  </ToggleGroup>
+                </>
+              )}
+            </div>
+          </div>
+          {view === "list" ? (
+            <ListView
+              items={data.results}
+              model={model}
+              selected={actions.length > 0 ? selected : undefined}
+              onToggle={actions.length > 0 ? toggle : undefined}
+              filtered={filtered}
+              onClear={clearContext}
+              reorder={reorder}
+              presence={presence}
+              className="border-0 rounded-none"
+            />
+          ) : (
+            <TableView
+              items={data.results}
+              model={model}
+              selected={selected}
+              ordering={ordering}
+              onOrderingChange={setOrdering}
+              onToggle={toggle}
+              onToggleAll={toggleAll}
+              filtered={filtered}
+              onClear={clearContext}
+              reorder={reorder}
+              presence={presence}
+              className="border-0 rounded-none"
+            />
+          )}
+        </div>
         {data.results.length > 0 && (
           <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
             <span className="tabular-nums select-none">

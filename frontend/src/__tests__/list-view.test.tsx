@@ -236,6 +236,18 @@ function renderListPage(
   );
 }
 
+// Picks an unset filter from the toolbar's "Filter" menu; its options
+// open right away.
+async function openFilter(
+  user: ReturnType<typeof userEvent.setup>,
+  name: string,
+) {
+  await user.click(
+    await screen.findByRole("button", { name: "list_view.filters.add" }),
+  );
+  await user.click(await screen.findByRole("menuitem", { name }));
+}
+
 describe("ModelListPage", () => {
   beforeEach(() => {
     httpGetMock.mockReset();
@@ -426,7 +438,7 @@ describe("ModelListPage", () => {
     );
 
     await screen.findByText("First Article");
-    await user.click(await screen.findByRole("button", { name: "Status" }));
+    await openFilter(user, "Status");
     await user.click(
       await screen.findByRole("menuitemcheckbox", { name: "Published" }),
     );
@@ -619,7 +631,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(await screen.findByRole("button", { name: "Status" }));
+    await openFilter(user, "Status");
     await user.click(
       await screen.findByRole("menuitemcheckbox", { name: "Published" }),
     );
@@ -677,7 +689,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(await screen.findByRole("button", { name: /^Published/ }));
+    await openFilter(user, "Published");
     await user.click(
       await screen.findByRole("menuitemradio", {
         name: "list_view.filters.yes",
@@ -710,6 +722,7 @@ describe("ModelListPage", () => {
   });
 
   it("renders a number filter for positive integer fields", async () => {
+    const user = userEvent.setup();
     renderListPage(
       makeModel({
         list: { filter: ["views"] },
@@ -723,8 +736,9 @@ describe("ModelListPage", () => {
       }),
     );
 
+    await openFilter(user, "Views");
     expect(
-      await screen.findByRole("button", { name: /^Views/ }),
+      await screen.findByLabelText("list_view.filters.min"),
     ).toBeInTheDocument();
   });
 
@@ -740,7 +754,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(await screen.findByRole("button", { name: /^Views/ }));
+    await openFilter(user, "Views");
     await user.type(await screen.findByLabelText("list_view.filters.min"), "5");
     await user.type(
       await screen.findByLabelText("list_view.filters.max"),
@@ -831,7 +845,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(await screen.findByRole("button", { name: /^Author/ }));
+    await openFilter(user, "Author");
     await user.click(await screen.findByText("John Doe"));
 
     await waitFor(() =>
@@ -878,9 +892,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(
-      await screen.findByRole("button", { name: /^Categories/ }),
-    );
+    await openFilter(user, "Categories");
     // The popover stays open while toggling options.
     await user.click(await screen.findByText("News"));
     await user.click(await screen.findByText("Sports"));
@@ -984,9 +996,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(
-      await screen.findByRole("button", { name: /^Popularity/ }),
-    );
+    await openFilter(user, "Popularity");
     await user.click(
       await screen.findByRole("menuitemradio", { name: "High" }),
     );
@@ -1026,9 +1036,7 @@ describe("ModelListPage", () => {
       }),
     );
 
-    await user.click(
-      await screen.findByRole("button", { name: /^Author country/ }),
-    );
+    await openFilter(user, "Author country");
     await user.click(
       await screen.findByRole("menuitemcheckbox", { name: "Belgium" }),
     );

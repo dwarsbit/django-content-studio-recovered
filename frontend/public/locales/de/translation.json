@@ -138,6 +138,7 @@
     "sort_descending": "Absteigend sortieren",
     "trash": "Papierkorb",
     "filters": {
+      "add": "Filter",
       "all": "Alle",
       "yes": "Ja",
       "no": "Nein",
