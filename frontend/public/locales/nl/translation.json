@@ -143,7 +143,8 @@
     "previous_page": "Vorige pagina",
     "next_page": "Volgende pagina",
     "slow_count": "Het tellen van deze lijst duurde {{seconds, number}} s. Zet list_count = \"estimated\" op {{studio}} om bij grote tabellen een schatting te tonen. Zichtbaar zolang DEBUG aan staat.",
-    "view": "Weergave"
+    "view": "Weergave",
+    "more_actions": "Meer acties"
   },
   "reorder": {
     "drag": "Sleep om te herschikken",
@@ -172,7 +173,7 @@
     "button": "Exporteren",
     "csv": "CSV",
     "xlsx": "Excel (.xlsx)",
-    "for_import": "Voor import",
+    "for_import": "Exporteren voor import",
     "json": "JSON"
   },
   "media_library": {
@@ -980,6 +981,7 @@
       "unchanged_other": "{{count}} ongewijzigd",
       "skipped_one": "{{count}} overgeslagen",
       "skipped_other": "{{count}} overgeslagen"
-    }
+    },
+    "from_file": "Importeren uit bestand…"
   }
 }

@@ -3,8 +3,8 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
-import { ExportMenu } from "@/components/export-menu";
 import { ImportDialog } from "@/components/import-dialog";
+import { ListActionsMenu } from "@/pages/(studio)/content/[model]/_components/list-actions-menu";
 import type { ImportConfig, ImportResult, Model } from "@/types";
 
 const httpGetMock = vi.hoisted(() => vi.fn());
@@ -166,27 +166,46 @@ describe("ImportDialog", () => {
   });
 });
 
-describe("ExportMenu for import", () => {
-  it("offers the formats an import reads", async () => {
+describe("ListActionsMenu", () => {
+  it("offers import and both exports in submenus", async () => {
+    const onImport = vi.fn();
     const onExportForImport = vi.fn();
 
     render(
-      <ExportMenu
-        formats={["csv"]}
+      <ListActionsMenu
+        exportFormats={["csv"]}
         onExport={vi.fn()}
         importFormats={["csv", "json"]}
         onExportForImport={onExportForImport}
+        onImport={onImport}
       />,
     );
 
     await userEvent.click(
-      screen.getByRole("button", { name: /export.button/ }),
+      screen.getByRole("button", { name: "list_view.more_actions" }),
     );
-    expect(screen.getByText("export.for_import")).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "import.from_file" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("menuitem", { name: "export.button" }),
+    ).toBeInTheDocument();
+
     await userEvent.click(
-      screen.getByRole("menuitem", { name: "export.json" }),
+      screen.getByRole("menuitem", { name: "export.for_import" }),
+    );
+    await userEvent.click(
+      await screen.findByRole("menuitem", { name: "export.json" }),
     );
 
     expect(onExportForImport).toHaveBeenCalledWith("json");
+  });
+
+  it("is hidden when there is nothing to offer", () => {
+    const { container } = render(
+      <ListActionsMenu exportFormats={[]} onExport={vi.fn()} />,
+    );
+
+    expect(container).toBeEmptyDOMElement();
   });
 });

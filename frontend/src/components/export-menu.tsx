@@ -6,23 +6,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { ExportFormat, ImportFormat } from "@/types";
+import type { ExportFormat } from "@/types";
 
 /**
  * The export control: a button that downloads the only format, or a
  * menu of the formats (CSV, and Excel when the server can write it).
- * With importFormats, the menu also offers the list "For import": the
- * values as an import reads them back.
  */
 export function ExportMenu({
   formats,
   onExport,
-  importFormats = [],
-  onExportForImport,
   label,
   icon,
   disabled,
@@ -30,8 +24,6 @@ export function ExportMenu({
 }: {
   formats: ExportFormat[];
   onExport(format: ExportFormat): void;
-  importFormats?: ImportFormat[];
-  onExportForImport?(format: ImportFormat): void;
   // Defaults to "Export".
   label?: string;
   // A Phosphor class; defaults to the download icon.
@@ -47,9 +39,7 @@ export function ExportMenu({
     </>
   );
 
-  const forImport = onExportForImport ? importFormats : [];
-
-  if (formats.length === 1 && forImport.length === 0) {
+  if (formats.length === 1) {
     return (
       <Button
         size="sm"
@@ -76,22 +66,6 @@ export function ExportMenu({
             {t(`export.${format}`)}
           </DropdownMenuItem>
         ))}
-        {forImport.length > 0 && (
-          <>
-            {formats.length > 0 && <DropdownMenuSeparator />}
-            <DropdownMenuLabel className="text-xs font-normal text-muted-foreground">
-              {t("export.for_import")}
-            </DropdownMenuLabel>
-            {forImport.map((format) => (
-              <DropdownMenuItem
-                key={`import-${format}`}
-                onSelect={() => onExportForImport?.(format)}
-              >
-                {t(`export.${format}`)}
-              </DropdownMenuItem>
-            ))}
-          </>
-        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );

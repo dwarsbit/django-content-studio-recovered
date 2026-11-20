@@ -227,13 +227,29 @@ describe("export", () => {
     ) as [string, { params: Record<string, unknown>; responseType: string }];
   }
 
+  // The list page offers its exports in the ⋯ menu next to Create,
+  // each with its formats in a submenu. The keyboard walks the menu:
+  // jsdom has no layout, so moving the pointer closes a submenu.
+  async function exportAs(
+    user: ReturnType<typeof userEvent.setup>,
+    format: string,
+  ) {
+    await user.click(
+      screen.getByRole("button", { name: "list_view.more_actions" }),
+    );
+    (await screen.findByRole("menuitem", { name: "export.button" })).focus();
+    await user.keyboard("{ArrowRight}");
+    (await screen.findByRole("menuitem", { name: format })).focus();
+    await user.keyboard("{Enter}");
+  }
+
   it("offers no export when the studio does not", async () => {
     renderPage(makeModel(null));
 
     await screen.findByText("Spring concert");
 
     expect(
-      screen.queryByRole("button", { name: "export.button" }),
+      screen.queryByRole("button", { name: "list_view.more_actions" }),
     ).not.toBeInTheDocument();
   });
 
@@ -243,7 +259,7 @@ describe("export", () => {
     renderPage(makeModel(["csv"]), "/content/testapp.event?search=spring");
 
     await screen.findByText("Spring concert");
-    await user.click(screen.getByRole("button", { name: "export.button" }));
+    await exportAs(user, "export.csv");
 
     await waitFor(() => expect(downloads).toEqual(["events-2026-10-28.csv"]));
     const [url, config] = exportCall();
@@ -262,10 +278,7 @@ describe("export", () => {
     renderPage(makeModel(["csv", "xlsx"]));
 
     await screen.findByText("Spring concert");
-    await user.click(screen.getByRole("button", { name: "export.button" }));
-    await user.click(
-      await screen.findByRole("menuitem", { name: "export.xlsx" }),
-    );
+    await exportAs(user, "export.xlsx");
 
     await waitFor(() => expect(exportCall()).toBeDefined());
     expect(exportCall()[1].params.export_format).toBe("xlsx");
@@ -285,7 +298,7 @@ describe("export", () => {
     renderPage(makeModel(["csv"]));
 
     await screen.findByText("Spring concert");
-    await user.click(screen.getByRole("button", { name: "export.button" }));
+    await exportAs(user, "export.csv");
 
     await waitFor(() =>
       expect(toastErrorMock).toHaveBeenCalledWith("No export."),

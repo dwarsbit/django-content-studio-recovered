@@ -7,15 +7,13 @@ import {
   PiInfoBold,
   PiRowsBold,
   PiTableBold,
-  PiUploadSimpleBold,
 } from "react-icons/pi";
 import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
-import { ExportMenu } from "@/components/export-menu";
 import { HeaderTabs } from "@/components/header-tabs";
 import { ImportDialog } from "@/components/import-dialog";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { PageBody, PageHeader, Toolbar } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/pagination";
 import { Spinner } from "@/components/ui/spinner";
@@ -42,6 +40,7 @@ import type {
 
 import { ContentBulkBar } from "./_components/bulk-bar";
 import { Filters } from "./_components/filters";
+import { ListActionsMenu } from "./_components/list-actions-menu";
 import { ListView } from "./_components/list-view";
 import { SortSelect } from "./_components/sort-select";
 import { type ReorderProps, TableView } from "./_components/table-view";
@@ -368,39 +367,32 @@ export function ModelListPage() {
         }
         description={model.admin.list.description}
         actions={
-          model.admin.permissions.add_permission && (
-            <Link
-              to={`/content/${model.label}/new`}
-              className={buttonVariants()}
-            >
-              {t("common.create")}
-            </Link>
-          )
+          <>
+            <ListActionsMenu
+              exportFormats={exportFormats}
+              onExport={exportList}
+              importFormats={importConfig?.formats}
+              onExportForImport={importConfig ? exportForImport : undefined}
+              onImport={
+                importConfig?.can_import ? () => setImportOpen(true) : undefined
+              }
+              disabled={isExporting || isImportExporting}
+            />
+            {model.admin.permissions.add_permission && (
+              <Link
+                to={`/content/${model.label}/new`}
+                className={buttonVariants()}
+              >
+                {t("common.create")}
+              </Link>
+            )}
+          </>
         }
       >
         {model.admin.list.trash && <ListTabs model={model} current="list" />}
         <Toolbar>
           <Filters model={model} values={filters} onValuesChange={setFilters} />
           <div className="ml-auto flex items-center gap-2">
-            {importConfig?.can_import && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => setImportOpen(true)}
-              >
-                <PiUploadSimpleBold />
-                {t("import.button")}
-              </Button>
-            )}
-            {(exportFormats.length > 0 || importConfig) && (
-              <ExportMenu
-                formats={exportFormats}
-                disabled={isExporting || isImportExporting}
-                onExport={exportList}
-                importFormats={importConfig?.formats}
-                onExportForImport={importConfig ? exportForImport : undefined}
-              />
-            )}
             {view === "list" && !R.isNil(sortableBy) && (
               <SortSelect
                 model={model}

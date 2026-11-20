@@ -532,7 +532,7 @@ class ArticleStudio(ModelStudio):
 To export the table's columns instead, set `allow_export = True` and leave
 `export_fields` out.
 
-The list page then offers Export in its toolbar. It downloads every object
+The list page then offers Export in the ⋯ menu next to Create. It downloads every object
 that matches the current search and filters, on all pages, in the list's
 current order. In the trash, Export downloads the objects in the trash. The
 built-in Export bulk action, next to Delete, downloads only the selected
@@ -567,7 +567,7 @@ would read as a formula, because it starts with `=`, `+`, `-` or `@`, gets a
 leading apostrophe so it stays text. Export is not available for
 singletons.
 
-To offer export in the toolbar only, leave `"export"` out of an explicit
+To offer export in the ⋯ menu only, leave `"export"` out of an explicit
 [`actions`](#bulk-actions) list.
 
 System check `content_studio.E022` reports `export_fields` entries that do
@@ -598,7 +598,8 @@ class ArticleStudio(ModelStudio):
 only sets fields the edit page writes: read-only fields, the tenant, file
 fields and write-only password fields are never imported.
 
-The list page then offers Import in its toolbar. Editors pick a CSV, Excel
+The list page then offers Import from file in the ⋯ menu next to Create.
+Editors pick a CSV, Excel
 (`.xlsx`) or JSON file, and the admin checks it first: it shows how many
 objects the file creates, updates and leaves unchanged, and lists the
 failing rows with their errors. Nothing is saved yet. When all rows are
@@ -638,7 +639,7 @@ per object. An import reads:
 Empty cells clear a value. Columns the import does not set, such as a
 computed column of an export, are left out and the check says which.
 
-The Export menu offers the list "For import" next to the regular export: a
+The ⋯ menu also offers Export for import next to the regular export: a
 CSV, Excel or JSON file with the values as an import reads them back, for
 the current search and filters. Editors change it and import it again. The
 import dialog also offers a template: the header row only. Excel files need

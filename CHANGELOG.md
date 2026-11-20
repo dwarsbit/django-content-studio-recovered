@@ -20,7 +20,9 @@
   numbers.
 
 - **Import from CSV, Excel or JSON.** A studio's new `allow_import` (or
-  `import_fields`) adds Import to the list page. Editors pick a file and
+  `import_fields`) adds Import to the list page. Import and Export now
+  sit in a ⋯ menu next to Create, each export with its formats in a
+  submenu. Editors pick a file and
   see first what it creates, updates and leaves unchanged, with the
   failing rows and their errors; then they import every row, or only the
   valid ones. Rows are matched on the primary key, or on
@@ -28,9 +30,9 @@
   create objects. `import_lookups` gives relations by a field of the
   related model, such as an author's username. Rows go through the edit
   page's validation, save hooks, permissions and tenant, and are logged in
-  the activity log and the history. The Export menu offers the list "For
-  import" (raw values as an import reads them back, also as JSON) and the
-  dialog a template. Files with at least `IMPORT_TASK_ROWS` rows (1,000)
+  the activity log and the history. Export for import downloads the raw
+  values as an import reads them back (also as JSON), and the dialog
+  offers a template. Files with at least `IMPORT_TASK_ROWS` rows (1,000)
   run as a Django task when the task backend runs in the background; in
   the request, files over `IMPORT_MAX_ROWS` rows (10,000) are refused.
   System checks `content_studio.E048` and `content_studio.W026` report
