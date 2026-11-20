@@ -1,0 +1,98 @@
+# 🧰 Developer tools
+
+While `DEBUG` is on, staff see a round button in the bottom-right corner of
+the admin. It gathers the warnings and errors you should act on in one
+place, and shows the admin API's requests with their database queries and
+the environment the admin runs in. A count on the button says how many
+issues there are: amber when they are all warnings, red when any is an
+error.
+
+<Screenshot name="devtools" alt="The developer tools panel above the list of articles, with a slow count warning expanded" />
+
+The developer tools never run in production: without `DEBUG` nothing is
+recorded, the button does not load and their endpoint answers 404. They are
+in English only.
+
+## Issues
+
+The **Issues** tab lists, newest first:
+
+- **System check warnings and errors**, such as
+  `content_studio.W001` for a required field that is not in the edit form.
+  They run once per process; **Run system checks** on the **Info** tab runs
+  them again after a change. Silenced checks stay silent.
+- **Slow counts.** A list without a search or filter whose exact count takes
+  longer than half a second suggests setting
+  [`list_count`](/docs/list-page#large-tables) on its studio, with the code
+  to copy.
+- **Server errors.** An unhandled exception in the admin API shows its
+  request and traceback.
+- **Many similar queries.** A request that runs more than ten alike queries,
+  usually one per related object, suggests `select_related` or
+  `prefetch_related` in the studio's `get_queryset`.
+- **Content Studio's log warnings and errors**, such as a thumbnail that
+  could not be made or a failed webhook delivery.
+- **Browser errors**: a request that got no answer or an error from
+  something other than Django, and uncaught errors in the admin.
+
+An issue that happens again is shown once, with a count. Expand an issue for
+its full message, the code or traceback to copy and a link to these docs.
+**Clear** empties the list.
+
+## Requests
+
+The **Requests** tab lists your last 50 requests to the admin API, with
+their status, time and number of database queries. Expand a request for the
+slowest queries and the most repeated one. Requests slower than a second
+and requests with many alike queries are marked.
+
+## Info
+
+The **Info** tab shows the studio of the page you are on, with its model,
+`list_count` and page size, and the environment: the versions of Content
+Studio, Django and Python, the database, the cache, the task backend, the
+login backend, the language and the time zone. It links to the UI showcase
+and to these docs.
+
+## Reporting your own issues
+
+Your own code can add issues with `report()`. It does nothing while the
+developer tools are off, so you can call it anywhere:
+
+```python
+from content_studio.devtools import report
+
+report(
+    "warning",
+    "The shop has no shipping rates, so orders cannot be placed.",
+    title="No shipping rates",
+    code="shop.shipping",
+    hint="Add a shipping rate under Settings.",
+    docs="https://example.com/docs/shipping",
+)
+```
+
+The level is `"error"`, `"warning"` or `"info"`. Issues with the same `key`
+(by default the code and the message) are counted as one. `snippet` adds
+code to copy.
+
+Warnings and errors of your own loggers show up too when you name them in
+[`DEVTOOLS_LOGGERS`](/docs/settings#devtools_loggers). A log record can add
+details with `extra`, or stay out with `extra={"devtools": False}`:
+
+```python
+logger.warning(
+    "Could not reach the stock service.",
+    extra={"devtools": {"title": "Stock service down", "hint": "Is it running?"}},
+)
+```
+
+## Settings
+
+- [`DEVTOOLS`](/docs/settings#devtools): `False` turns the developer tools
+  off, also while `DEBUG` is on.
+- [`DEVTOOLS_LOGGERS`](/docs/settings#devtools_loggers): more loggers whose
+  warnings and errors show up.
+
+Everything is kept in memory, per process: up to 200 issues and 50 requests.
+Restarting the server starts with an empty list.

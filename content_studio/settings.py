@@ -195,6 +195,13 @@ DEFAULTS = {
     "TOKEN_SIGNING_KEY": None,
     # Algorithm used to sign tokens (see PyJWT for the supported options).
     "TOKEN_ALGORITHM": "HS256",
+    # Whether staff see the developer tools while DEBUG is on: a button
+    # with the warnings and errors to act on, the admin API's requests
+    # and the environment. They are never on without DEBUG.
+    "DEVTOOLS": True,
+    # Loggers, besides Content Studio's own, whose warnings and errors
+    # show in the developer tools.
+    "DEVTOOLS_LOGGERS": [],
 }
 
 

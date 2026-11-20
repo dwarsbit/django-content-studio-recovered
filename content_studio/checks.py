@@ -2687,6 +2687,38 @@ def presence_errors() -> list[tuple[str, str]]:
     return []
 
 
+def devtools_errors() -> list[tuple[str, str]]:
+    """
+    A DEVTOOLS that is not True or False, or a DEVTOOLS_LOGGERS that is
+    not a list of logger names, as (check id, message) pairs.
+    """
+    errors = []
+    enabled = cs_settings.DEVTOOLS
+    loggers = cs_settings.DEVTOOLS_LOGGERS
+
+    if not isinstance(enabled, bool):
+        errors.append(
+            (
+                "content_studio.E049",
+                f"DEVTOOLS is {enabled!r}; set it to True (developer tools "
+                "while DEBUG is on) or False.",
+            )
+        )
+
+    if not isinstance(loggers, (list, tuple)) or not all(
+        isinstance(name, str) and name for name in loggers
+    ):
+        errors.append(
+            (
+                "content_studio.E049",
+                f"DEVTOOLS_LOGGERS is {loggers!r}; set it to a list of logger "
+                'names, such as ["myproject"].',
+            )
+        )
+
+    return errors
+
+
 def thumbnail_errors() -> list[tuple[str, str]]:
     """
     A THUMBNAIL_CACHE that names no configured cache while thumbnails
@@ -3564,6 +3596,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, error in presence_errors():
+        messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
+
+    for check_id, error in devtools_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, error in thumbnail_errors():

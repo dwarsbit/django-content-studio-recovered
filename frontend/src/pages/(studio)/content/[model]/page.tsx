@@ -2,12 +2,7 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as R from "ramda";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  PiFileTextBold,
-  PiInfoBold,
-  PiRowsBold,
-  PiTableBold,
-} from "react-icons/pi";
+import { PiFileTextBold, PiRowsBold, PiTableBold } from "react-icons/pi";
 import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
@@ -484,17 +479,6 @@ export function ModelListPage() {
               }
             />
           </div>
-        )}
-        {data.pagination.slow_count && (
-          <p className="flex items-start gap-2 text-xs text-muted-foreground">
-            <PiInfoBold className="size-3.5 shrink-0 mt-px" />
-            <span>
-              {t("list_view.slow_count", {
-                seconds: data.pagination.slow_count.seconds,
-                studio: data.pagination.slow_count.studio,
-              })}
-            </span>
-          </p>
         )}
       </PageBody>
 
