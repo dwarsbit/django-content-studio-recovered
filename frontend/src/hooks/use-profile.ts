@@ -13,6 +13,7 @@ import {
   rangeParams,
   type TimeseriesPoint,
 } from "@/components/analytics/data";
+import type { SaveMode } from "@/components/content-editor/save-button";
 import { useHttp } from "@/hooks/use-http";
 import type { ProfileTwoFactor } from "@/pages/(studio)/profile/_components/two-factor-card";
 import type { FormField } from "@/types";
@@ -39,6 +40,14 @@ export interface Profile {
   password: boolean;
   // Two-factor login, when the two-factor app is installed.
   two_factor?: ProfileTwoFactor | null;
+  // The editor's preferences, when the preferences app is installed.
+  preferences?: ProfilePreferences | null;
+}
+
+// The editor's own settings for the admin.
+export interface ProfilePreferences {
+  // What the edit page's Save button does.
+  save_action: SaveMode;
 }
 
 export type ProfileMetric = "total" | "created" | "updated" | "deleted";
@@ -64,10 +73,11 @@ export interface RecentItem {
 
 const PROFILE_KEY = ["profile"];
 
-export function useProfile() {
+export function useProfile({ enabled = true }: { enabled?: boolean } = {}) {
   const http = useHttp();
 
   return useQuery({
+    enabled,
     retry: false,
     queryKey: PROFILE_KEY,
     async queryFn() {
@@ -129,6 +139,40 @@ export function useUpdateProfile() {
       await queryClient.invalidateQueries({ queryKey: ["me"] });
     },
   });
+}
+
+/** Saves preferences; the edit pages follow them at once. */
+export function useUpdatePreferences() {
+  const http = useHttp();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    async mutationFn(values: Partial<ProfilePreferences>) {
+      const { data } = await http.post<ProfilePreferences>(
+        "/profile/preferences",
+        values,
+      );
+
+      return data;
+    },
+    onSuccess(preferences) {
+      queryClient.setQueryData<Profile>(PROFILE_KEY, (profile) =>
+        profile ? { ...profile, preferences } : profile,
+      );
+    },
+  });
+}
+
+/**
+ * The preferences of the signed-in user: the defaults until loaded, and
+ * without the preferences app.
+ */
+export function usePreferences({
+  enabled = true,
+}: { enabled?: boolean } = {}): ProfilePreferences {
+  const { data } = useProfile({ enabled });
+
+  return { save_action: data?.preferences?.save_action ?? "save" };
 }
 
 /**

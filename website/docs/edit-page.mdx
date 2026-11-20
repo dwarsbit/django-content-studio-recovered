@@ -106,6 +106,22 @@ class ArticleStudio(ModelStudio):
 `edit_width` is `"default"` or `"wide"`. System check `content_studio.E024`
 reports any other value.
 
+## Saving
+
+Save keeps you on the object. The menu next to it offers **Save and add
+another**, which opens an empty create form, and **Save and close**, which
+goes back to the list. Both say in a message what was saved, with a link to
+open it again. Save and add another needs add permission. Singletons and the
+dialogs of inlines and related objects only have Save.
+
+With the [preferences app](/docs/profile#preferences), editors choose on
+their profile which of the three the button does; the menu then offers the
+other two.
+
+Press **⌘S** on macOS or **Ctrl S** on Windows and Linux to save from
+anywhere in the form, also while typing in a field. In a dialog over the
+edit page, the shortcut saves the dialog.
+
 ## Read-only fields
 
 Like the classic Django admin, a studio can list fields in

@@ -43,7 +43,7 @@ test("picks a location on the map and by its coordinates", async ({ page }) => {
       response.url().includes("demo_blog.sitesettings") &&
       response.ok(),
   );
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   const body = (await (await saved).json()) as {
     office_location: { lat: number; lng: number };
   };

@@ -1190,3 +1190,21 @@ msgstr[1] "Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen.
 #: importing.py
 msgid "Import from a file"
 msgstr "Importeren uit een bestand"
+
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+msgid "Save"
+msgstr "Opslaan"
+
+msgid "Save and add another"
+msgstr "Opslaan en nieuwe toevoegen"
+
+msgid "Save and close"
+msgstr "Opslaan en sluiten"
+
+msgid "Default save action"
+msgstr "Standaard opslagactie"
+
+msgid "user preferences"
+msgstr "gebruikersvoorkeuren"

@@ -4,6 +4,24 @@
 
 ### Features
 
+- **Save and add another, and a save shortcut.** The edit page's Save
+  button has a menu with "Save and add another", which opens an empty
+  create form, and "Save and close", which goes back to the list, like the
+  classic Django admin's buttons. Save itself still keeps you on the
+  object. A message says what was saved, with a link to open it. Save and
+  add another needs add permission; singletons and dialogs keep a single
+  Save button. ⌘S on macOS, or Ctrl S elsewhere, saves from anywhere in the
+  form, also inside a dialog, instead of opening the browser's "Save page".
+
+- **Preferences on the profile page.** The new optional
+  `content_studio.preferences` app adds a Preferences card to the profile's
+  edit tab, kept on the account so it follows the editor to every device.
+  Its first setting is the default save action: what the edit page's Save
+  button does (Save, Save and add another or Save and close), with the
+  others in the menu next to it. ⌘S or Ctrl S always saves and stays.
+  Without the app the button saves, as before. Run `manage.py migrate`
+  after adding it.
+
 - **System status page.** The new `content_studio.contrib.status` app adds
   a System status page to the user menu, for superusers. It shows the
   services the site depends on with their status (the databases, the

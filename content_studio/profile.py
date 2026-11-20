@@ -2,7 +2,8 @@
 The profile page: every editor's own account. The overview counts the
 editor's changes from the activity log (Django's LogEntry) and lists the
 content they changed last; the edit tab changes the site's profile
-fields and the password.
+fields, the password and, with the preferences app, the editor's
+preferences.
 
 The endpoints only ever serve the signed-in user, so editing a profile
 needs no permission on the user model: the profile fields are the gate.
@@ -10,6 +11,7 @@ needs no permission on the user model: the profile fields are the gate.
 
 from typing import Optional
 
+from django.apps import apps
 from django.contrib.admin.models import ADDITION, CHANGE, DELETION, LogEntry
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -19,7 +21,7 @@ from django.db.models import Count
 from django.db.models.functions import Trunc
 from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
-from rest_framework import status
+from rest_framework import serializers, status
 from rest_framework.decorators import action
 from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
@@ -183,6 +185,43 @@ def two_factor_state(user) -> Optional[dict]:
     return state(user)
 
 
+PREFERENCES_APP = "content_studio.preferences"
+
+
+def preferences_installed() -> bool:
+    return apps.is_installed(PREFERENCES_APP)
+
+
+def preferences_data(user) -> Optional[dict]:
+    """
+    The editor's preferences, with the defaults for any not chosen; None
+    without the preferences app.
+    """
+    if not preferences_installed():
+        return None
+
+    from .preferences.models import UserPreferences
+
+    preferences = UserPreferences.objects.filter(user=user).first()
+
+    return {
+        "save_action": (
+            preferences.save_action if preferences else UserPreferences.SaveAction.SAVE
+        ),
+    }
+
+
+class PreferencesSerializer(serializers.Serializer):
+    def get_fields(self):
+        from .preferences.models import UserPreferences
+
+        return {
+            "save_action": serializers.ChoiceField(
+                choices=UserPreferences.SaveAction.choices, required=False
+            ),
+        }
+
+
 class PasswordChangeRateThrottle(UserRateThrottle):
     """
     Rate limit for password changes, per user: a wrong current password
@@ -238,6 +277,7 @@ class ProfileViewSet(ViewSet):
             "values": {field.name: values.get(field.name) for field in fields},
             "password": can_change_password(user),
             "two_factor": two_factor_state(user),
+            "preferences": preferences_data(user),
         }
 
     def list(self, request):
@@ -258,6 +298,28 @@ class ProfileViewSet(ViewSet):
                 record_change(request, user, "updated", "Changed the profile.")
 
         return Response(self.profile_data(request))
+
+    @action(methods=["post"], detail=False, url_path="preferences")
+    def preferences(self, request):
+        """
+        Change the editor's preferences; those left out keep their value.
+        A personal setting, so not recorded in the activity log. POST, as
+        PATCH on this singleton route updates the profile itself.
+        """
+        if not preferences_installed():
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        from .preferences.models import UserPreferences
+
+        serializer = PreferencesSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        if serializer.validated_data:
+            UserPreferences.objects.update_or_create(
+                user=request.user, defaults=serializer.validated_data
+            )
+
+        return Response(preferences_data(request.user))
 
     @action(methods=["post"], detail=False, url_path="password")
     def password(self, request):

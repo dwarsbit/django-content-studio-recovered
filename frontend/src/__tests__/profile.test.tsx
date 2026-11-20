@@ -104,6 +104,7 @@ const profile = {
     email: "alex@example.com",
   },
   password: true,
+  preferences: { save_action: "save" },
 };
 
 const point = (value: number) => ({
@@ -385,6 +386,55 @@ describe("Profile page", () => {
     await screen.findByDisplayValue("Alex");
     expect(
       screen.queryByRole("button", { name: "profile.password.change" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("saves the default save action as soon as it is picked", async () => {
+    const user = userEvent.setup();
+    httpMock.post.mockResolvedValue({ data: { save_action: "close" } });
+    renderPage("/profile/edit");
+
+    const group = await screen.findByRole("radiogroup", {
+      name: "profile.preferences.save_action",
+    });
+    expect(
+      within(group).getByRole("radio", {
+        name: "profile.preferences.save_actions.save",
+      }),
+    ).toBeChecked();
+
+    await user.click(
+      within(group).getByRole("radio", {
+        name: "profile.preferences.save_actions.close",
+      }),
+    );
+
+    await waitFor(() =>
+      expect(httpMock.post).toHaveBeenCalledWith("/profile/preferences", {
+        save_action: "close",
+      }),
+    );
+    expect(toastMock.success).toHaveBeenCalledWith("profile.preferences.saved");
+    await waitFor(() =>
+      expect(
+        within(group).getByRole("radio", {
+          name: "profile.preferences.save_actions.close",
+        }),
+      ).toBeChecked(),
+    );
+  });
+
+  it("leaves the preferences out without the preferences app", async () => {
+    httpMock.get.mockImplementation(async (url: string) =>
+      url === "/profile"
+        ? { data: { ...profile, preferences: null } }
+        : respond(url),
+    );
+    renderPage("/profile/edit");
+
+    await screen.findByDisplayValue("Alex");
+    expect(
+      screen.queryByText("profile.preferences.title"),
     ).not.toBeInTheDocument();
   });
 });

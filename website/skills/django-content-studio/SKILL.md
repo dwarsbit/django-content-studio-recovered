@@ -542,6 +542,9 @@ Each is optional and has its own page:
 - History with field-level diffs and restore (`"content_studio.history"`
   app, `HISTORY_MAX_VERSIONS`, shown by the `ActivityLog` component):
   https://djangocontentstudio.org/docs/history.md
+- Preferences on the profile page, such as the default save action of
+  edit pages (`"content_studio.preferences"` app):
+  https://djangocontentstudio.org/docs/profile.md
 - Multi-tenancy (`TENANT_MODEL`, `ContentStudioSite.get_tenants`):
   https://djangocontentstudio.org/docs/multi-tenancy.md
 - Login backends, sessions and password reset:

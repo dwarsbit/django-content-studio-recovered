@@ -47,7 +47,7 @@ test("creates, edits and deletes an article", async ({ page }) => {
   await rowByText(page, title).click();
   await expect(page).toHaveURL(editorUrl);
   await fieldByLabel(page, "title").fill(editedTitle);
-  await page.getByRole("button", { name: "Save" }).click();
+  await page.getByRole("button", { name: "Save", exact: true }).click();
   // The header's breadcrumb shows the object's __str__, which refetches
   // after a successful save.
   await expect(page.getByText(editedTitle).first()).toBeVisible();

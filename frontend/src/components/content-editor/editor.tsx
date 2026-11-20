@@ -4,7 +4,7 @@ import * as R from "ramda";
 import { useEffect, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { type Blocker, useBlocker } from "react-router";
+import { type Blocker, useBlocker, useNavigate } from "react-router";
 import { toast } from "sonner";
 import type { z } from "zod";
 
@@ -16,6 +16,7 @@ import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { usePresence } from "@/hooks/use-presence";
+import { usePreferences } from "@/hooks/use-profile";
 import { useShowResult } from "@/hooks/use-show-result";
 import { contentFormSchema } from "@/lib/invalid-input";
 import { applyFieldErrors, getNonFieldErrors } from "@/lib/server-errors";
@@ -36,6 +37,8 @@ import { Header } from "./header";
 import { Main } from "./main";
 import { Prepopulate } from "./prepopulate";
 import { ResourcePathContext } from "./resource-path";
+import type { SaveMode } from "./save-button";
+import { saveFromKeyboard, useSaveShortcut } from "./save-shortcut";
 
 export function Editor({
   modelLabel,
@@ -73,6 +76,9 @@ export function Editor({
   onDuplicate?: (id: string) => void;
   onCreated?: (id: string) => void;
   onSave?: (saved?: Resource) => void;
+  // Opens an empty create form: the Save menu then offers Save and add
+  // another (with add permission).
+  onAddAnother?: VoidFunction;
   onClose?: VoidFunction;
   onDelete?: VoidFunction;
 }) {
@@ -99,6 +105,7 @@ function EditorForm({
   onCreated,
   onDelete,
   onSave,
+  onAddAnother,
   onClose,
 }: {
   model: Model;
@@ -130,6 +137,9 @@ function EditorForm({
   onDuplicate?: (id: string) => void;
   onCreated?: (id: string) => void;
   onSave?: (saved?: Resource) => void;
+  // Opens an empty create form: the Save menu then offers Save and add
+  // another (with add permission).
+  onAddAnother?: VoidFunction;
   onClose?: VoidFunction;
   onDelete?: VoidFunction;
 }) {
@@ -138,8 +148,14 @@ function EditorForm({
   const { t } = useTranslation();
   const confirm = useConfirmDialog();
   const showResult = useShowResult();
+  const navigate = useNavigate();
   const modelLabel = model.label;
   const isSingleton = model?.admin.is_singleton ?? false;
+  // Only full edit pages have a choice of save actions.
+  const preferences = usePreferences({
+    enabled:
+      !dialog && !inlineOf && !isSingleton && !!(onAddAnother || onClose),
+  });
   // Inline models are managed through the inline endpoints of their parent,
   // not the content endpoints (which only exist for registered models).
   const resourcePath = inlineOf
@@ -347,7 +363,9 @@ function EditorForm({
     }
   }, [nonFieldErrors]);
 
-  async function onSubmit(values: z.infer<typeof formSchema>) {
+  // `leaving`: the save leaves the object (add another, close), so a
+  // create does not open the new object first.
+  async function onSubmit(values: z.infer<typeof formSchema>, leaving = false) {
     setNonFieldErrors([]);
 
     try {
@@ -369,7 +387,7 @@ function EditorForm({
 
       form.reset(savedResource);
 
-      if (!values.id && savedId != null) {
+      if (!values.id && savedId != null && !leaving) {
         // The navigation this triggers must pass the guard despite the
         // stale dirty state from the last render.
         allowNextNavigation.current = true;
@@ -407,6 +425,80 @@ function EditorForm({
     }
   }
 
+  // Full edit pages split Save: save and add another (with add
+  // permission), save and close. Dialogs, inline rows and singletons
+  // only save.
+  const isPage = !dialog && !inlineOf && !isSingleton;
+  const saveOptions = {
+    addAnother:
+      isPage && !!onAddAnother && model.admin.permissions.add_permission,
+    close: isPage && !!onClose,
+    // The button's action, chosen on the profile.
+    defaultMode: preferences.save_action,
+  };
+
+  async function saveWith(mode: SaveMode = "save") {
+    const leaving = mode !== "save";
+    const isCreate = !form.getValues("id");
+    // handleSubmit resolves without saving when a value is invalid:
+    // only a save that happened is reported, so an inline dialog stays
+    // open on the field's message.
+    let saved: Resource | null = null;
+
+    await form.handleSubmit(async (values) => {
+      saved = await onSubmit(values, leaving);
+    })();
+
+    if (!saved) {
+      return;
+    }
+
+    onSave?.(saved);
+
+    if (leaving) {
+      // The page changes: say what was saved, with a way back to it.
+      const { id: savedId, __str__: name } = saved as Resource;
+
+      toast.success(
+        t(isCreate ? "editor.created" : "editor.saved", {
+          object: name || model.verbose_name,
+        }),
+        savedId != null
+          ? {
+              action: {
+                label: t("editor.open"),
+                onClick: () =>
+                  navigate(
+                    `/content/${modelLabel}/${encodeURIComponent(String(savedId))}`,
+                  ),
+              },
+            }
+          : undefined,
+      );
+      // The form was reset, but the guard still sees the last render.
+      allowNextNavigation.current = true;
+
+      if (mode === "add_another") {
+        onAddAnother?.();
+      } else {
+        onClose?.();
+      }
+    }
+  }
+
+  // Ctrl+S (⌘S) saves from anywhere in the form, like a click on Save.
+  const rootRef = useRef<HTMLDivElement>(null);
+  useSaveShortcut(
+    rootRef,
+    initialized && !isReadOnly && !isPending
+      ? () => {
+          saveFromKeyboard(() => saveWith()).catch(() => {
+            // Errors are already surfaced by the save flow.
+          });
+        }
+      : null,
+  );
+
   return model && initialized ? (
     <Form {...form}>
       <ResourcePathContext value={resourcePath}>
@@ -423,7 +515,10 @@ function EditorForm({
                   {})
             }
           />
-          <div className="flex-1 flex flex-col overflow-hidden w-full">
+          <div
+            ref={rootRef}
+            className="flex-1 flex flex-col overflow-hidden w-full"
+          >
             <TenantInfo label={model.label} />
             <Header
               model={model}
@@ -440,20 +535,8 @@ function EditorForm({
                   ? () => onDuplicate?.(String(resource.id))
                   : undefined
               }
-              onSave={async () => {
-                // handleSubmit resolves without saving when a value is
-                // invalid: only a save that happened is reported, so an
-                // inline dialog stays open on the field's message.
-                let saved: Resource | null = null;
-
-                await form.handleSubmit(async (values) => {
-                  saved = await onSubmit(values);
-                })();
-
-                if (saved) {
-                  onSave?.(saved);
-                }
-              }}
+              saveOptions={saveOptions}
+              onSave={saveWith}
               onDelete={() => {
                 // The changes died with the object; leaving must not
                 // trigger the navigation guard.

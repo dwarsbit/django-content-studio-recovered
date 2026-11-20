@@ -1,4 +1,5 @@
 import * as R from "ramda";
+import { useState } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router";
 
 import { Editor } from "@/components/content-editor/editor";
@@ -19,12 +20,14 @@ export function ContentEditorPage() {
   const { data: discover } = useDiscover();
   const model = discover?.models.find(R.whereEq({ label: modelLabel }));
   const isSingleton = model?.admin.is_singleton ?? false;
+  // Save and add another opens a fresh create form, also from /new.
+  const [createCount, setCreateCount] = useState(0);
 
   return (
     <Editor
       // A duplicate starts afresh, also when opened from the object's
       // own editor.
-      key={duplicateOf ? `duplicate-${duplicateOf}` : "editor"}
+      key={duplicateOf ? `duplicate-${duplicateOf}` : `editor-${createCount}`}
       modelLabel={modelLabel!}
       id={id}
       duplicateOf={duplicateOf}
@@ -39,6 +42,10 @@ export function ContentEditorPage() {
         if (!isSingleton) {
           navigate(`/content/${modelLabel}/${createdId}`, { replace: true });
         }
+      }}
+      onAddAnother={() => {
+        setCreateCount((count) => count + 1);
+        navigate(`/content/${modelLabel}/new`);
       }}
       onClose={() => navigate(isSingleton ? "/" : `/content/${modelLabel}`)}
       onDelete={() => navigate(isSingleton ? "/" : `/content/${modelLabel}`)}

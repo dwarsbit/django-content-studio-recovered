@@ -112,7 +112,15 @@
     "unique_set_warning_hint": "Saving will fail unless you change one of them.",
     "unsaved_changes": "Unsaved changes",
     "duplicate": "Duplicate",
-    "duplicate_notice": "A copy of \"{{object}}\". Nothing is saved until you create it."
+    "duplicate_notice": "A copy of \"{{object}}\". Nothing is saved until you create it.",
+    "save_options": "More save options",
+    "save_and_add_another": "Save and add another",
+    "create_and_add_another": "Create and add another",
+    "save_and_close": "Save and close",
+    "create_and_close": "Create and close",
+    "saved": "\"{{object}}\" was saved.",
+    "created": "\"{{object}}\" was created.",
+    "open": "Open"
   },
   "list_view": {
     "table_view": "Table view",
@@ -824,6 +832,20 @@
       "confirm": "Confirm new password",
       "mismatch": "The new passwords do not match.",
       "changed": "Password changed"
+    },
+    "preferences": {
+      "title": "Preferences",
+      "save_action": "Default save action",
+      "save_action_help": "What the Save button on edit pages does. The others stay in the menu next to it, and {{shortcut}} always saves and stays.",
+      "saved": "Preferences saved",
+      "save_actions": {
+        "save": "Save",
+        "save_help": "Stay on the object.",
+        "add_another": "Save and add another",
+        "add_another_help": "Open an empty form for the next one.",
+        "close": "Save and close",
+        "close_help": "Go back to the list."
+      }
     }
   },
   "history": {
