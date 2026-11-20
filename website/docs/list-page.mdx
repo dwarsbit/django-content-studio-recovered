@@ -573,6 +573,111 @@ To offer export in the toolbar only, leave `"export"` out of an explicit
 System check `content_studio.E022` reports `export_fields` entries that do
 not resolve, and `content_studio.W015` options that have no effect.
 
+## Importing from a file
+
+To let editors create and update objects from a file, set
+`allow_import = True`, or list the fields a file may set in
+`import_fields`:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    table_display = ["title", "status", "published_at"]
+    import_fields = ["title", "slug", "body", "status", "author", "published_at"]
+    import_lookups = {"author": "username"}
+```
+
+`allow_import` takes the fields the edit page writes. Either way, an import
+only sets fields the edit page writes: read-only fields, the tenant, file
+fields and write-only password fields are never imported.
+
+The list page then offers Import in its toolbar. Editors pick a CSV, Excel
+(`.xlsx`) or JSON file, and the admin checks it first: it shows how many
+objects the file creates, updates and leaves unchanged, and lists the
+failing rows with their errors. Nothing is saved yet. When all rows are
+valid, editors import them. When some fail, they fix the file and pick it
+again, or import only the valid rows.
+
+### Matching rows
+
+A row with an `id` updates that object, and a row without one creates a
+new object. An `id` that matches no object fails. To match rows on other
+fields, such as a unique slug, name them in `import_id_fields`. A row that
+matches an object updates it, and a row that matches none creates one:
+
+```python
+import_fields = ["title", "slug", "body", "status"]
+import_id_fields = ["slug"]
+```
+
+`import_id_fields` should be unique together: a row that matches more than
+one object fails. Updates set only the columns in the file, so a file with
+an `id` and a `status` column changes the status and leaves the rest.
+
+### Values
+
+A file holds field names as headers (verbose names work too), then one row
+per object. An import reads:
+
+- a choice's value or its label, such as `published` or `Published`;
+- `true`/`false`, `yes`/`no` or `1`/`0` for booleans;
+- dates and times in ISO format, such as `2026-04-01T18:30:00+02:00`
+  (without an offset, in the current time zone);
+- the primary key of a related object, or the field `import_lookups` names
+  for that relation, such as the author's username;
+- many-to-many values and tags separated by commas, or as a JSON list;
+- JSON for JSON fields.
+
+Empty cells clear a value. Columns the import does not set, such as a
+computed column of an export, are left out and the check says which.
+
+The Export menu offers the list "For import" next to the regular export: a
+CSV, Excel or JSON file with the values as an import reads them back, for
+the current search and filters. Editors change it and import it again. The
+import dialog also offers a template: the header row only. Excel files need
+the `excel` extra, as for export.
+
+### Permissions and history
+
+Importing needs add or change permission on the model. Creating a row needs
+add permission, and updating one needs change permission on that object.
+Each row goes through the edit page's rules: the studio's
+[save hooks](/docs/edit-page), the model's validation and, with
+[multi-tenancy](/docs/multi-tenancy), the selected tenant. Objects in the
+trash are never matched. Every created or changed object is logged in the
+activity log, and with the history app it gets a version, as when an editor
+saves it.
+
+The check runs the save hooks inside a transaction that is rolled back.
+Send emails and other work outside the database from
+`transaction.on_commit`, so a check does not trigger them.
+
+### Large files
+
+An import runs in the request. Files with more than
+[`IMPORT_MAX_ROWS`](/docs/settings#import_max_rows) rows (10,000 by
+default) are refused. When your project's
+[Django tasks](https://docs.djangoproject.com/en/stable/topics/tasks/)
+backend runs tasks in the background, files with at least
+[`IMPORT_TASK_ROWS`](/docs/settings#import_task_rows) rows (1,000 by
+default) run as a task instead, without the row limit. The dialog then
+shows the check's progress, and a notice follows the import itself. The
+file and the job's progress wait in
+[`UPLOAD_FOLDER`](/docs/settings#upload_folder), so the storage must be
+shared with the task workers; `content_studio_clear_uploads` removes them
+after a day.
+
+System check `content_studio.E048` reports import options that do not
+resolve, and `content_studio.W026` options that have no effect or keys that
+need not be unique.
+
 ## Large tables
 
 The list page counts its objects to show the total and number the pages.

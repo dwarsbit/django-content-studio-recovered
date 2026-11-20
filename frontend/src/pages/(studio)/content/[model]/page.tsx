@@ -7,13 +7,15 @@ import {
   PiInfoBold,
   PiRowsBold,
   PiTableBold,
+  PiUploadSimpleBold,
 } from "react-icons/pi";
 import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { ExportMenu } from "@/components/export-menu";
 import { HeaderTabs } from "@/components/header-tabs";
-import { buttonVariants } from "@/components/ui/button";
+import { ImportDialog } from "@/components/import-dialog";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { PageBody, PageHeader, Toolbar } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/pagination";
 import { Spinner } from "@/components/ui/spinner";
@@ -21,6 +23,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDiscover } from "@/hooks/use-discover";
 import { useExport } from "@/hooks/use-export";
 import { useHttp } from "@/hooks/use-http";
+import { useImportDownload } from "@/hooks/use-import";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
 import { getDownloadErrorMessage } from "@/lib/download";
@@ -30,6 +33,7 @@ import { isCounted } from "@/lib/list-pagination";
 import { safeStorage } from "@/lib/safe-storage";
 import type {
   ExportFormat,
+  ImportFormat,
   ListResponse,
   Model,
   PaginatedResponse,
@@ -250,6 +254,26 @@ export function ModelListPage() {
     }
   };
 
+  // Import: the dialog, and the list "For import" in the export menu.
+  const importConfig = model?.admin.list.import ?? null;
+  const [importOpen, setImportOpen] = useState(false);
+  const { mutateAsync: runImportExport, isPending: isImportExporting } =
+    useImportDownload(appLabel ?? "");
+  const exportForImport = async (format: ImportFormat) => {
+    try {
+      await runImportExport({
+        format,
+        params: {
+          ...filters,
+          search: search || undefined,
+          ordering: effectiveOrdering,
+        },
+      });
+    } catch (e) {
+      toast.error(await getDownloadErrorMessage(e));
+    }
+  };
+
   const queryKey = [
     "resources",
     appLabel,
@@ -358,11 +382,23 @@ export function ModelListPage() {
         <Toolbar>
           <Filters model={model} values={filters} onValuesChange={setFilters} />
           <div className="ml-auto flex items-center gap-2">
-            {exportFormats.length > 0 && (
+            {importConfig?.can_import && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => setImportOpen(true)}
+              >
+                <PiUploadSimpleBold />
+                {t("import.button")}
+              </Button>
+            )}
+            {(exportFormats.length > 0 || importConfig) && (
               <ExportMenu
                 formats={exportFormats}
-                disabled={isExporting}
+                disabled={isExporting || isImportExporting}
                 onExport={exportList}
+                importFormats={importConfig?.formats}
+                onExportForImport={importConfig ? exportForImport : undefined}
               />
             )}
             {view === "list" && !R.isNil(sortableBy) && (
@@ -406,6 +442,13 @@ export function ModelListPage() {
           </div>
         </Toolbar>
       </PageHeader>
+      {importConfig?.can_import && (
+        <ImportDialog
+          model={model}
+          open={importOpen}
+          onOpenChange={setImportOpen}
+        />
+      )}
 
       <PageBody className="space-y-3">
         {view === "list" ? (

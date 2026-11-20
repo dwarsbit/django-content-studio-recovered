@@ -445,7 +445,6 @@ class BaseModelViewSet(ModelViewSet):
             create_job,
             detect_format,
             is_importable,
-            load_state,
             public_state,
             read_rows,
             restart_job,
@@ -476,7 +475,7 @@ class BaseModelViewSet(ModelViewSet):
         file = request.FILES.get("file")
 
         if file is None:
-            raise ValidationError({"file": "No file was submitted."})
+            raise ValidationError({"file": ["No file was submitted."]})
 
         max_size = cs_settings.UPLOAD_MAX_SIZE
 
@@ -485,8 +484,10 @@ class BaseModelViewSet(ModelViewSet):
 
             raise ValidationError(
                 {
-                    "file": _("The file is too large; it can be %(size)s at most.")
-                    % {"size": filesizeformat(max_size)}
+                    "file": [
+                        _("The file is too large; it can be %(size)s at most.")
+                        % {"size": filesizeformat(max_size)}
+                    ]
                 }
             )
 
@@ -495,7 +496,7 @@ class BaseModelViewSet(ModelViewSet):
             content = file.read()
             headers, rows = read_rows(content, file_format)
         except ImportFileError as error:
-            raise ValidationError({"file": str(error)})
+            raise ValidationError({"file": [str(error)]})
 
         task_rows = cs_settings.IMPORT_TASK_ROWS
         max_rows = cs_settings.IMPORT_MAX_ROWS
@@ -520,11 +521,13 @@ class BaseModelViewSet(ModelViewSet):
         if max_rows is not None and len(rows) > max_rows:
             raise ValidationError(
                 {
-                    "file": _(
-                        "The file has %(count)s rows; at most %(max)s can be "
-                        "imported at once. Split it into smaller files."
-                    )
-                    % {"count": f"{len(rows):,}", "max": f"{max_rows:,}"}
+                    "file": [
+                        _(
+                            "The file has %(count)s rows; at most %(max)s can "
+                            "be imported at once. Split it into smaller files."
+                        )
+                        % {"count": f"{len(rows):,}", "max": f"{max_rows:,}"}
+                    ]
                 }
             )
 

@@ -138,6 +138,19 @@ The maximum size of a file picked in a `FileWidget`, in bytes. Default:
 `52428800` (50 MB). `None` removes the limit; your web server's own request
 size limit still applies.
 
+### IMPORT_MAX_ROWS {#import_max_rows}
+
+The most rows a file can hold to be [imported](/docs/list-page#importing-from-a-file)
+in the request. Default: `10000`. Larger files run as a task when the task
+backend runs tasks in the background, and are refused otherwise. `None`
+removes the limit.
+
+### IMPORT_TASK_ROWS {#import_task_rows}
+
+From this many rows, an import runs as a Django task when the task backend
+runs tasks in the background (not Django's immediate or dummy backend).
+Default: `1000`. `None` always imports in the request.
+
 ### MAP_TILE_URL, MAP_TILE_ATTRIBUTION {#map_tiles}
 
 The tiles a [`MapWidget`](/docs/widgets#maps) shows: a tile URL template

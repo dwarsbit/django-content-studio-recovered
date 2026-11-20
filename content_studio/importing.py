@@ -33,7 +33,7 @@ import logging
 import posixpath
 import uuid
 from decimal import Decimal
-from typing import Any, Callable, Iterable, Iterator, Optional
+from typing import Any, Callable, Optional
 
 from django.core.exceptions import FieldDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
@@ -1277,18 +1277,6 @@ def is_unchanged(instance, validated_data: dict) -> bool:
 # Background jobs
 
 
-def _get_task_backend():
-    try:
-        from django.tasks import default_task_backend
-    except ImportError:  # Django < 6.0
-        try:
-            from django_tasks import default_task_backend
-        except ImportError:
-            return None
-
-    return default_task_backend
-
-
 def runs_in_background() -> bool:
     """
     Whether imports can run as a task: Django tasks are available and
@@ -1296,12 +1284,12 @@ def runs_in_background() -> bool:
     backend, which runs them in place, or the dummy one, which never
     runs them).
     """
-    if task is None:
+    if run_import_task is None:
         return False
 
     try:
-        backend = _get_task_backend()
-        name = type(backend).__name__ if backend is not None else ""
+        backend = run_import_task.get_backend()
+        name = type(backend).__name__
     except Exception:
         return False
 

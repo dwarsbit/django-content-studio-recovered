@@ -171,7 +171,9 @@
   "export": {
     "button": "Export",
     "csv": "CSV",
-    "xlsx": "Excel (.xlsx)"
+    "xlsx": "Excel (.xlsx)",
+    "for_import": "For import",
+    "json": "JSON"
   },
   "media_library": {
     "title": "Media library",
@@ -929,5 +931,55 @@
     "turn_off_title": "Turn off two-factor login?",
     "turn_off_description": "Enter a code from your authenticator app. You then log in with your password alone, and your other devices are logged out.",
     "turned_off": "Two-factor login is off"
+  },
+  "import": {
+    "button": "Import",
+    "title": "Import {{plural}}",
+    "description_pk": "Create and update from a CSV, Excel or JSON file. A row with an id updates that {{name}}; a row without one creates a new {{name}}.",
+    "description_key": "Create and update from a CSV, Excel or JSON file. Rows are matched on {{key}}: a match updates that {{name}}, other rows create a new {{name}}.",
+    "choose": "Choose a file",
+    "drop": "Drop the file to check it",
+    "formats": "or drop a CSV, Excel (.xlsx) or JSON file here",
+    "wrong_type": "Choose a CSV, Excel (.xlsx) or JSON file.",
+    "columns": "Columns:",
+    "by_lookup": "by {{lookup}}",
+    "template": "Download a template:",
+    "replace": "Choose another file",
+    "checking": "Checking the rows…",
+    "checking_progress": "Checking rows… {{processed}} of {{total}}",
+    "queued": "Importing {{total}} rows…",
+    "progress": "Importing… {{processed}} of {{total}} rows",
+    "cannot_import": "This file cannot be imported",
+    "counts": {
+      "created": "New",
+      "updated": "Updated",
+      "unchanged": "Unchanged",
+      "failed": "Failing"
+    },
+    "ignored_columns_one": "The column {{columns}} is left out: it is not a field this import sets.",
+    "ignored_columns_other": "The columns {{columns}} are left out: they are not fields this import sets.",
+    "failing_rows": "Failing rows",
+    "row": "Row {{row}}",
+    "more_rows_one": "and {{count}} more row",
+    "more_rows_other": "and {{count}} more rows",
+    "import_all_one": "Import {{number}} row",
+    "import_all_other": "Import {{number}} rows",
+    "import_valid_one": "Import {{number}} valid row",
+    "import_valid_other": "Import {{number}} valid rows",
+    "nothing_valid": "No valid rows",
+    "nothing_changes": "Nothing to change",
+    "not_applied": "Some rows failed, so nothing was imported. Fix them, or import only the valid rows.",
+    "failed": "The import failed.",
+    "done": "Imported {{plural}}",
+    "summary": {
+      "created_one": "{{count}} new",
+      "created_other": "{{count}} new",
+      "updated_one": "{{count}} updated",
+      "updated_other": "{{count}} updated",
+      "unchanged_one": "{{count}} unchanged",
+      "unchanged_other": "{{count}} unchanged",
+      "skipped_one": "{{count}} skipped",
+      "skipped_other": "{{count}} skipped"
+    }
   }
 }

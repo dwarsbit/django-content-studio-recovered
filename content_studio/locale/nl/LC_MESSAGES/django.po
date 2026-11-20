@@ -1100,3 +1100,89 @@ msgstr "Tweestapsverificatie is verplicht: deze gebruiker stelt het in bij de vo
 
 msgid "Lost their phone? **Reset two-factor login** in the more actions menu."
 msgstr "Telefoon kwijt? **Tweestapsverificatie resetten** staat in het menu met meer acties."
+
+#: importing.py
+msgid "Choose a CSV, Excel (.xlsx) or JSON file."
+msgstr "Kies een CSV-, Excel- (.xlsx) of JSON-bestand."
+
+#: importing.py
+msgid "A JSON file must hold a list of objects."
+msgstr "Een JSON-bestand moet een lijst van objecten bevatten."
+
+#: importing.py
+msgid "Enter true or false."
+msgstr "Vul true of false in."
+
+#: importing.py
+msgid "The import failed. Try again, or ask a developer to check the logs."
+msgstr "De import is mislukt. Probeer het opnieuw, of vraag een developer de logs te bekijken."
+
+#: importing.py
+msgid "Excel files cannot be imported on this site."
+msgstr "Excel-bestanden kunnen op deze site niet worden geïmporteerd."
+
+#: importing.py
+msgid "The file is empty."
+msgstr "Het bestand is leeg."
+
+#: importing.py
+msgid "The file is not a valid CSV file."
+msgstr "Het bestand is geen geldig CSV-bestand."
+
+#: importing.py
+msgid "The file is not a valid Excel file."
+msgstr "Het bestand is geen geldig Excel-bestand."
+
+#: importing.py
+msgid "The file is not valid JSON."
+msgstr "Het bestand is geen geldige JSON."
+
+#: importing.py
+msgid "The file has no column this import can set. Download the template for the columns."
+msgstr "Het bestand heeft geen kolom die deze import kan vullen. Download het sjabloon voor de kolommen."
+
+#: importing.py
+msgid "This model cannot be imported."
+msgstr "Dit model kan niet worden geïmporteerd."
+
+#: importing.py
+msgid "No %(model)s with %(field)s %(value)s."
+msgstr "Geen %(model)s met %(field)s %(value)s."
+
+#: importing.py
+msgid "More than one %(model)s has %(field)s %(value)s."
+msgstr "Meer dan één %(model)s heeft %(field)s %(value)s."
+
+#: importing.py
+msgid "The row matches more than one %(model)s."
+msgstr "De rij past bij meer dan één %(model)s."
+
+#: importing.py
+msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
+msgstr "Geen %(model)s met id %(value)s. Laat het id leeg om er een te maken."
+
+#: importing.py
+msgid "Enter valid JSON."
+msgstr "Vul geldige JSON in."
+
+#: importing.py
+msgid "You may not create %(model)s."
+msgstr "Je mag geen %(model)s maken."
+
+#: importing.py
+msgid "You may not change this %(model)s."
+msgstr "Je mag deze %(model)s niet wijzigen."
+
+#: importing.py
+msgid "The file is too large; it can be %(size)s at most."
+msgstr "Het bestand is te groot; het mag hoogstens %(size)s zijn."
+
+#: importing.py
+msgid "The file has %(count)s rows; at most %(max)s can be imported at once. Split it into smaller files."
+msgstr "Het bestand heeft %(count)s rijen; er kunnen er hoogstens %(max)s tegelijk worden geïmporteerd. Splits het op in kleinere bestanden."
+
+#: importing.py
+msgid "The file needs the column %(columns)s to match rows."
+msgid_plural "The file needs the columns %(columns)s to match rows."
+msgstr[0] "Het bestand heeft de kolom %(columns)s nodig om rijen te koppelen."
+msgstr[1] "Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen."
