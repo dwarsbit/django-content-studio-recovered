@@ -419,6 +419,13 @@ class ModelStudio(BaseStudio[T]):
     # The icon for this model will be shown in the menu and some other places.
     icon: Optional[str] = None
 
+    # The edit page's "View on site" button, which opens the object's
+    # public page in a new tab. True: the page is get_link_url(obj)
+    # (by default obj.get_absolute_url()), and the button shows when
+    # there is one. False hides it. A method view_on_site(self, obj)
+    # returns the URL itself; None hides the button for that object.
+    view_on_site: Union[bool, Callable[[Any], Optional[str]]] = True
+
     # Duplicate (save as new), as an opt-in: the edit page offers to
     # open a create form prefilled with a copy of the object. Never
     # offered for singletons.
@@ -485,6 +492,20 @@ class ModelStudio(BaseStudio[T]):
             return None
 
         return get_absolute_url()
+
+    def get_view_on_site_url(self, obj: T) -> Optional[str]:
+        """
+        The URL of the edit page's "View on site" button for obj, or None
+        to hide it. The default follows view_on_site: its result when it
+        is a method, get_link_url(obj) when it is True, None when False.
+        """
+        if callable(self.view_on_site):
+            return self.view_on_site(obj) or None
+
+        if not self.view_on_site:
+            return None
+
+        return self.get_link_url(obj) or None
 
     def get_relation_display(self, obj: T, request: HttpRequest) -> "RelationDisplay":
         """

@@ -3,7 +3,11 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import { PiArrowLeftBold, PiDotsThreeBold } from "react-icons/pi";
+import {
+  PiArrowLeftBold,
+  PiArrowSquareOutBold,
+  PiDotsThreeBold,
+} from "react-icons/pi";
 import { toast } from "sonner";
 
 import {
@@ -123,6 +127,8 @@ export function Header({
     },
   });
   const showUserActions = showSetPassword || showSendLink || showResetTwoFactor;
+  // The object's public page (the studio's view_on_site), once saved.
+  const viewOnSiteUrl = !isCreate ? resource?.__view_on_site__ : null;
   const { isDirty } = form.formState;
   const editedAt =
     resource && info
@@ -229,6 +235,24 @@ export function Header({
                     {`${t("editor.last_edited")} ${dayjs(editedAt).fromNow()}`}
                   </div>
                 ) : null}
+                {viewOnSiteUrl && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    className="max-lg:w-8 max-lg:px-0"
+                  >
+                    <a
+                      href={viewOnSiteUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <PiArrowSquareOutBold />
+                      <span className="sr-only lg:not-sr-only">
+                        {t("editor.view_on_site")}
+                      </span>
+                    </a>
+                  </Button>
+                )}
                 {components.map((component) => (
                   <Conditional
                     key={component.component_id}

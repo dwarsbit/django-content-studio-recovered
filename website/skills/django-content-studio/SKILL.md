@@ -209,6 +209,10 @@ blocks in `content_studio.form`:
   `content_studio.analytics`, `Analytics`.
 - `edit_header`: buttons and links next to the save button (no text
   components, no fields).
+- `view_on_site`: the header's "View on site" button, shown when the model
+  has `get_absolute_url()` (through the studio's `get_link_url`). `False`
+  hides it; a `view_on_site(self, obj)` method returns the URL, or `None`
+  to hide it for that object (`E045` for anything else).
 
 ```python
 # blog/admin.py

@@ -292,6 +292,11 @@ class DjangoContentStudioConfig(AppConfig):
                         __permissions__ = serializers.SerializerMethodField(
                             method_name="get_object_permissions"
                         )
+                        # The URL of the header's "View on site" button,
+                        # or None without one.
+                        __view_on_site__ = serializers.SerializerMethodField(
+                            method_name="get_view_on_site"
+                        )
 
                         def _get_obj(self):
                             return (
@@ -412,6 +417,14 @@ class DjangoContentStudioConfig(AppConfig):
                             return get_studio_readonly_fields(
                                 admin_model, self.context.get("request"), obj
                             )
+
+                        def get_view_on_site(self, obj):
+                            get_url = getattr(admin_model, "get_view_on_site_url", None)
+
+                            if not isinstance(obj, models.Model) or not obj.pk:
+                                return None
+
+                            return get_url(obj) if get_url else None
 
                         def get_object_permissions(self, obj):
                             request = self.context.get("request")
