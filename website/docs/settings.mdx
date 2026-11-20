@@ -347,6 +347,45 @@ How many seconds the [system status page](/docs/system-status) remembers the
 results of its checks before it runs them again. Default: `60`. `0` runs the
 checks on every request.
 
+## Backups
+
+These settings take effect with
+[`content_studio.contrib.backups`](/docs/backups) in `INSTALLED_APPS`.
+
+### BACKUP_STORAGE {#backup_storage}
+
+The alias in Django's `STORAGES` that backups are saved in. Default:
+`"default"`, the media storage. A backup holds the whole database, so the
+storage must not serve it publicly; see
+[Keep the backups private](/docs/backups#keep-the-backups-private).
+
+### BACKUP_FOLDER {#backup_folder}
+
+The folder in that storage. Each database gets a subfolder by its alias.
+Default: `"content_studio/backups"`.
+
+### BACKUP_SCHEDULE {#backup_schedule}
+
+When backups run, as a cron expression of five fields: minute, hour, day of
+the month, month and day of the week (0 or 7 is Sunday). Default:
+`"0 3 * * *"`, every night at 03:00. Huey runs it when it is installed;
+otherwise run `content_studio_backup` from cron on the same schedule. `None`
+turns scheduled backups off.
+
+### BACKUP_KEEP {#backup_keep}
+
+How many backups are kept per database. Older ones are deleted after each
+successful backup. Default: `14`. `None` keeps every backup.
+
+### BACKUP_DATABASES {#backup_databases}
+
+The aliases in `DATABASES` that are backed up. Default: `["default"]`.
+
+### BACKUP_EXCLUDE {#backup_exclude}
+
+App labels (`"analytics"`) or models (`"shop.Cart"`) left out of backups,
+on top of content types, permissions and sessions. Default: `[]`.
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}

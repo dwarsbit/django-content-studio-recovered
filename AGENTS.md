@@ -46,7 +46,7 @@ content_studio/
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E044, W001-W025)
+├── checks.py            # System checks (content_studio.E001-E050, W001-W028)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution)
 ├── export.py            # Export of a list as CSV/Excel (display values)
@@ -82,6 +82,7 @@ content_studio/
 │   └── jwt.py           # JWT token backend
 ├── contrib/
 │   ├── huey.py          # HueyAdapter: the task dashboard for a Huey queue
+│   ├── backups/         # Optional automatic backups: the Backup record (models.py), dumping/pruning/restoring fixtures (backup.py), BACKUP_SCHEDULE cron parsing (schedule.py), Huey's periodic task (huey.py), the status page rows (status.py), the Backups page endpoints (views.py), content_studio_backup/content_studio_restore
 │   ├── status/          # Optional system status page: register_service/register_task_adapter/register_recurring_task (registry.py), the built-in checks (builtin.py), running and caching the checks (runner.py), the task lists from the task adapters (tasks.py), the endpoints (views.py)
 │   └── password_reset/  # Password reset functionality
 ├── static/              # Static files (compiled frontend)

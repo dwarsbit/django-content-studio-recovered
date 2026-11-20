@@ -68,6 +68,7 @@ def serialize(service: Service, result: ServiceResult, seconds: float) -> dict:
         "label": str(service.label),
         "group": str(group) if group else "",
         "icon": service.icon,
+        "url": service.url,
         "status": str(result.status),
         "detail": str(result.detail or ""),
         "message": str(result.message or ""),

@@ -1,0 +1,226 @@
+# 🗄️ Backups
+
+The backups app saves a copy of your database on a schedule. Each backup is
+a gzipped Django fixture in your media storage, such as an S3 bucket, and
+the newest 14 are kept. Superusers see the backups on the
+[system status page](/docs/system-status), download them and back up on
+demand on the Backups page. You restore a backup with a management command.
+
+## Setup
+
+Add the app to `INSTALLED_APPS` and migrate. It keeps a record of each
+backup in its own table.
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    # ...
+    "content_studio",
+    "content_studio.contrib.status",
+    "content_studio.contrib.backups",
+]
+```
+
+```bash
+python manage.py migrate
+```
+
+Backups go to the default storage, in the folder `content_studio/backups`,
+every night at 03:00. Then decide what runs them.
+
+### With Huey
+
+With [Huey](/docs/dashboard#huey) installed (`huey.contrib.djhuey` in
+`INSTALLED_APPS`), the backups run as a Huey periodic task on
+[`BACKUP_SCHEDULE`](/docs/settings#backup_schedule). Nothing else is needed:
+the consumer that runs your other tasks runs the backups.
+
+Huey reads the schedule in UTC unless you set `utc=False` in your `HUEY`
+settings, so `"0 3 * * *"` runs at 03:00 UTC.
+
+### With cron
+
+Without Huey, run the backup command from cron on the same schedule:
+
+```bash
+# crontab -e
+0 3 * * * cd /srv/blog && .venv/bin/python manage.py content_studio_backup
+```
+
+`manage.py check` then warns with `content_studio.W028` that Huey does not
+run the schedule. Once the cron job is in place, add the warning to
+`SILENCED_SYSTEM_CHECKS`. The status page still uses `BACKUP_SCHEDULE` to
+know when a backup is due.
+
+## Keep the backups private
+
+A backup holds the whole database, password hashes included. Anyone who can
+read the backup folder can read every account.
+
+- **S3 and other object storage**: keep the bucket private and let the
+  storage sign its URLs (django-storages' default). Content Studio never
+  links to a backup; downloads go through the Backups page, for superusers.
+- **The file system**: a web server that serves `MEDIA_ROOT` also serves
+  the backups in it. Give the backups a storage of their own, outside
+  `MEDIA_ROOT`:
+
+```python
+# settings.py
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+    },
+    "backups": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": "/srv/blog/backups"},
+    },
+}
+
+CONTENT_STUDIO = {
+    # ...
+    "BACKUP_STORAGE": "backups",
+}
+```
+
+`manage.py check` warns with `content_studio.W027` when the backup storage
+is a file system storage inside `MEDIA_ROOT`, or an object storage with a
+public ACL or unsigned URLs.
+
+Backups are not encrypted by Content Studio. Turn on your storage's own
+encryption at rest, such as S3's default server-side encryption.
+
+## What a backup holds
+
+Each backup is the JSON that `manage.py dumpdata` writes, gzipped, with
+natural keys for content types and permissions. It covers every model of
+every installed app, so `loaddata` reads it back on any database engine.
+
+Left out:
+
+- Content types and permissions: `migrate` creates them again.
+- Sessions: everyone signs in again after a restore.
+- The backup records themselves.
+- Whatever you list in [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude),
+  as app labels (`"analytics"`) or models (`"shop.Cart"`).
+
+Media files are not part of a backup: they stay in the storage they are
+in. Protect them with the storage's own versioning or replication.
+
+Next to each backup the app saves its manifest,
+`<name>.manifest.json`: the Content Studio and Django versions, the database
+engine, the applied migrations and the number of rows per model. A backup of
+database `default` made on 20 November 2026 at 03:00 UTC is saved as:
+
+```text
+content_studio/backups/default/2026-11-20T030000Z.json.gz
+content_studio/backups/default/2026-11-20T030000Z.manifest.json
+```
+
+The dump streams each table to a temporary file on the worker, which is
+uploaded when it is done, so the worker needs free disk space for one
+compressed backup. Every database in
+[`BACKUP_DATABASES`](/docs/settings#backup_databases) gets its own backup.
+
+After each successful backup, older backups of that database beyond
+[`BACKUP_KEEP`](/docs/settings#backup_keep) are deleted, file and manifest,
+and so are failed runs older than the oldest backup kept. A failed run
+leaves no file behind.
+
+## On the status page
+
+With the status app installed, the page shows two rows:
+
+- **Database backups**, a service. Operational while the latest backup is
+  newer than its scheduled time plus an hour. Degraded when a backup is
+  overdue or none has been made yet. Down when the last run failed, with its
+  error, or when the backup storage is missing. Not checked when
+  `BACKUP_SCHEDULE` is `None` and the last run did not fail. Its name links
+  to the Backups page.
+- **Back up the database**, a recurring task, with the schedule in words,
+  the latest run and the next. With Huey, this is Huey's periodic task, so
+  it shows as one row.
+
+## The Backups page
+
+The Backups page lists the latest 100 backups, newest first, with the
+database, what started it, its size, how long it took and the error of a
+failed run. **Download** saves a backup's file. **Back up now** queues a
+backup of every database in `BACKUP_DATABASES` as a Django task: with
+Django's default `ImmediateBackend` it runs during the request, with a
+background backend such as Huey it runs in a worker and the page shows it
+running.
+
+Only superusers see the page. Override `has_backup_permission(request)` on
+your admin site ([`ADMIN_SITE`](/docs/settings#admin_site)) to decide
+otherwise:
+
+```python
+from content_studio.admin import ContentStudioSite
+
+
+class BlogStudioSite(ContentStudioSite):
+    def has_backup_permission(self, request):
+        return request.user.groups.filter(name="Operations").exists()
+```
+
+## Back up from the command line
+
+```bash
+python manage.py content_studio_backup
+python manage.py content_studio_backup --database default
+python manage.py content_studio_backup --list
+```
+
+The command backs up the databases in `BACKUP_DATABASES`, or the ones you
+pass with `--database`, and prunes the old ones like a scheduled backup. It
+exits with an error when a backup fails, so cron can mail you. `--list`
+prints the backups with their status, size and name.
+
+## Restore a backup
+
+Restoring replaces everything in the database with the backup. There is no
+button for it: run the command on the server.
+
+```bash
+python manage.py content_studio_restore --latest
+python manage.py content_studio_restore content_studio/backups/default/2026-11-20T030000Z.json.gz
+python manage.py content_studio_restore /tmp/2026-11-20T030000Z.json.gz --database default
+```
+
+Name a backup as `--list` prints it, or a downloaded file on disk (keep its
+manifest next to it). The command:
+
+1. Asks you to type the database's name. `--noinput` skips the question.
+2. Fetches the backup and its manifest.
+3. Compares the backup's migrations with the database's. When they differ
+   it stops: migrate the database to the backup's state first, or pass
+   `--ignore-migrations`.
+4. Empties every table and loads the backup, in one transaction, so a
+   failed load leaves the database as it was.
+
+The backup records are kept as they are, so the Backups page still lists
+every backup after a restore.
+
+:::caution
+MySQL and MariaDB cannot roll back emptying a table. On those databases a
+failed restore leaves tables empty: restore into a fresh database, or keep
+the previous backup at hand.
+:::
+
+To move a site to another database engine, migrate the new database, then
+restore a backup of the old one into it.
+
+## Settings
+
+| Setting | Default | |
+|---------|---------|---|
+| [`BACKUP_STORAGE`](/docs/settings#backup_storage) | `"default"` | The alias in `STORAGES` backups are saved in. |
+| [`BACKUP_FOLDER`](/docs/settings#backup_folder) | `"content_studio/backups"` | The folder in that storage. |
+| [`BACKUP_SCHEDULE`](/docs/settings#backup_schedule) | `"0 3 * * *"` | When backups run, as a cron expression. |
+| [`BACKUP_KEEP`](/docs/settings#backup_keep) | `14` | Backups kept per database. |
+| [`BACKUP_DATABASES`](/docs/settings#backup_databases) | `["default"]` | The databases backed up. |
+| [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude) | `[]` | Apps and models left out. |
+
+`manage.py check` reports settings that cannot work as
+`content_studio.E050`.

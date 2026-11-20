@@ -38,6 +38,9 @@ export function useDiscover() {
         // The system status page, when the user may open it; absent
         // from older servers.
         status?: { enabled: boolean };
+        // The Backups page, when the user may open it; absent from
+        // older servers.
+        backups?: { enabled: boolean };
         multitenancy: {
           enabled: boolean;
           tenant_model: string | null;

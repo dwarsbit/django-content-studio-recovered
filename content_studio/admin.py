@@ -845,6 +845,12 @@ class ContentStudioSite:
 
             set_up_status_router()
 
+        # The Backups page, with the optional app installed.
+        if apps.is_installed("content_studio.contrib.backups"):
+            from .contrib.backups.views import set_up_router as set_up_backup_router
+
+            set_up_backup_router()
+
         # The notification endpoints, with the optional app installed.
         if apps.is_installed("content_studio.notifications"):
             from .notifications.viewsets import NotificationViewSet
@@ -859,6 +865,13 @@ class ContentStudioSite:
         """
         Who may open the system status page (content_studio.contrib.status):
         superusers, unless overridden.
+        """
+        return bool(request.user.is_active and request.user.is_superuser)
+
+    def has_backup_permission(self, request: HttpRequest) -> bool:
+        """
+        Who may open the Backups page (content_studio.contrib.backups),
+        download backups and back up now: superusers, unless overridden.
         """
         return bool(request.user.is_active and request.user.is_superuser)
 

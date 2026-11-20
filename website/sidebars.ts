@@ -24,6 +24,7 @@ const sidebars: SidebarsConfig = {
     "history",
     "presence",
     "system-status",
+    "backups",
     "command-palette",
     "deployment",
     "developer-tools",

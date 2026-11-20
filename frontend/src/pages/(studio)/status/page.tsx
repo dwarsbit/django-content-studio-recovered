@@ -14,6 +14,7 @@ import {
   PiWarningBold,
   PiXCircleBold,
 } from "react-icons/pi";
+import { Link } from "react-router";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -382,7 +383,9 @@ function ServiceRow({ service }: { service: StatusService }) {
         {service.icon ? <span className={service.icon} /> : <PiCubeBold />}
       </span>
       <div className="flex-1 min-w-0">
-        <div className="font-medium">{service.label}</div>
+        <div className="font-medium">
+          <ServiceLabel service={service} />
+        </div>
         {detail && (
           <div className="text-xs text-muted-foreground">{detail}</div>
         )}
@@ -397,6 +400,31 @@ function ServiceRow({ service }: { service: StatusService }) {
         {t(`status.service_status.${service.status}`)}
       </Badge>
     </li>
+  );
+}
+
+/** A service's name: a link when it has a url. */
+function ServiceLabel({ service }: { service: StatusService }) {
+  if (!service.url) {
+    return service.label;
+  }
+
+  const className =
+    "underline-offset-4 hover:underline outline-none focus-visible:underline";
+
+  return /^https?:\/\//i.test(service.url) ? (
+    <a
+      href={service.url}
+      target="_blank"
+      rel="noopener noreferrer"
+      className={className}
+    >
+      {service.label}
+    </a>
+  ) : (
+    <Link to={`/${service.url.replace(/^\//, "")}`} className={className}>
+      {service.label}
+    </Link>
   );
 }
 

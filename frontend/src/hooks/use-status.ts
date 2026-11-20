@@ -18,6 +18,9 @@ export interface StatusService {
   group: string;
   // A Phosphor icon class.
   icon: string | null;
+  // Where the service's name links to: a path in the admin, or an
+  // http(s) address (a new tab).
+  url?: string | null;
   status: ServiceStatus;
   detail: string;
   message: string;

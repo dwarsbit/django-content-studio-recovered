@@ -1083,5 +1083,43 @@
       "failed": "Mislukt {{when}}",
       "never": "Nog niet gedraaid"
     }
+  },
+  "backups": {
+    "title": "Back-ups",
+    "back": "Terug naar systeemstatus",
+    "back_up_now": "Nu back-uppen",
+    "running": "Back-up loopt…",
+    "started": "De back-up is gestart.",
+    "unavailable_title": "Back-ups zijn niet beschikbaar",
+    "unavailable_description": "Back-ups staan niet aan op deze site, of je account mag ze niet openen.",
+    "schedule": "Planning",
+    "schedule_next": "{{schedule}} · volgende {{next}}",
+    "not_scheduled": "Niet gepland",
+    "kept": "Bewaard",
+    "keep_one": "De nieuwste back-up per database",
+    "keep_other": "De nieuwste {{count}} per database",
+    "keep_all": "Elke back-up",
+    "storage": "Opslag",
+    "no_storage": "Geen opslag voor back-ups ingesteld",
+    "list": {
+      "title": "Back-ups",
+      "description": "De laatste back-ups, nieuwste eerst",
+      "empty_title": "Nog geen back-ups",
+      "empty_description": "Back-ups verschijnen hier zodra er een is gemaakt. Kies Nu back-uppen voor de eerste."
+    },
+    "restore_hint": "Een back-up terugzetten doe je met",
+    "by": "{{trigger}} door {{user}}",
+    "download": "{{name}} downloaden",
+    "trigger": {
+      "scheduled": "Gepland",
+      "manual": "Nu back-uppen",
+      "command": "Commando"
+    },
+    "status": {
+      "queued": "In de wachtrij",
+      "running": "Bezig",
+      "done": "Klaar",
+      "failed": "Mislukt"
+    }
   }
 }

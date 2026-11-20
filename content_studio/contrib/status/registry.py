@@ -63,6 +63,7 @@ class Service:
     icon: Optional[str] = None
     group: Any = None
     timeout: float = DEFAULT_TIMEOUT
+    url: Optional[str] = None
 
 
 @dataclass
@@ -111,6 +112,7 @@ def register_service(
     icon: Optional[str] = None,
     group: Optional[StrOrPromise] = None,
     timeout: float = DEFAULT_TIMEOUT,
+    url: Optional[str] = None,
 ) -> None:
     """
     Add a service to the status page. key is lowercase dotted words
@@ -124,13 +126,21 @@ def register_service(
 
     icon is a Phosphor icon class, such as "ph-bold ph-database". group
     is the heading the service is listed under; by default the name of
-    the app the check is defined in.
+    the app the check is defined in. url makes the service's name a link:
+    a path in the admin ("backups") or an http(s) address, which opens
+    in a new tab.
 
     Registering a key twice with different definitions is reported by
     system check content_studio.E047.
     """
     service = Service(
-        key=key, label=label, check=check, icon=icon, group=group, timeout=timeout
+        key=key,
+        label=label,
+        check=check,
+        icon=icon,
+        group=group,
+        timeout=timeout,
+        url=url,
     )
 
     if not _valid_key("Status service", key):

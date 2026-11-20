@@ -28,6 +28,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.password_reset",
     "content_studio.contrib.two_factor",
     "content_studio.contrib.status",
+    "content_studio.contrib.backups",
     "content_studio.notifications",
     "content_studio.history",
     "content_studio.preferences",
@@ -82,6 +83,20 @@ MEDIA_ROOT = BASE_DIR / "demo" / "media"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
+STORAGES = {
+    "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+    "staticfiles": {"BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"},
+    # Backups hold the whole database: kept outside MEDIA_ROOT, unserved.
+    "backups": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": BASE_DIR / "demo" / "backups"},
+    },
+}
+
+# The demo has no Huey to run BACKUP_SCHEDULE; back up with
+# `content_studio_backup` or Back up now.
+SILENCED_SYSTEM_CHECKS = ["content_studio.W028"]
+
 # Keep demo emails out of SMTP; password reset codes land in the console.
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
@@ -89,6 +104,7 @@ CONTENT_STUDIO = {
     "ADMIN_SITE": "demo.blog.studio.admin_site",
     "MEDIA_LIBRARY_MODEL": "demo.blog.models.MediaItem",
     "MEDIA_LIBRARY_FOLDER_MODEL": "demo.blog.models.MediaFolder",
+    "BACKUP_STORAGE": "backups",
     # The default per-IP rate (10/min) is fine for humans; the e2e suite
     # drives several parallel browser contexts through the same login form.
     "LOGIN_THROTTLE_RATE": "60/min",

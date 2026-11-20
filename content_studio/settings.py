@@ -143,6 +143,20 @@ DEFAULTS = {
     # the services' results before checking them again; 0 checks on
     # every request.
     "STATUS_CACHE_TIMEOUT": 60,
+    # Automatic backups (content_studio.contrib.backups): the alias in
+    # Django's STORAGES the backups are saved in, and the folder there.
+    "BACKUP_STORAGE": "default",
+    "BACKUP_FOLDER": "content_studio/backups",
+    # When backups run, as a cron expression (minute, hour, day, month,
+    # day of the week); None turns scheduled backups off.
+    "BACKUP_SCHEDULE": "0 3 * * *",
+    # Backups kept per database; older ones are deleted. None keeps all.
+    "BACKUP_KEEP": 14,
+    # The database aliases backed up.
+    "BACKUP_DATABASES": ["default"],
+    # App labels ("app") or models ("app.Model") left out of backups, on
+    # top of content types, permissions and sessions.
+    "BACKUP_EXCLUDE": [],
     # Days read notifications are kept; None keeps them.
     "NOTIFICATION_RETENTION": 90,
     # Days unread notifications are kept; None (the default) keeps them.

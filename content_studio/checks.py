@@ -778,6 +778,139 @@ def status_errors() -> list[tuple[str, str]]:
     return [("content_studio.E047", error) for error in registration_errors()]
 
 
+def backup_errors() -> list[tuple[str, str]]:
+    """
+    Backup settings that cannot work (E050): BACKUP_STORAGE not in
+    STORAGES, an unknown alias in BACKUP_DATABASES, a BACKUP_SCHEDULE
+    that is not a cron expression, BACKUP_KEEP below 1, or an unknown
+    app or model in BACKUP_EXCLUDE.
+    """
+    from django.apps import apps
+    from django.conf import settings
+    from django.core.files.storage import InvalidStorageError, storages
+
+    if not apps.is_installed("content_studio.contrib.backups"):
+        return []
+
+    from .contrib.backups.schedule import ScheduleError, parse
+
+    errors = []
+
+    try:
+        storages[cs_settings.BACKUP_STORAGE]
+    except InvalidStorageError:
+        errors.append(
+            f"BACKUP_STORAGE {cs_settings.BACKUP_STORAGE!r} is not in STORAGES."
+        )
+
+    databases = cs_settings.BACKUP_DATABASES
+
+    if not isinstance(databases, (list, tuple)):
+        errors.append("BACKUP_DATABASES must be a list of database aliases.")
+    else:
+        for alias in databases:
+            if alias not in settings.DATABASES:
+                errors.append(f"BACKUP_DATABASES names {alias!r}, not in DATABASES.")
+
+    if cs_settings.BACKUP_SCHEDULE:
+        try:
+            parse(cs_settings.BACKUP_SCHEDULE)
+        except ScheduleError as exc:
+            errors.append(f"BACKUP_SCHEDULE {cs_settings.BACKUP_SCHEDULE!r}: {exc}")
+
+    keep = cs_settings.BACKUP_KEEP
+
+    if keep is not None and (not isinstance(keep, int) or keep < 1):
+        errors.append("BACKUP_KEEP must be a whole number of 1 or more, or None.")
+
+    for label in cs_settings.BACKUP_EXCLUDE or []:
+        app_label, _dot, model_name = str(label).partition(".")
+
+        try:
+            config = apps.get_app_config(app_label)
+            if model_name:
+                config.get_model(model_name)
+        except LookupError:
+            errors.append(f"BACKUP_EXCLUDE names {label!r}, no installed app or model.")
+
+    return [("content_studio.E050", error) for error in errors]
+
+
+def is_inside_media_root(location) -> bool:
+    from pathlib import Path
+
+    if not settings.MEDIA_ROOT:
+        return False
+
+    media_root = Path(settings.MEDIA_ROOT).resolve()
+    path = Path(location).resolve()
+    return path == media_root or media_root in path.parents
+
+
+def backup_warnings() -> list[tuple[str, str]]:
+    """
+    Backups that may be public (W027): saved in a FileSystemStorage inside
+    MEDIA_ROOT, or in a storage with a public ACL or unsigned URLs. And a
+    BACKUP_SCHEDULE without Huey to run it (W028): run
+    content_studio_backup from cron, and silence the warning.
+    """
+    from django.apps import apps
+    from django.core.files.storage import FileSystemStorage, InvalidStorageError
+    from django.core.files.storage import storages
+
+    if not apps.is_installed("content_studio.contrib.backups"):
+        return []
+
+    warnings = []
+
+    try:
+        storage = storages[cs_settings.BACKUP_STORAGE]
+    except InvalidStorageError:
+        storage = None
+
+    if storage is not None:
+        public = False
+
+        if isinstance(storage, FileSystemStorage):
+            # Web servers serve MEDIA_ROOT: backups inside it are public.
+            public = is_inside_media_root(storage.location)
+        elif (
+            getattr(storage, "default_acl", None)
+            in (
+                "public-read",
+                "public-read-write",
+            )
+            or getattr(storage, "querystring_auth", True) is False
+        ):
+            public = True
+
+        if public:
+            warnings.append(
+                (
+                    "content_studio.W027",
+                    f"Backups are saved in the {cs_settings.BACKUP_STORAGE!r} "
+                    f"storage, which may serve "
+                    f"{cs_settings.BACKUP_FOLDER!r} publicly. A backup holds "
+                    "the whole database, password hashes included: make sure "
+                    "the folder is not served, or set BACKUP_STORAGE to a "
+                    "private storage in STORAGES.",
+                )
+            )
+
+    if cs_settings.BACKUP_SCHEDULE and not apps.is_installed("huey.contrib.djhuey"):
+        warnings.append(
+            (
+                "content_studio.W028",
+                f"BACKUP_SCHEDULE is {cs_settings.BACKUP_SCHEDULE!r} but Huey is "
+                "not installed to run it. Run `manage.py content_studio_backup` "
+                "from cron on that schedule, then add content_studio.W028 to "
+                "SILENCED_SYSTEM_CHECKS.",
+            )
+        )
+
+    return warnings
+
+
 def media_json_attr_errors(
     setting, check_id, purpose, explicit_only=False
 ) -> list[tuple[str, str]]:
@@ -3594,6 +3727,14 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
 
     for check_id, error in status_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
+
+    for check_id, error in backup_errors():
+        messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
+
+    for check_id, warning in backup_warnings():
+        messages.append(
+            checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
+        )
 
     for check_id, error in presence_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
