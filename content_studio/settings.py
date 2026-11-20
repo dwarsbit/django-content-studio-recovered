@@ -103,6 +103,10 @@ DEFAULTS = {
     # wait in until the object is saved. Unsaved uploads are removed by
     # the content_studio_clear_uploads command.
     "UPLOAD_FOLDER": "content_studio/uploads",
+    # The alias in Django's STORAGES that uploads wait in until the
+    # object is saved, and import files until they are imported. Best a
+    # storage that is not served publicly.
+    "UPLOAD_STORAGE": "default",
     # Maximum size of a file picked in a FileWidget, in bytes; None for
     # no limit.
     "UPLOAD_MAX_SIZE": 50 * 1024 * 1024,

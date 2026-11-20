@@ -82,6 +82,13 @@
   `UPLOAD_MAX_SIZE` for imports, and **`IMPORT_FILE_MAX_ROWS`** (100,000)
   caps imports that run as a task, which had no row limit.
 
+- **Uploads waiting to be saved sat in the public media storage.** Files
+  picked in a `FileWidget` and import files are now kept in the new
+  **`UPLOAD_STORAGE`** (an alias in `STORAGES`, by default `"default"`);
+  the Deployment page advises a private one. Closing the import dialog
+  after a background check now removes the checked file at once, instead
+  of leaving it until `content_studio_clear_uploads` runs.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

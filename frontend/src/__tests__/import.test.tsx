@@ -9,6 +9,7 @@ import type { ImportConfig, ImportResult, Model } from "@/types";
 
 const httpGetMock = vi.hoisted(() => vi.fn());
 const httpPostMock = vi.hoisted(() => vi.fn());
+const httpDeleteMock = vi.hoisted(() => vi.fn(async () => ({})));
 const toastMock = vi.hoisted(() => ({
   error: vi.fn(),
   success: vi.fn(),
@@ -16,7 +17,11 @@ const toastMock = vi.hoisted(() => ({
 }));
 
 vi.mock("@/hooks/use-http", () => ({
-  useHttp: () => ({ get: httpGetMock, post: httpPostMock }),
+  useHttp: () => ({
+    get: httpGetMock,
+    post: httpPostMock,
+    delete: httpDeleteMock,
+  }),
 }));
 
 vi.mock("sonner", () => ({ toast: toastMock }));
@@ -139,6 +144,24 @@ describe("ImportDialog", () => {
     const run = httpPostMock.mock.calls[1][1] as FormData;
     expect(run.get("preview")).toBe("false");
     expect(run.get("skip_errors")).toBe("true");
+  });
+
+  it("discards a background check that is cancelled", async () => {
+    httpPostMock.mockResolvedValueOnce({
+      data: { job: { id: "job-1", status: "done", result: result() } },
+    });
+
+    renderDialog();
+    await pickFile();
+
+    await screen.findByText("This field may not be blank.");
+    await userEvent.click(
+      screen.getByRole("button", { name: "common.cancel" }),
+    );
+
+    expect(httpDeleteMock).toHaveBeenCalledWith(
+      "/content/testapp.event/import/job-1",
+    );
   });
 
   it("shows why a file cannot be imported", async () => {

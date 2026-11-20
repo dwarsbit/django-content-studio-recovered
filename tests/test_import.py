@@ -692,6 +692,18 @@ class BackgroundTests(ImportTestCase):
     def status(self, job, client=None):
         return (client or self.client).get(f"{EVENTS}/import/{job['id']}")
 
+    def test_a_checked_file_that_is_not_imported_is_discarded(self):
+        job = self.start(preview=True)
+        self.assertEqual(self.status(job).json()["job"]["status"], "done")
+        storage = importing.get_upload_storage()
+        self.assertTrue(storage.exists(importing._file_path(job["id"], "csv")))
+
+        response = self.client.delete(f"{EVENTS}/import/{job['id']}")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(storage.exists(importing._file_path(job["id"], "csv")))
+        self.assertEqual(self.status(job).status_code, 404)
+
     def test_preview_then_import(self):
         job = self.start(preview=True)
         self.assertEqual(job["status"], "queued")

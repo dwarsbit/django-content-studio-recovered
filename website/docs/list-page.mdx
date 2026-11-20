@@ -767,9 +767,10 @@ with more than 1,000 columns are refused, and reading a file stops at the
 first row too many, so a large file is never parsed whole. The dialog then
 shows the check's progress, and a notice follows the import itself. The
 file and the job's progress wait in
-[`UPLOAD_FOLDER`](/docs/settings#upload_folder), so the storage must be
-shared with the task workers; `content_studio_clear_uploads` removes them
-after a day. On the [system status](/docs/system-status#tasks) page, when
+[`UPLOAD_FOLDER`](/docs/settings#upload_folder) in
+[`UPLOAD_STORAGE`](/docs/settings#upload_storage), so the storage must be
+shared with the task workers. Closing the dialog after the check removes
+the file; `content_studio_clear_uploads` removes what is left after a day. On the [system status](/docs/system-status#tasks) page, when
 a task adapter lists your backend's tasks, the task is named "Import from
 a file".
 

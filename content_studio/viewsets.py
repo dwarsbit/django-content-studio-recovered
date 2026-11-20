@@ -545,15 +545,28 @@ class BaseModelViewSet(ModelViewSet):
         )
 
     @action(
-        methods=["get"],
+        methods=["get", "delete"],
         detail=False,
         url_path="import/(?P<job_id>[^/]+)",
     )
     def import_status(self, request, job_id):
-        """An import job's progress and, once done, its result."""
-        from .importing import public_state
+        """
+        An import job's progress and, once done, its result. DELETE
+        discards a checked file that will not be imported.
+        """
+        from .importing import DONE, FAILED, discard_job, public_state
 
-        return Response({"job": public_state(self._get_import_job(job_id))})
+        state = self._get_import_job(job_id)
+
+        if request.method == "DELETE":
+            # Only a check that finished: a running job still needs its
+            # file, and an import that ran removed it already.
+            if state["status"] in (DONE, FAILED):
+                discard_job(state)
+
+            return Response(status=204)
+
+        return Response({"job": public_state(state)})
 
     def _get_import_job(self, job_id):
         """An import job of this model, started by the request's user."""

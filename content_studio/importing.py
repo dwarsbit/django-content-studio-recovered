@@ -38,7 +38,6 @@ from typing import Any, Callable, Optional
 from django.core.exceptions import FieldDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, router, transaction
 from django.http import HttpResponse, StreamingHttpResponse
@@ -1384,6 +1383,12 @@ def runs_in_background() -> bool:
     return bool(name) and name not in ("ImmediateBackend", "DummyBackend")
 
 
+def get_upload_storage():
+    from . import uploads
+
+    return uploads.get_upload_storage()
+
+
 def job_folder() -> str:
     return posixpath.join(cs_settings.UPLOAD_FOLDER, "imports")
 
@@ -1399,10 +1404,10 @@ def _file_path(job_id: str, file_format: str) -> str:
 def save_state(state: dict) -> None:
     path = _state_path(state["id"])
 
-    if default_storage.exists(path):
-        default_storage.delete(path)
+    if get_upload_storage().exists(path):
+        get_upload_storage().delete(path)
 
-    default_storage.save(
+    get_upload_storage().save(
         path, ContentFile(json.dumps(state, cls=DjangoJSONEncoder).encode("utf-8"))
     )
 
@@ -1416,7 +1421,7 @@ def load_state(job_id: str) -> Optional[dict]:
     path = _state_path(job_id)
 
     try:
-        with default_storage.open(path, "rb") as file:
+        with get_upload_storage().open(path, "rb") as file:
             return json.loads(file.read().decode("utf-8"))
     except (FileNotFoundError, OSError, ValueError):
         return None
@@ -1443,7 +1448,7 @@ def create_job(
 ) -> dict:
     """Store the file and a job for it, and enqueue the task."""
     job_id = str(uuid.uuid4())
-    default_storage.save(_file_path(job_id, file_format), ContentFile(content))
+    get_upload_storage().save(_file_path(job_id, file_format), ContentFile(content))
     state = {
         "id": job_id,
         "user": str(request.user.pk),
@@ -1545,7 +1550,9 @@ def run_job(job_id: str) -> None:
         if view is None or not is_importable(view._admin_model):
             raise ImportFileError(_("This model cannot be imported."))
 
-        with default_storage.open(_file_path(job_id, state["format"]), "rb") as file:
+        with get_upload_storage().open(
+            _file_path(job_id, state["format"]), "rb"
+        ) as file:
             content = file.read()
 
         with translation.override(state.get("language")):
@@ -1585,11 +1592,24 @@ def run_job(job_id: str) -> None:
         delete_job_file(state)
 
 
+def discard_job(state: dict) -> None:
+    """
+    An import the editor left after its check: its file and state are
+    removed now, not when content_studio_clear_uploads runs.
+    """
+    delete_job_file(state)
+
+    try:
+        get_upload_storage().delete(_state_path(state["id"]))
+    except (FileNotFoundError, OSError):
+        pass
+
+
 def delete_job_file(state: dict) -> None:
     path = _file_path(state["id"], state["format"])
 
     try:
-        default_storage.delete(path)
+        get_upload_storage().delete(path)
     except (FileNotFoundError, OSError):
         pass
 

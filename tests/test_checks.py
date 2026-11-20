@@ -818,6 +818,7 @@ def test_valid_webhook_settings_pass():
         {"MEDIA_LIBRARY_ALLOWED_EXTENSIONS": [".jpg"]},
         {"UPLOAD_ALLOWED_EXTENSIONS": "pdf"},
         {"UPLOAD_ALLOWED_EXTENSIONS": [".pdf"]},
+        {"UPLOAD_STORAGE": "nowhere"},
         {"MEDIA_LIBRARY_MAX_UPLOAD_SIZE": 0},
         {"MEDIA_LIBRARY_MAX_UPLOAD_SIZE": "10MB"},
     ],

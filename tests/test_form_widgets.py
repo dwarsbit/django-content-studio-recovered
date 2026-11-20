@@ -310,6 +310,38 @@ class FileWidgetTests(APITestCase):
         assert self.upload(name="archive.ZIP", content=b"PK").status_code == 201
         assert self.upload().status_code == 400
 
+    @override_settings(
+        STORAGES={
+            "default": {"BACKEND": "django.core.files.storage.FileSystemStorage"},
+            "staticfiles": {
+                "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage"
+            },
+            "uploads": {"BACKEND": "django.core.files.storage.InMemoryStorage"},
+        },
+        CONTENT_STUDIO={"UPLOAD_STORAGE": "uploads"},
+    )
+    def test_uploads_wait_in_upload_storage(self):
+        from django.core import signing
+        from django.core.files.storage import storages
+
+        from content_studio.uploads import SALT
+
+        token = self.upload().json()["upload"]
+        path = signing.loads(token, salt=SALT)["path"]
+
+        assert storages["uploads"].exists(path)
+        assert not default_storage.exists(path)
+
+        response = self.client.post(
+            "/api/content/testapp.product",
+            {"title": "Hammer", "slug": "hammer", "manual": {"upload": token}},
+            format="json",
+        )
+
+        assert response.status_code == 201, response.content
+        assert Product.objects.get(slug="hammer").manual.read() == b"%PDF-1.4 manual"
+        assert not storages["uploads"].exists(path)
+
     def test_the_waiting_copy_has_no_extension(self):
         from django.core import signing
 

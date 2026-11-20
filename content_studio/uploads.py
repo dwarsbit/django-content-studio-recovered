@@ -2,7 +2,7 @@
 Temporary uploads for the FileWidget.
 
 The content API takes JSON, so a file picked in a FileWidget is uploaded
-first, on its own: it waits in UPLOAD_FOLDER (in the default storage)
+first, on its own: it waits in UPLOAD_FOLDER (in UPLOAD_STORAGE)
 and the editor gets a signed token for it. The waiting copy has no
 extension, so a web server never serves it as a page. Saving the object sends the
 token as the field's value, and the file is attached to the object then;
@@ -17,7 +17,7 @@ from datetime import timedelta
 from django.core import signing
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File
-from django.core.files.storage import default_storage
+from django.core.files.storage import storages
 from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
 from django.utils.translation import gettext as _
@@ -39,6 +39,14 @@ class TemporaryUpload(File):
     def __init__(self, file, name, temporary_name):
         super().__init__(file, name)
         self.temporary_name = temporary_name
+
+
+def get_upload_storage():
+    """
+    The storage uploads wait in until they are attached, and import files
+    until they are imported: UPLOAD_STORAGE in STORAGES.
+    """
+    return storages[cs_settings.UPLOAD_STORAGE]
 
 
 def upload_key(model, field_name) -> str:
@@ -89,7 +97,7 @@ def save_upload(request, model, model_field, file) -> dict:
     # Without the original name or extension: until the object is saved,
     # the copy is never served under a type a browser renders.
     path = posixpath.join(cs_settings.UPLOAD_FOLDER, uuid.uuid4().hex, "upload")
-    path = default_storage.save(path, file)
+    path = get_upload_storage().save(path, file)
 
     token = signing.dumps(
         {
@@ -123,12 +131,12 @@ def open_upload(request, model, field_name, token) -> TemporaryUpload:
 
     path = data["path"]
 
-    if not default_storage.exists(path):
+    if not get_upload_storage().exists(path):
         raise serializers.ValidationError(
             _("The upload has expired. Choose the file again.")
         )
 
-    return TemporaryUpload(default_storage.open(path), data["name"], path)
+    return TemporaryUpload(get_upload_storage().open(path), data["name"], path)
 
 
 def discard_upload(upload: TemporaryUpload):
@@ -136,7 +144,7 @@ def discard_upload(upload: TemporaryUpload):
     try:
         upload.close()
     finally:
-        default_storage.delete(upload.temporary_name)
+        get_upload_storage().delete(upload.temporary_name)
 
 
 def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
@@ -149,18 +157,18 @@ def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
     removed = 0
 
     try:
-        directories, _files = default_storage.listdir(folder)
+        directories, _files = get_upload_storage().listdir(folder)
     except (FileNotFoundError, NotImplementedError):
         return 0
 
     for directory in directories:
         path = posixpath.join(folder, directory)
 
-        for name in default_storage.listdir(path)[1]:
+        for name in get_upload_storage().listdir(path)[1]:
             file_path = posixpath.join(path, name)
 
             try:
-                modified = default_storage.get_modified_time(file_path)
+                modified = get_upload_storage().get_modified_time(file_path)
             except (NotImplementedError, FileNotFoundError):
                 continue
 
@@ -168,7 +176,7 @@ def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
                 modified = timezone.make_aware(modified)
 
             if modified < cutoff:
-                default_storage.delete(file_path)
+                get_upload_storage().delete(file_path)
                 removed += 1
 
     return removed

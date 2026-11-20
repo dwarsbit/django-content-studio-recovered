@@ -34,6 +34,10 @@ of the box, and the system checks that catch configuration mistakes.
   (`SECURE_CONTENT_TYPE_NOSNIFF`), but media is usually served by the web
   server or the storage: for nginx, `add_header X-Content-Type-Options
   nosniff;` in the media `location`.
+- **Keep uploads waiting to be saved private.** Files picked in a
+  `FileWidget` and import files wait in
+  [`UPLOAD_STORAGE`](/docs/settings#upload_storage), by default the media
+  storage. Give them a storage of their own that is not served.
 - **Clear unsaved uploads daily.** Files picked in a
   [`FileWidget`](/docs/widgets#files) but never saved stay in the upload
   folder until `manage.py content_studio_clear_uploads` removes them. Run it
@@ -118,7 +122,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E011` | `search_fields`, `ordering` and `list_filter` entries that are not a field, and `list_item_display` values that are not a field or a model method. Inlines are checked too. |
 | `content_studio.E012` | An inline's `fk_name` that is not a field, or not a foreign key (or one-to-one field) to the parent model; or no `fk_name` on an inline whose model has no, or more than one, foreign key to the parent. The inline is not served. |
 | `content_studio.E013` | Values in the site's `default_widget_mapping` or `default_format_mapping` that are not widget or format classes or instances. |
-| `content_studio.E014` | A `MEDIA_LIBRARY_ALLOWED_EXTENSIONS` or `UPLOAD_ALLOWED_EXTENSIONS` that is not a list of extensions without the dot, or a `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` that is not a positive number of bytes. |
+| `content_studio.E014` | An `UPLOAD_STORAGE` that is not in `STORAGES`, a `MEDIA_LIBRARY_ALLOWED_EXTENSIONS` or `UPLOAD_ALLOWED_EXTENSIONS` that is not a list of extensions without the dot, or a `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` that is not a positive number of bytes. |
 | `content_studio.E015` | `readonly_fields` entries that are not model fields or properties. Inlines are checked too. |
 | `content_studio.E016` | `prepopulated_fields` that is not a mapping, fields or source fields that are not model fields, fields that cannot be prepopulated (`DateTimeField`, `ForeignKey`, `OneToOneField`, `ManyToManyField`) and fields in `readonly_fields`. Inlines are checked too. |
 | `content_studio.E017` | A `reorder_field` that is not a model field or, unless the studio overrides `reorder`, not a number field, and `reorder_scope` entries that are not model fields. Inlines are checked too. |

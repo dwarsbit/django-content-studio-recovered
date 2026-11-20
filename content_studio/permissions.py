@@ -72,9 +72,13 @@ class ModelStudioPermissions(BasePermission):
                 request
             ) or admin_model.has_add_permission(request)
 
-        if getattr(view, "action", None) == "import_rows":
+        if getattr(view, "action", None) == "import_rows" or (
+            getattr(view, "action", None) == "import_status"
+            and request.method == "DELETE"
+        ):
             # Importing creates and updates objects; each row is checked
-            # for the permission it needs.
+            # for the permission it needs. Discarding a checked file is
+            # part of importing.
             return admin_model.has_add_permission(
                 request
             ) or admin_model.has_change_permission(request)

@@ -83,6 +83,17 @@ export function ImportDialog({
     setStep({ name: "pick" });
   }
 
+  /** Closed by the editor: a checked file left unimported is removed. */
+  function cancel() {
+    if (step.name === "preview" && step.job) {
+      void http
+        .delete(`/content/${model.label}/import/${step.job}`)
+        .catch(() => undefined);
+    }
+
+    close();
+  }
+
   async function check(file: File) {
     abort.current?.abort();
     abort.current = new AbortController();
@@ -261,7 +272,7 @@ export function ImportDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => (next ? onOpenChange(true) : close())}
+      onOpenChange={(next) => (next ? onOpenChange(true) : cancel())}
     >
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
@@ -349,7 +360,7 @@ export function ImportDialog({
         </div>
 
         <DialogFooter>
-          <Button variant="ghost" onClick={close}>
+          <Button variant="ghost" onClick={cancel}>
             {t("common.cancel")}
           </Button>
           {(step.name === "preview" || step.name === "importing") && (

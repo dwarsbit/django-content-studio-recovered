@@ -839,6 +839,18 @@ def media_upload_errors() -> list[tuple[str, str]]:
             )
         )
 
+    from django.core.files.storage import InvalidStorageError, storages
+
+    try:
+        storages[cs_settings.UPLOAD_STORAGE]
+    except (InvalidStorageError, TypeError):
+        errors.append(
+            (
+                "content_studio.E014",
+                f"UPLOAD_STORAGE {cs_settings.UPLOAD_STORAGE!r} is not in STORAGES.",
+            )
+        )
+
     return errors
 
 

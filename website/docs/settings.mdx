@@ -128,9 +128,35 @@ takes precedence over this setting.
 ### UPLOAD_FOLDER {#upload_folder}
 
 Where files picked in a [`FileWidget`](/docs/widgets#files) wait until the
-editor saves, in the default storage. Default:
+editor saves, in [`UPLOAD_STORAGE`](#upload_storage). Default:
 `"content_studio/uploads"`. `content_studio_clear_uploads` removes the
 ones that were never saved.
+
+### UPLOAD_STORAGE {#upload_storage}
+
+The alias in Django's `STORAGES` that files picked in a
+[`FileWidget`](/docs/widgets#files) wait in until the object is saved, and
+[import](/docs/list-page#large-files) files until they are imported.
+Default: `"default"`, the media storage. Their names cannot be guessed, but
+a media storage serves them to anyone with the link until
+`content_studio_clear_uploads` removes them, so a private storage is
+better: one outside `MEDIA_ROOT`, or a bucket with signed URLs.
+`content_studio.E014` reports an alias that is not in `STORAGES`.
+
+```python
+STORAGES = {
+    # ...
+    "uploads": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": "/srv/blog/uploads"},
+    },
+}
+
+CONTENT_STUDIO = {
+    # ...
+    "UPLOAD_STORAGE": "uploads",
+}
+```
 
 ### UPLOAD_ALLOWED_EXTENSIONS {#upload_allowed_extensions}
 
