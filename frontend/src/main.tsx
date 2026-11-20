@@ -1,0 +1,145 @@
+import "@fontsource-variable/inter";
+
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import ReactDOM from "react-dom/client";
+import { createBrowserRouter, RouterProvider } from "react-router";
+
+import { App } from "@/app";
+import { AuthGuard, AuthProvider } from "@/auth";
+import { ThemeProvider } from "@/components/theme-provider";
+import { ForgotPasswordPage } from "@/pages/(auth)/forgot-password/page";
+import { AuthLayout } from "@/pages/(auth)/layout";
+import { LoginPage } from "@/pages/(auth)/login/page";
+import { ResetPasswordPage } from "@/pages/(auth)/reset-password/page";
+import { SetPasswordPage } from "@/pages/(auth)/set-password/page";
+import { DashboardPage } from "@/pages/(studio)/(dashboard)/page";
+import { CatchAllPage } from "@/pages/(studio)/[...slug]/page";
+import { ContentEditorPage } from "@/pages/(studio)/content/[model]/[id]/page";
+import { ModelListLayout } from "@/pages/(studio)/content/[model]/layout";
+import { ContentIndexPage } from "@/pages/(studio)/content/[model]/page";
+import { ContentTrashPage } from "@/pages/(studio)/content/[model]/trash/page";
+import { StudioLayout } from "@/pages/(studio)/layout";
+import { MediaLibraryPage } from "@/pages/(studio)/media-library/[model]/page";
+import { NotificationsPage } from "@/pages/(studio)/notifications/page";
+import { NotificationSettingsPage } from "@/pages/(studio)/notifications/settings/page";
+import { ProfilePage } from "@/pages/(studio)/profile/page";
+import { UIPage } from "@/pages/(studio)/ui/page";
+
+const queryClient = new QueryClient();
+
+// The UI showcase is a development tool: available under the vite dev server
+// and on Django debug deployments (the template sets DCS_DEBUG); production
+// installs never see the route.
+const uiShowcaseEnabled = import.meta.env.DEV || window.DCS_DEBUG === true;
+
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <App />,
+      children: [
+        {
+          element: <AuthGuard />,
+          children: [
+            {
+              element: <StudioLayout />,
+              children: [
+                {
+                  index: true,
+                  element: <DashboardPage />,
+                },
+                {
+                  path: "media-library",
+                  element: <MediaLibraryPage />,
+                },
+                {
+                  path: "notifications",
+                  element: <NotificationsPage />,
+                },
+                {
+                  path: "notifications/settings",
+                  element: <NotificationSettingsPage />,
+                },
+                {
+                  path: "profile",
+                  element: <ProfilePage tab="overview" />,
+                },
+                {
+                  path: "profile/edit",
+                  element: <ProfilePage tab="edit" />,
+                },
+                ...(uiShowcaseEnabled
+                  ? [{ path: "ui", element: <UIPage /> }]
+                  : []),
+                {
+                  path: "content/:model",
+                  element: <ModelListLayout />,
+                  children: [
+                    {
+                      index: true,
+                      element: <ContentIndexPage />,
+                    },
+                    {
+                      path: "new",
+                      element: <ContentEditorPage />,
+                    },
+                    {
+                      path: "trash",
+                      element: <ContentTrashPage />,
+                    },
+                    {
+                      path: ":id",
+                      element: <ContentEditorPage />,
+                    },
+                  ],
+                },
+                {
+                  path: "*",
+                  element: <CatchAllPage />,
+                },
+              ],
+            },
+          ],
+        },
+        {
+          element: <AuthLayout />,
+          children: [
+            {
+              path: "login",
+              element: <LoginPage />,
+            },
+            {
+              path: "forgot-password",
+              element: <ForgotPasswordPage />,
+            },
+            {
+              path: "reset-password",
+              element: <ResetPasswordPage />,
+            },
+            {
+              path: "set-password",
+              element: <SetPasswordPage />,
+            },
+          ],
+        },
+      ],
+    },
+  ],
+  {
+    basename: import.meta.env.PROD
+      ? (window as typeof window & { DCS_BASENAME: string }).DCS_BASENAME
+      : "",
+  },
+);
+
+const root = document.getElementById("root")!;
+
+ReactDOM.createRoot(root).render(
+  <QueryClientProvider client={queryClient}>
+    <AuthProvider>
+      <ThemeProvider>
+        <RouterProvider router={router} />
+      </ThemeProvider>
+    </AuthProvider>
+  </QueryClientProvider>,
+);

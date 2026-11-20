@@ -1,0 +1,342 @@
+# 📊 Dashboard
+
+The dashboard is the admin's start page. You compose it in Python from
+widgets: statistics, lists of content, recent activity and scheduled tasks.
+
+<Screenshot name="dashboard" alt="A dashboard with four statistics, a list of the latest articles, notifications and an activity log" />
+
+## Compose a dashboard
+
+Most widgets get their data from a `get_data(request)` method you write.
+Subclass the built-in widget and implement it:
+
+```python
+# blog/dashboard.py
+from content_studio.dashboard.content_list import ContentListWidget
+from content_studio.dashboard.statistic import StatisticWidget
+
+from .models import Article
+
+
+class PublishedArticlesWidget(StatisticWidget):
+    def get_data(self, request):
+        return {
+            "title": "Published articles",
+            "value": Article.objects.filter(status="published").count(),
+        }
+
+
+class LatestArticlesWidget(ContentListWidget):
+    def get_data(self, request):
+        articles = Article.objects.order_by("-published_at")[:5]
+        return {
+            "title": "Latest articles",
+            "content": [
+                {"model": "blog.article", "id": str(article.pk), "title": article.title}
+                for article in articles
+            ],
+        }
+```
+
+Then give the site a `Dashboard` with the widgets, in the order they
+appear:
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+from content_studio.dashboard import Dashboard
+from content_studio.dashboard.activity_log import ActivityLogWidget
+
+from blog.dashboard import LatestArticlesWidget, PublishedArticlesWidget
+
+
+class BlogStudioSite(ContentStudioSite):
+    dashboard = Dashboard(
+        widgets=[
+            PublishedArticlesWidget(),
+            LatestArticlesWidget(),
+            ActivityLogWidget(),
+        ]
+    )
+
+
+admin_site = BlogStudioSite()
+```
+
+Point the [`ADMIN_SITE`](/docs/settings#admin_site) setting at the site:
+
+```python
+# mysite/settings.py
+CONTENT_STUDIO = {
+    "ADMIN_SITE": "mysite.studio.admin_site",
+}
+```
+
+`get_data` returns a dictionary with the widget's data, or a
+[Django REST Framework](https://www.django-rest-framework.org/api-guide/serializers/)
+serializer that validates it. A widget's `col_span` sets how many grid
+columns it spans.
+
+A widget loads its data when the dashboard opens and when the editor returns
+to the admin. Set `refresh_interval` to reload it every so many seconds
+while it is shown, such as the length of a task queue:
+
+```python
+class QueuedTasksWidget(StatisticWidget):
+    refresh_interval = 10
+
+    def get_data(self, request):
+        return {"title": "Queued tasks", "value": count_queued_tasks()}
+```
+
+`ScheduledTasksWidget` reloads every 10 seconds by default. System check
+`content_studio.E029` reports an interval that is not a positive number.
+
+The start page is not the only dashboard: a
+[`DashboardPage`](/docs/extensions#dashboardpage) adds a page to the admin
+with a dashboard of its own.
+
+## Built-in widgets
+
+- **`StatisticWidget`**: one number with a title. `get_data` returns
+  `value` and, optionally, `title`, `prefix`, `suffix`, a `trend` (a
+  percentage) and a `trend_sentiment` (`"positive"`, `"negative"` or
+  `"default"`). See [Statistics](#statistics) for the formats and extras.
+- **`ContentListWidget`**: a list of links to content. `get_data` returns a
+  `title`, an optional `description` and `content`: items with the `model`
+  label, the object's `id`, a `title` and, optionally, a `description`, a
+  `status` shown as a badge, a `status_variant` that colors it
+  (`"default"`, `"success"`, `"warning"`, `"info"` or `"danger"`), the URL
+  of a `thumbnail` and a `timestamp`, shown relative to now.
+- **`ActivityLogWidget`**: the five latest changes made in the admin. It
+  needs no configuration and only shows changes to models the editor may
+  view. With [multi-tenancy](/docs/multi-tenancy), changes to a tenant's
+  content only show in that tenant, and deletions of that content are not
+  shown.
+- **`ScheduledTasksWidget`**: the status of scheduled tasks, from your task
+  runner. `get_data` returns `tasks`: items with a `title`, `last_run_at`,
+  `next_run_at`, `duration` and a `status` (`"RUNNING"`,
+  `"SCHEDULED"`, `"SUCCESS"` or `"FAILURE"`), and optionally a
+  `description` and an `error_message`. Times and durations that are `None`
+  are left out.
+- **`WebhookDeliveriesWidget`**: each webhook with its latest delivery, from
+  the [webhooks app](/docs/webhooks#a-deploy-button-and-a-dashboard-widget).
+- **`NotificationsWidget`**: the editor's latest notifications, from the
+  [notifications app](/docs/notifications#a-dashboard-widget).
+- **`SpacingWidget(col_span)`**: empty space, to align the grid.
+
+Your own widgets subclass one of these: the admin can only show the built-in
+widget types. System check `content_studio.W012` reports a widget that does
+not.
+
+## Statistics
+
+A `StatisticWidget` shows its value compact and in the editor's language:
+1,234 shows as 1.2K and 45,940 as 45.9K, with the exact value on hover.
+Set `number_format` to show it otherwise:
+
+- `"compact"` (the default): large numbers shortened, with one decimal.
+- `"full"`: every digit, grouped (45,940).
+- `"percent"`: the value as a percentage, so 91 shows as 91%.
+- `"currency"`: an amount in `currency`, a three-letter code such as
+  `"EUR"`; compact from 1,000 on.
+
+The value may be a whole number or a decimal. A statistic also takes these
+optional fields:
+
+- `icon`: a [Phosphor](https://phosphoricons.com/) icon class, such as
+  `"ph-bold ph-eye"`, shown next to the title.
+- `trend_label`: what the `trend` compares with, such as "vs last month".
+- `footnote`: a short line under the value.
+- `series`: a list of numbers, oldest first, drawn as a sparkline.
+- `max_value`: draws a meter of the value against it, such as a goal.
+
+```python
+# blog/dashboard.py
+from datetime import timedelta
+
+from django.utils import timezone
+
+from content_studio.dashboard.statistic import StatisticWidget
+
+from .models import Article
+
+
+class RecentlyPublishedWidget(StatisticWidget):
+    def get_data(self, request):
+        today = timezone.localdate()
+        published = Article.objects.filter(status="published")
+        days = [today - timedelta(days=n) for n in range(29, -1, -1)]
+        return {
+            "title": "Published, last 30 days",
+            "value": published.filter(published_at__date__gte=days[0]).count(),
+            "icon": "ph-bold ph-check-circle",
+            "trend": 12.5,
+            "trend_sentiment": "positive",
+            "trend_label": "vs last month",
+            # Articles published per day, oldest first.
+            "series": [published.filter(published_at__date=day).count() for day in days],
+        }
+```
+
+## Task dashboard
+
+`TaskDashboard` is a [dashboard page](/docs/extensions#dashboardpage) with
+the state of your task backend: a statistic tile per number, the periodic
+tasks with their latest run, and the latest runs. Content Studio does not
+know your backend. You connect it with an adapter: a subclass of
+`TaskAdapter` that implements the methods your backend supports.
+
+<Screenshot name="tasks" alt="The task dashboard with queued, running, succeeded and failed counts, periodic tasks and recent runs" />
+
+```python
+# mysite/tasks_dashboard.py
+from content_studio.dashboard.tasks import (
+    TaskAdapter,
+    TaskRow,
+    TaskStatistic,
+    TaskStatus,
+)
+
+
+class QueueAdapter(TaskAdapter):
+    statistics = ("queued", "running", "succeeded", "failed")
+
+    def get_statistics(self, request):
+        counts = my_queue.counts()
+        return {key: TaskStatistic(counts[key]) for key in self.statistics}
+
+    def get_recent_tasks(self, request, limit):
+        return [
+            TaskRow(
+                title=run.name,
+                status=TaskStatus.SUCCESS if run.ok else TaskStatus.FAILURE,
+                last_run_at=run.finished_at,
+                duration=run.seconds,
+                error_message=run.error,
+            )
+            for run in my_queue.latest_runs(limit)
+        ]
+```
+
+Add the page to the site's extensions, with a menu link to its path:
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+from content_studio.dashboard.tasks import TaskDashboard
+from content_studio.extensions import UserMenuLink
+
+from .tasks_dashboard import QueueAdapter
+
+
+class BlogStudioSite(ContentStudioSite):
+    extensions = [
+        TaskDashboard(adapter=QueueAdapter()),
+        UserMenuLink(url="/tasks/", label="Tasks", icon="ph-bold ph-queue"),
+    ]
+```
+
+The page lives at `tasks/` with the title "Tasks"; pass `path`, `title` and
+`description` to change them. Its widgets reload every 10 seconds.
+
+An adapter implements any of these methods. The page leaves out the
+widgets of the ones it does not implement.
+
+- **`get_statistics(request)`**: a dictionary from statistic key to a
+  `TaskStatistic(value, trend=None)`, for every key in the adapter's
+  `statistics`. The keys are `queued`, `scheduled`, `running`,
+  `succeeded`, `failed` and `retried`; tiles show in the order of
+  `statistics`. `succeeded`, `failed` and `retried` count over the
+  adapter's `window` (24 hours by default), which shows in their title.
+  `trend` is a change in percent; a rise in failures shows as bad news.
+- **`get_periodic_tasks(request)`**: a list of `TaskRow`, one per task that
+  runs on a schedule, with its latest run and its next.
+- **`get_recent_tasks(request, limit)`**: a list of at most `limit`
+  `TaskRow`, the latest first.
+
+A `TaskRow` has a `title` and a `status` (a `TaskStatus`), and optionally a
+`description`, `last_run_at`, `next_run_at`, a `duration` in seconds and an
+`error_message`.
+
+:::caution
+Task names and error messages can reveal how your project works. Only
+superusers see the task dashboard; override `is_visible(request)` on a
+subclass to show it to more users.
+:::
+
+The page is built from two widgets that also work on any other dashboard,
+such as the start page: `TaskStatisticWidget(adapter, statistic)` and
+`TaskListWidget(adapter, kind)`, where `kind` is `"periodic"` or
+`"recent"`. Override `get_widgets()` on a `TaskDashboard` subclass to
+change its layout. When a site uses two adapters of the same class, such as
+for two queues, override the adapter's `get_id()` so their widgets get
+different IDs.
+
+An adapter can report problems with its setup by overriding `check()`: it
+returns a list of `(check_id, message)` pairs, which the system checks show
+as warnings.
+
+### Huey
+
+Content Studio ships an adapter for [Huey](https://huey.readthedocs.io/):
+`HueyAdapter` in `content_studio.contrib.huey`. Install it with the `huey`
+extra:
+
+```bash
+pip install "django-content-studio[huey]"
+```
+
+Add the page with a menu link, and Huey's stats app to `INSTALLED_APPS`:
+
+```python
+# mysite/settings.py
+INSTALLED_APPS = [
+    # ...
+    "huey.contrib.djhuey",
+    "huey.contrib.djhuey.stats",
+    "content_studio",
+]
+```
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+from content_studio.contrib.huey import HueyAdapter
+from content_studio.dashboard.tasks import TaskDashboard
+from content_studio.extensions import UserMenuLink
+
+
+class BlogStudioSite(ContentStudioSite):
+    extensions = [
+        TaskDashboard(adapter=HueyAdapter()),
+        UserMenuLink(url="/tasks/", label="Tasks", icon="ph-bold ph-queue"),
+    ]
+```
+
+The adapter reports djhuey's `HUEY`; pass `HueyAdapter(huey=...)` for
+another Huey instance. The page shows:
+
+- **Statistics**: the queued and scheduled tasks, from Huey's storage; and
+  the running tasks and the succeeded, failed and retried runs of the last
+  24 hours, from the stats app. Pass `statistics` to show fewer, and
+  `window` to count over another period.
+- **Periodic tasks**: every periodic task with its latest run and its next
+  one. Huey cannot describe a schedule, so the description is the first
+  line of the task's docstring, or its module. Override
+  `get_task_description(task_class)` to describe the schedules yourself.
+- **Recent runs**: the latest runs the workers finished. Runs that ended
+  without completing, such as revoked, expired or locked ones, show as
+  failed, with the reason. Django tasks run by Huey's Django tasks backend,
+  such as [webhook](/docs/webhooks) deliveries, show under their own name.
+
+Huey's stats app records what the workers do; without it, the page only
+shows the queued and scheduled tasks, and the periodic tasks without their
+runs, and system check `content_studio.W020` warns. The stats app keeps
+48 hours and at most 2000 events by default (its `HUEY_STATS` setting);
+on a busy queue, the counts cover less than the window.
+
+## Two widgets of the same class
+
+Give each an explicit `widget_id` (a UUID) to tell them apart;
+`manage.py check` reports duplicates.

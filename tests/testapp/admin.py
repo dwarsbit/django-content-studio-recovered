@@ -1,0 +1,198 @@
+from content_studio import register
+from content_studio.actions import bulk_action
+from content_studio.admin import InlineModelStudio, ModelStudio
+from content_studio.form import FormSet, TableColumn
+
+from .models import (
+    Attachment,
+    Article,
+    Category,
+    Coupon,
+    Edition,
+    Event,
+    Label,
+    LandingPage,
+    Note,
+    Page,
+    Part,
+    Product,
+    ProductComment,
+    ProductSupplier,
+    Review,
+    Shelf,
+    SiteSettings,
+    Step,
+    Track,
+)
+
+
+class ReviewInline(InlineModelStudio):
+    model = Review
+
+
+class StepInline(InlineModelStudio):
+    model = Step
+    table_display = ["text"]
+    reorder_field = "order_key"
+
+
+@register(Category)
+class CategoryAdmin(ModelStudio):
+    table_display = ["id", "name"]
+    search_fields = ["name"]
+
+
+@register(Article)
+class ArticleAdmin(ModelStudio):
+    table_display = [
+        "id",
+        "title",
+        "status",
+        "published_at",
+        "views",
+        TableColumn(field="get_body_preview", header="Preview"),
+    ]
+    list_views = ["table", "list"]
+    list_item_display = {
+        "title": "title",
+        "description": "body",
+        "meta": "get_status_display",
+    }
+    list_filter = ["status", "published_at"]
+    search_fields = ["title"]
+    inlines = [ReviewInline, StepInline]
+    edit_main = [
+        FormSet(
+            title="Content",
+            description="The article itself",
+            fields=["title", "body", "status"],
+        ),
+    ]
+    edit_sidebar = ["published_at", "rating", "author"]
+
+    @bulk_action(
+        label="Publish",
+        icon="ph-bold ph-paper-plane-tilt",
+        allowed_permissions=["change"],
+    )
+    def publish(self, request, queryset):
+        count = queryset.update(status=Article.Status.PUBLISHED)
+        return f"Published {count} articles."
+
+    def get_body_preview(self, obj, request):
+        return obj.body[:50] if obj.body else ""
+
+
+@register(SiteSettings)
+class SiteSettingsAdmin(ModelStudio):
+    is_singleton = True
+    edit_main = ["site_name", "tagline"]
+
+
+@register(Note)
+class NoteAdmin(ModelStudio):
+    table_display = ["id", "title"]
+    sortable_by = ["title"]
+    soft_delete = "removed_at"
+
+
+class AttachmentInline(InlineModelStudio):
+    model = Attachment
+    table_display = ["name"]
+
+
+@register(Page)
+class PageAdmin(ModelStudio):
+    table_display = ["id", "title"]
+    prepopulated_fields = {"slug": ["title"]}
+    soft_delete = "removed_at"
+    inlines = [AttachmentInline]
+
+
+@register(Label)
+class LabelAdmin(ModelStudio):
+    table_display = ["code", "name"]
+    search_fields = ["name"]
+
+
+@register(Track)
+class TrackAdmin(ModelStudio):
+    table_display = ["id", "title", "position"]
+    list_filter = ["category", "title"]
+    search_fields = ["title"]
+    soft_delete = "removed_at"
+    reorder_field = "position"
+    reorder_scope = ["category"]
+
+
+@register(LandingPage)
+class LandingPageAdmin(ModelStudio):
+    table_display = ["title"]
+
+
+class PartInline(InlineModelStudio):
+    model = Part
+
+
+class ProductSupplierInline(InlineModelStudio):
+    model = ProductSupplier
+
+
+class ProductCommentInline(InlineModelStudio):
+    model = ProductComment
+
+
+@register(Product)
+class ProductAdmin(ModelStudio):
+    table_display = ["title"]
+    allow_duplication = True
+    inlines = [PartInline, ProductSupplierInline, ProductCommentInline]
+    duplicate_inlines = [PartInline, ProductSupplierInline]
+    readonly_fields = ["internal_note"]
+    exclude = ["secret"]
+    soft_delete = "removed_at"
+
+
+@register(Edition)
+class EditionAdmin(ModelStudio):
+    table_display = ["title"]
+    soft_delete = "removed_at"
+
+
+@register(Event)
+class EventAdmin(ModelStudio):
+    table_display = ["title", "status", "starts_at"]
+    list_filter = ["status"]
+    search_fields = ["title"]
+    exclude = ["secret"]
+    soft_delete = "removed_at"
+    export_fields = [
+        "title",
+        "status",
+        "category",
+        "tags",
+        "starts_at",
+        "day",
+        "price",
+        "attendees",
+        "is_public",
+        "notes",
+        "keywords",
+        "details",
+        TableColumn(field="get_summary", header="Summary"),
+    ]
+
+    def get_summary(self, obj, request):
+        return f"{obj.title} ({obj.attendees})"
+
+
+@register(Shelf)
+class ShelfAdmin(ModelStudio):
+    table_display = ["title"]
+    search_fields = ["title"]
+
+
+@register(Coupon)
+class CouponAdmin(ModelStudio):
+    table_display = ["code"]
+    soft_delete = "removed_at"

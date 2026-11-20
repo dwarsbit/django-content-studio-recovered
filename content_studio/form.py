@@ -1,0 +1,661 @@
+###
+# Form field classes are used for grouping, ordering and laying out fields.
+###
+import uuid
+from dataclasses import dataclass
+from typing import Any, Optional, Sequence, Type, Union
+
+from django.db.models import Model
+from django.utils.translation import gettext_lazy as _
+from rest_framework.response import Response
+
+from . import conditions
+from .conditions import Condition, When
+from .utils import as_instance, derive_uuid
+from ._types import StrOrPromise
+
+__all__ = [
+    "ActivityLog",
+    "Button",
+    "ButtonLink",
+    "ButtonResult",
+    "Callout",
+    "Component",
+    "Condition",
+    "Field",
+    "FieldLayout",
+    "FormSet",
+    "FormSetGroup",
+    "Link",
+    "SEOPreview",
+    "Subtitle",
+    "TableColumn",
+    "Text",
+    "Title",
+]
+
+
+class Field:
+    """
+    Field class for configuring the fields in content edit views in Django Content Studio.
+    """
+
+    def __init__(
+        self,
+        name: str,
+        col_span: int = 1,
+        label: StrOrPromise | None = None,
+        readonly: bool = False,
+        widget: Union[Type, object] | None = None,
+        when: When = None,
+    ):
+        self.name = name
+        self.col_span = col_span
+        self.label = label
+        self.readonly = readonly
+        # The widget rendering the field: a widget class, or an
+        # instance carrying options. None falls back to the field
+        # type's default widget.
+        self.widget = widget
+        # When the field shows: a Q object or Condition over the form's
+        # values. A hidden field is not saved: its value stays as it is.
+        conditions.validate(when, f"Field({name!r})")
+        self.when = when
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "type": "field",
+            "name": self.name,
+            "col_span": self.col_span,
+            "label": self.label,
+            "readonly": self.readonly,
+            "widget": as_instance(self.widget).serialize() if self.widget else None,
+            "when": conditions.serialize(self.when),
+        }
+
+
+class FieldLayout:
+    """
+    Field layout class for configuring the layout of fields in content edit views in Django Content Studio.
+    """
+
+    def __init__(self, fields: Sequence[str | Field] | None = None, columns: int = 1):
+        self.fields = [self._normalize_field(f) for f in fields] if fields else []
+        self.columns = columns
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "type": "field-layout",
+            "fields": [field.serialize() for field in self.fields],
+            "columns": self.columns,
+        }
+
+    def get_fields(self) -> list[Field]:
+        return self.fields
+
+    def _normalize_field(self, field):
+        """
+        Checks if a field is of an allowed type and wraps string fields in a Field object.
+        """
+        if isinstance(field, str):
+            return Field(field)
+        elif isinstance(field, Field):
+            return field
+        else:
+            raise ValueError(f"Invalid field: {field}. Must be a string or Field.")
+
+
+class TableColumn:
+    """
+    Column of a table view. A plain field name renders the field's
+    values; a method name on the model studio renders the method's
+    return value through the column's format.
+
+    Method values must be JSON-safe types the format understands:
+    strings for text-like formats, numbers for NumberFormat, ISO
+    strings for the date and time formats.
+    """
+
+    def __init__(
+        self,
+        field: str,
+        header: StrOrPromise | None = None,
+        format: Union[Type, object] | None = None,
+    ):
+        self.field = field
+        # The column header. None uses the field's verbose name and
+        # leaves method columns unlabeled.
+        self.header = header
+        # The format rendering the column's values: a format class, or
+        # an instance carrying options. None falls back to the field
+        # type's default format (TextFormat for methods).
+        self.format = format
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "name": self.field,
+            "header": self.header,
+            "format": as_instance(self.format).serialize() if self.format else None,
+        }
+
+
+class FormSet:
+    """
+    Formset class for configuring the blocks of fields in content edit views
+    in Django Content Studio.
+    """
+
+    def __init__(
+        self,
+        title: StrOrPromise = "",
+        description: StrOrPromise = "",
+        fields: Sequence["FormSetItem"] | None = None,
+        when: When = None,
+    ):
+        self.title = title
+        self.description = description
+        self.fields = [self._normalize_field(f) for f in fields] if fields else []
+        # When the form set shows; its fields are not saved while hidden.
+        conditions.validate(when, f"FormSet({title!r})")
+        self.when = when
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "type": "form-set",
+            "title": self.title,
+            "description": self.description,
+            "fields": [field.serialize() for field in self.fields],
+            "when": conditions.serialize(self.when),
+        }
+
+    def get_fields(self) -> list[Field]:
+        """
+        Returns a list of all Field and Component objects.
+        """
+        fields = []
+
+        for field in self.fields:
+            if isinstance(field, FieldLayout):
+                fields = fields + field.get_fields()
+            else:
+                fields.append(field)
+
+        return fields
+
+    def _normalize_field(self, field):
+        """
+        Checks if a field is of an allowed type and wraps string fields in a Field object.
+        """
+        if isinstance(field, str):
+            return Field(field)
+        elif isinstance(field, Field):
+            return field
+        elif isinstance(field, FieldLayout):
+            return field
+        elif issubclass(field.__class__, Component):
+            return field
+        else:
+            raise ValueError(
+                f"Invalid field: {field}. Must be a string, Field, FieldLayout or a Component (subclass)."
+            )
+
+
+class FormSetGroup:
+    """
+    Formset group class for configuring the groups of form sets in content edit views.
+    """
+
+    def __init__(
+        self,
+        label: StrOrPromise = "",
+        formsets: Sequence[FormSet] | None = None,
+        when: When = None,
+    ):
+        self.label = label
+        self.formsets = formsets or []
+        # When the tab shows; its fields are not saved while hidden.
+        conditions.validate(when, f"FormSetGroup({label!r})")
+        self.when = when
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "type": "form-set-group",
+            "label": self.label,
+            "formsets": [formset.serialize() for formset in self.formsets],
+            "when": conditions.serialize(self.when),
+        }
+
+    def get_fields(self) -> list[Field]:
+        """
+        Returns a list of all Field and Component objects.
+        """
+        fields = []
+
+        for form_set in self.formsets:
+            fields = fields + form_set.get_fields()
+
+        return fields
+
+
+class Component:
+    component_id: uuid.UUID
+    component_type: str
+    # When the component shows: a Q object or Condition over the form's
+    # values; None shows it always. Set it as a class attribute, or pass
+    # when= to the components that take it.
+    when: When = None
+
+    def __init__(
+        self, component_id: uuid.UUID | str | None = None, *, when: When = None
+    ):
+        """
+        The component ID is derived deterministically from the class and
+        its ID parts, so all workers agree on it. Pass an explicit UUID
+        to disambiguate components that share these.
+        """
+        if when is not None:
+            self.when = when
+
+        conditions.validate(self.when, self.__class__.__name__)
+
+        if component_id is not None:
+            self.component_id = uuid.UUID(str(component_id))
+        else:
+            self.component_id = derive_uuid(
+                self.__class__.__module__,
+                self.__class__.__qualname__,
+                *self.get_id_parts(),
+            )
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        """
+        Return the properties that define this component's identity.
+
+        The parts feed the derived component ID, so every component
+        should override this to return the values that distinguish it.
+        Note that the method is called from __init__: only use
+        attributes that are set before calling super().__init__().
+        Components sharing their parts get the same ID and are rejected
+        at setup.
+        """
+        return ()
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "type": "component",
+            "component_type": str(self.component_type),
+            "component_id": str(self.component_id),
+            "when": conditions.serialize(self.when),
+        }
+
+
+# What a FormSet's fields hold.
+FormSetItem = Union[str, Field, FieldLayout, Component]
+
+# What a studio's edit_sidebar holds: form sets, or the fields of one.
+EditSidebarItem = Union[FormSet, FormSetItem]
+
+# What a studio's edit_main holds: form set groups (tabs), form sets,
+# or the fields of one.
+EditMainItem = Union[FormSetGroup, FormSet, FormSetItem]
+
+
+class Link(Component):
+    component_type = "Link"
+    label: StrOrPromise
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.label,)
+
+    # obj is Any in the hooks projects override, so an override may
+    # name its own model: def get_url(self, obj: Article, request).
+    def get_url(self, obj: Any, request) -> str:
+        raise NotImplementedError
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "label": self.label,
+        }
+
+    def handle_request(self, obj: Model, request) -> Any:
+        return Response(data={"url": self.get_url(obj, request)})
+
+
+class ButtonLink(Link):
+    component_type = "LinkButton"
+
+    # Add icon before label
+    icon: Optional[str] = None
+
+    # Add copy to clipboard button
+    copy: bool = False
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "icon": self.icon,
+            "copy": self.copy,
+        }
+
+
+@dataclass
+class ButtonResult:
+    """
+    What a button reports back to the editor: a message shown as a
+    notification, and optionally a value shown once in a dialog with a
+    copy button (such as a newly generated secret).
+    """
+
+    message: Optional[StrOrPromise] = None
+    value: Optional[str] = None
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "message": None if self.message is None else str(self.message),
+            "value": self.value,
+        }
+
+
+class Button(Component):
+    """
+    A button on the edit page that runs handle() on the server for the
+    object being edited:
+
+        class PublishButton(Button):
+            label = _("Publish")
+            icon = "ph-bold ph-paper-plane-tilt"
+            confirm = _("Publish this article?")
+            allowed_permissions = ["change"]
+
+            def handle(self, obj, request):
+                obj.status = Article.Status.PUBLISHED
+                obj.save(update_fields=["status"])
+                return _("Published.")
+
+    handle returns None, a message (shown as a notification) or a
+    ButtonResult. allowed_permissions gates the button on the studio's
+    has_<permission>_permission for the object, any one of them being
+    enough; by default the button needs change permission. An empty
+    list opens it to anyone who can view the object. is_visible hides
+    it per object. Buttons only show on saved objects.
+    """
+
+    component_type = "Button"
+    label: StrOrPromise
+    icon: Optional[str] = None
+    # A question to confirm before the button runs.
+    confirm: Optional[StrOrPromise] = None
+    # Shown in the destructive style.
+    destructive: bool = False
+    allowed_permissions: Union[list[str], tuple[str, ...]] = ("change",)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.label,)
+
+    def is_visible(self, obj: Any, request) -> bool:
+        return True
+
+    def is_allowed(self, studio, obj: Model, request) -> bool:
+        """Whether the request may see and run the button on obj."""
+        allowed = not self.allowed_permissions or any(
+            getattr(studio, f"has_{permission}_permission")(request, obj)
+            for permission in self.allowed_permissions
+        )
+
+        return allowed and self.is_visible(obj, request)
+
+    def handle(self, obj: Any, request) -> Union[None, StrOrPromise, ButtonResult]:
+        raise NotImplementedError("A button needs a handle(obj, request) method.")
+
+    def run(self, obj: Model, request) -> ButtonResult:
+        result = self.handle(obj, request)
+
+        if isinstance(result, ButtonResult):
+            return result
+
+        return ButtonResult(message=result)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "label": str(self.label),
+            "icon": self.icon,
+            "confirm": None if self.confirm is None else str(self.confirm),
+            "destructive": self.destructive,
+        }
+
+
+class ActivityLog(Component):
+    """
+    The object's activity log, rendered in the edit view where the
+    component is placed (usually the sidebar): the additions, changes
+    and deletions recorded for the object, most recent first. The
+    frontend fetches the entries through the generated API's activity
+    endpoint, so the component itself handles no requests.
+    """
+
+    component_type = "ActivityLog"
+
+    def __init__(self, title=None, component_id=None, *, when=None):
+        # Set before super().__init__(): get_id_parts() reads it.
+        self.title = title or _("Activity")
+        super().__init__(component_id, when=when)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.title,)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "title": str(self.title),
+        }
+
+
+class BaseText(Component):
+    """
+    The base of the display-only text components (Title, Subtitle, Text
+    and Callout): text shown on the edit page, not an input.
+
+    The text is static (passed in or set as a class attribute), or
+    computed for the object being edited by overriding
+    get_text(obj, request). Per-object text is fetched through the
+    component's endpoint, so it only shows once the object is saved.
+    """
+
+    text: Optional[StrOrPromise] = None
+
+    def __init__(self, text=None, *, component_id=None, when=None):
+        # Set before super().__init__(): get_id_parts() reads it.
+        if text is not None:
+            self.text = text
+
+        if self.text is None and not self.per_object:
+            raise ValueError(
+                f"{self.__class__.__name__} needs a text, or a "
+                "get_text(obj, request) method."
+            )
+
+        super().__init__(component_id, when=when)
+
+    @property
+    def per_object(self) -> bool:
+        """Whether the text comes from an overridden get_text."""
+        return type(self).get_text is not BaseText.get_text
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return ("" if self.text is None else str(self.text),)
+
+    def get_text(self, obj: Any, request) -> Optional[StrOrPromise]:
+        return self.text
+
+    def handle_request(self, obj: Model, request) -> Any:
+        text = self.get_text(obj, request)
+
+        return Response(data={"text": None if text is None else str(text)})
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            # Per-object text is fetched from the component's endpoint.
+            "text": None if self.per_object else str(self.text),
+            "per_object": self.per_object,
+        }
+
+
+class Title(BaseText):
+    """A heading on the edit page. Plain text."""
+
+    component_type = "Title"
+
+
+class Subtitle(BaseText):
+    """A smaller heading on the edit page. Plain text."""
+
+    component_type = "Subtitle"
+
+
+class Text(BaseText):
+    """A paragraph of text on the edit page, written in Markdown."""
+
+    component_type = "Text"
+
+
+CALLOUT_VARIANTS = ("info", "success", "warning", "danger")
+
+
+class Callout(BaseText):
+    """
+    Highlighted text on the edit page, written in Markdown, with an
+    optional title. The variant (info, success, warning or danger) sets
+    the color and the default icon; icon replaces the icon with a
+    Phosphor icon class, such as "ph-bold ph-lightbulb".
+    """
+
+    component_type = "Callout"
+    title: Optional[StrOrPromise] = None
+    variant: str = "info"
+    icon: Optional[str] = None
+
+    def __init__(
+        self,
+        text=None,
+        *,
+        title=None,
+        variant=None,
+        icon=None,
+        component_id=None,
+        when=None,
+    ):
+        # Set before super().__init__(): get_id_parts() reads them.
+        if title is not None:
+            self.title = title
+
+        if variant is not None:
+            self.variant = variant
+
+        if icon is not None:
+            self.icon = icon
+
+        if self.variant not in CALLOUT_VARIANTS:
+            raise ValueError(
+                f"Callout variant must be one of {', '.join(CALLOUT_VARIANTS)}, "
+                f"not {self.variant!r}."
+            )
+
+        super().__init__(text, component_id=component_id, when=when)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (
+            *super().get_id_parts(),
+            "" if self.title is None else str(self.title),
+        )
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "title": None if self.title is None else str(self.title),
+            "variant": self.variant,
+            "icon": self.icon,
+        }
+
+
+class SEOPreview(Component):
+    """
+    A search-result snippet of the object being edited, as the editor
+    types: the value of title_field, the value of description_field
+    under it, and the page's URL, base_url joined with the value of
+    path_field (a slug or a URL path). site_name shows above the URL.
+    Titles over 60 characters and descriptions over 160 are cut off the
+    way search engines cut them, with a note.
+    """
+
+    component_type = "SEOPreview"
+    title_field: Optional[str] = None
+    description_field: Optional[str] = None
+    base_url: Optional[str] = None
+    path_field: Optional[str] = None
+    site_name: Optional[StrOrPromise] = None
+
+    def __init__(
+        self,
+        *,
+        title_field=None,
+        description_field=None,
+        base_url=None,
+        path_field=None,
+        site_name=None,
+        component_id=None,
+        when=None,
+    ):
+        # Set before super().__init__(): get_id_parts() reads them.
+        if title_field is not None:
+            self.title_field = title_field
+
+        if description_field is not None:
+            self.description_field = description_field
+
+        if base_url is not None:
+            self.base_url = base_url
+
+        if path_field is not None:
+            self.path_field = path_field
+
+        if site_name is not None:
+            self.site_name = site_name
+
+        for name in ("title_field", "description_field", "path_field"):
+            value = getattr(self, name)
+
+            if value is not None and (not isinstance(value, str) or not value):
+                raise TypeError(
+                    f"SEOPreview {name} must be a field name; got {value!r}."
+                )
+
+        if self.title_field is None:
+            raise ValueError("SEOPreview needs a title_field.")
+
+        if self.base_url is not None and not isinstance(self.base_url, str):
+            raise TypeError(
+                f"SEOPreview base_url must be a string; got {self.base_url!r}."
+            )
+
+        super().__init__(component_id, when=when)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (
+            self.title_field,
+            self.description_field or "",
+            self.base_url or "",
+            self.path_field or "",
+        )
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "title_field": self.title_field,
+            "description_field": self.description_field,
+            "base_url": self.base_url,
+            "path_field": self.path_field,
+            "site_name": None if self.site_name is None else str(self.site_name),
+        }

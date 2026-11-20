@@ -1,0 +1,141 @@
+@reference "@/index.css";
+
+.rich-text-field {
+  @apply focus:outline-none p-4 min-h-[400px] font-normal text-foreground;
+
+  & h1 {
+    @apply mt-8 mb-6 text-4xl font-bold;
+  }
+
+  & h2 {
+    @apply mt-6 mb-4 text-3xl font-bold;
+  }
+
+  & h3 {
+    @apply mt-0 mb-2 text-2xl font-bold;
+  }
+
+  & h4 {
+    @apply mt-0 mb-2 text-xl font-bold;
+  }
+
+  & h5 {
+    @apply mt-0 mb-2 text-lg font-bold;
+  }
+
+  & h6 {
+    @apply mt-0 mb-2 text-base font-bold;
+  }
+
+  & p {
+    @apply mb-3;
+  }
+
+  & blockquote {
+    @apply border-l-2 border-border border-solid border-0 mx-0 px-4 text-muted-foreground;
+  }
+
+  & a {
+    @apply underline;
+  }
+
+  & ul {
+    @apply list-disc ml-8;
+
+    p {
+      @apply mb-0;
+    }
+  }
+
+  & ol {
+    @apply list-decimal ml-8;
+  }
+
+  & .rich-text-figure {
+    @apply relative my-6 mx-auto;
+
+    & img {
+      @apply block w-full h-auto rounded-md;
+    }
+
+    & figcaption,
+    & .figcaption {
+      @apply mt-2 mb-0 text-sm text-muted-foreground text-center;
+    }
+
+    & .figcaption.is-empty::before {
+      content: attr(data-placeholder);
+      @apply text-muted-foreground/60 pointer-events-none;
+    }
+
+    &.align-center {
+      @apply max-w-[480px];
+    }
+
+    &.align-left {
+      @apply float-left w-[240px] max-w-[45%] mr-6 mt-1 mb-3;
+
+      & figcaption,
+      & .figcaption {
+        @apply text-left;
+      }
+    }
+
+    &.align-wide {
+      @apply w-full clear-both;
+    }
+
+    &.is-selected img {
+      @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+    }
+  }
+
+  & .tableWrapper {
+    @apply my-4 overflow-x-auto clear-both;
+  }
+
+  & table {
+    @apply w-full border-collapse text-sm;
+
+    & th,
+    & td {
+      @apply border border-border px-3 py-2 text-left align-top min-w-[80px] relative;
+
+      & p {
+        @apply mb-0;
+      }
+    }
+
+    & th {
+      @apply bg-muted font-semibold;
+    }
+
+    & .selectedCell::after {
+      content: "";
+      @apply absolute inset-0 bg-primary/10 pointer-events-none;
+    }
+  }
+
+  /* Links to objects in the studio, as opposed to web addresses. */
+  & a[data-link-model] {
+    @apply decoration-dotted;
+  }
+
+  /* A floated image never sticks out of the editor. */
+  &::after {
+    content: "";
+    @apply block clear-both;
+  }
+
+  /* Images that are not from the media library, such as pasted ones. */
+  & .rich-text-image {
+    @apply block max-w-full h-auto rounded-md my-4;
+
+    &.ProseMirror-selectednode {
+      @apply ring-2 ring-ring ring-offset-2 ring-offset-background;
+    }
+  }
+}
+.richt-text-button {
+  @apply bg-transparent hover:bg-secondary border-none h-full flex items-center justify-center cursor-pointer min-w-[32px];
+}

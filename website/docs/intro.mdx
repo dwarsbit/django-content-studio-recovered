@@ -1,0 +1,62 @@
+# 🎯 Introduction
+
+Django Content Studio is a modern alternative to the classic Django admin,
+with batteries included. Register a model and it becomes manageable in the
+admin: with a list page, search, filters, an edit page with dedicated
+widgets, inlines, a dashboard and a media library.
+
+<Screenshot name="dashboard" alt="The dashboard of a magazine site in Content Studio, with statistics, the latest articles, notifications and recent activity" />
+
+## What you get
+
+- **Your models, as they are.** Like the classic Django admin, Content
+  Studio manages the models you already have. There is nothing to migrate
+  to and no content model to adopt.
+- **A complete admin for every registered model.** List pages with search,
+  filters and ordering, and edit pages with validation, inlines and audit
+  stamps. Access follows the same permission hooks as the classic Django
+  admin, including per-object checks.
+- **Dedicated widgets.** Fields are edited with widgets for dates, rich
+  text, tags, media and structured JSON, and edit pages are laid out with
+  form sets and field layouts.
+- **A dashboard** with statistics, content lists, recent activity and
+  scheduled tasks, declared in Python.
+- **A media library** with folders, uploads and image crops, on the media
+  model you choose.
+- **Collaboration**: notifications about other editors' changes, presence
+  avatars on the objects others have open, and a command palette to jump
+  anywhere.
+- **Webhooks** that rebuild a static site or notify another service after
+  editors change content.
+- **Multi-tenancy**: one hook decides which tenants an editor may work in,
+  and every page is scoped to the selected tenant.
+- **Batteries included.** Optional fields such as `HTMLField`, `TagField`
+  and `FlexField`, and base models such as `ContentModel` and
+  `SingletonModel`, for content-driven projects.
+
+## What it is not
+
+Content Studio does not render your website. It manages content, the way
+the classic Django admin does. The built-in fields and models are optional:
+everything also works with plain Django models and fields.
+
+## Requirements
+
+- Python 3.12 or later
+- Django 5.2, 6.0 or 6.1
+
+## See also
+
+- [Django Headless](https://djangoheadless.org), if you need an API for
+  your own clients.
+- [DjangoStack](https://djangostack.org), if you want a ready-to-run
+  project with Content Studio, Django Headless and a frontend from one
+  command.
+
+## Next steps
+
+Start with [installation](/docs/getting-started), then read about
+[registering models](/docs/registering-models) and
+[access control](/docs/permissions). To see how Content Studio relates to
+admin themes and content management systems, read
+[how it compares](/docs/comparison).

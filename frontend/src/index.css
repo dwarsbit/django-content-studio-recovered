@@ -1,0 +1,304 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  /* The gray scale rides on the theme's mist family (like every other token below):
+     Tailwind's stock gray leans blue and reads as a different palette. */
+  --color-gray-50: oklch(98.7% 0.002 197.1);
+  --color-gray-100: oklch(96.3% 0.002 197.1);
+  --color-gray-200: oklch(92.5% 0.005 214.3);
+  --color-gray-300: oklch(87.2% 0.007 219.6);
+  --color-gray-400: oklch(72.3% 0.014 214.4);
+  --color-gray-500: oklch(56% 0.021 213.5);
+  --color-gray-600: oklch(45% 0.017 213.2);
+  --color-gray-700: oklch(37.8% 0.015 216);
+  --color-gray-800: oklch(27.5% 0.011 216.9);
+  --color-gray-900: oklch(21.8% 0.008 223.9);
+  --color-gray-950: oklch(14.8% 0.004 228.8);
+  --font-heading: var(--font-sans);
+  --font-sans: "Inter Variable", sans-serif;
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-success: var(--success);
+  --color-warning: var(--warning);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
+
+  --radius-sm: calc(var(--radius) * 0.8);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.2);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+  --radius-4xl: calc(var(--radius) * 2.6);
+
+  --text-*: initial;
+  --text-xs: 12px;
+  --text-sm: 13px;
+  --text-base: 14px;
+  --text-md: 16px;
+  --text-lg: 18px;
+  --text-xl: 24px;
+  --text-2xl: 26px;
+  --text-3xl: 28px;
+  --text-4xl: 32px;
+
+  --shadow-*: initial;
+  --shadow-none: none;
+  --shadow-xs: 0 1px 1px 0 rgb(53 70 74 / 0.04);
+  --shadow-sm: 0 1px 2px 0 rgb(53 70 74 / 0.05);
+  --shadow-md:
+    0 2px 4px -1px rgb(53 70 74 / 0.06), 0 1px 2px -1px rgb(53 70 74 / 0.04);
+  --shadow-lg:
+    0 8px 16px -4px rgb(53 70 74 / 0.08), 0 2px 6px -2px rgb(53 70 74 / 0.05);
+  --shadow-xl:
+    0 20px 32px -8px rgb(53 70 74 / 0.12), 0 8px 12px -6px rgb(53 70 74 / 0.06);
+}
+
+:root {
+  --background: oklch(1 0 0);
+  --foreground: oklch(21.8% 0.008 223.9);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(21.8% 0.008 223.9);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(21.8% 0.008 223.9);
+  --primary: oklch(27.5% 0.011 216.9);
+  --primary-foreground: oklch(0.987 0.002 197.1);
+  --secondary: oklch(92.5% 0.005 214.3);
+  --secondary-foreground: oklch(45% 0.017 213.2);
+  --muted: oklch(98.7% 0.002 197.1);
+  /* mist-500, one point darker: 4.5:1 on muted as well as on background. */
+  --muted-foreground: oklch(55% 0.021 213.5);
+  --accent: oklch(96.3% 0.002 197.1);
+  --accent-foreground: oklch(45% 0.017 213.2);
+  --destructive: oklch(0.577 0.245 27.325);
+  --success: oklch(0.527 0.154 150.069);
+  --warning: oklch(0.555 0.163 48.998);
+  --border: oklch(0.925 0.005 214.3);
+  --input: oklch(0.925 0.005 214.3);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --radius: 0.625rem;
+  --sidebar: oklch(0.987 0.002 197.1);
+  --sidebar-foreground: oklch(0.148 0.004 228.8);
+  --sidebar-primary: oklch(0.218 0.008 223.9);
+  --sidebar-primary-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-accent: oklch(0.963 0.002 197.1);
+  --sidebar-accent-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-border: oklch(0.925 0.005 214.3);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+  /* Syntax colors of the code editor (lib/code-editor). */
+  --code-keyword: oklch(0.496 0.265 301.924);
+  --code-string: oklch(0.527 0.154 150.069);
+  --code-number: oklch(0.553 0.195 38.402);
+  --code-property: oklch(0.488 0.243 264.376);
+  --code-tag: oklch(0.505 0.213 27.518);
+  --code-function: oklch(0.52 0.105 223.128);
+  --code-comment: oklch(0.55 0.021 213.5);
+}
+
+.dark {
+  --background: oklch(0.148 0.004 228.8);
+  --foreground: oklch(0.987 0.002 197.1);
+  --card: oklch(0.218 0.008 223.9);
+  --card-foreground: oklch(0.987 0.002 197.1);
+  --popover: oklch(0.218 0.008 223.9);
+  --popover-foreground: oklch(0.987 0.002 197.1);
+  --primary: oklch(0.925 0.005 214.3);
+  --primary-foreground: oklch(0.218 0.008 223.9);
+  --secondary: oklch(0.275 0.011 216.9);
+  --secondary-foreground: oklch(0.987 0.002 197.1);
+  --muted: oklch(0.275 0.011 216.9);
+  --muted-foreground: oklch(0.723 0.014 214.4);
+  --accent: oklch(0.275 0.011 216.9);
+  --accent-foreground: oklch(0.987 0.002 197.1);
+  --destructive: oklch(0.704 0.191 22.216);
+  --success: oklch(0.792 0.155 152.935);
+  --warning: oklch(0.828 0.189 84.429);
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.56 0.021 213.5);
+  --chart-1: oklch(0.872 0.007 219.6);
+  --chart-2: oklch(0.56 0.021 213.5);
+  --chart-3: oklch(0.45 0.017 213.2);
+  --chart-4: oklch(0.378 0.015 216);
+  --chart-5: oklch(0.275 0.011 216.9);
+  --sidebar: oklch(0.218 0.008 223.9);
+  --sidebar-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-primary: oklch(0.925 0.005 214.3);
+  --sidebar-primary-foreground: oklch(0.218 0.008 223.9);
+  --sidebar-accent: oklch(0.275 0.011 216.9);
+  --sidebar-accent-foreground: oklch(0.987 0.002 197.1);
+  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-ring: oklch(0.56 0.021 213.5);
+  --code-keyword: oklch(0.714 0.203 305.504);
+  --code-string: oklch(0.792 0.209 151.711);
+  --code-number: oklch(0.75 0.183 55.934);
+  --code-property: oklch(0.707 0.165 254.624);
+  --code-tag: oklch(0.704 0.191 22.216);
+  --code-function: oklch(0.789 0.154 211.53);
+  --code-comment: oklch(0.723 0.014 214.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring selection:bg-foreground/10;
+  }
+  body {
+    @apply bg-background text-foreground font-sans text-sm antialiased;
+    font-optical-sizing: auto;
+  }
+  button {
+    @apply cursor-pointer;
+  }
+  .scrollbar {
+    /* The theme's border token: visible on light and dark alike. */
+    --scrollbar-foreground: var(--border);
+    --scrollbar-background: transparent;
+    /* Foreground, Background */
+    scrollbar-color: var(--scrollbar-foreground) var(--scrollbar-background);
+    scrollbar-width: thin;
+
+    &::-webkit-scrollbar {
+      width: 4px; /* Mostly for vertical scrollbars */
+      height: 4px; /* Mostly for horizontal scrollbars */
+    }
+    &::-webkit-scrollbar-thumb {
+      /* Foreground */
+      background: var(--scrollbar-foreground);
+      border-radius: 40px;
+    }
+    &::-webkit-scrollbar-thumb:hover {
+      background: color-mix(in oklab, var(--foreground) 30%, transparent);
+    }
+    &::-webkit-scrollbar-track {
+      /* Background */
+      background: var(--scrollbar-background);
+    }
+  }
+}
+
+/* MapWidget: Leaflet's own stylesheet is added by its chunk; these
+   fit the map into the theme. They are not layered, as Leaflet's rules
+   are not either. */
+.dcs-map .leaflet-container {
+  font: inherit;
+  background: var(--muted);
+}
+.dcs-map .leaflet-bar {
+  border: 1px solid var(--border);
+  box-shadow: none;
+}
+.dcs-map .leaflet-bar a {
+  background: var(--background);
+  color: var(--foreground);
+  border-bottom-color: var(--border);
+}
+.dcs-map .leaflet-bar a:hover,
+.dcs-map .leaflet-bar a:focus {
+  background: var(--accent);
+  color: var(--accent-foreground);
+}
+.dcs-map .leaflet-bar a.leaflet-disabled {
+  background: var(--muted);
+  color: var(--muted-foreground);
+}
+.dcs-map .leaflet-control-attribution {
+  background: color-mix(in oklab, var(--background) 80%, transparent);
+  color: var(--muted-foreground);
+  font-size: 0.65rem;
+}
+.dcs-map .leaflet-control-attribution a {
+  color: var(--foreground);
+}
+.dcs-map .dcs-map-pin {
+  color: var(--primary);
+  filter: drop-shadow(0 2px 2px rgb(0 0 0 / 0.35));
+}
+.dcs-map .leaflet-marker-draggable .dcs-map-pin,
+.dcs-map .leaflet-marker-icon.dcs-map-pin {
+  cursor: grab;
+}
+/* The tiles are drawn for light pages: inverted and turned back
+   around the hue wheel, they keep their colors on a dark one. */
+.dark .dcs-map .leaflet-tile-pane {
+  filter: invert(1) hue-rotate(180deg) brightness(0.9) contrast(0.9)
+    saturate(0.7);
+}
+
+/* Toasts (sonner). Its stylesheet is injected unlayered, hence the
+   attribute selectors. The text keeps a readable width: buttons that
+   don't fit beside it move below it, to the end. Colors follow the
+   theme instead of sonner's own. */
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] {
+  flex-wrap: wrap;
+  row-gap: 0.75rem;
+  column-gap: 0.5rem;
+  font-family: inherit;
+  border-radius: var(--radius);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-content] {
+  min-width: 12rem;
+}
+[data-sonner-toaster]
+  [data-sonner-toast][data-styled="true"]
+  [data-description] {
+  color: var(--muted-foreground);
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-button] {
+  height: 1.75rem;
+  padding-inline: 0.625rem;
+  border-radius: calc(var(--radius) - 4px);
+  margin: 0;
+  background: var(--primary);
+  color: var(--primary-foreground);
+}
+[data-sonner-toaster]
+  [data-sonner-toast][data-styled="true"]
+  [data-content]
+  + [data-button] {
+  margin-inline-start: auto;
+}
+[data-sonner-toaster] [data-sonner-toast][data-styled="true"] [data-cancel] {
+  background: var(--secondary);
+  color: var(--secondary-foreground);
+}
+[data-sonner-toaster]
+  [data-sonner-toast][data-styled="true"]
+  [data-button]:focus-visible {
+  box-shadow: 0 0 0 2px var(--ring);
+}

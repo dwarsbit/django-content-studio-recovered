@@ -1,0 +1,90 @@
+import { type ComponentType, useMemo } from "react";
+
+import { useAdminInfo } from "@/hooks/use-admin-info";
+import { FieldType, FieldWidget, type Model, type ModelField } from "@/types";
+
+import { BooleanFilter } from "./boolean-filter";
+import { DateRangeFilter } from "./date-range-filter";
+import { ForeignKeyFilter } from "./foreign-key-filter";
+import { ManyToManyFilter } from "./many-to-many-filter";
+import { MultiSelectFilter } from "./multi-select-filter";
+import { NumberFilter } from "./number-filter";
+import type {
+  FilterChanges,
+  FilterComponentProps,
+  FilterValues,
+} from "./types";
+
+type FilterComponent = ComponentType<FilterComponentProps>;
+
+const NUMBER_TYPES: string[] = [
+  FieldType.IntegerField,
+  FieldType.DecimalField,
+  FieldType.FloatField,
+];
+
+// Every integer field (PositiveIntegerField, BigIntegerField, ...)
+// filters on a number range.
+function isNumberType(type: string) {
+  return NUMBER_TYPES.includes(type) || type.endsWith("IntegerField");
+}
+
+export function FilterRenderer({
+  field,
+  name,
+  model,
+  values,
+  onValueChange,
+}: {
+  field: ModelField;
+  name: string;
+  model: Model;
+  values: FilterValues;
+  onValueChange(changes: FilterChanges): void;
+}) {
+  const { data: info } = useAdminInfo();
+  const widgetClass = field.widget_class ?? info?.widgets[field.type]?.name;
+
+  const FilterComp = useMemo<FilterComponent | null>(() => {
+    if (widgetClass === FieldWidget.InputWidget && field.choices) {
+      return MultiSelectFilter;
+    }
+    if (widgetClass === FieldWidget.MultiSelectWidget) {
+      return MultiSelectFilter;
+    }
+    if (field.type === FieldType.BooleanField) {
+      return BooleanFilter;
+    }
+    if (
+      field.type === FieldType.DateField ||
+      field.type === FieldType.DateTimeField
+    ) {
+      return DateRangeFilter;
+    }
+    if (isNumberType(field.type)) {
+      return NumberFilter;
+    }
+    if (widgetClass === FieldWidget.ForeignKeyWidget) {
+      return ForeignKeyFilter;
+    }
+    if (
+      widgetClass === FieldWidget.ManyToManyWidget ||
+      widgetClass === FieldWidget.PermissionMatrixWidget
+    ) {
+      return ManyToManyFilter;
+    }
+    return null;
+  }, [field, widgetClass]);
+
+  return (
+    FilterComp && (
+      <FilterComp
+        field={field}
+        name={name}
+        model={model}
+        values={values}
+        onChange={onValueChange}
+      />
+    )
+  );
+}

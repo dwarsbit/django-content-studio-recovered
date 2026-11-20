@@ -1,0 +1,139 @@
+# 🚀 Getting started
+
+This page takes you from installation to your first model in the admin. The
+examples use a blog project: the project package `mysite` and an app called
+`blog`.
+
+## Install the package
+
+```bash
+pip install django-content-studio
+```
+
+## Configure Django
+
+1. Add Content Studio and [Django REST Framework](https://www.django-rest-framework.org/)
+   to `INSTALLED_APPS`. Keep `django.contrib.admin` installed: Content Studio
+   records its activity log with it. The order of the apps does not matter.
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       "django.contrib.admin",
+       "django.contrib.auth",
+       "django.contrib.contenttypes",
+       "django.contrib.sessions",
+       "django.contrib.messages",
+       "django.contrib.staticfiles",
+       "rest_framework",
+       "content_studio",
+       "blog",
+   ]
+   ```
+
+2. Mount the admin at a URL prefix. `admin/` is the usual choice; the admin
+   needs no other URL configuration.
+
+   ```python
+   # mysite/urls.py
+   from django.urls import include, path
+
+   urlpatterns = [
+       path("admin/", include("content_studio.urls")),
+   ]
+   ```
+
+## Initialize Content Studio
+
+The `init_content_studio` command sets up the site and the settings:
+
+```bash
+python manage.py init_content_studio
+```
+
+It asks which models to use for the media library (an item and a folder
+model, none by default), whether to use a tenant model, and which login
+backend to enable. Choose with the arrow keys; **Esc** asks to cancel. The
+command then:
+
+- creates `studio.py` next to your settings, with the site (a
+  `ContentStudioSite` instance called `admin_site`) and its customization
+  hooks as comments;
+- adds a `CONTENT_STUDIO` block to your settings with `ADMIN_SITE` pointing
+  at the new site. If the block already exists, the command reports it and
+  leaves your settings as they are.
+
+To run the command without prompts, pass every choice as a flag:
+`--media-item`, `--media-folder` and `--tenant` (each as
+`app_label.Model`), `--login-backend`, and `--no-input` for the defaults of
+everything else. Run `manage.py check` afterwards: the
+[system checks](/docs/deployment#system-checks) report any problem with the
+configuration.
+
+## Register a model
+
+Take a plain Django model:
+
+```python
+# blog/models.py
+from django.db import models
+
+
+class Article(models.Model):
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        PUBLISHED = "published", "Published"
+
+    title = models.CharField(max_length=200)
+    body = models.TextField(blank=True)
+    status = models.CharField(
+        max_length=20, choices=Status.choices, default=Status.DRAFT
+    )
+
+    def __str__(self):
+        return self.title
+```
+
+Register it with a studio in the app's `admin.py`, where Content Studio
+looks for registrations:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    table_display = ["title", "status"]
+    list_filter = ["status"]
+    search_fields = ["title"]
+```
+
+## Log in
+
+Start the development server and open `/admin/`. Log in with the username
+and password of a staff user, as in the classic Django admin. Articles
+appear in the menu, with a list page you can search and filter, and an edit
+page built from the model's fields.
+
+## Type checking
+
+Content Studio ships its type hints (a `py.typed` marker), so mypy and
+Pyright check your studios against them. Lazy translations work wherever
+text is shown, such as `label=_("Publish")`. With mypy, install
+[django-stubs](https://github.com/typeddjango/django-stubs) and enable its
+plugin; Pyright picks the stubs up when they are installed.
+
+## Next steps
+
+- [Registering models](/docs/registering-models): every studio
+  option, singletons and inlines.
+- [List page](/docs/list-page): columns, bulk actions, trash, reordering
+  and export.
+- [Edit page layout](/docs/edit-page) and [widgets](/docs/widgets): edit
+  page layouts and field editors.
+- [Access control](/docs/permissions): model and object permissions.
+- [Settings](/docs/settings): every `CONTENT_STUDIO` setting.

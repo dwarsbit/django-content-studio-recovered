@@ -1,0 +1,384 @@
+# 📜 Public API
+
+Content Studio follows [semantic versioning](https://semver.org/) for its
+public API: from version 1.0, the names on this page only change in a major
+release, after a deprecation period with a warning.
+
+The public API consists of:
+
+- the names below, imported from the module they are listed under;
+- the documented attributes and methods of `ModelStudio`,
+  `InlineModelStudio` and `ContentStudioSite`: the configuration options and
+  the hooks, such as the `has_*_permission` methods, `get_fields`,
+  `get_readonly_fields`, `get_prepopulated_fields`, `get_list_item_display`,
+  `get_relation_display`, `get_created_result`, `get_duplicate_initial`,
+  `save_model`, `save_related`, `delete_model`, `delete_queryset`,
+  `get_tenants`,
+  `get_thumbnail`, `get_media_serializer_fields`, `get_media_metadata`,
+  `get_default_subscriptions`, `get_link_url`, `crop_image` and `reset_crop`;
+- the documented options and methods of blocks: the `Meta` options of
+  `Block`, `get_context` and `get_template_name`, and the
+  [values of a block field](/docs/block-fields#render-blocks-in-templates)
+  (`blocks`, and each block's `id`, `type`, `value` and `render`);
+- the `render_blocks`, `image_size` and `image_url` tags and the
+  `rich_text` filter of the `content_studio` template library;
+- every [setting](/docs/settings) in `CONTENT_STUDIO`;
+- the [system check](/docs/deployment#system-checks) IDs, but not their messages;
+- `content_studio.urls` and the `content_studio.contrib.password_reset` app,
+  as a whole;
+- the media library's `content_studio_media_metadata`,
+  `content_studio_thumbnails` and `content_studio_image_sizes` commands,
+  with their `--all` option;
+- the `content_studio.webhooks` app's `content_studio_deliver_webhooks`
+  command, and the requests its webhooks send: the payload with its
+  `version`, and the `X-Content-Studio-*` headers;
+- the `content_studio.notifications` app's
+  `content_studio_prune_notifications` command, and its
+  `content_studio_send_notification_digest` command with its `--delay`
+  option;
+- the email digest's templates,
+  `content_studio/notifications/digest.txt` and `digest.html`, and the
+  context they get.
+
+Everything else may change in any release, including any name that is not
+on this page, even when you can import it.
+
+## `content_studio`
+
+The registration decorator and the package version.
+
+- `VERSION`
+- `register`
+
+## `content_studio.admin`
+
+Studios, the site and their configuration objects. `admin_site` is the default site.
+
+- `ContentStudioSite`
+- `InlineModelStudio`
+- `ListItemDisplay`
+- `ModelGroup`
+- `ModelStudio`
+- `RelationDisplay`
+- `admin_site`
+- `register`
+
+## `content_studio.user_studios`
+
+The studios registered for the user model and Django's groups when a
+project registers none, to subclass. See [User management](/docs/users).
+
+- `GroupStudio`
+- `UserStudio`
+
+## `content_studio.form`
+
+Edit page layouts, components and table columns. `Component` is the base type of the built-in components; custom component types are not supported, but `Link`, `ButtonLink`, `Button`, the text components (`Title`, `Subtitle`, `Text`, `Callout`) and `SEOPreview` are meant to be subclassed. `Condition` is the base of [server-side conditions](/docs/edit-page#server-side-conditions).
+
+- `ActivityLog`
+- `Button`
+- `ButtonLink`
+- `ButtonResult`
+- `Callout`
+- `Component`
+- `Condition`
+- `Field`
+- `FieldLayout`
+- `FormSet`
+- `FormSetGroup`
+- `Link`
+- `SEOPreview`
+- `Subtitle`
+- `TableColumn`
+- `Text`
+- `Title`
+
+## `content_studio.actions`
+
+Custom bulk actions.
+
+- `bulk_action`
+
+## `content_studio.dashboard`
+
+The dashboard and its layout widget. `DashboardWidget` is the base type of the built-in widgets.
+
+- `Dashboard`
+- `DashboardWidget`
+- `SpacingWidget`
+
+## `content_studio.dashboard.*`
+
+The built-in dashboard widgets, each from its own module.
+
+- `content_studio.dashboard.statistic.StatisticWidget`
+- `content_studio.dashboard.content_list.ContentListWidget`
+- `content_studio.dashboard.activity_log.ActivityLogWidget`
+- `content_studio.dashboard.scheduled_tasks.ScheduledTasksWidget`
+
+## `content_studio.dashboard.tasks`
+
+The task dashboard: the adapter you write for your task backend, the
+widgets it feeds and the page that shows them.
+
+- `TaskAdapter`
+- `TaskDashboard`
+- `TaskListWidget`
+- `TaskRow`
+- `TaskStatistic`
+- `TaskStatisticWidget`
+- `TaskStatus`
+
+## `content_studio.contrib.huey`
+
+The task dashboard's adapter for Huey.
+
+- `HueyAdapter`
+
+## `content_studio.analytics`
+
+[Analytics](/docs/analytics): the extension, its page, links, component and
+dashboard widgets, the Umami provider, and the interface of a provider of
+your own. `get_analytics` returns the site's `AnalyticsExtension`, or `None`.
+
+- `Analytics`
+- `AnalyticsError`
+- `AnalyticsExtension`
+- `AnalyticsLink`
+- `AnalyticsPage`
+- `AnalyticsProvider`
+- `AnalyticsQuery`
+- `AnalyticsStatisticWidget`
+- `AnalyticsTopPagesWidget`
+- `AnalyticsUserMenuLink`
+- `BreakdownRow`
+- `MetricValue`
+- `TimeseriesPoint`
+- `UmamiProvider`
+- `get_analytics`
+
+## `content_studio.extensions`
+
+Menu links, menu buttons, embedded pages and dashboard pages.
+
+- `DashboardPage`
+- `IFramePage`
+- `MainMenuButton`
+- `MainMenuLink`
+- `UserMenuButton`
+- `UserMenuLink`
+
+## `content_studio.widgets`
+
+The built-in editing widgets, to use in `Field(widget=...)` and `default_widget_mapping`, as classes or as instances with [options](/docs/widgets#widget-options). `BaseWidget` is their base type; custom widgets are not supported.
+
+- `BaseWidget`
+- `BlockWidget`
+- `CheckboxWidget`
+- `CodeWidget`
+- `ColorPickerWidget`
+- `CoverImageWidget`
+- `DateTimeWidget`
+- `DateWidget`
+- `DurationWidget`
+- `EmailWidget`
+- `EmbedWidget`
+- `FileWidget`
+- `ForeignKeyWidget`
+- `IconPickerWidget`
+- `InputWidget`
+- `JSONSchemaWidget`
+- `JSONWidget`
+- `KeyValueWidget`
+- `ListWidget`
+- `ManyMediaWidget`
+- `ManyToManyWidget`
+- `MapWidget`
+- `MarkdownWidget`
+- `MediaWidget`
+- `MultiSelectWidget`
+- `PasswordWidget`
+- `PermissionMatrixWidget`
+- `PhoneWidget`
+- `RadioButtonWidget`
+- `RatingWidget`
+- `RichTextWidget`
+- `SelectWidget`
+- `SliderWidget`
+- `SlugWidget`
+- `SwitchWidget`
+- `TagWidget`
+- `TextAreaWidget`
+- `TimeWidget`
+- `ToggleGroupWidget`
+- `URLPathWidget`
+- `URLWidget`
+
+## `content_studio.formats`
+
+The built-in display formats, to use in `TableColumn(format=...)` and `default_format_mapping`, as classes or as instances. `BaseFormat` is their base type; custom formats are not supported.
+
+- `BadgeFormat`
+- `BaseFormat`
+- `BlockFormat`
+- `BooleanFormat`
+- `CodeFormat`
+- `ColorFormat`
+- `CurrencyFormat`
+- `DateFormat`
+- `DateTimeFormat`
+- `DurationFormat`
+- `EmailFormat`
+- `FileFormat`
+- `FileSizeFormat`
+- `ForeignKeyFormat`
+- `HtmlFormat`
+- `ImageFormat`
+- `JSONFormat`
+- `LinkFormat`
+- `ManyMediaFormat`
+- `ManyToManyFormat`
+- `MediaFormat`
+- `NumberFormat`
+- `PercentFormat`
+- `ProgressFormat`
+- `TagFormat`
+- `TextFormat`
+- `TimeFormat`
+
+## `content_studio.fields`
+
+Optional content fields.
+
+- `ColorField`
+- `FlexField`
+- `HTMLField`
+- `HashTagField`
+- `MultipleChoiceField`
+- `TagField`
+- `URLPathField`
+
+## `content_studio.blocks`
+
+The block field: an ordered list of content blocks. `Block` is the base type of the blocks you define.
+
+- `Block`
+- `BlockField`
+
+## `content_studio.models`
+
+Optional abstract base models.
+
+- `ContentModel`
+- `EditorModel`
+- `ManualOrderModel`
+- `SingletonModel`
+- `SoftDeletableContentModel`
+- `SoftDeletableModel`
+- `TimeStampedModel`
+- `UUIDModel`
+
+## `content_studio.managers`
+
+Managers of the base models.
+
+- `SingletonManager`
+- `SoftDeletableManager`
+- `SoftDeletableQuerySet`
+
+## `content_studio.signals`
+
+The signal sent after changes made in the admin are committed, the changes it carries, and the function that records a change.
+
+- `Change`
+- `content_changed`
+- `record_change`
+
+## `content_studio.validators`
+
+Validators used by the content fields, usable on any field.
+
+- `ChoiceOptionsValidator`
+- `ColorValidator`
+- `JSONSchemaValidator`
+
+## `content_studio.sanitizers`
+
+The built-in HTML sanitizer, the default `HTML_SANITIZER`.
+
+- `sanitize_html`
+
+## `content_studio.rich_text`
+
+Refreshes the image and link URLs in [rich text](/docs/widgets#rich-text).
+
+- `render_rich_text`
+
+## `content_studio.exceptions`
+
+Raised by registration.
+
+- `AlreadyRegistered`
+- `NotRegistered`
+
+## `content_studio.media_library.fields`
+
+Media picker fields of the optional media library app.
+
+- `CropField`
+- `ManyMediaField`
+- `MediaField`
+
+## `content_studio.media_library.models`
+
+The media library app's concrete models.
+
+- `Folder`
+- `Media`
+
+## `content_studio.media_library.sizes`
+
+The [image sizes](/docs/media-library#image-sizes) of media library images.
+
+- `get_image_sizes`
+
+## `content_studio.webhooks.models`
+
+The webhooks app's models: the webhooks and their deliveries.
+
+- `Webhook`
+- `WebhookDelivery`
+
+## `content_studio.webhooks.dashboard`
+
+The webhooks app's dashboard widget.
+
+- `WebhookDeliveriesWidget`
+
+## `content_studio.webhooks.extensions`
+
+The webhooks app's main menu button.
+
+- `DeployButton`
+
+## `content_studio.notifications`
+
+The notifications app's events: register an event, and notify users of it.
+
+- `notify`
+- `register_event`
+
+## `content_studio.notifications.dashboard`
+
+The notifications app's dashboard widget.
+
+- `NotificationsWidget`
+
+## `content_studio.notifications.models`
+
+The notifications app's models: the notifications, the users'
+subscriptions and the objects they follow.
+
+- `Follow`
+- `Notification`
+- `NotificationSubscription`

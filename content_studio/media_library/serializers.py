@@ -1,0 +1,212 @@
+from django.template.defaultfilters import filesizeformat
+from django.utils.translation import gettext as _
+from rest_framework import serializers
+
+from content_studio.settings import cs_settings
+
+from content_studio.thumbnails import get_thumbnail_url
+
+from .cropping import get_crop, original_file
+from .metadata import get_metadata_attr, get_properties_attr, validate_properties
+from .sizes import get_image_sizes, get_size_specs
+
+# Leading bytes that mark markup (HTML, SVG, XML): browsers may render
+# such a file as a page when it is served from the site's own domain.
+MARKUP_SNIFF_BYTES = 512
+
+
+def looks_like_markup(file) -> bool:
+    position = file.tell() if hasattr(file, "tell") else None
+
+    try:
+        file.seek(0)
+        head = file.read(MARKUP_SNIFF_BYTES)
+    finally:
+        if position is not None:
+            file.seek(position)
+
+    if isinstance(head, str):
+        head = head.encode("utf-8", "ignore")
+
+    for bom in (b"\xef\xbb\xbf", b"\xff\xfe", b"\xfe\xff"):
+        head = head.removeprefix(bom)
+
+    return head.lstrip().replace(b"\x00", b"").startswith(b"<")
+
+
+def validate_media_upload(file):
+    """
+    The media library's upload policy: the extension must be in
+    MEDIA_LIBRARY_ALLOWED_EXTENSIONS, the size within
+    MEDIA_LIBRARY_MAX_UPLOAD_SIZE, and the content must not be markup,
+    whatever its extension claims.
+    """
+    allowed = cs_settings.MEDIA_LIBRARY_ALLOWED_EXTENSIONS
+    max_size = cs_settings.MEDIA_LIBRARY_MAX_UPLOAD_SIZE
+    name = getattr(file, "name", "") or ""
+    extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+
+    if allowed is not None and extension not in {e.lower() for e in allowed}:
+        raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
+
+    if max_size is not None and file.size > max_size:
+        raise serializers.ValidationError(
+            _("The file is larger than %(size)s.") % {"size": filesizeformat(max_size)}
+        )
+
+    if looks_like_markup(file):
+        raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
+
+    return file
+
+
+def build_media_item_serializer(media_model):
+    """
+    Build a serializer for the given media model at call time, so the
+    configured MEDIA_LIBRARY_MODEL is always current (the setting
+    cannot be captured at import time). The exposed fields are
+    controlled by ContentStudioSite.get_media_serializer_fields.
+    """
+    admin_site = cs_settings.ADMIN_SITE
+
+    class MediaItemSerializer(serializers.ModelSerializer):
+        thumbnail = serializers.SerializerMethodField()
+        thumbnail_large = serializers.SerializerMethodField()
+
+        class Meta:
+            model = media_model
+            fields = admin_site.get_media_serializer_fields(media_model)
+            # Metadata is read from the file, never edited.
+            read_only_fields = [get_metadata_attr()] if get_metadata_attr() else []
+
+        def validate_file(self, file):
+            return validate_media_upload(file)
+
+        def validate_tags(self, tags):
+            """Tags are a list of strings; the field is a JSONField, so
+            the serializer would otherwise accept any JSON value."""
+            if not isinstance(tags, list) or not all(
+                isinstance(tag, str) for tag in tags
+            ):
+                raise serializers.ValidationError("Tags must be a list of strings.")
+
+            return tags
+
+        def validate(self, attrs):
+            attr = get_properties_attr()
+
+            if attr and attr in attrs:
+                try:
+                    validate_properties(attrs[attr])
+                except ValueError as e:
+                    raise serializers.ValidationError({attr: str(e)})
+
+            return super().validate(attrs)
+
+        def to_representation(self, obj):
+            data = super().to_representation(obj)
+            data["original"] = self.get_original(obj)
+
+            if get_size_specs():
+                data["sizes"] = self.get_sizes(obj)
+
+            return data
+
+        def get_sizes(self, obj):
+            """The image's sizes (IMAGE_SIZES), with absolute URLs."""
+            request = self.context.get("request")
+            sizes = get_image_sizes(obj)
+
+            if request:
+                for size in sizes.values():
+                    size["url"] = request.build_absolute_uri(size["url"])
+
+            return sizes
+
+        def get_original(self, obj):
+            """
+            A cropped image's original and the crop box on it, for
+            the crop editor; None when the image is not cropped.
+            """
+            crop = get_crop(obj)
+
+            if not crop:
+                return None
+
+            # A large thumbnail when thumbnails are on: the crop editor
+            # needs no full-size image.
+            original = original_file(obj, crop)
+            url = get_thumbnail_url(original, "large") or original.url
+            request = self.context.get("request")
+
+            return {
+                "url": request.build_absolute_uri(url) if request else url,
+                "crop": crop["box"],
+            }
+
+        def get_thumbnail(self, obj):
+            return self._thumbnail(obj, "small")
+
+        def get_thumbnail_large(self, obj):
+            return self._thumbnail(obj, "large")
+
+        def _thumbnail(self, obj, size):
+            admin_site = cs_settings.ADMIN_SITE
+
+            if admin_site and obj.type == "image":
+                return admin_site.get_thumbnail(obj, size)
+
+            return None
+
+    return MediaItemSerializer
+
+
+def build_media_folder_serializer(folder_model):
+    """
+    Build a serializer for the given media folder model at call time,
+    so the configured MEDIA_LIBRARY_FOLDER_MODEL is always current.
+    """
+
+    class MediaFolderSerializer(serializers.ModelSerializer):
+        has_children = serializers.SerializerMethodField()
+        count = serializers.SerializerMethodField()
+
+        class Meta:
+            model = folder_model
+            fields = ["id", "name", "parent", "has_children", "count"]
+
+        def get_has_children(self, obj):
+            return obj.children.exists()
+
+        def validate_parent(self, parent):
+            """
+            Reject a parent that is the folder itself or one of its
+            subfolders: either would make the folder part of a cycle.
+            """
+            if parent is None or self.instance is None:
+                return parent
+
+            seen = set()
+            ancestor = parent
+
+            # Bounded by the folders seen, so cyclic data cannot loop.
+            while ancestor is not None and ancestor.pk not in seen:
+                if ancestor.pk == self.instance.pk:
+                    raise serializers.ValidationError(
+                        _("A folder cannot be moved into itself or its subfolders.")
+                    )
+                seen.add(ancestor.pk)
+                ancestor = ancestor.parent
+
+            return parent
+
+        def get_count(self, obj):
+            """The folder's direct items; None without a media model."""
+            media_model = cs_settings.MEDIA_LIBRARY_MODEL
+
+            if not media_model:
+                return None
+
+            return media_model.objects.filter(folder_id=obj.pk).count()
+
+    return MediaFolderSerializer

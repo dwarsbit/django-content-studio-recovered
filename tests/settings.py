@@ -1,0 +1,103 @@
+"""
+Django settings for testing content_studio.
+"""
+
+import os
+import tempfile
+from pathlib import Path
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+
+SECRET_KEY = "django-insecure-test-key-for-content-studio-tests-only-not-for-production"
+DEBUG = True
+ALLOWED_HOSTS = ["*"]
+
+INSTALLED_APPS = [
+    "django.contrib.admin",
+    "django.contrib.auth",
+    "django.contrib.contenttypes",
+    "django.contrib.sessions",
+    "django.contrib.messages",
+    "django.contrib.staticfiles",
+    "rest_framework",
+    "content_studio",
+    "content_studio.contrib.password_reset",
+    "content_studio.contrib.two_factor",
+    "content_studio.media_library",
+    "content_studio.webhooks",
+    "content_studio.notifications",
+    "content_studio.history",
+    "tests.testapp",
+]
+
+MIDDLEWARE = [
+    "django.middleware.security.SecurityMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+
+ROOT_URLCONF = "content_studio.urls"
+
+TEMPLATES = [
+    {
+        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "DIRS": [],
+        "APP_DIRS": True,
+        "OPTIONS": {
+            "context_processors": [
+                "django.template.context_processors.debug",
+                "django.template.context_processors.request",
+                "django.contrib.auth.context_processors.auth",
+                "django.contrib.messages.context_processors.messages",
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = "tests.wsgi.application"
+
+DATABASES = {
+    "default": {
+        "ENGINE": "django.db.backends.sqlite3",
+        "NAME": BASE_DIR / "db.sqlite3",
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.MinimumLengthValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.CommonPasswordValidator",
+    },
+    {
+        "NAME": "django.contrib.auth.password_validation.NumericPasswordValidator",
+    },
+]
+
+LANGUAGE_CODE = "en-us"
+TIME_ZONE = "UTC"
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = "static/"
+
+# Keep test uploads out of the repository: file fields write to a
+# throwaway directory instead of the default media/ next to the CWD.
+MEDIA_ROOT = tempfile.mkdtemp(prefix="content_studio_tests_")
+
+# Keep test emails out of SMTP
+EMAIL_BACKEND = "django.core.mail.backends.locmem.EmailBackend"
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# Content Studio settings
+CONTENT_STUDIO = {
+    "ADMIN_SITE": "content_studio.admin.admin_site",
+}

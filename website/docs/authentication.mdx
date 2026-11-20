@@ -1,0 +1,176 @@
+# 🔐 Authentication
+
+Editors log in to the admin with their username and password, like in the
+classic Django admin. Content Studio handles the sessions itself and is
+configured entirely through the `CONTENT_STUDIO` setting, so it never
+interferes with the authentication your project uses elsewhere.
+
+<Screenshot name="login" alt="The login page, with username and password fields" />
+
+## Who can log in
+
+Only active staff users can log in, and every request checks this again:
+deactivating a user or revoking their staff status ends their access
+immediately. What an editor may see and do is decided by the
+[permission hooks](/docs/permissions).
+
+## Sessions
+
+- **Short-lived.** A session stays active for an hour at a time
+  ([`TOKEN_LIFETIME`](/docs/settings#token_lifetime)) and renews itself
+  while the editor works. After a week without using the admin, the editor
+  logs in again ([`REFRESH_TOKEN_LIFETIME`](/docs/settings#refresh_token_lifetime)).
+  However active, a session ends 30 days after logging in
+  ([`MAX_SESSION_LIFETIME`](/docs/settings#max_session_lifetime)).
+- **Survives a reload.** Reloading the page keeps the editor logged in.
+- **Ends everywhere on a password change.** Changing or resetting a
+  password logs the user out on every device. Editors change their own
+  password on their [profile page](/docs/profile#password), which keeps
+  them logged in where they changed it.
+- **Logging out** ends the session in that browser. The session cannot be
+  continued afterwards, not even with a copy of its cookie.
+- **A copied session ends.** Each renewal replaces the session cookie and
+  the old one stops working. When an old cookie is presented again, it was
+  copied, and Content Studio ends the session for both.
+
+Sessions are signed with your `SECRET_KEY`, or with
+[`TOKEN_SIGNING_KEY`](/docs/settings#token_signing_key) when you set one.
+When you rotate `SECRET_KEY`, keep the old key in `SECRET_KEY_FALLBACKS` for
+a while, as Django documents: sessions signed with it then continue until
+they expire.
+
+## Login backends
+
+Editors log in with their username and password, like in the classic Django
+admin. Login attempts are limited per IP address
+([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate)).
+
+:::note
+Username and password is the only supported way to log in. Custom login
+backends, such as single sign-on, are not supported.
+:::
+
+## Password reset
+
+The `content_studio.contrib.password_reset` app lets editors reset a
+forgotten password with a code sent by email.
+
+1. Add the app to `INSTALLED_APPS`:
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.contrib.password_reset",
+   ]
+   ```
+
+2. Include its URLs under the admin's prefix:
+
+   ```python
+   # mysite/urls.py
+   from django.urls import include, path
+
+   urlpatterns = [
+       path("admin/", include("content_studio.contrib.password_reset.urls")),
+       path("admin/", include("content_studio.urls")),
+   ]
+   ```
+
+3. Configure Django's `EMAIL_*` settings, so the code emails can be sent.
+
+The login page then offers **Forgot password?**, as long as editors log in
+with an email address (a custom user model whose username field is an
+`EmailField`). An editor requests a code for their email address, enters
+it, and sets a new password; the page lists the rules of your
+`AUTH_PASSWORD_VALIDATORS`. How the flow protects itself:
+
+- Only active staff users can reset their password. The email address
+  matches regardless of case; an address shared by several users gets no
+  code.
+- Codes have six digits and are valid for 10 minutes
+  ([`PASSWORD_RESET_EXPIRATION_TIME`](/docs/settings#password_reset_expiration_time)).
+- Five wrong codes lock the email address out for an hour, also when new
+  codes are requested in between.
+- Requests are limited per IP address
+  ([`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate)).
+- The new password must pass your project's `AUTH_PASSWORD_VALIDATORS`.
+- Unknown addresses and wrong codes get the same answer, so the flow does
+  not reveal which addresses have an account.
+
+The emails are sent as a [Django task](https://docs.djangoproject.com/en/stable/topics/tasks/).
+Without a task backend, Django runs the task during the request. Configure
+a backend that runs tasks in a worker (the `TASKS` setting) and the request
+only queues the email: it then takes as long for an unknown address as for a
+known one, so its duration does not reveal which addresses exist either.
+On Django 5.2, which has no tasks framework, the
+[`django-tasks`](https://pypi.org/project/django-tasks/) package is used when
+installed; otherwise the email is sent during the request.
+`manage.py check --deploy` warns (`content_studio.W018`) while the emails
+are sent during the request.
+
+## Two-factor login
+
+The `content_studio.contrib.two_factor` app adds a second step to the
+login: after the password, editors enter the six-digit code from an
+authenticator app on their phone, such as 1Password, Google Authenticator
+or Microsoft Authenticator. A stolen password alone is then not enough.
+
+1. Add the app to `INSTALLED_APPS` and run `migrate`:
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.contrib.two_factor",
+   ]
+   ```
+
+2. Optionally, require it ([`TWO_FACTOR_REQUIRED`](/docs/settings#two_factor_required)):
+
+   ```python
+   CONTENT_STUDIO = {
+       "TWO_FACTOR_REQUIRED": "superusers",  # or "all"
+   }
+   ```
+
+Editors turn it on from their [profile page](/docs/profile#two-factor-login):
+they scan a QR code with the app, confirm with a code, and save ten
+recovery codes. A recovery code logs in once without the phone. When it is
+required, editors who have not set it up do so in the login card, right
+after their password, before they can continue. Turning the requirement on
+ends the sessions that did not pass the code step, so it applies at once.
+
+An editor who lost their phone and their recovery codes asks an
+administrator to [reset it](/docs/users#resetting-two-factor-login).
+
+How the code step protects itself:
+
+- No session exists until the code is right. The password step answers
+  with a signed challenge that lives 5 minutes and works once; a password
+  change voids it.
+- Five wrong codes void the challenge and send the editor back to the
+  password. Wrong codes are also counted per account
+  ([`TWO_FACTOR_THROTTLE_RATE`](/docs/settings#two_factor_throttle_rate)),
+  on top of the [login limit](/docs/settings#login_throttle_rate) per IP
+  address, so spreading guesses over many addresses does not help.
+- A code works once. The codes of the 30 seconds before and after are
+  accepted too, for phones whose clock is a little off.
+- Turning two-factor login on or off, or a reset by an administrator, logs
+  the editor out on every other device, like a password change.
+- Wrong codes send Django's `user_login_failed` signal, so audit tools such
+  as django-axes count them.
+- Recovery codes are stored as an HMAC keyed with `SECRET_KEY`, never as
+  they are.
+
+The app's secret has to be readable to check codes, so it is stored as is
+in the database, as django-otp stores it too. Protect database backups
+accordingly. Invite and password links lead to the code step as well
+(or to setting it up, when it is required).
+
+:::note
+Two-factor login protects Content Studio's own login. When your project
+also serves the classic Django admin, that login is not covered.
+:::

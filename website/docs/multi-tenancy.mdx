@@ -1,0 +1,74 @@
+# 🧭 Multi-tenancy
+
+With multi-tenancy, one admin serves several tenants, such as the
+organizations of a platform. Editors pick a tenant and only see and change
+that tenant's content.
+
+## Set it up
+
+1. Point the [`TENANT_MODEL`](/docs/settings#tenant_model) setting at your
+   tenant model:
+
+   ```python
+   # mysite/settings.py
+   CONTENT_STUDIO = {
+       "TENANT_MODEL": "organizations.models.Organization",
+   }
+   ```
+
+2. Give each model that belongs to a tenant a foreign key to the tenant
+   model. Content Studio finds it on its own: the one foreign key that points
+   at the tenant model. Models without one are shared by all tenants.
+
+## How content is scoped
+
+Editors choose a tenant in the admin, and everything they do happens within
+it:
+
+- Lists and searches only show the selected tenant's objects.
+- New objects are assigned to the selected tenant, and an object's
+  tenant cannot be changed afterwards.
+- Relation fields only offer objects of the selected tenant.
+- The dashboard's recent activity only shows changes to the selected
+  tenant's objects that still exist.
+- Without a selected tenant, tenant models show no objects at all.
+- A tenant the editor may not access is refused.
+
+## Decide who works in which tenant
+
+The site's `get_tenants` method decides which tenants an editor may work in.
+It feeds the tenant selector and guards every page, so this one method is
+all the authorization multi-tenancy needs. By default it returns all
+tenants:
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+
+
+class BlogStudioSite(ContentStudioSite):
+    def get_tenants(self, tenant_model, **kwargs):
+        user = kwargs["request"].user
+        return tenant_model.objects.filter(members=user)
+
+
+admin_site = BlogStudioSite()
+```
+
+Point the [`ADMIN_SITE`](/docs/settings#admin_site) setting at the site to
+use it.
+
+## What every tenant shares
+
+Two parts of the admin are not scoped to a tenant, whichever tenant the
+editor works in:
+
+- The [media library](/docs/media-library): every editor sees the same
+  folders and files, also when the media model has a foreign key to the
+  tenant model.
+- [Webhooks](/docs/webhooks): editors see and change every webhook and its
+  delivery log. A webhook's **Tenant** field chooses whose changes trigger
+  it, not who may manage it.
+
+Give the permissions on these models only to editors who may work across
+tenants.

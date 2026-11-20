@@ -1,0 +1,206 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  backend:
+    name: backend (py${{ matrix.python }}, Django ${{ matrix.django }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python: ["3.12", "3.13", "3.14"]
+        django: ["5.2", "6.0", "6.1"]
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: ${{ matrix.python }}
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      # The extras too: the Excel export is tested with openpyxl.
+      - name: Install dependencies
+        run: poetry install --all-extras
+
+      - name: Pin Django ${{ matrix.django }}
+        run: poetry run pip install "Django~=${{ matrix.django }}.0"
+
+      - name: Check formatting
+        run: poetry run black --check content_studio tests scripts
+
+      - name: Run tests
+        run: poetry run pytest tests/
+
+  # The package ships its type hints (py.typed): typical project code in
+  # tests/typing must pass mypy and Pyright, so a hint change cannot
+  # give users false errors.
+  typing:
+    name: type hints
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: mypy
+        run: poetry run mypy --config-file tests/typing/mypy.ini tests/typing/public_api.py
+
+      - name: Pyright
+        run: poetry run pyright -p tests/typing
+
+  audit:
+    name: dependency audit
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Audit the locked Python dependencies
+        run: |
+          poetry install
+          poetry run pip install pip-audit
+          poetry run pip-audit --skip-editable
+
+      # Runtime dependencies end up in the shipped bundle; build tooling
+      # (devDependencies) never reaches users.
+      - name: Audit the frontend runtime dependencies
+        working-directory: frontend
+        run: npm audit --omit=dev
+
+  frontend:
+    name: frontend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Design system
+        run: |
+          npm run build:design-system -- --check
+          npm run build:design-system
+
+      - name: Build
+        run: npm run build
+
+  e2e:
+    name: e2e
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Install dependencies
+        run: poetry install
+
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: npm run build
+
+      - name: Install Playwright browsers
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+
+      - name: Run e2e tests
+        working-directory: frontend
+        run: npm run e2e
+        env:
+          CS_PYTHON: "poetry run python"
+
+  packaging:
+    name: packaging
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install Poetry
+        run: pipx install poetry
+
+      - name: Build the frontend
+        working-directory: frontend
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build the wheel
+        run: poetry build
+
+      - name: Verify the wheel contents
+        run: python scripts/check_wheel.py
+
+      - name: Fresh install imports cleanly
+        run: |
+          python -m venv /tmp/cs-venv
+          /tmp/cs-venv/bin/pip install dist/*.whl
+          /tmp/cs-venv/bin/python -c "import content_studio; print(content_studio.__version__)"

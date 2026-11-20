@@ -1,0 +1,202 @@
+# 👥 User management
+
+Users are managed on the user model's edit page, like any other model:
+Content Studio registers the user model and Django's groups when your
+project does not. On top of the fields, admins invite new users by email,
+send a link to set a new password or set one themselves, pick permissions
+in a matrix, and Content Studio keeps staff who are not superusers from
+taking over a superuser account or granting more than they have.
+
+## Invites and password links
+
+Adding a user sends them an invite: an email with a link to set their
+password. The new user has no password until they do, so they cannot log
+in before. Setting it logs them in. The add page asks for an email
+address, which the invite is sent to, and starts with **Staff status**
+checked, since only active staff users can log in. Uncheck it and no
+invite is sent.
+
+On an existing user's page, the more actions menu has **Send password
+link**: an email with a link to set a new password. Their current password
+keeps working until they use it. For a user who never logged in, the same
+item is **Resend invite**. It is offered under the same conditions as
+[setting a password](#setting-a-password), and when the user has an email
+address and may log in.
+
+A link works once: it stops working when the password is set, when the
+user logs in, when their email address changes and after Django's
+[`PASSWORD_RESET_TIMEOUT`](https://docs.djangoproject.com/en/stable/ref/settings/#password-reset-timeout)
+(three days by default; raise it for invites that may wait longer). The
+links are signed with your `SECRET_KEY` by Django's own password reset
+token generator, so they need no table and no extra app. The page that
+sets the password is limited by
+[`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate).
+
+Invites and password links need:
+
+- Django's `EMAIL_*` settings, so the emails can be sent.
+- A user model with an email field. Without one, users are added without
+  an invite and you set their password yourself.
+- [`ADMIN_URL`](/docs/settings#admin_url) when a proxy in front of Django
+  changes the address the admin is served at; otherwise the links use the
+  address of the request that sends them.
+
+Like the password reset emails, the emails are sent as a
+[Django task](https://docs.djangoproject.com/en/stable/topics/tasks/), so
+your `TASKS` setting decides whether a worker sends them. Without a task
+backend they are sent during the request. A failure to send is logged to
+the `content_studio.users` logger.
+
+The [password reset](/docs/authentication#password-reset) app is
+separate: it lets editors who forgot their password request a code
+themselves, and works with or without invites.
+
+## Setting a password
+
+To set a password yourself, open a user and choose **Set password** in the
+header's more actions menu.
+Type the new password twice, or choose **Generate password** for a random
+one that you can copy and pass on. The password must pass your project's
+[`AUTH_PASSWORD_VALIDATORS`](https://docs.djangoproject.com/en/stable/topics/auth/passwords/#module-django.contrib.auth.password_validation).
+
+Setting a password logs the user out on every device: they log in with the
+new password from then on. The change is recorded in the activity log as
+"Set password.", without the password itself.
+
+**Set password** is offered when:
+
+- the site logs in with a username and password (the default
+  [login backend](/docs/authentication)),
+- the editor may change the user: the user model studio's
+  `has_change_permission(request, obj)`, by default Django's `change_user`
+  permission,
+- the user is not a superuser, or the editor is one too,
+- the user is not the editor. Editors change their own password on their
+  [profile page](/docs/profile#password), which asks for the current one.
+
+## Resetting two-factor login
+
+When a user with [two-factor login](/docs/authentication#two-factor-login)
+lost their phone and their recovery codes, open the user and choose
+**Reset two-factor login** in the header's more actions menu. Their
+authenticator and recovery codes are removed, they are logged out on every
+device, and they get an email that it was reset. They then log in with
+their password alone, or set it up again at their next login when it is
+required. The reset is recorded in the activity log.
+
+The status card of the [user edit page](#the-user-edit-page) tells when a
+user has two-factor login on, or must still set it up. The reset is
+offered under the same conditions as [Set password](#setting-a-password),
+while two-factor login is on.
+
+## What staff who are not superusers can change
+
+Django's classic admin lets anyone with the `change_user` permission change
+every field of every user, including `is_superuser`. A staff member could
+make themselves a superuser, or change a superuser's email address and then
+[reset the password](/docs/authentication#password-reset) sent to it.
+
+Content Studio closes both. For editors who are not superusers:
+
+- `is_superuser` is read-only, on the create page and on every user.
+- A superuser's email address is read-only.
+- A superuser's password cannot be set, and no password link can be sent
+  to them.
+
+Superusers can change everything. The fields show read-only on the edit
+page and the server does not save them either, whichever studio you
+register for the user model. Your studio's own `get_readonly_fields` still
+applies on top.
+
+## Permissions and groups
+
+A user's permissions and a group's permissions are picked in a matrix: a
+row per model, grouped by app, with **Add**, **Change**, **View** and
+**Delete** columns. Permissions of your own (`Meta.permissions`) follow in
+the **Other** column. The checkboxes at the head of a row, a column or an
+app toggle all of its permissions, the search box filters by app, model or
+permission, and **Selected only** shows the rows that have any.
+
+Editors who are not superusers can only grant what they have themselves:
+
+- A permission they do not have is shown dimmed and cannot be checked or
+  unchecked, so they can neither grant it nor take it away.
+- They can only add a user to a group, or remove them from one, when they
+  have every permission of the group.
+
+The server refuses anything else when the user or group is saved, with an
+error on the field, whatever the form sent. Superusers grant everything.
+
+The matrix is the `PermissionMatrixWidget`, the default for every
+many-to-many field to `django.contrib.auth.models.Permission`, also on
+models of your own. Its options come from
+`api/content/<model>/permissions/<field>`, which needs view permission on
+the model.
+
+## The default user and group studios
+
+When your project registers no studio for them, Content Studio registers
+these, from `content_studio.user_studios`:
+
+- **`UserStudio`**, for the user model; see
+  [The user edit page](#the-user-edit-page) for its layout. The list shows
+  the username, email address, name and staff status, searches the
+  username, name and email address, and filters by status and group.
+- **`GroupStudio`**, for Django's groups: the name and the permission
+  matrix.
+
+Subclass them to start from their layout. What you set yourself is kept:
+
+```python
+from django.contrib.auth import get_user_model
+
+from content_studio import register
+from content_studio.user_studios import UserStudio
+
+
+@register(get_user_model())
+class MyUserStudio(UserStudio):
+    list_filter = ["is_staff", "groups"]
+```
+
+### The user edit page
+
+The default user studio lays out its edit page with the same
+[building blocks](/docs/edit-page) as any studio:
+
+- A **Profile** tab with the account (username and email address) and the
+  personal info (first and last name).
+- A **Permissions** tab with the groups and the permission matrix.
+- A sidebar, shown next to both tabs, with the **Status** (active, staff
+  and superuser), the last login and date joined, read-only, and the
+  user's activity log.
+
+Callouts tell what the status means while you change it:
+
+- An inactive user cannot log in.
+- A user without staff status cannot log in to the admin.
+- A user who may log in but never did has not used their invite yet. The
+  callout names **Resend invite** when you may send it.
+- A superuser has every permission, so on the Permissions tab a callout
+  takes the place of the permission matrix. The matrix comes back, with
+  the permissions it held, when you turn off superuser status. Groups
+  stay, since a project can use them for more than permissions.
+
+The add page shows the same form without the dates and the activity log,
+which a new user does not have yet.
+
+Fields a custom user model does not have are left out, with the cards and
+callouts that would be empty without them. Fields the layout does not
+know get a **Details** card on the Profile tab.
+
+To leave groups out of the menu, give the studio no view permission, or
+register a `ModelStudio` of your own for `Group` that returns `False` from
+`has_view_permission`.
+
+## Related pages
+
+- [Access control](/docs/permissions): the permission hooks the user
+  model's studio uses.
+- [Authentication](/docs/authentication): logging in, sessions and password
+  reset.
+- [Profile page](/docs/profile): every editor's own details and password.

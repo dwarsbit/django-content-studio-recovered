@@ -1,0 +1,177 @@
+# 🛡️ Deployment
+
+Everyone who can log in to the admin can change your content. This page
+lists what to configure before you go live, what Content Studio protects out
+of the box, and the system checks that catch configuration mistakes.
+
+## Deployment checklist
+
+- **Serve the admin over HTTPS.** The session cookie is marked `Secure`
+  whenever `DEBUG` is off
+  ([`REFRESH_COOKIE_SECURE`](/docs/settings#refresh_cookie_secure)). Behind a
+  proxy that terminates TLS, also set Django's `SECURE_PROXY_SSL_HEADER`.
+- **Configure a shared cache**, such as Redis, Memcached or the database
+  cache. The login and password reset limits are counted in the cache; with
+  the default per-process cache, every worker counts separately.
+  Ended sessions are recorded in the cache
+  ([`TOKEN_CACHE`](/docs/settings#token_cache)); with a per-process cache,
+  a session logged out in one worker continues in another.
+  [Presence](/docs/presence) is kept in the cache too.
+- **Pass on the client's IP address.** The limits count per IP address.
+  Without further configuration, Content Studio uses the address of the
+  connection and ignores `X-Forwarded-For`, which any client can set. Behind
+  a proxy, every request then comes from the proxy's address and all
+  clients share one limit. Set `NUM_PROXIES` in the
+  [Django REST Framework settings](https://www.django-rest-framework.org/api-guide/settings/#num_proxies)
+  to the number of proxies in front of your application, and make sure
+  those proxies add the client's address to `X-Forwarded-For`.
+- **Serve uploads from a separate domain** when you can, such as a CDN or an
+  object storage bucket. Even with the upload checks, a file served from your
+  own domain runs with your site's privileges if a browser renders it.
+- **Clear unsaved uploads daily.** Files picked in a
+  [`FileWidget`](/docs/widgets#files) but never saved stay in the upload
+  folder until `manage.py content_studio_clear_uploads` removes them. Run it
+  once a day, for example with cron.
+- **Configure a task backend** that runs Django tasks in a worker. Password
+  reset emails are then sent outside the request, so its duration does not
+  reveal whether an address has an account
+  ([password reset](/docs/authentication#password-reset)).
+- **Keep `DEBUG` off** in production, and keep Django, Content Studio and
+  your other dependencies up to date.
+- **Use Django's security middleware and settings:** `SecurityMiddleware`
+  with HSTS, `XFrameOptionsMiddleware`, and `SESSION_COOKIE_SECURE` and
+  `CSRF_COOKIE_SECURE` for the rest of your site. `manage.py check --deploy`
+  lists what is missing.
+- **Keep `SECRET_KEY` strong and secret**, or set a separate
+  [`TOKEN_SIGNING_KEY`](/docs/settings#token_signing_key): it signs the
+  sessions.
+
+## What Content Studio protects
+
+- **Staff only.** Like the classic Django admin, only active staff users can
+  log in, and every request checks this again. Deactivating a user or
+  revoking their staff status ends their access immediately. What an editor
+  may see and do is decided by the [permission hooks](/docs/permissions).
+- **Short sessions.** Sessions renew themselves while an editor works and
+  end after a week without use, and 30 days after logging in at the latest
+  ([`MAX_SESSION_LIFETIME`](/docs/settings#max_session_lifetime)). Changing
+  or resetting a password logs the user out everywhere
+  ([authentication](/docs/authentication)).
+- **Logging out ends the session on the server.** A copy of the session
+  cookie stops working at logout, and each renewal invalidates the previous
+  cookie. A cookie presented again after its renewal was copied, so
+  Content Studio ends that session.
+- **Limited login and password reset attempts**, per IP address
+  ([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate),
+  [`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate)).
+  The address is the one the connection comes from; an `X-Forwarded-For`
+  header sent by the client is ignored unless you configure your proxies
+  (see the checklist below). Five wrong reset codes lock an email address
+  out, and new passwords must pass `AUTH_PASSWORD_VALIDATORS`.
+- **Sanitized rich text.** `HTMLField` cleans its value on save with an
+  allowlist sanitizer ([`HTML_SANITIZER`](/docs/settings#html_sanitizer)).
+- **Checked uploads.** The media library accepts a list of file types up to
+  a maximum size, and rejects markup such as HTML and SVG
+  ([`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](/docs/settings#media_library_allowed_extensions)).
+  File fields reject markup too, and a file is only attached to an object
+  by the editor who uploaded it.
+- **Write-only secrets.** A field with
+  [`PasswordWidget(write_only=True)`](/docs/widgets#secrets) never sends
+  its value to the browser or to an export.
+- **Nothing public but the login pages.** Before logging in, the admin only
+  receives what it needs to show the login form.
+
+## System checks
+
+Content Studio checks its configuration with Django's system check
+framework: on `manage.py check`, when the development server starts, on
+`makemigrations` and in your CI. An error means the configuration is broken
+and would fail at runtime, often silently. A warning means it works, but
+probably not as you intended. Neither stops the server from starting, but
+`manage.py check` exits with an error code.
+
+### Errors
+
+| ID | Reports |
+|----|---------|
+| `content_studio.E001` | `list_display` set to a mapping. The list view's mapping belongs in `list_item_display`; `list_display` sets the table columns. |
+| `content_studio.E002` | `list_views` with an unknown view name. |
+| `content_studio.E003` | Two extensions with the same ID. Pass an `extension_id` to tell them apart. |
+| `content_studio.E004` | Two dashboard widgets with the same ID, on the start page and the [dashboard pages](/docs/extensions#dashboardpage) together. Pass a `widget_id` to tell them apart. |
+| `content_studio.E005` | Two components with the same ID on one studio, or on an inline and the inlined model's own studio. Pass a `component_id` to tell them apart; the same component class may serve several studios. |
+| `content_studio.E006` | `table_display` entries that are not field names or `TableColumn` objects, duplicate columns, columns that are not a model field, a model property, `__str__` or a studio method, and formats that are not `content_studio.formats` classes or instances. Inlines are checked too. |
+| `content_studio.E007` | Bulk actions: an `actions` list with unknown or duplicate names, a `@bulk_action` that replaces the built-in delete or export, `"export"` in `actions` without export, or an unknown permission. |
+| `content_studio.E008` | `soft_delete` naming an unknown field, or a field that is not a nullable date or date and time. |
+| `content_studio.E009` | A `FOCAL_POINT_ATTR` setting, which is removed: the focal point is one of a media item's [properties](/docs/media-library#properties). |
+| `content_studio.E010` | Edit page fields that are not model fields or properties, which would show as empty read-only boxes, and `Field(widget=...)` values that are not `content_studio.widgets` classes or instances. |
+| `content_studio.E011` | `search_fields`, `ordering` and `list_filter` entries that are not a field, and `list_item_display` values that are not a field or a model method. Inlines are checked too. |
+| `content_studio.E012` | An inline's `fk_name` that is not a field, or not a foreign key (or one-to-one field) to the parent model; or no `fk_name` on an inline whose model has no, or more than one, foreign key to the parent. The inline is not served. |
+| `content_studio.E013` | Values in the site's `default_widget_mapping` or `default_format_mapping` that are not widget or format classes or instances. |
+| `content_studio.E014` | A `MEDIA_LIBRARY_ALLOWED_EXTENSIONS` that is not a list of extensions without the dot, or a `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` that is not a positive number of bytes. |
+| `content_studio.E015` | `readonly_fields` entries that are not model fields or properties. Inlines are checked too. |
+| `content_studio.E016` | `prepopulated_fields` that is not a mapping, fields or source fields that are not model fields, fields that cannot be prepopulated (`DateTimeField`, `ForeignKey`, `OneToOneField`, `ManyToManyField`) and fields in `readonly_fields`. Inlines are checked too. |
+| `content_studio.E017` | A `reorder_field` that is not a model field or, unless the studio overrides `reorder`, not a number field, and `reorder_scope` entries that are not model fields. Inlines are checked too. |
+| `content_studio.E018` | A `BlockField` without blocks, with entries in `blocks` that are not `Block` subclasses, with two blocks of the same name, with a negative `min_num` or `max_num`, or with `min_num` greater than `max_num`. Also block fields that a block cannot store: `ManyToManyField`, `ManyMediaField`, `FileField` and auto fields, a `BlockField` in a block inside a block (blocks inside blocks go one level deep), and relations to models that are not installed. |
+| `content_studio.E019` | Webhook settings: a `WEBHOOK_ALLOWED_HOSTS` that is not a list of host names, a `WEBHOOK_MAX_ATTEMPTS` that is not a positive whole number, a `WEBHOOK_TIMEOUT` that is not a positive number of seconds, or a `WEBHOOK_DELIVERY_RETENTION` that is not `None` or a positive whole number of days. |
+| `content_studio.E020` | An `edit_header` that is not a list, or entries in it that are not components, such as fields, or are text components (`Title`, `Subtitle`, `Text`, `Callout`) or an `SEOPreview`. Inlines are checked too. |
+| `content_studio.E021` | A `duplicate_inlines` that is not a list, or entries in it that are not in the studio's `inlines`. |
+| `content_studio.E022` | An `export_fields` that is not a list, or entries in it that are not field names or `TableColumn` objects, that appear twice, or that do not resolve to a model field, a model property, `__str__` or a method on the studio. |
+| `content_studio.E023` | A [`PRESENCE_CACHE`](/docs/settings#presence_cache) that is not a cache in `CACHES`. |
+| `content_studio.E024` | An `edit_width` that is not `"default"` or `"wide"`. Inlines are checked too. |
+| `content_studio.E025` | A [`MEDIA_METADATA_ATTR`](/docs/settings#media_metadata_attr) you set without a `MEDIA_LIBRARY_MODEL`, or naming a field that is missing or not a `JSONField`. The default is not checked. |
+| `content_studio.E026` | A [`MEDIA_PROPERTIES_ATTR`](/docs/settings#media_properties_attr) you set without a `MEDIA_LIBRARY_MODEL`, or naming a field that is missing or not a `JSONField`. The default is not checked. |
+| `content_studio.E027` | A [`THUMBNAIL_CACHE`](/docs/settings#thumbnail_cache) that is not a cache in `CACHES`, while thumbnails are on. |
+| `content_studio.E028` | A [`DashboardPage`](/docs/extensions#dashboardpage) path that one of the admin's own pages uses, such as `content/` or `media-library/`. |
+| `content_studio.E029` | A dashboard widget's `refresh_interval` that is not a positive number of seconds or `None`. |
+| `content_studio.E030` | A [`NOTIFICATION_RETENTION`](/docs/settings#notification_retention) or [`NOTIFICATION_UNREAD_RETENTION`](/docs/settings#notification_unread_retention) that is not a positive whole number of days or `None`. |
+| `content_studio.E031` | A notification event registered with `register_event` whose key is not lowercase dotted words (like `blog.article_submitted`), starts with `content.`, has an unknown level, or is registered twice with different definitions. |
+| `content_studio.E032` | A [`NOTIFICATION_EMAIL_DIGEST`](/docs/settings#notification_email_digest) that is not `True` or `False`, an [`ADMIN_URL`](/docs/settings#admin_url) that is not an absolute `http` or `https` URL, or the digest turned on without `ADMIN_URL`. |
+| `content_studio.E033` | An [`IMAGE_SIZES`](/docs/settings#image_sizes) size with an invalid name or option, such as an unknown option, no width or height, or `"cover"` without both. The size is not made. |
+| `content_studio.E034` | A [`MAP_TILE_URL`](/docs/settings#map_tiles) without `{z}`, `{x}` and `{y}`, a `MAP_TILE_ATTRIBUTION` that is not a string, a [`MAP_GEOCODER_URL`](/docs/settings#map_geocoder_url) that is not `None` or an `http(s)` URL, or an [`OEMBED_PROVIDERS`](/docs/settings#oembed_providers) that is not `None` or a list of providers with a name, an `http(s)` endpoint and valid URL patterns. |
+| `content_studio.E035` | A [`MapWidget`](/docs/widgets#maps) on a field that is not a `JSONField`, or a `FloatField` or `DecimalField` with an `lng_field` naming another number field; or `lng_field` on a `JSONField`. |
+| `content_studio.E036` | An [`SEOPreview`](/docs/edit-page#seo-preview) whose `title_field`, `description_field` or `path_field` is not a model field. |
+| `content_studio.E037` | [Analytics](/docs/analytics) set up wrong: an `AnalyticsPage`, link, `Analytics` component or analytics widget without an `AnalyticsExtension`, more than one extension or page, a provider that reports metrics or breakdowns Content Studio does not know, or an analytics page path that another page uses. |
+| `content_studio.E038` | The same model inlined twice on one studio. An inline is served at one endpoint per parent and model, so the second inline is not served. |
+| `content_studio.E039` | With [`TENANT_MODEL`](/docs/settings#tenant_model) set, a registered or inlined model with more than one foreign key to the tenant model. Tenant scoping needs exactly one. |
+| `content_studio.E040` | A [condition](/docs/edit-page#conditional-fields) (`when`) that reads a field the model does not have, or an excluded or write-only field, whose value never reaches the admin. |
+| `content_studio.E041` | A [`profile_fields`](/docs/profile#edit-profile) entry that is not a field name or `Field`, names a field the user model does not have, names the password, names the username or a field that decides what a user may do without `readonly=True`, or has `when`. |
+| `content_studio.E042` | A [`list_filter` path](/docs/list-page#filters-across-relations) through the user model's password or a field that the model's studio excludes, or one that continues past a field that is not a relation. The list refuses such filters. |
+| `content_studio.E043` | A [custom filter](/docs/list-page#custom-filters) without a `title`, a `parameter_name` or a `queryset()` method, or whose `parameter_name` is already a field in `list_filter`, another filter's, or a reserved name (`search`, `page`, `ordering`, ...). |
+| `content_studio.E044` | [`TWO_FACTOR_REQUIRED`](/docs/settings#two_factor_required) is not `None`, `"superusers"` or `"all"`, or is set without `content_studio.contrib.two_factor` in `INSTALLED_APPS`. |
+| `content_studio.E046` | An unknown [`list_count`](/docs/list-page#large-tables) value: use `"exact"`, `"estimated"` or `"none"`. |
+
+### Warnings
+
+| ID | Reports |
+|----|---------|
+| `content_studio.W001` | A required model field missing from `edit_main` and `edit_sidebar`, so saving fails. Fields with a default, nullable or blank fields, and fields Content Studio fills in itself do not count. |
+| `content_studio.W002` | A required model field set to `readonly=True` on the edit page or listed in `readonly_fields`, so it can never be filled in and saving fails. |
+| `content_studio.W003` | A choice widget (`SelectWidget`, `MultiSelectWidget`, `ToggleGroupWidget`, `RadioButtonWidget`) on a field without choices, which would show empty. |
+| `content_studio.W004` | `sortable_by` names that are not `table_display` columns. Sorting only applies to table columns. |
+| `content_studio.W005` | `list_filter` entries that are ignored: a `(field, FieldListFilter)` tuple filters on its field without the class, and entries that are not a field name, a path or a [filter class](/docs/list-page#custom-filters) are left out. |
+| `content_studio.W006` | A model group with a model that is not registered with the site, which leaves an empty menu entry. |
+| `content_studio.W007` | A media item model without `file`, `name` or `type`, or a folder model without `name` or `parent`. |
+| `content_studio.W008` | A `crop_image` method on the site without a `MEDIA_LIBRARY_MODEL`, so it is never called. |
+| `content_studio.W009` | An empty `LOGIN_BACKENDS` setting, so nobody can log in. |
+| `content_studio.W010` | `list_display` used for the table columns. It works, but rename it to `table_display`. When both are set, `list_display` is ignored. Inlines are checked too. |
+| `content_studio.W011` | A studio that overrides `get_list_display`, which is never called. The list view uses `get_list_item_display`. |
+| `content_studio.W012` | A dashboard widget that does not subclass a built-in widget, which the admin cannot show. |
+| `content_studio.W013` | An `ordering` that does not start with the `reorder_field` (after any `reorder_scope` fields), so moves do not match the order of the list. Inlines are checked too. |
+| `content_studio.W014` | `allow_duplication` on a singleton, or `duplicate_inlines` without `allow_duplication`. Neither has an effect. |
+| `content_studio.W015` | `export_fields` or `allow_export` on a singleton, an empty `export_fields`, or exported columns that are in `exclude` and are left out. None of them has an effect. |
+| `content_studio.W016` | [Presence](/docs/presence) kept in a `DummyCache`, which keeps nothing, so the admin never shows who has an object open. |
+| `content_studio.W017` | [Presence](/docs/presence) kept in a `LocMemCache`, which each process keeps for itself. A deployment check: `manage.py check --deploy` reports it. |
+| `content_studio.W018` | [Password reset](/docs/authentication#password-reset) emails sent during the request, because no task backend runs Django tasks in a worker. A deployment check: `manage.py check --deploy` reports it. |
+| `content_studio.W019` | `CoverImageWidget` on a field that is not a `MediaField` to the media library model. The widget edits one media item. |
+| `content_studio.W020` | A [Huey task dashboard](/docs/dashboard#huey) without Huey's stats app, so it cannot show runs, durations or errors. |
+| `content_studio.W021` | A [`NotificationsWidget`](/docs/notifications#a-dashboard-widget) on a site without `content_studio.notifications` in `INSTALLED_APPS`; it is not shown. |
+| `content_studio.W022` | [`IMAGE_SIZES`](/docs/settings#image_sizes) set while no sizes can be made: Pillow is not installed, `IMAGE_SIZE_FOLDER` is not set, or the media model has no metadata field. Every size is then the image's own file. |
+| `content_studio.W023` | An analytics provider missing a setting it needs, such as an [`UmamiProvider`](/docs/analytics#umami) without an `api_key` or `website_id`. Its reports show the statistics as unavailable. |
+| `content_studio.W024` | A required model field that only shows under a [condition](/docs/edit-page#conditional-fields). A hidden field is not saved, so creating an object while it is hidden fails. |
+| `content_studio.W025` | A [`RichTextWidget`](/docs/widgets#rich-text) with the image feature without the media library, or with a `link_models` model or an `image_sizes` size that does not exist, has no URL or has no `search_fields`. |
+
+## Reporting a vulnerability
+
+Report security problems privately, through GitHub's private vulnerability
+reporting or by email; see
+[SECURITY.md](https://github.com/dwarsbit/django-content-studio/blob/main/SECURITY.md).

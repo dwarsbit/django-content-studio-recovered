@@ -1,0 +1,6 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate %}Hi {{ name }},
+
+{{ sender }} reset your two-factor login for {{ site_title }}. You log in with your password alone now, and your old recovery codes no longer work. If two-factor login is required, you set it up again the next time you log in.{% endblocktranslate %}
+
+{% blocktranslate %}If you did not ask for this, contact your administrator.{% endblocktranslate %}
+{% endautoescape %}

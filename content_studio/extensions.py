@@ -1,0 +1,341 @@
+import uuid
+from typing import Any, Optional, Union
+
+from .form import ButtonResult
+from .utils import derive_uuid
+from ._types import StrOrPromise
+
+__all__ = [
+    "DashboardPage",
+    "IFramePage",
+    "MainMenuButton",
+    "MainMenuLink",
+    "UserMenuButton",
+    "UserMenuLink",
+]
+
+
+class BaseExtension:
+    extension_type: str
+    extension_id: uuid.UUID
+
+    def __init__(self, extension_id=None):
+        """
+        The extension ID is derived deterministically from the class and
+        its ID parts, so all workers agree on it. Pass an explicit UUID
+        to disambiguate extensions that share these.
+        """
+        if extension_id is not None:
+            self.extension_id = uuid.UUID(str(extension_id))
+        else:
+            self.extension_id = derive_uuid(
+                self.__class__.__module__,
+                self.__class__.__qualname__,
+                *self.get_id_parts(),
+            )
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        """
+        Return the properties that define this extension's identity.
+
+        The parts feed the derived extension ID, so every extension
+        should override this to return the values that distinguish it.
+        Note that the method is called from __init__: only use
+        attributes that are set before calling super().__init__().
+        Extensions sharing their parts get the same ID and are rejected
+        at setup.
+        """
+        return ()
+
+    def is_visible(self, request) -> bool:
+        """
+        Whether the request's user sees this extension. Extensions it
+        returns False for are left out of what the frontend receives.
+        """
+        return True
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            "extension_type": self.extension_type,
+            "extension_id": str(self.extension_id),
+        }
+
+
+class MainMenuLink(BaseExtension):
+    """
+    A link in the main menu. url is a path in the admin, such as
+    "/reports/", or an http(s) URL, which opens in a new tab.
+    Subclass it and override is_visible(request) to show the link to
+    some users only.
+    """
+
+    extension_type = "MainMenuLink"
+    url: str
+    label: StrOrPromise
+    icon: Optional[str] = None
+    color: Optional[str] = None
+    # The position among the main menu's links and buttons: lower first.
+    weight: int = 0
+
+    def __init__(
+        self,
+        url: str,
+        label: StrOrPromise,
+        icon: str | None = None,
+        color: str | None = None,
+        weight: int = 0,
+        extension_id: uuid.UUID | None = None,
+    ):
+        self.url = url
+        self.label = label
+        self.icon = icon
+        self.color = color
+        self.weight = weight
+        super().__init__(extension_id)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.url, self.label)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "config": {
+                "url": self.url,
+                "icon": self.icon,
+                "color": self.color,
+                "label": self.label,
+                "weight": self.weight,
+            },
+        }
+
+
+class MainMenuButton(BaseExtension):
+    """
+    A button in the main menu that runs handle(request) on the server,
+    like the edit page's Button component but for the whole admin:
+
+        class ClearCacheButton(MainMenuButton):
+            def handle(self, request):
+                cache.clear()
+                return _("The cache is cleared.")
+
+        class BlogStudioSite(ContentStudioSite):
+            extensions = [
+                ClearCacheButton(
+                    label=_("Clear cache"),
+                    icon="ph-bold ph-broom",
+                    confirm=_("Clear the cache?"),
+                ),
+            ]
+
+    handle returns None, a message (shown as a notification) or a
+    ButtonResult. is_visible(request) decides who sees the button; it
+    is checked again when the button runs.
+    """
+
+    extension_type = "MainMenuButton"
+    label: StrOrPromise
+    icon: Optional[str] = None
+    color: Optional[str] = None
+    # A question to confirm before the button runs.
+    confirm: Optional[StrOrPromise] = None
+    # The position among the main menu's links and buttons: lower first.
+    weight: int = 0
+
+    def __init__(
+        self,
+        label: StrOrPromise | None = None,
+        icon: str | None = None,
+        color: str | None = None,
+        confirm: StrOrPromise | None = None,
+        weight: int | None = None,
+        extension_id: uuid.UUID | None = None,
+    ):
+        # Arguments override the class attributes, so subclasses can
+        # set defaults. Set before super().__init__(): get_id_parts()
+        # reads the label.
+        if label is not None:
+            self.label = label
+        if icon is not None:
+            self.icon = icon
+        if color is not None:
+            self.color = color
+        if confirm is not None:
+            self.confirm = confirm
+        if weight is not None:
+            self.weight = weight
+
+        if not getattr(self, "label", None):
+            raise ValueError("A main menu button needs a label.")
+
+        super().__init__(extension_id)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (str(self.label),)
+
+    def handle(self, request) -> Union[None, str, ButtonResult]:
+        raise NotImplementedError("A main menu button needs a handle(request) method.")
+
+    def run(self, request) -> ButtonResult:
+        result = self.handle(request)
+
+        if isinstance(result, ButtonResult):
+            return result
+
+        return ButtonResult(message=result)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "config": {
+                "label": str(self.label),
+                "icon": self.icon,
+                "color": self.color,
+                "confirm": None if self.confirm is None else str(self.confirm),
+                "weight": self.weight,
+            },
+        }
+
+
+class UserMenuLink(MainMenuLink):
+    """
+    A link in the user menu, between the theme toggle and logging out.
+    It takes the same options as MainMenuLink.
+    """
+
+    extension_type = "UserMenuLink"
+
+
+class UserMenuButton(MainMenuButton):
+    """
+    A button in the user menu, between the theme toggle and logging
+    out. It works like MainMenuButton: subclass it and implement
+    handle(request).
+    """
+
+    extension_type = "UserMenuButton"
+
+
+# The sandbox an IFramePage's iframe gets by default. The embedded page
+# may run scripts, keep its origin, submit forms, open windows and offer
+# downloads, but cannot navigate the admin away, show modal dialogs or
+# lock the pointer.
+DEFAULT_IFRAME_SANDBOX = (
+    "allow-scripts allow-same-origin allow-forms allow-popups "
+    "allow-popups-to-escape-sandbox allow-downloads"
+)
+
+
+class IFramePage(BaseExtension):
+    """
+    A page in the admin that shows another web page in an iframe.
+
+    sandbox is the iframe's sandbox attribute: DEFAULT_IFRAME_SANDBOX
+    unless given, another string of sandbox tokens to tighten or widen
+    it, or None to embed the page without a sandbox.
+    """
+
+    extension_type = "IFramePage"
+    path: str
+    iframe_url: str
+    sandbox: Optional[str]
+
+    def __init__(
+        self,
+        path: str,
+        iframe_url: str,
+        extension_id: uuid.UUID | None = None,
+        *,
+        sandbox: Optional[str] = DEFAULT_IFRAME_SANDBOX,
+    ):
+        self.path = path
+        self.iframe_url = iframe_url
+        self.sandbox = sandbox
+        super().__init__(extension_id)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.path, self.iframe_url)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "config": {
+                "path": self.path,
+                "iframe_url": self.iframe_url,
+                "sandbox": self.sandbox,
+            },
+        }
+
+
+class DashboardPage(BaseExtension):
+    """
+    A page in the admin with its own dashboard: a title, an optional
+    description and a grid of dashboard widgets.
+
+        class BlogStudioSite(ContentStudioSite):
+            extensions = [
+                DashboardPage(
+                    path="reports/",
+                    title=_("Reports"),
+                    dashboard=Dashboard(widgets=[TotalArticlesWidget()]),
+                ),
+            ]
+
+    Link to the page with a menu link to its path. is_visible(request)
+    decides who sees the page; it is checked again whenever one of its
+    widgets loads its data.
+    """
+
+    extension_type = "DashboardPage"
+    path: str
+    title: StrOrPromise
+    description: Optional[StrOrPromise] = None
+    dashboard: Any
+
+    def __init__(
+        self,
+        path: str | None = None,
+        title: StrOrPromise | None = None,
+        dashboard: Any | None = None,
+        description: StrOrPromise | None = None,
+        extension_id: uuid.UUID | None = None,
+    ):
+        # Arguments override the class attributes, so subclasses can
+        # set defaults. Set before super().__init__(): get_id_parts()
+        # reads the path.
+        if path is not None:
+            self.path = path
+        if title is not None:
+            self.title = title
+        if dashboard is not None:
+            self.dashboard = dashboard
+        if description is not None:
+            self.description = description
+
+        if not getattr(self, "path", None):
+            raise ValueError("A dashboard page needs a path.")
+        if not getattr(self, "title", None):
+            raise ValueError("A dashboard page needs a title.")
+        if getattr(self, "dashboard", None) is None:
+            raise ValueError("A dashboard page needs a dashboard.")
+
+        super().__init__(extension_id)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.path,)
+
+    def is_visible(self, request) -> bool:
+        return True
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "config": {
+                "path": self.path,
+                "title": str(self.title),
+                "description": (
+                    None if self.description is None else str(self.description)
+                ),
+                **self.dashboard.serialize(),
+            },
+        }

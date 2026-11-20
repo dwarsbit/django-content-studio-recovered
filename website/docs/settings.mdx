@@ -1,0 +1,363 @@
+# ⚙️ Settings reference
+
+All settings live in one `CONTENT_STUDIO` dictionary in your Django settings.
+Every setting is optional; leave out the ones you do not change.
+
+```python
+# mysite/settings.py
+CONTENT_STUDIO = {
+    "ADMIN_SITE": "mysite.studio.admin_site",
+    "MEDIA_LIBRARY_MODEL": "content_studio.media_library.models.Media",
+}
+```
+
+## Site
+
+### ADMIN_SITE {#admin_site}
+
+The site the admin runs on, as an import path string. Default:
+`"content_studio.admin.admin_site"`, a site without customizations. To add
+a dashboard, extensions, tenants or media library hooks, subclass
+`ContentStudioSite` and point this setting at your instance.
+
+## Login and sessions
+
+### LOGIN_BACKENDS {#login_backends}
+
+The login backends. Leave it at the default, username and password: it is
+the only supported backend ([authentication](/docs/authentication#login-backends)).
+
+### LOGIN_THROTTLE_RATE {#login_throttle_rate}
+
+The maximum number of login attempts per IP address, as a
+[Django REST Framework rate string](https://www.django-rest-framework.org/api-guide/throttling/#setting-the-throttling-policy)
+such as `"10/min"`. Default: `"10/min"`. `None` removes the limit. Attempts
+are counted in the cache: with the default per-process cache, every worker
+counts separately, so configure a shared cache.
+
+### TWO_FACTOR_REQUIRED {#two_factor_required}
+
+Who must use [two-factor login](/docs/authentication#two-factor-login):
+`None` (default: it is optional for everyone), `"superusers"` or `"all"`.
+Editors who have not set it up do so at their next login, and sessions that
+did not pass the code step end. Needs the `content_studio.contrib.two_factor`
+app; `manage.py check` reports `content_studio.E044` otherwise.
+
+### TWO_FACTOR_ISSUER {#two_factor_issuer}
+
+The name authenticator apps show above the account. Default: `None`, which
+uses the admin site's `site_title`.
+
+### TWO_FACTOR_THROTTLE_RATE {#two_factor_throttle_rate}
+
+The maximum number of wrong two-factor codes per account, such as
+`"10/hour"` (the default). Once reached, the account cannot log in with a
+code until the period has passed since the first wrong one. `None` removes
+the limit. Counted in [`TOKEN_CACHE`](#token_cache).
+
+### TOKEN_BACKEND {#token_backend}
+
+The backend that manages sessions. Leave it at the default: it is the only
+supported backend.
+
+### TOKEN_LIFETIME {#token_lifetime}
+
+How long a session stays active between renewals, in seconds. Default:
+`3600` (one hour). Sessions renew themselves while the editor works, so a
+short lifetime does not log anyone out.
+
+### REFRESH_TOKEN_LIFETIME {#refresh_token_lifetime}
+
+How long a session can go unused before the editor has to log in again, in
+seconds. Default: `604800` (seven days).
+
+### MAX_SESSION_LIFETIME {#max_session_lifetime}
+
+How long a session can last after logging in, however active the editor
+is, in seconds. Default: `2592000` (30 days). After that, the editor logs
+in again. `None` lets a session that is in use last indefinitely.
+
+### TOKEN_CACHE {#token_cache}
+
+The alias of the cache in `CACHES` that remembers logged-out sessions.
+Default: `"default"`. With several worker processes or servers, use a shared
+cache, such as Redis, Memcached or the database cache; otherwise a session
+logged out in one worker continues in another.
+
+### TOKEN_SIGNING_KEY {#token_signing_key}
+
+The key that signs the sessions. Default: `None`, which uses Django's
+`SECRET_KEY`. Rotate `SECRET_KEY` the way Django documents, with the old key
+in `SECRET_KEY_FALLBACKS`, and the sessions it signed continue; without the
+fallback, every editor logs in again. Set a separate key if you rotate
+`SECRET_KEY` independently of admin sessions.
+
+### TOKEN_ALGORITHM {#token_algorithm}
+
+The algorithm that signs the sessions: `"HS256"`, `"HS384"` or `"HS512"`.
+Default: `"HS256"`.
+
+### REFRESH_COOKIE_SECURE {#refresh_cookie_secure}
+
+Whether the session cookie is marked `Secure`, so browsers only send it over
+HTTPS. Default: `None`, which marks it secure on HTTPS requests and whenever
+`DEBUG` is off, also behind a proxy that does not set
+`SECURE_PROXY_SSL_HEADER`. Set `True` or `False` to force either value. A
+production site served over plain HTTP needs `False` to log in at all, and
+should move to HTTPS.
+
+## Audit stamps
+
+### EDITED_BY_ATTR, EDITED_AT_ATTR, CREATED_BY_ATTR, CREATED_AT_ATTR {#audit-attrs}
+
+The field names of the audit stamps. Defaults: `"edited_by"`,
+`"edited_at"`, `"created_by"` and `"created_at"`. When an editor creates an
+object, the admin fills in `created_by`; when they save it, `edited_by` and
+`edited_at`. Models without these fields are left as they are.
+
+## Content
+
+### HTML_SANITIZER {#html_sanitizer}
+
+The sanitizer that cleans [`HTMLField`](/docs/registering-models)
+values on save: a callable or an import path string. Default: `None`, the
+built-in sanitizer, which keeps a common set of tags, attributes and link
+types and removes everything else. A `sanitizer` passed to an `HTMLField`
+takes precedence over this setting.
+
+### UPLOAD_FOLDER {#upload_folder}
+
+Where files picked in a [`FileWidget`](/docs/widgets#files) wait until the
+editor saves, in the default storage. Default:
+`"content_studio/uploads"`. `content_studio_clear_uploads` removes the
+ones that were never saved.
+
+### UPLOAD_MAX_SIZE {#upload_max_size}
+
+The maximum size of a file picked in a `FileWidget`, in bytes. Default:
+`52428800` (50 MB). `None` removes the limit; your web server's own request
+size limit still applies.
+
+### MAP_TILE_URL, MAP_TILE_ATTRIBUTION {#map_tiles}
+
+The tiles a [`MapWidget`](/docs/widgets#maps) shows: a tile URL template
+with `{z}`, `{x}` and `{y}`, and the attribution shown on the map (HTML).
+Default: OpenStreetMap's tiles,
+`"https://tile.openstreetmap.org/{z}/{x}/{y}.png"`, with its attribution.
+Editors' browsers request the tiles, so a tile server with a key, such as
+MapTiler, exposes that key to them.
+
+### MAP_GEOCODER_URL {#map_geocoder_url}
+
+The address search of a `MapWidget`: a
+[Nominatim](https://nominatim.org) search URL, which editors' browsers
+call when they press Enter in the search box. Default:
+`"https://nominatim.openstreetmap.org/search"`. `None` leaves the search
+box out.
+
+### OEMBED_PROVIDERS {#oembed_providers}
+
+The sites an [`EmbedWidget`](/docs/widgets#embeds) previews. Default:
+`None`, the built-in list (`content_studio.oembed.PROVIDERS`): YouTube,
+Vimeo, Spotify, SoundCloud, Dailymotion, TikTok, Flickr, Bluesky, X,
+Mixcloud, CodePen and Giphy. A list replaces it; each entry names the site,
+its oEmbed endpoint and the URL patterns it embeds, as regular expressions
+matched against the start of the URL:
+
+```python
+from content_studio.oembed import PROVIDERS
+
+CONTENT_STUDIO = {
+    "OEMBED_PROVIDERS": [
+        *PROVIDERS,
+        {
+            "name": "PeerTube",
+            "endpoint": "https://tube.example.com/services/oembed",
+            "patterns": [r"https://tube\.example\.com/w/"],
+        },
+    ],
+}
+```
+
+The server asks these endpoints, and nothing else, for a preview.
+
+## Media library
+
+### MEDIA_LIBRARY_MODEL, MEDIA_LIBRARY_FOLDER_MODEL {#media_models}
+
+The media item and folder models of the [media library](/docs/media-library),
+as import path strings. Default: `None`, which turns the media library off.
+
+### MEDIA_LIBRARY_ALLOWED_EXTENSIONS {#media_library_allowed_extensions}
+
+The file extensions the media library accepts, in lowercase and without the
+dot. By default:
+
+- images: `avif`, `gif`, `jpeg`, `jpg`, `png`, `webp`;
+- video and audio: `m4a`, `mov`, `mp3`, `mp4`, `ogg`, `wav`, `webm`;
+- documents: `csv`, `doc`, `docx`, `odp`, `ods`, `odt`, `pdf`, `ppt`,
+  `pptx`, `txt`, `xls`, `xlsx`.
+
+SVG is left out because it can contain scripts. `None` accepts every
+extension. Files whose content is markup (HTML, SVG, XML) are rejected
+whatever their extension.
+
+### MEDIA_LIBRARY_MAX_UPLOAD_SIZE {#media_library_max_upload_size}
+
+The maximum size of an upload, in bytes. Default: `52428800` (50 MB). `None`
+removes the limit; your web server's own request size limit still applies.
+
+### MEDIA_METADATA_ATTR {#media_metadata_attr}
+
+The field on the media item model that stores the
+[metadata read from its file](/docs/media-library#metadata), such as an
+image's width and height. The field must be a `JSONField`; editors cannot
+change it. Default: `"metadata"`, the field of the built-in `Media` model. A
+media model without a `JSONField` by that name has no metadata; `None` turns
+reading metadata off. When you set this setting, system check
+`content_studio.E025` reports a value without a media library model, or one
+naming a field that is missing or not a `JSONField`.
+
+### MEDIA_PROPERTIES_ATTR {#media_properties_attr}
+
+The field on the media item model that stores the
+[properties editors set](/docs/media-library#properties) for some types of
+media, such as an image's focal point. The field must be a `JSONField`.
+Default: `"properties"`, the field of the built-in `Media` model. A media
+model without a `JSONField` by that name has no properties, and the admin
+offers no focal point; `None` turns properties off. When you set this
+setting, system check `content_studio.E026` reports a value without a media
+library model, or one naming a field that is missing or not a `JSONField`.
+
+### THUMBNAIL_FOLDER {#thumbnail_folder}
+
+The folder, inside each image's storage, that the
+[thumbnails of media library images](/docs/media-library#thumbnails) are
+saved in. Default: `"content_studio/thumbnails"`. Thumbnails need Pillow,
+from the `images` extra. `None` turns them off: the admin shows the image
+file itself.
+
+### THUMBNAIL_CACHE {#thumbnail_cache}
+
+The alias of the cache in `CACHES` that remembers which thumbnails exist.
+Default: `"default"`. With several worker processes or servers, it must be a
+shared cache, such as Redis, Memcached or the database cache. System check
+`content_studio.E027` reports an alias that is not in `CACHES` while
+thumbnails are on.
+
+### IMAGE_SIZES {#image_sizes}
+
+The [image sizes](/docs/media-library#image-sizes) every media library image
+is made in, for your site and other consumers: a dict of size names to
+options (`width`, `height`, `fit`, `format`, `quality` and `upscale`).
+Default: `{}`, which makes none. Names hold letters, digits, hyphens and
+underscores. System check `content_studio.E033` reports a size it cannot
+make, and `content_studio.W022` sizes that are set while none can be made.
+
+### IMAGE_SIZE_FOLDER {#image_size_folder}
+
+The folder, inside each image's own storage, that the image sizes are saved
+in. Default: `"content_studio/sizes"`.
+
+## Multi-tenancy
+
+### TENANT_MODEL {#tenant_model}
+
+The tenant model for [multi-tenancy](/docs/multi-tenancy), as an import path
+string. Default: `None`, which turns multi-tenancy off.
+
+## Presence
+
+### PRESENCE {#presence}
+
+Whether the edit and list pages show which other editors have an object
+open; see [Presence](/docs/presence). Default: `True`. A studio turns it off
+for its model with `presence = False`.
+
+### PRESENCE_CACHE {#presence_cache}
+
+The alias of the cache in `CACHES` that presence is kept in. Default:
+`"default"`. With several worker processes or servers, it must be a shared
+cache, such as Redis, Memcached or the database cache. System check
+`content_studio.E023` reports an alias that is not in `CACHES`.
+
+## Webhooks
+
+These settings apply when the `content_studio.webhooks` app is installed;
+see [Webhooks](/docs/webhooks).
+
+### WEBHOOK_ALLOWED_HOSTS {#webhook_allowed_hosts}
+
+Host names that webhooks may reach although they resolve to a private,
+loopback or link-local address, or use plain HTTP, such as a build server on
+your own network. Default: `[]`. Outside this list, webhooks only connect to
+public addresses, over HTTPS unless `DEBUG` is on.
+
+### WEBHOOK_MAX_ATTEMPTS {#webhook_max_attempts}
+
+How many times a webhook delivery is attempted before it is marked as
+failed. Default: `5`. The wait between attempts grows from 1 minute to 64
+minutes.
+
+### WEBHOOK_TIMEOUT {#webhook_timeout}
+
+How long a webhook request may take in total, from connecting to reading the
+response, in seconds. A request that takes longer fails and is retried.
+Default: `5`.
+
+### WEBHOOK_DELIVERY_RETENTION {#webhook_delivery_retention}
+
+How many days delivered and failed webhook deliveries are kept.
+`content_studio_deliver_webhooks` removes older ones; pending deliveries are
+always kept. Default: `30`. `None` keeps every delivery.
+
+## Notifications
+
+### NOTIFICATION_RETENTION {#notification_retention}
+
+How many days read notifications are kept.
+`content_studio_prune_notifications` removes older ones. Default: `90`.
+`None` keeps every read notification.
+
+### NOTIFICATION_UNREAD_RETENTION {#notification_unread_retention}
+
+How many days unread notifications are kept.
+`content_studio_prune_notifications` removes older ones. Default: `None`,
+which keeps every unread notification.
+
+### NOTIFICATION_EMAIL_DIGEST {#notification_email_digest}
+
+Whether `content_studio_send_notification_digest` emails editors the
+notifications they left unread. It needs [`ADMIN_URL`](#admin_url) for the
+links in the emails. Default: `False`. See
+[Email digest](/docs/notifications#email-digest).
+
+### ADMIN_URL {#admin_url}
+
+The admin's absolute URL, like `"https://example.com/admin/"`, for links in
+emails, which are sent outside a request. Default: `None`. Invites and
+password links fall back to the address of the request that sends them;
+set `ADMIN_URL` when a proxy in front of Django changes it.
+
+## History
+
+### HISTORY_MAX_VERSIONS {#history_max_versions}
+
+How many versions the history app (`content_studio.history`) keeps per
+object. Saving an object removes its older versions, and
+`content_studio_prune_history` applies the limit to every object. Default:
+`50`. `None` keeps every version. See [History and restore](history.mdx).
+
+## Password reset
+
+### PASSWORD_RESET_EXPIRATION_TIME {#password_reset_expiration_time}
+
+How long a password reset code stays valid, in minutes. Default: `10`.
+
+### PASSWORD_RESET_THROTTLE_RATE {#password_reset_throttle_rate}
+
+The maximum number of password reset requests per IP address, as a
+[Django REST Framework rate string](https://www.django-rest-framework.org/api-guide/throttling/#setting-the-throttling-policy).
+Default: `"10/hour"`. `None` removes the limit. Like the login limit, it is
+counted in the cache. The same limit applies to the page that sets a
+password with an [invite or password link](/docs/users#invites-and-password-links).

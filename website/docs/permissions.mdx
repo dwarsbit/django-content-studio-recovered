@@ -1,0 +1,123 @@
+# 🔑 Access control
+
+Content Studio uses the permission system of the classic Django admin. Only
+active staff users can log in, editors need Django's model permissions to
+see and change content, and the permission hooks on a studio can restrict
+access further, down to single objects.
+
+## Model-level permissions
+
+Each studio checks access through four permission methods. By default they
+check Django's model permissions:
+
+| Method | Default |
+|--------|---------|
+| `has_view_permission(request, obj=None)` | Django's `view` permission |
+| `has_add_permission(request, obj=None)` | Django's `add` permission |
+| `has_change_permission(request, obj=None)` | Django's `change` permission |
+| `has_delete_permission(request, obj=None)` | Django's `delete` permission |
+
+An editor needs the matching permission on the model; superusers have them
+all. Grant permissions as you would anywhere in Django, through groups or
+user permissions.
+
+## Object-level permissions
+
+The methods also receive the object, so a studio can decide per object. The
+answer guards every endpoint that works on one object: opening, saving,
+deleting, restoring and moving it, and running its buttons.
+
+The edit page follows the same answer: an object the editor may not change
+opens read-only, without Save, and Delete is only offered when the editor
+may delete the object. Inline rows follow the inline's methods.
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    def has_view_permission(self, request, obj=None):
+        if obj is None:
+            return super().has_view_permission(request)
+        # Editors only see their own articles.
+        return obj.author_id == request.user.id or request.user.is_superuser
+```
+
+Without an override, the object-level check falls back to the model-level
+check, as in the classic Django admin. The same methods also guard what
+surrounds an object: a related model's options only appear when the editor
+may view that model, and inline objects can only be added to parents the
+editor can see.
+
+## Narrowing the objects an editor sees
+
+Lists are not filtered object by object. To hide objects from an editor
+altogether, override `get_queryset(request)`: the list, the trash, exports,
+bulk actions, the site search, relation pickers, saves of relations and the
+single-object endpoints all start from it, so an object outside the
+queryset is not listed and not found. Tenant scoping and the trash filter
+are applied on top of it.
+
+```python
+@register(Article)
+class ArticleStudio(ModelStudio):
+    def get_queryset(self, request):
+        queryset = super().get_queryset(request)
+        if request.user.is_superuser:
+            return queryset
+        # Editors only see their own articles.
+        return queryset.filter(author=request.user)
+```
+
+An object that already refers to a hidden object stays editable: a relation
+the form sends back unchanged is kept, only a new choice must come from the
+related studio's queryset. Relations inside blocks are validated within the
+tenant only.
+
+Pair it with `has_view_permission(request, obj)` when an editor may see an
+object but not open it.
+
+## Login throttling
+
+Login attempts are limited per IP address, to 10 per minute by default.
+Change or disable the limit with the
+[`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate) setting:
+
+```python
+# mysite/settings.py
+CONTENT_STUDIO = {
+    "LOGIN_THROTTLE_RATE": "5/min",  # None disables the limit
+}
+```
+
+:::note
+The limit is counted in the cache. With the default per-process cache, every
+worker counts separately; configure a shared cache such as Redis or
+Memcached when you run more than one worker.
+:::
+
+## Field-level permissions
+
+Content Studio has no per-field permissions: an editor who may change an
+object sees all fields the studio shows. To hide a field from every editor,
+leave it out of the edit page with `exclude` or `edit_main`. Fields in
+`exclude` are also never sent to the admin, so `exclude` keeps a value such
+as an API key out of editors' browsers; a field you only leave out of
+`edit_main` is still sent. To let some
+editors see a field without changing it, return it from the studio's
+[`get_readonly_fields`](/docs/edit-page#read-only-fields) for those
+editors. To protect
+sensitive data from some editors only, keep it in a separate model with its
+own permissions.
+
+The user model is the exception: staff who are not superusers cannot change
+`is_superuser`, nor a superuser's email address or password. See
+[User management](/docs/users#what-staff-who-are-not-superusers-can-change).
+Nor can they grant permissions they do not have themselves, directly or
+through a group; see
+[Permissions and groups](/docs/users#permissions-and-groups).

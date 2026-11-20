@@ -1,0 +1,1604 @@
+from typing import Any, Callable, Generic, Optional, Sequence, Type, TypeVar, Union
+
+from django.apps import apps
+from django.contrib.auth import get_user_model
+from django.core.exceptions import FieldDoesNotExist, ImproperlyConfigured
+from django.db import models
+from django.db.models import Model, QuerySet
+from django.db.models.fields.files import FieldFile
+from django.utils.translation import gettext_lazy as _
+from rest_framework.request import HttpRequest
+
+from . import widgets, formats, fields, blocks
+from .actions import get_bulk_actions
+from .exceptions import AlreadyRegistered, NotRegistered
+from .export import get_export_formats, is_exportable
+from .filters import serialize_list_filters
+from .form import (
+    ButtonResult,
+    Component,
+    EditMainItem,
+    EditSidebarItem,
+    Field,
+    FormSet,
+    FormSetGroup,
+    TableColumn,
+)
+from .login_backends import LoginBackendManager
+from .media_library import fields as ml_fields
+from .presence import is_presence_enabled
+from .settings import cs_settings
+from .token_backends import TokenBackendManager
+from .utils import get_related_field_name, flatten
+from ._types import StrOrPromise
+
+__all__ = [
+    "ContentStudioSite",
+    "InlineModelStudio",
+    "ListItemDisplay",
+    "ModelGroup",
+    "ModelStudio",
+    "RelationDisplay",
+    "admin_site",
+    "register",
+]
+
+
+class ModelGroup:
+    """
+    A group of models in the main menu: a heading with the models listed
+    under it. A group starts collapsed when `collapsed` is set; the group
+    holding the current model is always expanded.
+    """
+
+    name: str
+    label: StrOrPromise
+    icon: Optional[str]
+    color: Optional[str]
+    models: list[Type[Model]]
+    collapsed: bool
+
+    def __init__(
+        self,
+        name: str,
+        label: Optional[StrOrPromise] = None,
+        icon: Optional[str] = None,
+        color: Optional[str] = None,
+        models: Optional[list[Type[Model]]] = None,
+        collapsed: bool = False,
+    ):
+        self.name = name
+        self.label = label or name.capitalize()
+        self.icon = icon
+        self.color = color
+        self.models = models or []
+        self.collapsed = collapsed
+
+
+class RelationDisplay:
+    """
+    The display of a related object wherever it appears in the studio:
+    relation pickers, list views and selected-value badges.
+
+    Besides title, description and icon, the display can carry initials
+    (shown as one character on a colored circle) and an avatar (an image
+    URL). When several are set, the interface shows one glyph with the
+    priority: avatar, then initials, then icon.
+    """
+
+    def __init__(
+        self,
+        title: StrOrPromise,
+        description: StrOrPromise = "",
+        icon: str | None = None,
+        initials: str = "",
+        avatar: str | None = None,
+    ):
+        self.title = title
+        self.description = description
+        # A CSS class, like the ModelStudio icon.
+        self.icon = icon
+        self.initials = initials
+        # A URL to an image.
+        self.avatar = avatar
+
+
+class ListItemDisplay:
+    """
+    The anatomy of an item in the list view: a prominent title, a muted
+    description, a meta value rendered as a badge on the right and a
+    thumbnail (an image URL) on the left.
+    """
+
+    def __init__(
+        self,
+        title: StrOrPromise,
+        description: StrOrPromise = "",
+        meta: StrOrPromise = "",
+        thumbnail: str = "",
+    ):
+        self.title = title
+        self.description = description
+        self.meta = meta
+        # A URL to an image.
+        self.thumbnail = thumbnail
+
+
+T = TypeVar("T", bound=Model)
+
+
+class BaseStudio(Generic[T]):
+    """
+    Shared base of ModelStudio and InlineModelStudio: the model, the
+    default edit fields and the permission hooks.
+
+    The permission defaults check Django's model-level permissions,
+    mirroring the classic admin: view or change to read, add/change/
+    delete for their respective actions. All hooks take the optional
+    object argument, so overriding per object is a matter of using it.
+    """
+
+    model: Type[T]
+
+    # Fields to leave out of the default edit form.
+    exclude: Optional[list[str]] = None
+
+    # The Django admin's name for the table columns, accepted as an
+    # alias of table_display (system check W010 asks for table_display).
+    list_display: Optional[list[Union[str, "TableColumn"]]] = None
+
+    # Model fields shown on the edit page but never written through it,
+    # like the classic admin's readonly_fields.
+    readonly_fields: list[str] = []
+
+    # Fields filled in from other fields on the create form, like the
+    # classic admin's prepopulated_fields: {"slug": ("title",)}.
+    prepopulated_fields: dict[str, Sequence[str]] = {}
+
+    # The width of the edit page and its dialogs: "default" keeps the
+    # main column at a readable width, "wide" lets it fill the page for
+    # wide content such as inlines with many columns.
+    edit_width: str = "default"
+
+    # Reordering, as an opt-in: the name of the field the list is
+    # ordered by. Empty, the default, offers no reordering. The built-in
+    # implementation rewrites a numeric field; override reorder() for
+    # any other ordering implementation.
+    reorder_field: str = ""
+
+    # Fields whose values partition the order, e.g. ["book"]: objects
+    # are only ordered among those sharing them. Inlines are always
+    # ordered per parent.
+    reorder_scope: list[str] = []
+
+    # Components shown in the edit page's header, next to the save
+    # button, such as buttons. On an inline, they show in the header of
+    # the inline row's editor.
+    edit_header: list[Component] = []
+
+    def __init__(self, model: Type[T], admin_site: "ContentStudioSite"):
+        self.model = model
+        self.admin_site = admin_site
+
+    def get_created_result(
+        self, request: HttpRequest, obj: T
+    ) -> Union[None, StrOrPromise, ButtonResult]:
+        """
+        What the editor sees after creating obj in the admin: None (the
+        default), a message, or a ButtonResult whose value is shown once
+        in a dialog with a copy button, such as a generated secret.
+        """
+        return None
+
+    def save_model(
+        self, request: HttpRequest, obj: T, data: dict[str, Any], change: bool
+    ) -> None:
+        """
+        Save obj, created (change is False) or changed in the admin,
+        like the classic admin's save_model. obj carries the edited
+        values; data maps the fields that were written to their values,
+        many-to-many fields included, which save_related sets once obj
+        is saved. Raise ValidationError to refuse the save: nothing is
+        stored and the editor sees the message.
+        """
+        obj.save()
+
+    def save_related(
+        self, request: HttpRequest, obj: T, data: dict[str, Any], change: bool
+    ) -> None:
+        """
+        Set the many-to-many fields of obj from data, after save_model
+        saved obj. Override to act once the relations are in place.
+        """
+        for field in obj._meta.many_to_many:
+            if field.name in data:
+                getattr(obj, field.name).set(data[field.name])
+
+    def delete_model(self, request: HttpRequest, obj: T) -> None:
+        """
+        Delete obj, like the classic admin's delete_model. Called for
+        the delete on the edit page and for permanent deletes from the
+        trash; the bulk delete calls delete_queryset. Raise
+        ValidationError to refuse the delete.
+        """
+        obj.delete()
+
+    def delete_queryset(self, request: HttpRequest, queryset: QuerySet) -> None:
+        """
+        Delete the objects of the built-in bulk delete, like the classic
+        admin's delete_queryset. Raise ValidationError to refuse the
+        delete.
+        """
+        queryset.delete()
+
+    def get_component(self, component_id) -> Optional[Component]:
+        """
+        Retrieves a component from the edit_header, edit_main or
+        edit_sidebar attributes by ID.
+        """
+        for component in iter_components(self):
+            if component.component_id == component_id:
+                return component
+
+        return None
+
+    def get_fields(self, request: HttpRequest, obj: Optional[T] = None) -> list[str]:
+        """
+        The fields of the default edit form: every editable field
+        (including many-to-many), minus `exclude`. The additive way to
+        pick fields is edit_main. The user model's password is never a
+        form field: its hash is not sent to the admin, and admins set
+        it with Set password.
+        """
+        exclude = set(self.exclude or [])
+
+        if self.model is get_user_model():
+            exclude.add("password")
+
+        return [
+            field.name
+            for field in self.model._meta.get_fields()
+            if field.editable and not field.auto_created and field.name not in exclude
+        ]
+
+    def get_readonly_fields(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> list[str]:
+        """
+        The fields that are read-only on the edit page; obj is None on
+        the create form. Override to decide per request or per object,
+        e.g. a slug that is fixed once the object exists.
+        """
+        return list(self.readonly_fields)
+
+    def get_prepopulated_fields(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> dict[str, Sequence[str]]:
+        """
+        The fields the create form fills in from other fields, mapped to
+        the fields they are made from. Like the classic admin, existing
+        objects are never prepopulated.
+        """
+        return dict(self.prepopulated_fields)
+
+    def reorder(
+        self,
+        request: HttpRequest,
+        obj: T,
+        *,
+        after: Optional[T] = None,
+        before: Optional[T] = None,
+    ) -> Optional[bool]:
+        """
+        Move obj directly after `after` or directly before `before`;
+        exactly one is given, and it is an object in obj's list. The
+        built-in implementation rewrites the numeric reorder_field of
+        the objects in between. Override to use another ordering
+        implementation, e.g. django-ordered-model's obj.above(before).
+        Returning False reports that nothing moved, so no change is
+        logged.
+        """
+        from .reordering import get_scope_queryset, move
+
+        return move(
+            get_scope_queryset(self, obj),
+            obj,
+            self.reorder_field,
+            after=after,
+            before=before,
+        )
+
+    def get_queryset(self, request: HttpRequest):
+        """
+        The objects the admin works with for this request: the list,
+        the trash, exports, bulk actions, the site search, relation
+        pickers and single-object endpoints all start from it. Override
+        it to narrow the objects an editor sees, such as to their own.
+        Tenant scoping and the trash filter are applied on top.
+        """
+        return self.model._default_manager.all()
+
+    def _has_model_perm(self, request: HttpRequest, action: str) -> bool:
+        opts = self.model._meta
+        return request.user.has_perm(f"{opts.app_label}.{action}_{opts.model_name}")
+
+    def has_add_permission(self, request: HttpRequest, obj: Optional[T] = None) -> bool:
+        return self._has_model_perm(request, "add")
+
+    def has_change_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        return self._has_model_perm(request, "change")
+
+    def has_delete_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        return self._has_model_perm(request, "delete")
+
+    def has_view_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        return self._has_model_perm(request, "view") or self._has_model_perm(
+            request, "change"
+        )
+
+
+class ModelStudio(BaseStudio[T]):
+    """
+    Configuration for a model in Content Studio: how its list and edit
+    pages are laid out, which fields it shows and who may do what.
+    """
+
+    model: Type[T]
+
+    # Whether the model is a singleton and should not show
+    # the list view.
+    is_singleton: bool = False
+
+    # We set a lower limit than Django's default of 100
+    list_per_page: int = 20
+
+    # How the list page counts its objects: "exact" runs COUNT(*),
+    # "estimated" shows the database's estimate for large tables
+    # (PostgreSQL; an exact count elsewhere and for searches and
+    # filters), "none" skips the count and pages with previous/next.
+    list_count: str = "exact"
+
+    # Description shown below model name on list pages
+    list_description: StrOrPromise = ""
+
+    # The columns of the table view: field names, TableColumn objects
+    # or both mixed.
+    table_display: list[Union[str, "TableColumn"]] = ["__str__"]
+
+    # The anatomy of a list view item: roles mapped to field or model
+    # method names, e.g. {"title": "name", "description": "subtitle"}.
+    list_item_display: Optional[dict[str, str]] = None
+
+    # The views offered by the list page: "table" and/or "list". More than
+    # one enables a toggle in the interface.
+    list_views: list[str] = ["table"]
+
+    # Fields the list search searches through.
+    search_fields: list[str] = []
+
+    # The list page's filters: field names, paths across relations
+    # ("author__country") and ListFilter classes.
+    list_filter: list[Union[str, type]] = []
+
+    # The bulk actions offered on the table view: None (the default)
+    # offers the built-in delete plus every @bulk_action method, an
+    # empty list disables bulk actions entirely, and an explicit list
+    # offers exactly those names (with "delete" naming the built-in).
+    actions: Optional[list[str]] = None
+
+    # The columns that may be sorted on; None allows all.
+    sortable_by: Optional[list[str]] = None
+
+    # The default ordering of list results; falls back to pk.
+    ordering: list[str] = []
+
+    # Soft delete, as an opt-in: the name of the model's nullable
+    # timestamp field that marks an object as trashed (the built-in
+    # SoftDeletableModel uses "removed_at"). Empty — the default —
+    # keeps the classic hard delete. When set, the delete action moves
+    # the object to the model's trash instead, where it can be restored
+    # or permanently deleted.
+    soft_delete: str = ""
+
+    # Inline models edited on the parent's edit page.
+    inlines: list[Type["InlineModelStudio"]] = []
+
+    # Configure the main section in the edit-view.
+    edit_main: list[EditMainItem] = []
+
+    # Configure the sidebar in the edit-view.
+    edit_sidebar: list[EditSidebarItem] = []
+
+    # The icon for this model will be shown in the menu and some other places.
+    icon: Optional[str] = None
+
+    # Duplicate (save as new), as an opt-in: the edit page offers to
+    # open a create form prefilled with a copy of the object. Never
+    # offered for singletons.
+    allow_duplication: bool = False
+
+    # The inlines (entries of `inlines`) whose rows are copied along
+    # when the duplicate is saved. Inlines left out start empty.
+    duplicate_inlines: list[Type["InlineModelStudio"]] = []
+
+    # Export, as an opt-in: the list page offers to download the list as
+    # CSV (and Excel when openpyxl is installed). export_fields names the
+    # columns, like table_display; allow_export exports the
+    # table_display columns. Never offered for singletons.
+    export_fields: Optional[list[Union[str, "TableColumn"]]] = None
+    allow_export: bool = False
+
+    # Whether the edit and list pages show which other users have an
+    # object open (when the PRESENCE setting is on).
+    presence: bool = True
+
+    # Whether changes to the model notify anyone (with the notifications
+    # app installed).
+    notifications: bool = True
+
+    def get_duplicate_initial(self, request: HttpRequest, obj: T) -> dict[str, Any]:
+        """
+        The values a duplicate of obj starts with, as model values:
+        related objects as instances, many-to-many fields as lists of
+        instances. The editor can change them before saving, and only
+        fields the create form writes are used. The default copies the
+        editable fields, gives unique slugs and URL paths a free suffix
+        and leaves other unique fields, files, one-to-one fields and
+        read-only, excluded and automatic fields out. Override to
+        adjust, e.g. starting from super().
+        """
+        from .duplication import get_default_duplicate_initial
+
+        return get_default_duplicate_initial(self, request, obj)
+
+    def get_link_url(self, obj: T) -> Optional[str]:
+        """
+        The URL that links to obj from rich text (internal links), or
+        None when obj has none. The default is obj.get_absolute_url();
+        override it for sites whose pages live elsewhere, such as a
+        headless frontend. Objects are offered as link targets when the
+        model has get_absolute_url or the studio overrides this method.
+        """
+        get_absolute_url = getattr(obj, "get_absolute_url", None)
+
+        if not callable(get_absolute_url):
+            return None
+
+        return get_absolute_url()
+
+    def get_relation_display(self, obj: T, request: HttpRequest) -> "RelationDisplay":
+        """
+        How a related object appears wherever the studio renders it: relation
+        pickers, list views and selected-value badges. Override to customize;
+        the base implementation displays the object's string representation.
+        """
+        return RelationDisplay(title=str(obj))
+
+    def get_list_item_display(self, obj: T, request: HttpRequest) -> "ListItemDisplay":
+        """
+        The anatomy of an item in the list view. The base implementation
+        resolves the declarative list_item_display mapping (roles to field
+        or model method names); override for fully computed items.
+        """
+        display = self.list_item_display or {}
+
+        def resolve(role: str) -> str:
+            field = display.get(role)
+
+            if not field:
+                return ""
+
+            value = getattr(obj, field)
+
+            return str(value() if callable(value) else value)
+
+        return ListItemDisplay(
+            title=resolve("title") or str(obj),
+            description=resolve("description"),
+            meta=resolve("meta"),
+            thumbnail=self._resolve_thumbnail(obj, display.get("thumbnail")),
+        )
+
+    def _resolve_thumbnail(self, obj: models.Model, field: Optional[str]) -> str:
+        """
+        The thumbnail URL of the list_item_display mapping: an image or
+        file field, a media library item (images only) or a URL string.
+        """
+        if not field:
+            return ""
+
+        value = getattr(obj, field)
+
+        if callable(value):
+            value = value()
+
+        if not value:
+            return ""
+
+        if isinstance(value, FieldFile):
+            return value.url
+
+        if isinstance(value, models.Model):
+            if value.__class__ is cs_settings.MEDIA_LIBRARY_MODEL:
+                if getattr(value, "type", None) != "image":
+                    return ""
+                return self.admin_site.get_thumbnail(value) or ""
+            return ""
+
+        return str(value)
+
+    def has_add_permission(self, request: HttpRequest, obj: Optional[T] = None) -> bool:
+        # Don't allow adding more than one singleton object.
+        if get_is_singleton(self) and self.model._default_manager.exists():
+            return False
+
+        return super().has_add_permission(request, obj)
+
+    def has_delete_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        if get_is_singleton(self):
+            return False
+
+        return super().has_delete_permission(request, obj)
+
+
+class InlineModelStudio(BaseStudio[T]):
+    """
+    An inline model: rows of a related model edited on the parent's
+    edit page. The relation is derived from the foreign key to the
+    parent; set fk_name when the inline has more than one.
+    """
+
+    model: Type[T]
+
+    # The name of the foreign key field pointing at the parent; left
+    # empty when the inline has exactly one.
+    fk_name: Optional[str] = None
+
+    # The columns of the inline list: field names, TableColumn objects
+    # or both mixed.
+    table_display: list[Union[str, "TableColumn"]] = ["__str__"]
+
+    list_per_page: int = 10
+    list_filter: list[Union[str, type]] = []
+    list_views: list[str] = ["table"]
+    search_fields: list[str] = []
+    ordering: list[str] = []
+
+    # Inlines share the soft_delete surface for the shared viewset code;
+    # inline lists themselves are not trashed.
+    soft_delete: str = ""
+
+    def __init__(self, parent_model: Type[Model], admin_site: "ContentStudioSite"):
+        self.parent_model = parent_model
+        self.admin_site = admin_site
+
+
+class ContentStudioSite:
+    """
+    The Content Studio site: the registry of model studios plus the
+    studio-wide configuration (authentication, dashboard, menus).
+    """
+
+    site_header: StrOrPromise = _("Content Studio")
+    site_title: StrOrPromise = _("Content Studio")
+    index_title: Optional[StrOrPromise] = None
+    site_url: str = "/"
+
+    token_backend: TokenBackendManager = TokenBackendManager()
+
+    login_backend: LoginBackendManager = LoginBackendManager()
+
+    dashboard: Any = None
+
+    model_groups: Optional[list["ModelGroup"]] = None
+
+    extensions: Optional[list[Any]] = None
+
+    # The user model fields editors change on their profile page: field
+    # names or Field objects. None: first_name, last_name and email, those
+    # the user model has; an empty list leaves only the password.
+    profile_fields: Optional[list[Union[str, Field]]] = None
+
+    default_widget_mapping: dict[
+        Union[Type[models.Field], str],
+        Union[Type[widgets.BaseWidget], widgets.BaseWidget],
+    ] = {
+        # Django fields
+        models.CharField: widgets.InputWidget,
+        models.EmailField: widgets.EmailWidget,
+        models.URLField: widgets.URLWidget,
+        models.IntegerField: widgets.InputWidget,
+        models.SmallIntegerField: widgets.InputWidget,
+        models.BigIntegerField: widgets.InputWidget,
+        models.PositiveIntegerField: widgets.InputWidget,
+        models.PositiveSmallIntegerField: widgets.InputWidget,
+        models.PositiveBigIntegerField: widgets.InputWidget,
+        models.FloatField: widgets.InputWidget,
+        models.DecimalField: widgets.InputWidget,
+        models.SlugField: widgets.SlugWidget,
+        models.TextField: widgets.TextAreaWidget,
+        models.BooleanField: widgets.CheckboxWidget,
+        models.NullBooleanField: widgets.CheckboxWidget,
+        models.ForeignKey: widgets.ForeignKeyWidget,
+        models.ManyToManyField: widgets.ManyToManyWidget,
+        models.OneToOneField: widgets.ForeignKeyWidget,
+        models.DateField: widgets.DateWidget,
+        models.DateTimeField: widgets.DateTimeWidget,
+        models.TimeField: widgets.TimeWidget,
+        models.DurationField: widgets.DurationWidget,
+        models.FileField: widgets.FileWidget,
+        models.ImageField: widgets.FileWidget,
+        models.JSONField: widgets.JSONWidget,
+        # Content Studio fields
+        fields.HTMLField: widgets.RichTextWidget,
+        fields.TagField: widgets.TagWidget,
+        fields.FlexField: widgets.JSONSchemaWidget,
+        blocks.BlockField: widgets.BlockWidget,
+        fields.MultipleChoiceField: widgets.MultiSelectWidget,
+        fields.URLPathField: widgets.URLPathWidget,
+        fields.ColorField: widgets.ColorPickerWidget,
+        ml_fields.MediaField: widgets.MediaWidget,
+        ml_fields.ManyMediaField: widgets.ManyMediaWidget,
+        # Common third-party fields
+        "AutoSlugField": widgets.SlugWidget,
+    }
+
+    default_format_mapping: dict[
+        Type[models.Field], Union[Type[formats.BaseFormat], formats.BaseFormat]
+    ] = {
+        models.CharField: formats.TextFormat,
+        models.EmailField: formats.EmailFormat,
+        models.URLField: formats.LinkFormat,
+        models.FileField: formats.FileFormat,
+        models.ImageField: formats.ImageFormat,
+        models.IntegerField: formats.NumberFormat,
+        models.SmallIntegerField: formats.NumberFormat,
+        models.BigIntegerField: formats.NumberFormat,
+        models.PositiveIntegerField: formats.NumberFormat,
+        models.PositiveSmallIntegerField: formats.NumberFormat,
+        models.PositiveBigIntegerField: formats.NumberFormat,
+        models.FloatField: formats.NumberFormat,
+        models.DecimalField: formats.NumberFormat,
+        models.SlugField: formats.TextFormat,
+        # Long text: two lines on the list page, the rest on hover.
+        models.TextField: formats.TextFormat(lines=2),
+        models.BooleanField: formats.BooleanFormat,
+        models.NullBooleanField: formats.BooleanFormat,
+        models.DateField: formats.DateFormat,
+        models.DateTimeField: formats.DateTimeFormat,
+        models.TimeField: formats.TimeFormat,
+        models.DurationField: formats.DurationFormat,
+        models.UUIDField: formats.CodeFormat,
+        models.ForeignKey: formats.ForeignKeyFormat,
+        models.OneToOneField: formats.ForeignKeyFormat,
+        models.ManyToManyField: formats.ManyToManyFormat,
+        models.JSONField: formats.JSONFormat,
+        # Content Studio fields
+        fields.HTMLField: formats.HtmlFormat,
+        fields.TagField: formats.TagFormat,
+        fields.FlexField: formats.JSONFormat,
+        blocks.BlockField: formats.BlockFormat,
+        fields.MultipleChoiceField: formats.TextFormat,
+        fields.URLPathField: formats.TextFormat,
+        fields.ColorField: formats.ColorFormat,
+        ml_fields.MediaField: formats.MediaFormat,
+        ml_fields.ManyMediaField: formats.ManyMediaFormat,
+        # Common third-party fields
+        "AutoSlugField": formats.TextFormat,
+    }
+
+    def __init__(self, name: str = "content_studio"):
+        self.name = name
+        self._registry: dict[Type[Model], ModelStudio] = {}
+
+    def register(
+        self,
+        model_or_iterable,
+        studio_class: Type[ModelStudio] | None = None,
+        **options,
+    ) -> None:
+        """
+        Register the given model(s) with the site. The studio class is
+        instantiated and stored; models must be registered only once.
+
+        Options given as keyword arguments are applied by dynamically
+        subclassing the studio class, like the classic admin's register.
+        """
+        if not isinstance(model_or_iterable, (list, tuple)):
+            model_or_iterable = [model_or_iterable]
+
+        for model in model_or_iterable:
+            if model._meta.abstract:
+                raise ImproperlyConfigured(
+                    f"The model {model.__name__} is abstract, so it cannot be "
+                    "registered with Content Studio."
+                )
+
+            if model in self._registry:
+                raise AlreadyRegistered(
+                    f"The model {model.__name__} is already registered with "
+                    "Content Studio."
+                )
+
+            if studio_class is None:
+                studio_class = ModelStudio
+
+            if options:
+                studio_class = type(
+                    str(studio_class.__name__), (studio_class,), options
+                )
+
+            if not issubclass(studio_class, ModelStudio):
+                raise ImproperlyConfigured(
+                    f"{studio_class.__name__} must subclass "
+                    "content_studio.admin.ModelStudio."
+                )
+
+            self._registry[model] = studio_class(model, self)
+
+    def unregister(self, model_or_iterable) -> None:
+        """
+        Unregister the given model(s) from the site.
+        """
+        if not isinstance(model_or_iterable, (list, tuple)):
+            model_or_iterable = [model_or_iterable]
+
+        for model in model_or_iterable:
+            if model not in self._registry:
+                raise NotRegistered(
+                    f"The model {model.__name__} is not registered with "
+                    "Content Studio."
+                )
+
+            del self._registry[model]
+
+    def get_dashboard_pages(self) -> list:
+        """The site's DashboardPage extensions."""
+        from .extensions import DashboardPage
+
+        return [
+            extension
+            for extension in self.extensions or []
+            if isinstance(extension, DashboardPage)
+        ]
+
+    def is_registered(self, model) -> bool:
+        """
+        Check the registry for the given model.
+        """
+        return model in self._registry
+
+    def setup(self):
+        # The user model and Django's groups are manageable out of the
+        # box; projects that register their own studios take precedence.
+        self._register_default_user_studio()
+
+        # Add token backend's view set to the
+        # Content Studio router.
+        self.token_backend.set_up_router()
+        # Add login backend's view set to the
+        # Content Studio router.
+        self.login_backend.set_up_router()
+        # Add the dashboards' view set to the Content Studio router:
+        # it serves the widgets of the site dashboard and of the
+        # dashboard pages.
+        if self.dashboard or self.get_dashboard_pages():
+            from .dashboard import set_up_router
+
+            set_up_router()
+
+        # The analytics reports, with an AnalyticsExtension.
+        from .analytics.extensions import get_analytics
+
+        if get_analytics(self):
+            from .analytics.views import set_up_router as set_up_analytics_router
+
+            set_up_analytics_router()
+
+        # The profile page of the signed-in user.
+        from .profile import set_up_router as set_up_profile_router
+
+        set_up_profile_router()
+
+        # Global search for the command palette.
+        from .router import content_studio_router
+        from .search import SearchViewSet
+
+        content_studio_router.register(
+            "api/search", SearchViewSet, basename="content_studio_search"
+        )
+
+        # The code step of the login and the profile's card, with the
+        # two-factor app installed.
+        if apps.is_installed("content_studio.contrib.two_factor"):
+            from .contrib.two_factor.views import (
+                set_up_router as set_up_two_factor_router,
+            )
+
+            set_up_two_factor_router()
+
+        # The notification endpoints, with the optional app installed.
+        if apps.is_installed("content_studio.notifications"):
+            from .notifications.viewsets import NotificationViewSet
+
+            content_studio_router.register(
+                "api/notifications",
+                NotificationViewSet,
+                basename="content_studio_notifications",
+            )
+
+    def _register_default_user_studio(self):
+        from .user_studios import GroupStudio, UserStudio
+
+        user_model = get_user_model()
+
+        if not self.is_registered(user_model):
+            self.register(user_model, UserStudio)
+
+        # Django's groups, to manage permissions per role.
+        if apps.is_installed("django.contrib.auth"):
+            from django.contrib.auth.models import Group
+
+            if not self.is_registered(Group):
+                self.register(Group, GroupStudio)
+
+    def get_thumbnail(self, obj, size: str = "small") -> str:
+        """
+        The thumbnail URL of a media library image. size is "small"
+        (grids, pickers and list rows; fits 480px) or "large" (the cover
+        image widget, cropping and the focal point; fits 1600px). With
+        Pillow installed (the [images] extra), a scaled-down WebP saved
+        under THUMBNAIL_FOLDER; otherwise, or when it cannot be made,
+        the file's own URL. Override to serve thumbnails another way.
+        """
+        from .thumbnails import get_thumbnail_url
+
+        if getattr(obj, "type", "image") == "image":
+            url = get_thumbnail_url(obj.file, size)
+
+            if url:
+                return url
+
+        return obj.file.url
+
+    def crop_image(self, obj, crop_info) -> None:
+        """
+        Crop an image media item to the editor's selection: crop_info
+        holds x, y, width and height as percentages of the image. By
+        default, the crop is cut from the original at full size (it is
+        never resized) and becomes the item's file; the original is kept
+        and named in the item's metadata, so a later crop starts from it
+        and reset_crop puts it back. The default needs Pillow (the
+        images extra) and a metadata field on the media model; without
+        them cropping is off. Override to crop another way.
+        """
+        from .media_library.cropping import crop_media
+
+        crop_media(obj, crop_info)
+
+    def reset_crop(self, obj) -> None:
+        """
+        Undo the crop of an image media item: by default, put the
+        original the built-in crop kept back in place.
+        """
+        from .media_library.cropping import reset_media_crop
+
+        reset_media_crop(obj)
+
+    def get_media_metadata(self, file, type: str) -> dict:
+        """
+        The metadata to store for a media file of the given type
+        ("image", "video", "audio" or "file") when the media model has
+        the MEDIA_METADATA_ATTR field: a JSON-safe dict. By default, an
+        image's width and height (with Pillow, when it is installed) and
+        nothing for other types. Override to read more, such as a
+        video's duration.
+        """
+        from .media_library.metadata import read_image_size
+
+        if type == "image":
+            return read_image_size(file)
+
+        return {}
+
+    def get_media_serializer_fields(self, media_model) -> Union[str, Sequence[str]]:
+        """
+        Controls which fields the media library serializer exposes for
+        the given media model. Defaults to "__all__"; override to
+        restrict custom media models that carry sensitive fields.
+        """
+        return "__all__"
+
+    def get_tenants(
+        self, tenant_model: Type[models.Model], **kwargs
+    ) -> models.QuerySet:
+        """
+        Method for getting the list of available tenants.
+        """
+        return tenant_model._default_manager.all()
+
+    def get_default_subscriptions(self, user) -> dict:
+        """
+        What the user is notified about without a choice of their own
+        (with the notifications app installed). Return a dict: a model
+        class maps to the changes and whose objects they are about,
+
+            {Article: {"events": ["created", "updated"], "scope": "all"}}
+
+        with changes from "created", "updated", "deleted" and "restored"
+        and scope "all" (every object) or "mine" (the objects the user
+        created, the default); a registered event's key maps to True or
+        False. Models and events left out keep the built-in default:
+        updates, deletions and restores of the objects the user created,
+        and the event's own default. A user's own choice on the
+        notification settings page always wins, and required events stay
+        on.
+
+        Called for every active staff user when a change is fanned out,
+        so keep it cheap: the user's groups are prefetched there.
+        """
+        return {}
+
+
+admin_site = ContentStudioSite()
+
+
+S = TypeVar("S", bound=Type[ModelStudio])
+
+
+def register(
+    *models: Type[Model], site: ContentStudioSite | None = None
+) -> Callable[[S], S]:
+    """
+    Register the given model classes and wrapped ModelStudio class with
+    the Content Studio site:
+
+        from content_studio import register
+        from content_studio.admin import ModelStudio
+
+        @register(Article)
+        class ArticleStudio(ModelStudio):
+            pass
+
+    The `site` kwarg is a Content Studio site to use instead of the
+    configured one.
+    """
+
+    def _model_studio_wrapper(studio_class: S) -> S:
+        if not models:
+            raise ValueError("At least one model must be passed to register.")
+
+        admin_site = site or cs_settings.ADMIN_SITE
+
+        if not isinstance(admin_site, ContentStudioSite):
+            raise ValueError("site must be a ContentStudioSite instance.")
+
+        if not issubclass(studio_class, ModelStudio):
+            raise ValueError("Wrapped class must subclass ModelStudio.")
+
+        admin_site.register(models, studio_class=studio_class)
+
+        return studio_class
+
+    return _model_studio_wrapper
+
+
+def _header_entries(studio) -> list:
+    """A studio's edit_header as a list; anything but a list or tuple
+    counts as empty (system check E020 reports it)."""
+    header = getattr(studio, "edit_header", None)
+
+    return list(header) if isinstance(header, (list, tuple)) else []
+
+
+def serialize_edit_header(studio) -> list[dict[str, Any]]:
+    """The serialized components of a studio's edit_header."""
+    return [
+        component.serialize()
+        for component in _header_entries(studio)
+        if isinstance(component, Component)
+    ]
+
+
+def get_search_field(studio) -> str | None:
+    """
+    The first of a studio's search_fields when it is a plain text field
+    of the model (not a path across relations), else None.
+    """
+    if not studio.search_fields:
+        return None
+
+    name = studio.search_fields[0]
+
+    if "__" in name:
+        return None
+
+    try:
+        field = studio.model._meta.get_field(name)
+    except FieldDoesNotExist:
+        return None
+
+    if (
+        isinstance(field, (models.CharField, models.TextField))
+        and field.editable
+        and not field.choices
+    ):
+        return name
+
+    return None
+
+
+def serialize_permissions(studio, request) -> dict[str, bool]:
+    return {
+        "add_permission": studio.has_add_permission(request),
+        "delete_permission": studio.has_delete_permission(request),
+        "change_permission": studio.has_change_permission(request),
+        "view_permission": studio.has_view_permission(request),
+    }
+
+
+def iter_components(admin_class):
+    """
+    Yield the components configured in a studio's edit_header,
+    edit_main and edit_sidebar.
+    """
+    all_fields = (
+        _header_entries(admin_class)
+        + list(getattr(admin_class, "edit_main", None) or [])
+        + list(getattr(admin_class, "edit_sidebar", None) or [])
+    )
+
+    flat_fields = flatten(
+        [f.get_fields() if hasattr(f, "get_fields") else [f] for f in all_fields]
+    )
+
+    for field in flat_fields:
+        if issubclass(field.__class__, Component):
+            yield field
+
+
+def declares(owner, name: str) -> bool:
+    """
+    Whether a studio (class or instance) sets an attribute itself rather
+    than inheriting Content Studio's default.
+    """
+    cls = owner if isinstance(owner, type) else type(owner)
+
+    return any(
+        name in vars(klass)
+        for klass in cls.__mro__
+        if klass not in (ModelStudio, InlineModelStudio, BaseStudio, Generic, object)
+    )
+
+
+def resolve_table_display(owner) -> list:
+    """
+    A studio's table_display entries. list_display, the Django admin's
+    name for the table columns, stands in for table_display unless the
+    studio sets table_display itself.
+    """
+    list_display = getattr(owner, "list_display", None)
+
+    if isinstance(list_display, (list, tuple)) and not declares(owner, "table_display"):
+        return list(list_display)
+
+    return list(getattr(owner, "table_display", []))
+
+
+def get_table_display_columns(admin_class) -> list[TableColumn]:
+    """
+    Normalize a model studio's table_display entries into TableColumn
+    objects: plain strings are shorthand for TableColumn(field=name).
+    """
+    return [
+        entry if isinstance(entry, TableColumn) else TableColumn(field=entry)
+        for entry in resolve_table_display(admin_class)
+    ]
+
+
+def is_computed_column(admin_class, column: TableColumn) -> bool:
+    """
+    Whether a column is computed: backed by a method on the studio
+    rather than a model field. Dunder names (__str__ and friends) are
+    model behavior, never studio methods.
+    """
+    if column.field.startswith("__"):
+        return False
+
+    return callable(getattr(admin_class, column.field, None))
+
+
+def get_studio_readonly_fields(
+    studio, request: HttpRequest, obj: Optional[models.Model] = None
+) -> list[str]:
+    """
+    The studio's get_readonly_fields plus, on the user model, the fields
+    the request may not change (see users.guarded_field_names): the
+    read-only fields the edit page shows.
+    """
+    from .users import guarded_field_names
+
+    names = list(studio.get_readonly_fields(request, obj))
+    guarded = guarded_field_names(getattr(studio, "model", None), request, obj)
+
+    return names + sorted(guarded - set(names))
+
+
+def get_readonly_field_names(
+    studio, request: HttpRequest, obj: Optional[models.Model] = None
+) -> set[str]:
+    """
+    Every field the API must not write for this studio: the studio's
+    get_readonly_fields plus the edit page's Field(readonly=True)
+    entries, so neither is enforced by the interface alone.
+    """
+    names = set(get_studio_readonly_fields(studio, request, obj))
+
+    all_fields = list(getattr(studio, "edit_main", None) or []) + list(
+        getattr(studio, "edit_sidebar", None) or []
+    )
+    flat_fields = flatten(
+        [f.get_fields() if hasattr(f, "get_fields") else [f] for f in all_fields]
+    )
+
+    for field in flat_fields:
+        if isinstance(field, Field) and field.readonly:
+            names.add(field.name)
+
+    return names
+
+
+def get_form_field_names(
+    studio, request: HttpRequest, obj: Optional[models.Model] = None
+) -> set[str]:
+    """
+    Every field the edit page renders for this studio: the fields of
+    edit_main (or get_fields when it is unset, which honors exclude)
+    and edit_sidebar. Like the classic admin's form, these are the only
+    fields the API writes.
+    """
+    # get_fields is called as the edit page's payload calls it.
+    edit_main = list(getattr(studio, "edit_main", None) or []) or list(
+        studio.get_fields(request)
+    )
+    entries = edit_main + list(getattr(studio, "edit_sidebar", None) or [])
+    flat_fields = flatten(
+        [f.get_fields() if hasattr(f, "get_fields") else [f] for f in entries]
+    )
+
+    names = set()
+
+    for field in flat_fields:
+        if isinstance(field, str):
+            names.add(field)
+        elif isinstance(field, Field):
+            names.add(field.name)
+
+    return names
+
+
+def get_field_placements(studio, request: HttpRequest) -> dict[str, list[list[Any]]]:
+    """
+    Where the edit page places each field, by name: one list per
+    placement of the conditions it shows under (its tab's, its form
+    set's and its own when=). An empty list shows the field always.
+    """
+    serializer = AdminSerializer(studio)
+    # get_fields is called as the edit page's payload calls it.
+    edit_main = list(getattr(studio, "edit_main", None) or []) or list(
+        studio.get_fields(request)
+    )
+    placements: dict[str, list[list[Any]]] = {}
+
+    def place(form_set, group=None):
+        for field in form_set.get_fields():
+            if isinstance(field, Field):
+                placements.setdefault(field.name, []).append(
+                    [
+                        when
+                        for when in (
+                            getattr(group, "when", None),
+                            form_set.when,
+                            field.when,
+                        )
+                        if when is not None
+                    ]
+                )
+
+    for group in serializer.get_edit_main(edit_main):
+        for form_set in group.formsets:
+            place(form_set, group)
+
+    for form_set in serializer.get_edit_sidebar(getattr(studio, "edit_sidebar", None)):
+        place(form_set)
+
+    return placements
+
+
+def iter_conditions(studio):
+    """
+    Yield the server-side Conditions of a studio's edit page: in the
+    when= of its header components, tabs, form sets, fields and
+    components.
+    """
+    from .conditions import iter_conditions as conditions_in
+
+    entries = (
+        _header_entries(studio)
+        + list(getattr(studio, "edit_main", None) or [])
+        + list(getattr(studio, "edit_sidebar", None) or [])
+    )
+
+    def visit(entry):
+        yield from conditions_in(getattr(entry, "when", None))
+
+        for child in getattr(entry, "formsets", None) or []:
+            yield from visit(child)
+
+        for child in getattr(entry, "fields", None) or []:
+            yield from visit(child)
+
+    for entry in entries:
+        yield from visit(entry)
+
+
+def get_hidden_field_names(
+    studio, request: HttpRequest, values: dict[str, Any]
+) -> set[str]:
+    """
+    The fields the edit page hides for these form values: every
+    placement of the field has a condition that does not hold. The API
+    does not write them, so their stored values stay as they are.
+    """
+    from .conditions import evaluate, iter_conditions as conditions_in, serialize
+
+    hidden = set()
+
+    for name, placements in get_field_placements(studio, request).items():
+        if not placements or any(not whens for whens in placements):
+            continue
+
+        def shows(whens) -> bool:
+            for when in whens:
+                by_id = {
+                    str(condition.condition_id): condition
+                    for condition in conditions_in(when)
+                }
+                result = evaluate(
+                    serialize(when),
+                    values,
+                    run_condition=lambda leaf: by_id[leaf["condition"]].run(
+                        values, request
+                    ),
+                )
+
+                if not result:
+                    return False
+
+            return True
+
+        if not any(shows(whens) for whens in placements):
+            hidden.add(name)
+
+    return hidden
+
+
+def get_condition_field_names(studio, request: HttpRequest) -> list[str]:
+    """
+    The form values the conditions of a studio's conditional fields
+    read, so a save can decide which fields are hidden.
+    """
+    from .conditions import referenced_fields
+
+    names = []
+
+    for placements in get_field_placements(studio, request).values():
+        if not placements or any(not whens for whens in placements):
+            continue
+
+        for whens in placements:
+            for when in whens:
+                names.extend(referenced_fields(when))
+
+    return list(dict.fromkeys(names))
+
+
+def get_write_only_field_names(studio, model) -> set[str]:
+    """
+    The fields edited with a write-only PasswordWidget, whose values are
+    never sent to the admin: by the widget a Field gives them on the edit
+    page, or else by the field's default widget.
+    """
+    from .utils import as_instance
+
+    site = cs_settings.ADMIN_SITE
+    mapping = getattr(site, "default_widget_mapping", None) or {}
+
+    def is_write_only(widget) -> bool:
+        widget = as_instance(widget) if widget is not None else None
+        return isinstance(widget, widgets.PasswordWidget) and widget.write_only
+
+    form_widgets = {}
+    entries = list(getattr(studio, "edit_main", None) or []) + list(
+        getattr(studio, "edit_sidebar", None) or []
+    )
+
+    for field in flatten(
+        [f.get_fields() if hasattr(f, "get_fields") else [f] for f in entries]
+    ):
+        if isinstance(field, Field) and field.widget is not None:
+            form_widgets[field.name] = field.widget
+
+    names = set()
+
+    for model_field in model._meta.concrete_fields:
+        if model_field.name in form_widgets:
+            widget = form_widgets[model_field.name]
+        elif hasattr(model_field, "widget_class"):
+            widget = model_field.widget_class
+        else:
+            widget = mapping.get(model_field.__class__) or mapping.get(
+                model_field.__class__.__name__
+            )
+
+        if is_write_only(widget):
+            names.add(model_field.name)
+
+    return names
+
+
+def serialize_prepopulated_fields(studio, request: HttpRequest) -> dict[str, list]:
+    """
+    The create form's prepopulated fields, with the sources as lists.
+    """
+    return {
+        target: list(sources)
+        for target, sources in studio.get_prepopulated_fields(request).items()
+    }
+
+
+def is_notifications_enabled(admin_class) -> bool:
+    """
+    Whether a studio's edit page offers Follow and its model is on the
+    notification settings: the notifications app is installed and the
+    studio does not opt out with notifications = False.
+    """
+    return (
+        apps.is_installed("content_studio.notifications")
+        and isinstance(admin_class, ModelStudio)
+        and bool(getattr(admin_class, "notifications", True))
+    )
+
+
+def get_is_singleton(admin_class) -> bool:
+    """
+    Return the effective singleton state of a model studio.
+
+    The studio's is_singleton attribute is the canonical declaration.
+    A model-level marker (e.g. a class property like the built-in
+    SingletonModel's is_singleton) is honored as a fallback for backward
+    compatibility; concrete fields named is_singleton are ignored, since
+    a field descriptor is truthy off the model class.
+    """
+    if getattr(admin_class, "is_singleton", False):
+        return True
+
+    model = admin_class.model
+
+    if any(field.name == "is_singleton" for field in model._meta.get_fields()):
+        return False
+
+    return bool(getattr(model, "is_singleton", False))
+
+
+def is_duplicable(studio) -> bool:
+    """
+    Whether a studio offers duplication: an opted-in model studio that
+    is not a singleton. Inlines are never duplicated on their own.
+    """
+    return (
+        isinstance(studio, ModelStudio)
+        and bool(studio.allow_duplication)
+        and not get_is_singleton(studio)
+    )
+
+
+def is_linkable(studio) -> bool:
+    """
+    Whether rich text can link to the studio's objects: the model has
+    get_absolute_url, or the studio overrides get_link_url. Singletons
+    count too; inline-only studios do not.
+    """
+    if not isinstance(studio, ModelStudio):
+        return False
+
+    return type(studio).get_link_url is not ModelStudio.get_link_url or callable(
+        getattr(studio.model, "get_absolute_url", None)
+    )
+
+
+def is_reorderable(studio, request: HttpRequest) -> bool:
+    """
+    Whether the request may reorder a studio's list: reordering is
+    configured and moving an object is a change.
+    """
+    return bool(studio.reorder_field) and studio.has_change_permission(request)
+
+
+def get_relation_display_for(
+    model: Type[models.Model], obj: models.Model, request: HttpRequest
+) -> "RelationDisplay":
+    """
+    Resolve the relation display for an object through its model's
+    registered ModelStudio. Models without one fall back to the string
+    representation.
+    """
+    related_studio = cs_settings.ADMIN_SITE._registry.get(model)
+
+    if related_studio is not None:
+        return related_studio.get_relation_display(obj, request)
+
+    return RelationDisplay(title=str(obj))
+
+
+class AdminSerializer:
+    """
+    Class for serializing model studios for the frontend.
+    """
+
+    def __init__(self, admin_class: ModelStudio):
+        self.admin_class = admin_class
+
+    def serialize(self, request: HttpRequest) -> dict[str, Any]:
+        admin_class = self.admin_class
+
+        return {
+            "icon": admin_class.icon,
+            "is_singleton": get_is_singleton(admin_class),
+            # Whether the edit and list pages show who else has an
+            # object open.
+            "presence": is_presence_enabled(admin_class),
+            # Whether the edit page offers Follow: the notifications app
+            # is installed and the studio does not opt out.
+            "notifications": is_notifications_enabled(admin_class),
+            # Whether rich text can link to the model's objects.
+            "linkable": is_linkable(admin_class),
+            "edit": {
+                "header": serialize_edit_header(admin_class),
+                "main": self.serialize_edit_main(request),
+                "sidebar": self.serialize_edit_sidebar(request),
+                # The create form's read-only fields; saved objects
+                # carry their own.
+                "readonly_fields": get_studio_readonly_fields(admin_class, request),
+                "prepopulated_fields": serialize_prepopulated_fields(
+                    admin_class, request
+                ),
+                # Whether the edit page offers Duplicate; it also needs
+                # add permission.
+                "duplicate": is_duplicable(admin_class),
+                "width": admin_class.edit_width,
+                "inlines": [
+                    {
+                        "model": inline.model._meta.label_lower,
+                        "fk_name": get_related_field_name(inline, admin_class.model),
+                        "readonly_fields": list(
+                            inline(
+                                admin_class.model, admin_class.admin_site
+                            ).get_readonly_fields(request)
+                        ),
+                        "prepopulated_fields": serialize_prepopulated_fields(
+                            inline(admin_class.model, admin_class.admin_site),
+                            request,
+                        ),
+                        "table_display": [
+                            column.serialize()
+                            for column in get_table_display_columns(inline)
+                        ],
+                        "reorderable": is_reorderable(
+                            inline(admin_class.model, admin_class.admin_site),
+                            request,
+                        ),
+                        "header": serialize_edit_header(inline),
+                        # The inline studio sizes its dialogs, not the
+                        # inline model's own studio.
+                        "width": inline.edit_width,
+                        "permissions": serialize_permissions(
+                            inline(admin_class.model, admin_class.admin_site),
+                            request,
+                        ),
+                    }
+                    for inline in admin_class.inlines
+                ],
+            },
+            "list": {
+                "per_page": admin_class.list_per_page,
+                "description": admin_class.list_description,
+                "display": self.get_table_display(),
+                "views": admin_class.list_views,
+                "search": len(admin_class.search_fields) > 0,
+                # The field a relation picker fills with the typed search
+                # text when it creates an object of this model.
+                "search_field": get_search_field(admin_class),
+                "filter": serialize_list_filters(admin_class, request),
+                "trash": bool(admin_class.soft_delete),
+                "sortable_by": admin_class.sortable_by,
+                "reorderable": is_reorderable(admin_class, request),
+                # The formats the list can be exported in, or None when
+                # the studio offers no export.
+                "export": (
+                    {"formats": get_export_formats()}
+                    if is_exportable(admin_class)
+                    else None
+                ),
+                "actions": [
+                    action.serialize()
+                    for action in get_bulk_actions(admin_class, request)
+                ],
+            },
+            "permissions": serialize_permissions(admin_class, request),
+        }
+
+    def serialize_edit_main(self, request: HttpRequest) -> list[dict[str, Any]]:
+        admin_class = self.admin_class
+
+        # An unset (or empty) edit_main falls back to every editable
+        # field. This also gives inline models without a studio of
+        # their own a complete form.
+        edit_main = admin_class.edit_main or admin_class.get_fields(request)
+
+        return [i.serialize() for i in self.get_edit_main(edit_main)]
+
+    def serialize_edit_sidebar(self, request: HttpRequest) -> list[dict[str, Any]]:
+        admin_class = self.admin_class
+
+        return [i.serialize() for i in self.get_edit_sidebar(admin_class.edit_sidebar)]
+
+    def get_table_display(self) -> list[dict[str, Any]]:
+        return [column.serialize() for column in self.get_columns()]
+
+    def get_columns(self) -> list[TableColumn]:
+        return get_table_display_columns(self.admin_class)
+
+    def get_edit_main(
+        self,
+        edit_main: Sequence[EditMainItem],
+    ) -> list[FormSetGroup]:
+        """
+        Returns a normalized list of form set groups.
+
+        Form sets will be wrapped in a form set group. If the edit_main attribute is a list of fields,
+        they are wrapped in a form set and a form set group.
+        """
+        if not edit_main:
+            return []
+        if isinstance(edit_main[0], FormSetGroup):
+            return edit_main
+        if isinstance(edit_main[0], FormSet):
+            return [FormSetGroup(formsets=edit_main)]
+
+        return [FormSetGroup(formsets=[FormSet(fields=edit_main)])]
+
+    def get_edit_sidebar(
+        self,
+        edit_sidebar: Optional[Sequence[EditSidebarItem]],
+    ) -> list[FormSet]:
+        """
+        Returns a normalized list of form sets for the edit_sidebar.
+
+        If the edit_sidebar attribute is a list of fields,
+        they are wrapped in a form set.
+        """
+        if not edit_sidebar:
+            return []
+        if isinstance(edit_sidebar[0], FormSet):
+            return edit_sidebar
+
+        return [FormSet(fields=edit_sidebar)]

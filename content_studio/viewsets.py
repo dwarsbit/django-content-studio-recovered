@@ -1,0 +1,1357 @@
+import json
+import operator
+import uuid
+from contextlib import nullcontext
+from functools import reduce
+
+from django.apps import apps
+from django.contrib.admin.models import LogEntry
+from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import FieldDoesNotExist
+from django.core.exceptions import ValidationError as DjangoValidationError
+from django.db import IntegrityError, models, router, transaction
+from django.db.models import Q
+from django.http import HttpResponseBase
+from django.utils import timezone
+from rest_framework.decorators import action
+from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
+from rest_framework.fields import get_error_detail
+from rest_framework.filters import SearchFilter, OrderingFilter
+from rest_framework.parsers import MultiPartParser
+from rest_framework.renderers import JSONRenderer
+from rest_framework.response import Response
+from rest_framework.viewsets import ModelViewSet
+
+from .parsers import ObjectJSONParser
+from .actions import EXPORT_ACTION_ID, check_object_permissions, get_bulk_actions
+from .admin import get_relation_display_for, is_duplicable
+from .dashboard.activity_log import LogEntrySerializer
+from .duplication import copy_inline_rows, represent_initial
+from .exceptions import DeleteConflict
+from .export import export_response, get_export_formats, is_exportable
+from .filters import (
+    LookupFilter,
+    get_custom_filter,
+    get_filter_field_path,
+    serialize_options,
+)
+from .form import Button, ButtonResult
+from .permissions import ModelStudioPermissions
+from .presence import (
+    MAX_OBJECTS,
+    MAX_SESSION_LENGTH,
+    STATES,
+    get_presence,
+    heartbeat,
+    is_presence_enabled,
+    leave,
+)
+from .reordering import get_reorder_scope
+from .serializers import RelatedItemSerializer
+from .snapshots import get_tracked_field_names, take_snapshot
+from .settings import cs_settings
+from .uniqueness import find_duplicate, get_unique_sets
+from .users import check_invite_email, invite_new_user, is_user_model
+from .signals import (
+    CREATED,
+    DELETED,
+    REORDERED,
+    RESTORED,
+    UPDATED,
+    collect_changes,
+    record_change,
+)
+from .utils import (
+    get_tenant_field_name,
+    get_tenant_scoped_queryset,
+    validate_tenant_access,
+)
+
+
+class BaseModelViewSet(ModelViewSet):
+    # The pk under its usual URL name: primary keys need not be called id.
+    lookup_field = "pk"
+    lookup_url_kwarg = "id"
+    is_singleton = False
+    parser_classes = [ObjectJSONParser]
+    renderer_classes = [JSONRenderer]
+    permission_classes = [ModelStudioPermissions]
+    filter_backends = [SearchFilter, OrderingFilter, LookupFilter]
+
+    def __init__(self, *args, **kwargs):
+        # Forward kwargs: action-level overrides (permission_classes,
+        # authentication_classes) arrive through the viewset init.
+        super(BaseModelViewSet, self).__init__(*args, **kwargs)
+        admin_site = cs_settings.ADMIN_SITE
+
+        self.authentication_classes = [
+            admin_site.token_backend.active_backend.authentication_class
+        ]
+
+    def dispatch(self, request, *args, **kwargs):
+        # The request's changes are sent as one content_changed signal.
+        with collect_changes(request):
+            return super().dispatch(request, *args, **kwargs)
+
+    def get_serializer_context(self):
+        # Saves go through the studio's save_model and save_related.
+        return {**super().get_serializer_context(), "studio": self._admin_model}
+
+    def list(self, request, *args, **kwargs):
+        """
+        We overwrite the list method to support singletons. If a singleton
+        doesn't exist this will raise a NotFound exception.
+        """
+        if self.is_singleton:
+            return super().retrieve(request, *args, **kwargs)
+
+        return super().list(request, *args, **kwargs)
+
+    def perform_create(self, serializer):
+        tenant_id = self.request.headers.get("x-dcs-tenant", None)
+        tenant_model = cs_settings.TENANT_MODEL
+        model = self.get_queryset().model
+        tenant_field_name = get_tenant_field_name(model)
+        attrs = {}
+
+        if tenant_model and tenant_field_name:
+            # Tenant-scoped models fail closed: the tenant comes from the
+            # validated header (the field itself is read-only).
+            if not tenant_id:
+                raise ValidationError("A tenant is required to create this object.")
+
+            tenant_id = validate_tenant_access(self.request, tenant_id)
+            attrs[f"{tenant_field_name}_id"] = tenant_id
+
+        if hasattr(model, cs_settings.CREATED_BY_ATTR):
+            attrs[cs_settings.CREATED_BY_ATTR] = self.request.user
+
+        # A new user is invited to set their password: the invite needs
+        # an email address.
+        check_invite_email(model, serializer.validated_data)
+
+        instance = self._save(serializer, **attrs)
+        source = getattr(self, "_duplicate_source", None)
+        # The history app keeps the created object's values as its first
+        # version.
+        after = (
+            self._snapshot(serializer.data)
+            if apps.is_installed("content_studio.history")
+            else None
+        )
+
+        if source is None:
+            record_change(self.request, instance, CREATED, after=after)
+        else:
+            record_change(
+                self.request,
+                instance,
+                CREATED,
+                f"Duplicated from {source}.",
+                after=after,
+            )
+            self._copy_inline_rows(source, instance)
+
+        invited = (
+            invite_new_user(instance, self.request) if is_user_model(model) else None
+        )
+
+        self._created_result = (
+            self._admin_model.get_created_result(self.request, instance) or invited
+        )
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create the object; what the studio's get_created_result returns
+        travels along under __result__, for the editor to show once.
+        """
+        self._created_result = None
+        self._duplicate_source = self._get_duplicate_source(request)
+
+        # A duplicate's inline rows are saved with it, or not at all.
+        with (
+            transaction.atomic()
+            if self._duplicate_source is not None
+            else nullcontext()
+        ):
+            response = super().create(request, *args, **kwargs)
+
+        result = self._created_result
+
+        if result is not None:
+            if not isinstance(result, ButtonResult):
+                result = ButtonResult(message=result)
+
+            response.data = {**response.data, "__result__": result.serialize()}
+
+        return response
+
+    def _get_duplicate_source(self, request):
+        """
+        The object a create duplicates: ?duplicate_of=<id>, or None for
+        a regular create. The source must be visible to the request,
+        like the duplicate action that prefilled the form.
+        """
+        source_id = request.query_params.get("duplicate_of")
+
+        if source_id is None:
+            return None
+
+        if not is_duplicable(self._admin_model):
+            raise ValidationError("This model cannot be duplicated.")
+
+        try:
+            source = (
+                self.get_queryset()
+                .filter(pk=self._model._meta.pk.to_python(source_id))
+                .first()
+            )
+        except DjangoValidationError:
+            source = None
+
+        if source is None or not self._admin_model.has_view_permission(request, source):
+            raise ValidationError("Unknown object to duplicate.")
+
+        return source
+
+    def _copy_inline_rows(self, source, instance):
+        """Copy the duplicate_inlines' rows of source to instance."""
+        try:
+            with transaction.atomic():
+                copies = copy_inline_rows(
+                    self.request, self._admin_model, source, instance
+                )
+        except IntegrityError:
+            raise ValidationError(
+                "The inline rows could not be copied: a unique value is "
+                "already taken."
+            )
+        except DjangoValidationError as error:
+            # Refused by the inline studio's save_model.
+            raise ValidationError(get_error_detail(error))
+
+        for row in copies:
+            record_change(self.request, row, CREATED, f"Duplicated with {instance}.")
+
+    @action(methods=["get"], detail=True, url_path="duplicate")
+    def duplicate(self, request, id):
+        """
+        The initial values of a duplicate of the object, for the create
+        form: the studio's get_duplicate_initial in the form's shape.
+        Saving goes through create with ?duplicate_of=<id>. Requires add
+        permission, and view permission on the object.
+        """
+        admin_model = self._admin_model
+
+        if not is_duplicable(admin_model):
+            raise NotFound("This model cannot be duplicated.")
+
+        obj = self.get_object()
+
+        if not admin_model.has_add_permission(request):
+            raise PermissionDenied("Add permission required.")
+
+        initial = admin_model.get_duplicate_initial(request, obj)
+        display = get_relation_display_for(self._model, obj, request)
+
+        return Response(
+            {
+                "initial": represent_initial(self.get_serializer(), initial),
+                "source": {"id": obj.pk, "__str__": display.title},
+            }
+        )
+
+    def _save(self, serializer, **attrs):
+        """
+        Save the serializer; a database integrity error (a unique
+        constraint the serializer could not check, such as a
+        conditional one or one that includes the tenant field) is a
+        validation error, not a crash, and so is a Django
+        ValidationError raised by the studio's save hooks.
+        """
+        try:
+            with transaction.atomic(
+                using=router.db_for_write(self.get_queryset().model)
+            ):
+                return serializer.save(**attrs)
+        except IntegrityError as error:
+            raise ValidationError(
+                "The object could not be saved: it conflicts with an existing "
+                f"object ({error})."
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+    def _snapshot(self, data):
+        """The tracked fields of a representation (see snapshots.py)."""
+        model = self.get_queryset().model
+        return take_snapshot(data, model, getattr(self, "_admin_model", None))
+
+    def perform_update(self, serializer):
+        # The object's values before and after the save: the activity
+        # log names the fields the save changed, and the history app
+        # keeps them as a version.
+        before = self._snapshot(serializer.to_representation(serializer.instance))
+        instance = self._save(serializer)
+
+        # Stamp the editor with a targeted update: a full instance save
+        # would race with concurrent edits (lost updates).
+        stamp_fields = []
+
+        if hasattr(instance, cs_settings.EDITED_BY_ATTR):
+            setattr(instance, cs_settings.EDITED_BY_ATTR, self.request.user)
+            stamp_fields.append(cs_settings.EDITED_BY_ATTR)
+
+        if hasattr(instance, cs_settings.EDITED_AT_ATTR):
+            setattr(instance, cs_settings.EDITED_AT_ATTR, timezone.now())
+            stamp_fields.append(cs_settings.EDITED_AT_ATTR)
+
+        if stamp_fields:
+            instance.save(update_fields=stamp_fields)
+
+        # Prefetched relations are stale after the save (DRF clears them
+        # only after perform_update); the response reuses this data.
+        if getattr(instance, "_prefetched_objects_cache", None):
+            instance._prefetched_objects_cache = {}
+
+        after = self._snapshot(serializer.data)
+        record_change(self.request, instance, UPDATED, before=before, after=after)
+
+    def perform_destroy(self, instance):
+        # With soft_delete configured, deleting moves the object to the
+        # trash: the field is stamped instead of the row being removed.
+        soft_delete_field = self._admin_model.soft_delete
+        if soft_delete_field:
+            record_change(self.request, instance, DELETED)
+            setattr(instance, soft_delete_field, timezone.now())
+            instance.save(update_fields=[soft_delete_field])
+            return
+
+        self._delete(instance)
+
+    def _delete(self, instance):
+        """
+        Delete an object through the studio's delete_model and record
+        the change. Objects that refer to it with on_delete=PROTECT or
+        RESTRICT block the delete: 409, and the transaction drops the
+        recorded change, as it does when delete_model refuses with a
+        ValidationError (400).
+        """
+        try:
+            with transaction.atomic(using=router.db_for_write(instance.__class__)):
+                record_change(self.request, instance, DELETED)
+                self._admin_model.delete_model(self.request, instance)
+        except (models.ProtectedError, models.RestrictedError) as error:
+            raise DeleteConflict.from_error(error)
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+    @action(methods=["get"], detail=False, url_path="trash")
+    def trash(self, request):
+        """
+        The model's trash: the soft-deleted objects, most recently
+        deleted first. Only exists when the studio configures
+        soft_delete; gated by view permission like the list.
+        """
+        if not self._admin_model.soft_delete:
+            raise NotFound("This model has no trash.")
+
+        return self.list(request)
+
+    @action(methods=["get"], detail=False, url_path="export")
+    def export(self, request):
+        """
+        The list as a download: ?export_format=csv|xlsx, with the list's
+        search, filters and ordering, every page. ?export_scope=trash
+        exports the trash instead. Only exists when the studio offers
+        export; gated by view permission like the list.
+        """
+        if not is_exportable(self._admin_model):
+            raise NotFound("This model cannot be exported.")
+
+        export_format = self._get_export_format(request.query_params)
+
+        if request.query_params.get("export_scope") == "trash" and (
+            not self._admin_model.soft_delete
+        ):
+            raise NotFound("This model has no trash.")
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        return export_response(self._admin_model, request, queryset, export_format)
+
+    def _get_export_format(self, params):
+        export_format = params.get("export_format") or "csv"
+
+        if export_format not in get_export_formats():
+            raise ValidationError(
+                f"Unknown or unavailable export format {export_format!r}."
+            )
+
+        return export_format
+
+    @action(methods=["post"], detail=True, url_path="restore")
+    def restore(self, request, id):
+        """
+        Restore a soft-deleted object: clears the soft delete field and
+        moves the object back into the lists. Restoring is a change, and
+        is gated by change permission on the object.
+        """
+        soft_delete_field = self._admin_model.soft_delete
+
+        if not soft_delete_field:
+            raise NotFound("This model has no trash.")
+
+        instance = self.get_object()
+        setattr(instance, soft_delete_field, None)
+
+        # A unique constraint that only holds among live objects (a
+        # condition on the soft delete field) refuses the restore when a
+        # live object took the value meanwhile: a conflict, not a crash.
+        try:
+            with transaction.atomic(using=router.db_for_write(instance.__class__)):
+                instance.save(update_fields=[soft_delete_field])
+        except IntegrityError as error:
+            raise ValidationError(
+                "The object could not be restored: it conflicts with an "
+                f"existing object ({error})."
+            )
+
+        record_change(self.request, instance, RESTORED, "Restored from trash.")
+
+        return Response({"id": instance.pk, "__str__": str(instance)})
+
+    @action(methods=["post"], detail=True, url_path="password")
+    def password(self, request, id):
+        """
+        Set a user's password, on the user model's studio only. Gated by
+        change permission on the user; a superuser's password is only
+        set by a superuser, and the own password is changed on the
+        profile page. Setting it signs the user out everywhere.
+        """
+        from .users import can_set_password, set_password
+
+        if not is_user_model(self._model):
+            raise NotFound()
+
+        instance = self.get_object()
+
+        if not can_set_password(self._admin_model, request, instance):
+            raise PermissionDenied()
+
+        password = request.data.get("password")
+        errors = set_password(instance, password if isinstance(password, str) else "")
+
+        if errors:
+            raise ValidationError({"password": errors})
+
+        record_change(request, instance, UPDATED, "Set password.")
+
+        return Response(status=204)
+
+    @action(methods=["post"], detail=True, url_path="password-link")
+    def password_link(self, request, id):
+        """
+        Email a user a link to set their password: an invite when they
+        never logged in, else a reset. Gated like setting the password.
+        """
+        from .password_links import INVITE, get_email, send_link
+        from .users import can_send_password_link
+
+        if not is_user_model(self._model):
+            raise NotFound()
+
+        instance = self.get_object()
+
+        if not can_send_password_link(self._admin_model, request, instance):
+            raise PermissionDenied()
+
+        kind = send_link(instance, request)
+        record_change(
+            request,
+            instance,
+            UPDATED,
+            "Sent an invite." if kind == INVITE else "Sent a password link.",
+        )
+
+        return Response({"kind": kind, "email": get_email(instance)})
+
+    @action(methods=["post"], detail=True, url_path="two-factor/reset")
+    def reset_two_factor(self, request, id):
+        """
+        Reset a user's two-factor login, for one who lost their phone:
+        it is off, their sessions end and they get an email. Gated like
+        setting the password.
+        """
+        from .users import can_reset_two_factor
+
+        if not is_user_model(self._model):
+            raise NotFound()
+
+        instance = self.get_object()
+
+        if not can_reset_two_factor(self._admin_model, request, instance):
+            raise PermissionDenied()
+
+        from .contrib.two_factor.service import reset
+
+        reset(instance, request)
+        record_change(request, instance, UPDATED, "Reset two-factor login.")
+
+        return Response(status=204)
+
+    @action(methods=["get"], detail=False, url_path="permissions/(?P<field_name>[^/]+)")
+    def permission_options(self, request, field_name):
+        """
+        The options of a many-to-many field to auth.Permission, grouped
+        by app and model for the permission matrix; each says whether
+        the editor may grant it (only what they have themselves, unless
+        they are a superuser). Seeing the model is enough: the list
+        only names the permissions.
+        """
+        from .permission_matrix import get_permission_options, is_permission_field
+
+        try:
+            field = self._model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            raise NotFound()
+
+        if not is_permission_field(field):
+            raise NotFound()
+
+        return Response(get_permission_options(request.user))
+
+    @action(methods=["delete"], detail=True, url_path="destroy")
+    def destroy_permanently(self, request, id):
+        """
+        Delete a soft-deleted object permanently, bypassing the trash.
+        Gated by delete permission on the object.
+        """
+        soft_delete_field = self._admin_model.soft_delete
+
+        if not soft_delete_field:
+            raise NotFound("This model has no trash.")
+
+        instance = self.get_object()
+
+        if getattr(instance, soft_delete_field) is None:
+            # Only the trash skips it: a live object goes through the
+            # regular delete, which moves it to the trash first.
+            raise ValidationError("The object is not in the trash.")
+
+        self._delete(instance)
+
+        return Response(status=204)
+
+    @action(methods=["post"], detail=True, url_path="move")
+    def move(self, request, id):
+        """
+        Move an object to another position in its list: {"after": id},
+        {"before": id} or {"position": "first" | "last" | "up" |
+        "down"}. The target is resolved among the objects the list shows
+        in obj's scope; up and down step past the neighbor in the list as
+        filtered by the query parameters, also across pages. The
+        studio's reorder hook does the move. Only exists when the
+        studio configures reorder_field; gated by change permission on
+        the object.
+        """
+        admin_model = self._admin_model
+
+        if not admin_model.reorder_field:
+            raise NotFound("This model cannot be reordered.")
+
+        given = [key for key in ("after", "before", "position") if key in request.data]
+
+        if len(given) != 1:
+            raise ValidationError(
+                "A move requires exactly one of after, before or position."
+            )
+
+        instance = self.get_object()
+
+        # The objects the list shows next to obj: not trashed, in the
+        # request's tenant and in obj's scope, in the list's order.
+        siblings = self.get_queryset().filter(
+            **{
+                attname: getattr(instance, attname)
+                for attname in get_reorder_scope(admin_model)
+            }
+        )
+
+        after = before = None
+        key = given[0]
+        value = request.data[key]
+
+        if key == "position" and value in ("up", "down"):
+            # The neighbor in the list the editor sees: filters apply.
+            pks = list(self.filter_queryset(siblings).values_list("pk", flat=True))
+            index = pks.index(instance.pk) if instance.pk in pks else -1
+            neighbor = index + (1 if value == "down" else -1)
+
+            if index != -1 and 0 <= neighbor < len(pks):
+                target = siblings.get(pk=pks[neighbor])
+                if value == "down":
+                    after = target
+                else:
+                    before = target
+        elif key == "position":
+            if value not in ("first", "last"):
+                raise ValidationError("The position must be first, last, up or down.")
+
+            # Already in place: nothing to move.
+            edge = siblings.first() if value == "first" else siblings.last()
+            others = siblings.exclude(pk=instance.pk)
+
+            if edge is None or edge.pk == instance.pk:
+                pass
+            elif value == "first":
+                before = others.first()
+            else:
+                after = others.last()
+        else:
+            try:
+                target = siblings.filter(
+                    pk=self._model._meta.pk.to_python(value)
+                ).first()
+            except DjangoValidationError:
+                target = None
+
+            if target is None:
+                raise ValidationError("The target is not in this list.")
+
+            if key == "after":
+                after = target
+            else:
+                before = target
+
+        target = after if after is not None else before
+
+        if target is not None and target.pk != instance.pk:
+            moved = admin_model.reorder(request, instance, after=after, before=before)
+        else:
+            moved = False
+
+        if moved is not False:
+            record_change(self.request, instance, REORDERED, "Moved.")
+
+        return Response({"id": instance.pk, "__str__": str(instance)})
+
+    def get_object(self):
+        """
+        We overwrite this method to add support for singletons.
+        If a singleton doesn't exist it will raise a NotFound exception.
+        """
+        if self.is_singleton:
+            singleton = self.get_queryset().first()
+
+            if singleton is None:
+                raise NotFound()
+
+            self.check_object_permissions(self.request, singleton)
+
+            return singleton
+
+        return super().get_object()
+
+    @action(
+        methods=["get"], detail=True, url_path="components/(?P<component_id>[^/.]+)"
+    )
+    def get_component(self, request, id, component_id):
+        component = self._find_component(component_id)
+
+        # A button's state: whether this request may see and run it on
+        # the object.
+        if isinstance(component, Button):
+            obj = self.get_object()
+            visible = component.is_allowed(self._admin_model, obj, request)
+
+            return Response({"visible": visible})
+
+        # Components without a request handler (like ActivityLog) have no
+        # endpoint of their own.
+        if not component or not callable(getattr(component, "handle_request", None)):
+            raise NotFound()
+
+        return component.handle_request(obj=self.get_object(), request=request)
+
+    @action(
+        methods=["post"],
+        detail=True,
+        url_path="components/(?P<component_id>[^/.]+)/run",
+    )
+    def run_component(self, request, id, component_id):
+        """
+        Run a button on the object. Seeing the object is the gate here;
+        the button checks its own allowed_permissions and visibility.
+        """
+        component = self._find_component(component_id)
+
+        if not isinstance(component, Button):
+            raise NotFound()
+
+        obj = self.get_object()
+
+        if not component.is_allowed(self._admin_model, obj, request):
+            raise PermissionDenied()
+
+        return Response(component.run(obj, request).serialize())
+
+    @action(
+        methods=["post"],
+        detail=False,
+        url_path="conditions/(?P<condition_id>[^/.]+)",
+    )
+    def condition(self, request, condition_id):
+        """
+        The answer of a server-side Condition of the edit page for the
+        form's values, {"values": {...}}: {"result": true}. The values
+        are the editor's unsaved input; nothing is stored. Only the
+        condition's own fields reach its check().
+        """
+        condition = self._find_condition(condition_id)
+
+        if condition is None:
+            raise NotFound()
+
+        values = request.data.get("values") if hasattr(request.data, "get") else None
+
+        if not isinstance(values, dict):
+            raise ValidationError("The form values must be an object.")
+
+        from .conditions import normalize
+
+        return Response(
+            {
+                "result": condition.run(
+                    {name: normalize(values.get(name)) for name in condition.fields},
+                    request,
+                )
+            }
+        )
+
+    def _find_condition(self, condition_id):
+        from .admin import iter_conditions
+
+        studios = [self._admin_model]
+
+        # Inline editors show the inline model's own studio's layout.
+        if getattr(self, "parent_model", None) is not None:
+            model_studio = cs_settings.ADMIN_SITE._registry.get(self._model)
+
+            if model_studio is not None:
+                studios.append(model_studio)
+
+        for studio in studios:
+            for condition in iter_conditions(studio):
+                if str(condition.condition_id) == condition_id:
+                    return condition
+
+        return None
+
+    def _find_component(self, component_id):
+        try:
+            component_uuid = uuid.UUID(component_id)
+        except ValueError:
+            raise NotFound()
+
+        component = self._admin_model.get_component(component_uuid)
+
+        # An inline object's editor shows the layout of the inline
+        # model's own studio, with the inline studio's header: its
+        # components are reached through the inline endpoints too. The
+        # inline studio's permissions still apply.
+        if component is None and getattr(self, "parent_model", None) is not None:
+            model_studio = cs_settings.ADMIN_SITE._registry.get(self._model)
+
+            if model_studio is not None:
+                component = model_studio.get_component(component_uuid)
+
+        return component
+
+    @action(methods=["get"], detail=True, url_path="activity")
+    def activity(self, request, id):
+        """
+        The object's history: the activity log entries recorded for it,
+        most recent first. The studio's equivalent of the Django admin's
+        history view, gated by view permission on the object like
+        retrieve.
+        """
+        obj = self.get_object()
+
+        entries = (
+            LogEntry.objects.filter(
+                content_type=ContentType.objects.get_for_model(obj),
+                object_id=obj.pk,
+            )
+            .select_related("user", "content_type")
+            .order_by("-action_time")
+        )
+        data = LogEntrySerializer(entries, many=True).data
+
+        # With the history app, entries that kept a version open it.
+        versioned = set()
+
+        if apps.is_installed("content_studio.history"):
+            from .history.models import Version
+
+            versioned = set(
+                Version.objects.filter(
+                    log_entry__in=[entry["id"] for entry in data]
+                ).values_list("log_entry_id", flat=True)
+            )
+
+        return Response(
+            [{**entry, "has_version": entry["id"] in versioned} for entry in data]
+        )
+
+    @action(
+        methods=["get"],
+        detail=True,
+        url_path=r"activity/(?P<entry_id>[0-9]+)",
+    )
+    def activity_version(self, request, id, entry_id):
+        """
+        The version kept with one of the object's activity log entries
+        (the history app): the object's values after the change, the
+        fields it changed and their values before it. Only the fields
+        the editor sees on the object now are answered.
+        """
+        obj = self.get_object()
+
+        if not apps.is_installed("content_studio.history"):
+            raise NotFound()
+
+        from .history.models import Version
+
+        version = (
+            Version.objects.filter(
+                log_entry_id=entry_id,
+                content_type=ContentType.objects.get_for_model(obj),
+                object_id=str(obj.pk),
+            )
+            .select_related("log_entry__user", "log_entry__content_type")
+            .first()
+        )
+
+        if version is None:
+            raise NotFound()
+
+        visible = {
+            name
+            for name, field in self.get_serializer(obj).fields.items()
+            if not field.write_only
+        } & get_tracked_field_names(self._model, self._admin_model)
+
+        return Response(
+            {
+                **LogEntrySerializer(version.log_entry).data,
+                "fields": [name for name in version.fields if name in visible],
+                "previous": {
+                    name: value
+                    for name, value in version.previous.items()
+                    if name in visible
+                },
+                "data": {
+                    name: value
+                    for name, value in version.data.items()
+                    if name in visible
+                },
+            }
+        )
+
+    @action(methods=["get"], detail=False, url_path="presence")
+    def presence_list(self, request):
+        """
+        Who else has the listed objects open: ?id=1&id=2, answered as
+        {"<id>": [users]} for the objects someone else has open. Only
+        objects the user may view, in the list's tenant, are answered;
+        the others are left out.
+        """
+        self._check_presence_enabled()
+
+        pks = []
+
+        for raw in request.query_params.getlist("id")[:MAX_OBJECTS]:
+            try:
+                pks.append(self._model._meta.pk.to_python(raw))
+            except DjangoValidationError:
+                continue
+
+        found = get_presence(request, self._model, [str(pk) for pk in pks])
+
+        if not found:
+            return Response({})
+
+        presence = {}
+
+        for obj in self.get_queryset().filter(pk__in=pks):
+            users = found.get(str(obj.pk))
+
+            if users and self._admin_model.has_view_permission(request, obj):
+                presence[str(obj.pk)] = users
+
+        return Response(presence)
+
+    @action(methods=["post", "delete"], detail=True, url_path="presence")
+    def presence(self, request, id):
+        """
+        The edit page's heartbeat: POST {"session": ..., "state":
+        "viewing" | "editing"} records that the user has the object open
+        and answers who else does ({"users": [...]}); DELETE
+        ?session=... records that the page was left.
+        """
+        self._check_presence_enabled()
+
+        obj = self.get_object()
+        source = request.data if request.method == "POST" else request.query_params
+        session = source.get("session")
+
+        if (
+            not isinstance(session, str)
+            or not session
+            or len(session) > MAX_SESSION_LENGTH
+        ):
+            raise ValidationError("A session id is required.")
+
+        if request.method == "DELETE":
+            leave(request, obj, session)
+
+            return Response(status=204)
+
+        state = request.data.get("state")
+
+        if state not in STATES:
+            raise ValidationError(f"The state must be one of {', '.join(STATES)}.")
+
+        return Response({"users": heartbeat(request, obj, session, state)})
+
+    def _check_presence_enabled(self):
+        # Inline viewsets carry their parent: inline objects are edited
+        # on the parent's edit page.
+        if getattr(self, "parent_model", None) is not None or not is_presence_enabled(
+            self._admin_model
+        ):
+            raise NotFound()
+
+    @action(methods=["post"], detail=False, url_path="bulk")
+    def bulk(self, request):
+        """
+        Run a bulk action on the selected rows: {"action": id,
+        "ids": [...]}. The action resolves per request — permissions
+        included — and runs on the ids within the list's queryset:
+        tenant-scoped and without trashed objects. The handler's return value becomes the response: an
+        int is a count, a str a message.
+        """
+        action_id = request.data.get("action")
+        ids = request.data.get("ids")
+
+        if not action_id or not isinstance(ids, list) or not ids:
+            raise ValidationError(
+                "A bulk action requires an action and a non-empty ids list."
+            )
+
+        actions = {
+            action.id: action for action in get_bulk_actions(self._admin_model, request)
+        }
+        action = actions.get(action_id)
+
+        if action is None:
+            raise NotFound("Unknown or unauthorized bulk action.")
+
+        try:
+            ids = [self._model._meta.pk.to_python(pk) for pk in ids]
+        except DjangoValidationError:
+            raise ValidationError("The ids must be primary keys of this model.")
+
+        if action.id == EXPORT_ACTION_ID and action.formats is not None:
+            # The export writes the selected rows as the list shows them:
+            # not trashed, in the list's (or the requested) order.
+            self._get_export_format(request.data)
+            queryset = self.filter_queryset(self.get_queryset()).filter(pk__in=ids)
+        else:
+            queryset = self.get_queryset().filter(pk__in=ids)
+
+        # The resolution above gates on model-level permissions; the
+        # selection must also pass them per object.
+        check_object_permissions(self._admin_model, request, action.meta, queryset)
+
+        # A delete (the built-in one or a custom action's) blocked by
+        # on_delete=PROTECT or RESTRICT is a conflict, not a crash.
+        try:
+            result = action.handler(request, queryset)
+        except (models.ProtectedError, models.RestrictedError) as error:
+            raise DeleteConflict.from_error(error)
+        except DjangoValidationError as error:
+            # A refusal, such as from the studio's delete_queryset.
+            raise ValidationError(get_error_detail(error))
+
+        # A response, such as the export's download, is returned as is.
+        if isinstance(result, HttpResponseBase):
+            return result
+
+        if isinstance(result, str):
+            return Response({"message": result})
+
+        if isinstance(result, int):
+            return Response({"count": result})
+
+        return Response({})
+
+    @action(methods=["get"], detail=False, url_path="unique-check")
+    def unique_check(self, request):
+        """
+        Whether another object already uses a value for a unique field:
+        ?field=slug&value=hello-world&exclude=<id>. Only single fields
+        with unique=True that the studio does not exclude qualify: the
+        check would otherwise reveal the values of fields the form never
+        shows. The lookup is tenant-scoped like the list, but includes
+        trashed objects: they still occupy the value in the database.
+        The conflicting object is only described when the user may view
+        it.
+
+        A combination of fields (unique_together or a UniqueConstraint
+        over several fields) is checked with ?set=<id>&values=<json>,
+        the values of the form by field name; see uniqueness.py.
+        """
+        if "set" in request.query_params:
+            return self._unique_set_check(request)
+
+        field_name = request.query_params.get("field", "")
+        value = request.query_params.get("value", "")
+        exclude = request.query_params.get("exclude")
+
+        try:
+            field = self._model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            raise ValidationError("Unknown field.")
+
+        if (
+            not getattr(field, "concrete", False)
+            or field.many_to_many
+            or field.primary_key
+            or not field.unique
+            or field.name in self._excluded_fields()
+        ):
+            raise ValidationError("Only fields with unique=True can be checked.")
+
+        # A value the field cannot hold, or an empty one, conflicts with
+        # nothing.
+        try:
+            value = field.to_python(value)
+        except DjangoValidationError:
+            return Response({"exists": False})
+
+        if value in field.empty_values:
+            return Response({"exists": False})
+
+        # get_queryset scopes to the tenant and leaves trashed objects
+        # in for this action.
+        qs = self.get_queryset().filter(**{field.attname: value})
+
+        if exclude:
+            try:
+                qs = qs.exclude(pk=self._model._meta.pk.to_python(exclude))
+            except DjangoValidationError:
+                pass
+
+        return self._unique_check_response(request, qs.first())
+
+    def _unique_set_check(self, request):
+        set_id = request.query_params.get("set", "")
+        unique_set = next(
+            (s for s in get_unique_sets(self._model) if s.id == set_id), None
+        )
+
+        # A combination with an excluded field is not checked either: the
+        # form cannot supply the field, and the check would reveal it.
+        if unique_set is None or self._excluded_fields().intersection(
+            unique_set.fields
+        ):
+            raise ValidationError("Unknown unique set.")
+
+        try:
+            values = json.loads(request.query_params.get("values", "{}"))
+        except ValueError:
+            values = None
+
+        if not isinstance(values, dict):
+            raise ValidationError("The values must be a JSON object.")
+
+        # get_queryset scopes to the tenant and leaves trashed objects
+        # in for this action. The object being edited supplies the values
+        # the form does not hold.
+        qs = self.get_queryset()
+        instance = None
+        exclude = request.query_params.get("exclude")
+
+        if exclude:
+            try:
+                instance = qs.filter(pk=self._model._meta.pk.to_python(exclude)).first()
+            except DjangoValidationError:
+                pass
+
+        obj = find_duplicate(
+            unique_set,
+            self._model,
+            qs,
+            values,
+            instance=instance,
+            tenant=request.headers.get("x-dcs-tenant"),
+        )
+
+        return self._unique_check_response(request, obj)
+
+    def _excluded_fields(self):
+        return set(self._admin_model.exclude or [])
+
+    def _unique_check_response(self, request, obj):
+        if obj is None:
+            return Response({"exists": False})
+
+        if not self._admin_model.has_view_permission(request, obj):
+            return Response({"exists": True})
+
+        display = get_relation_display_for(self._model, obj, request)
+        data = {"exists": True, "id": obj.pk, "__str__": display.title}
+
+        soft_delete_field = self._admin_model.soft_delete
+        if soft_delete_field and getattr(obj, soft_delete_field) is not None:
+            data["trashed"] = True
+
+        return Response(data)
+
+    @action(
+        methods=["post"],
+        detail=False,
+        url_path="uploads/(?P<field_name>[^/]+)",
+        parser_classes=[MultiPartParser],
+    )
+    def upload(self, request, field_name):
+        """
+        A file picked in a FileWidget, kept until the object is saved:
+        the token the editor sends as the field's value to attach it
+        (see uploads.py). Only for file fields the edit page writes.
+        """
+        from .admin import get_form_field_names, get_readonly_field_names
+        from .uploads import save_upload
+
+        model = self.queryset.model
+
+        try:
+            model_field = model._meta.get_field(field_name)
+        except FieldDoesNotExist:
+            raise ValidationError("File field not found.")
+
+        if (
+            not isinstance(model_field, models.FileField)
+            or field_name not in get_form_field_names(self._admin_model, request)
+            or field_name in get_readonly_field_names(self._admin_model, request)
+        ):
+            raise ValidationError("File field not found.")
+
+        file = request.FILES.get("file")
+
+        if file is None:
+            raise ValidationError({"file": "No file was submitted."})
+
+        try:
+            upload = save_upload(request, model, model_field, file)
+        except ValidationError as error:
+            # Keyed by the file, like the media library's upload errors.
+            raise ValidationError({"file": error.detail})
+
+        return Response(upload, status=201)
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="filters/(?P<filter_name>[^/]+)/options",
+    )
+    def filter_options(self, request, filter_name):
+        """
+        The options of a custom list filter (a ListFilter or Django
+        SimpleListFilter in list_filter), built for this request.
+        """
+        list_filter = get_custom_filter(self._admin_model, filter_name)
+
+        if list_filter is None:
+            raise NotFound("Filter not found.")
+
+        return Response(
+            [
+                {"value": value, "label": label}
+                for value, label in serialize_options(list_filter.get_options(request))
+            ]
+        )
+
+    @action(methods=["post"], detail=False, url_path="relations/(?P<field_name>[^/]+)")
+    def get_related_objects(self, request, field_name):
+        """
+        Endpoint for retrieving related objects.
+
+        The user needs view permission on the related model, mirroring
+        the Django admin's requirement for related object popups.
+        """
+        search = request.data.get("search", "")
+
+        parent_model = self.queryset.model
+
+        # A list filter across relations ("author__company") offers the
+        # objects of the relation its path ends in; only paths declared
+        # in list_filter, which pass the filter path checks.
+        is_filter_path = "__" in field_name
+
+        try:
+            if is_filter_path:
+                spec = get_filter_field_path(self._admin_model, field_name)
+                if spec is None:
+                    raise FieldDoesNotExist(field_name)
+                related_field = spec.field
+            else:
+                related_field = get_relation_field(parent_model, field_name)
+        except (FieldDoesNotExist, KeyError):
+            raise ValidationError("Related field not found.")
+
+        if not related_field.is_relation or related_field.related_model is None:
+            raise ValidationError("Related field not found.")
+
+        related_model = related_field.related_model
+
+        self._check_related_permission(request, related_model)
+
+        custom_filter_method = (
+            None
+            if is_filter_path
+            else getattr(self._admin_model, f"get_related_{field_name}", None)
+        )
+
+        if custom_filter_method:
+            qs = custom_filter_method(
+                search=search,
+                form_data=request.data.get("form", {}),
+                related_model=related_model,
+                request=request,
+            )
+
+        else:
+            qs = self._get_related_search_queryset(related_model, search, request)
+
+        # Related objects of tenant-scoped models come from the request's
+        # tenant only, like any list.
+        if isinstance(qs, models.QuerySet):
+            qs = get_tenant_scoped_queryset(request, related_model, qs)
+        # One object the picker just created or edited: its option, or
+        # none when it is outside what the picker offers.
+        pk = request.data.get("pk")
+        if pk is not None:
+            qs = self._filter_related_pk(related_model, qs, pk)
+        items = []
+        for obj in qs[:20]:
+            display = get_relation_display_for(related_model, obj, request)
+            item = {"id": obj.pk, "__str__": display.title}
+
+            if display.description:
+                item["description"] = display.description
+
+            if display.icon:
+                item["icon"] = display.icon
+
+            if display.initials:
+                item["initials"] = display.initials
+
+            if display.avatar:
+                item["avatar"] = display.avatar
+
+            items.append(item)
+
+        serializer = RelatedItemSerializer(items, many=True)
+
+        return Response(data=serializer.data)
+
+    def _filter_related_pk(self, related_model, qs, pk):
+        """
+        The related objects (a queryset, or the list a get_related_<field>
+        hook returns) narrowed to the one with this primary key.
+        """
+        try:
+            pk = related_model._meta.pk.to_python(pk)
+        except DjangoValidationError:
+            return related_model._default_manager.none()
+
+        if isinstance(qs, models.QuerySet):
+            return qs.filter(pk=pk)
+
+        return [obj for obj in qs if obj.pk == pk]
+
+    def _check_related_permission(self, request, related_model):
+        """
+        Require view permission on the related model. Uses the model's
+        registered model studio when present, so custom permission
+        overrides apply; otherwise falls back to Django's view
+        permission.
+        """
+        related_admin = cs_settings.ADMIN_SITE._registry.get(related_model)
+
+        if related_admin is not None:
+            if not related_admin.has_view_permission(request):
+                raise PermissionDenied("View permission required.")
+
+        elif not request.user.has_perm(
+            f"{related_model._meta.app_label}.view_{related_model._meta.model_name}"
+        ):
+            raise PermissionDenied("View permission required.")
+
+    def _get_related_search_queryset(self, related_model, search, request):
+        """
+        Search the related model by the related model studio's
+        search_fields. Without search_fields nothing is searchable, so a
+        search term matches nothing: other fields (such as the user
+        model's password) are never searched. Trashed objects are never
+        offered when the related model studio configures soft_delete.
+        """
+        related_admin = cs_settings.ADMIN_SITE._registry.get(related_model)
+        qs = (
+            related_admin.get_queryset(request)
+            if related_admin is not None
+            else related_model._default_manager.all()
+        )
+
+        soft_delete_field = related_admin.soft_delete if related_admin else None
+        if soft_delete_field:
+            qs = qs.filter(**{f"{soft_delete_field}__isnull": True})
+
+        if not search:
+            return qs
+
+        search_fields = related_admin.search_fields if related_admin else None
+
+        if not search_fields:
+            return related_model._default_manager.none()
+
+        queries = [Q(**{f"{field}__icontains": search}) for field in search_fields]
+        combined_query = reduce(operator.or_, queries)
+
+        return qs.filter(combined_query)
+
+
+def get_relation_field(model, field_name):
+    """
+    A model field, or a field of a block in a BlockField, named as
+    "<block field>.<block type>.<field>", and so on for blocks inside
+    blocks: "<block field>.<block type>.<block field>.<block type>.<field>".
+    """
+    from .blocks import BlockField
+
+    name, *block_path = field_name.split(".")
+    field = model._meta.get_field(name)
+
+    if len(block_path) % 2:
+        raise FieldDoesNotExist(field_name)
+
+    for block_type, block_field in zip(block_path[::2], block_path[1::2]):
+        if not isinstance(field, BlockField):
+            raise FieldDoesNotExist(field_name)
+
+        field = field.block_types[block_type].get_fields()[block_field]
+
+    return field

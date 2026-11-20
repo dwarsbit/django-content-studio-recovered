@@ -1,0 +1,42 @@
+node_modules
+.DS_Store
+dist
+dist-ssr
+*.local
+.env
+.idea
+/content_studio/static/content_studio
+.output.txt
+__pycache__
+.coverage
+
+# The test project's database (tests/settings.py)
+/db.sqlite3
+
+# Stray media uploads (tests use a temp MEDIA_ROOT)
+/media/
+
+# Demo project state
+/demo/db.sqlite3
+/demo/media/
+/.venv
+/demo/.venv
+
+# Agent tooling
+.agents/
+.vibe/
+skills-lock.json
+/ROADMAP.md
+/ANALYSIS.md
+
+# Docusaurus website
+node_modules/
+website/build/
+.docusaurus/
+
+# Design system build output (npm run build:design-system)
+/design-system/components/bundle.js
+/design-system/components/bundle.css
+/design-system/fonts/
+/design-system/assets/Logos/*.svg
+/design-system/assets/Logos/*.png
