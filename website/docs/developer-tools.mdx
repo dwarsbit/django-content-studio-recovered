@@ -13,6 +13,14 @@ The developer tools never run in production: without `DEBUG` nothing is
 recorded, the button does not load and their endpoint answers 404. They are
 in English only.
 
+:::caution
+Every staff user sees the same issues, with tracebacks, SQL and the values
+in them. That is fine on your own machine, but a staging site that runs
+with `DEBUG` and has editors who should not see that, or real data, should
+turn the tools off with [`DEVTOOLS`](/docs/settings#devtools) set to
+`False` (or not run with `DEBUG` at all).
+:::
+
 ## Issues
 
 The **Issues** tab lists, newest first:

@@ -118,6 +118,11 @@
   a plain conflict message; the details go to the `content_studio.viewsets`
   log (and the developer tools while `DEBUG` is on).
 
+- **Docs**: the Developer tools page warns that every staff user sees the
+  same tracebacks and SQL, and advises `DEVTOOLS = False` on staging sites
+  that run with `DEBUG`. The Authentication page says which secrets are
+  stored readable (two-factor app secrets and live password reset codes).
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

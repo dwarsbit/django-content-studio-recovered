@@ -166,8 +166,11 @@ How the code step protects itself:
   they are.
 
 The app's secret has to be readable to check codes, so it is stored as is
-in the database, as django-otp stores it too. Protect database backups
-accordingly. Invite and password links lead to the code step as well
+in the database, as django-otp stores it too, and so are password reset
+codes until they are used or expire. Anyone who can read the database can
+read them: protect it, and its backups, accordingly.
+[Backups](/docs/backups) leave reset codes out, but keep the app secrets,
+so that a restored site still accepts its editors' apps. Invite and password links lead to the code step as well
 (or to setting it up, when it is required).
 
 :::note
