@@ -557,6 +557,10 @@ Each is optional and has its own page:
   they have; default `UserStudio` and `GroupStudio` in
   `content_studio.user_studios` to subclass):
   https://djangocontentstudio.org/docs/users.md
+- The system status page (`content_studio.contrib.status`: services,
+  recent and recurring tasks; apps add theirs with
+  `status.register_service()` in `AppConfig.ready()`):
+  https://djangocontentstudio.org/docs/system-status.md
 - Presence, the command palette, deployment and every system check:
   https://djangocontentstudio.org/docs/presence.md,
   https://djangocontentstudio.org/docs/command-palette.md,

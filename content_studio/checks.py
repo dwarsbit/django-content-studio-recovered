@@ -762,6 +762,22 @@ def notification_errors() -> list[tuple[str, str]]:
     return errors
 
 
+def status_errors() -> list[tuple[str, str]]:
+    """
+    Services and recurring tasks registered for the status page with a
+    malformed key, without a check or twice with different definitions
+    (E047), as (check id, message) pairs.
+    """
+    from django.apps import apps
+
+    if not apps.is_installed("content_studio.contrib.status"):
+        return []
+
+    from .contrib.status.registry import registration_errors
+
+    return [("content_studio.E047", error) for error in registration_errors()]
+
+
 def media_json_attr_errors(
     setting, check_id, purpose, explicit_only=False
 ) -> list[tuple[str, str]]:
@@ -2402,6 +2418,17 @@ def task_adapter_warnings(site) -> list[tuple[str, str]]:
         seen.add(id(adapter))
         warnings.extend(check())
 
+    # The status page's adapters: the registered ones, or Huey's.
+    from django.apps import apps
+
+    if apps.is_installed("content_studio.contrib.status"):
+        from .contrib.status.tasks import get_adapters
+
+        for adapter in get_adapters():
+            if id(adapter) not in seen:
+                seen.add(id(adapter))
+                warnings.extend(adapter.check())
+
     return warnings
 
 
@@ -3531,6 +3558,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, error in notification_errors():
+        messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
+
+    for check_id, error in status_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, error in presence_errors():

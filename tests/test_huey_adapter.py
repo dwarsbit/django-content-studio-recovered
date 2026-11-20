@@ -336,3 +336,119 @@ def test_runs_of_other_queues_are_left_out(huey, stats, stats_db, request_):
 
     assert HueyAdapter(huey).get_recent_tasks(request_, 10) == []
     assert HueyAdapter(huey).get_statistics(request_)["succeeded"].value == 0
+
+
+# The status page: pending tasks and the queue's health
+
+
+def test_pending_tasks_are_the_running_then_the_queued(huey, stats, request_):
+    from huey.contrib.stats import HueyInflight
+
+    @huey.task()
+    def resize_images():
+        return 1
+
+    @huey.task()
+    def send_mail():
+        return 1
+
+    huey.immediate = False
+    send_mail()
+    send_mail()
+    HueyInflight.insert(
+        task_id="run-1",
+        queue=stats.name,
+        task=f"{__name__}.resize_images",
+        started=datetime.now(tz=UTC).timestamp() - 20,
+    ).execute()
+
+    adapter = HueyAdapter(huey)
+    rows = adapter.get_pending_tasks(request_, 10)
+
+    assert adapter.implements("get_pending_tasks")
+    assert [(row.title, row.status, row.key) for row in rows] == [
+        ("resize_images", TaskStatus.RUNNING, f"{__name__}.resize_images"),
+        ("send_mail", TaskStatus.QUEUED, f"{__name__}.send_mail"),
+        ("send_mail", TaskStatus.QUEUED, f"{__name__}.send_mail"),
+    ]
+    assert rows[0].last_run_at is not None
+    assert len(adapter.get_pending_tasks(request_, 2)) == 2
+
+
+def test_pending_tasks_without_stats_are_the_queued(huey, request_):
+    @huey.task()
+    def send_mail():
+        return 1
+
+    huey.immediate = False
+    send_mail()
+
+    rows = HueyAdapter(huey).get_pending_tasks(request_, 10)
+
+    assert [row.status for row in rows] == [TaskStatus.QUEUED]
+
+
+def test_rows_carry_the_task_path_as_their_key(huey, stats, request_):
+    @huey.task()
+    def works():
+        return 1
+
+    @huey.periodic_task(crontab(minute="*/5"))
+    def every_five_minutes():
+        return 1
+
+    works()
+    flush(stats)
+    adapter = HueyAdapter(huey)
+
+    assert adapter.get_recent_tasks(request_, 5)[0].key == f"{__name__}.works"
+    assert (
+        adapter.get_periodic_tasks(request_)[0].key == f"{__name__}.every_five_minutes"
+    )
+
+
+def test_health_reports_the_queue(huey):
+    @huey.task()
+    def works():
+        return 1
+
+    huey.immediate = False
+    works()
+
+    health = HueyAdapter(huey).get_health()
+
+    assert (health.status, str(health.detail)) == ("ok", "Huey · 1 queued")
+
+
+def test_health_is_degraded_when_tasks_wait_and_no_worker_runs(huey, stats):
+    from huey.contrib.stats import HueyEvent
+
+    @huey.task()
+    def works():
+        return 1
+
+    huey.immediate = False
+    works()
+    flush(stats)
+    adapter = HueyAdapter(huey)
+
+    # Just queued: fine.
+    assert adapter.get_health().status == "ok"
+
+    waiting = datetime.now(tz=UTC).timestamp() - 600
+    HueyEvent.update(ts=waiting).where(HueyEvent.queue == stats.name).execute()
+    health = adapter.get_health()
+
+    assert health.status == "degraded"
+    assert "waiting for 10 minutes" in str(health.message)
+
+    # A worker that finished something lately is busy, not gone.
+    HueyEvent.insert(
+        ts=datetime.now(tz=UTC).timestamp() - 30,
+        queue=stats.name,
+        task_id="other",
+        task=f"{__name__}.works",
+        signal="complete",
+    ).execute()
+
+    assert adapter.get_health().status == "ok"

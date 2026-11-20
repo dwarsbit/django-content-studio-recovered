@@ -82,6 +82,7 @@ content_studio/
 │   └── jwt.py           # JWT token backend
 ├── contrib/
 │   ├── huey.py          # HueyAdapter: the task dashboard for a Huey queue
+│   ├── status/          # Optional system status page: register_service/register_task_adapter/register_recurring_task (registry.py), the built-in checks (builtin.py), running and caching the checks (runner.py), the task lists from the task adapters (tasks.py), the endpoints (views.py)
 │   └── password_reset/  # Password reset functionality
 ├── static/              # Static files (compiled frontend)
 ├── templates/           # Django templates

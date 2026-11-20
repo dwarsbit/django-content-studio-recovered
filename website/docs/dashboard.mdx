@@ -259,6 +259,9 @@ A `TaskRow` has a `title` and a `status` (a `TaskStatus`), and optionally a
 `description`, `last_run_at`, `next_run_at`, a `duration` in seconds and an
 `error_message`.
 
+The same adapter feeds the [system status page](/docs/system-status#tasks),
+which also uses its optional `get_pending_tasks()` and `get_health()`.
+
 :::caution
 Task names and error messages can reveal how your project works. Only
 superusers see the task dashboard; override `is_visible(request)` on a

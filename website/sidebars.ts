@@ -23,6 +23,7 @@ const sidebars: SidebarsConfig = {
     "notifications",
     "history",
     "presence",
+    "system-status",
     "command-palette",
     "deployment",
     "settings",

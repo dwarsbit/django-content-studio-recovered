@@ -47,9 +47,10 @@ from django.utils.duration import duration_string
 from django.utils.http import content_disposition_header
 from django.utils.text import capfirst, slugify
 from django.utils.translation import gettext as _
-from django.utils.translation import ngettext
+from django.utils.translation import gettext_lazy, ngettext
 from rest_framework.exceptions import ValidationError
 
+from .contrib.status.registry import register_task
 from .export import CHUNK_SIZE, FORMULA_PREFIXES, _Echo
 from .fields import MultipleChoiceField, TagField
 from .settings import cs_settings
@@ -1527,3 +1528,6 @@ def run_import(job_id: str) -> None:
 # the name of the function it wraps. Without Django tasks, imports run
 # in the request only (runs_in_background is False).
 run_import_task = task(run_import) if task is not None else None
+
+# The system status page names the task when a task adapter lists it.
+register_task(f"{__name__}.run_import", gettext_lazy("Import from a file"))

@@ -220,6 +220,12 @@ class AdminApiViewSet(ViewSet):
             ),
         }
 
+        # The system status page: the user menu's item and its dot.
+        data["status"] = {
+            "enabled": apps.is_installed("content_studio.contrib.status")
+            and bool(self.admin_site.has_status_permission(request)),
+        }
+
         # What MapWidget's map shows and searches with.
         data["map"] = {
             "tile_url": cs_settings.MAP_TILE_URL,

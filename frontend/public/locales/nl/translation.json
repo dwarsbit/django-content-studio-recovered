@@ -87,7 +87,8 @@
     "collapse": "Menu inklappen",
     "expand": "Menu uitklappen",
     "title": "Hoofdmenu",
-    "profile": "Profiel"
+    "profile": "Profiel",
+    "status": "Systeemstatus"
   },
   "editor": {
     "title_create": "Maak {{modelName}} aan",
@@ -519,7 +520,8 @@
           "SUCCESS": "Geslaagd",
           "RUNNING": "Wordt uitgevoerd",
           "SCHEDULED": "Gepland",
-          "FAILURE": "Mislukt"
+          "FAILURE": "Mislukt",
+          "QUEUED": "In de wachtrij"
         }
       },
       "content_list": {
@@ -983,5 +985,82 @@
       "skipped_other": "{{count}} overgeslagen"
     },
     "from_file": "Importeren uit bestand…"
+  },
+  "status": {
+    "title": "Systeemstatus",
+    "refresh": "Vernieuwen",
+    "checked": "Gecontroleerd {{when}}",
+    "unavailable_title": "De systeemstatus is niet beschikbaar",
+    "unavailable_description": "De statuspagina staat niet aan op deze site, of je account mag deze niet openen.",
+    "of": "{{count}} van {{total}}",
+    "summary": {
+      "degraded": "Een dienst heeft aandacht nodig",
+      "down": "Een dienst is onbereikbaar"
+    },
+    "overview": {
+      "ok": "Alle systemen werken",
+      "ok_description": "Elke gecontroleerde dienst reageert zoals verwacht.",
+      "degraded_one": "{{count}} dienst heeft aandacht nodig",
+      "degraded_other": "{{count}} diensten hebben aandacht nodig",
+      "down_one": "{{count}} dienst is onbereikbaar",
+      "down_other": "{{count}} diensten zijn onbereikbaar",
+      "failed_tasks_one": "{{count}} taak is mislukt in de afgelopen 24 uur.",
+      "failed_tasks_other": "{{count}} taken zijn mislukt in de afgelopen 24 uur."
+    },
+    "figures": {
+      "services": "Diensten werken",
+      "pending": "Taken in afwachting",
+      "failed": "Mislukt in 24 uur"
+    },
+    "services": {
+      "title": "Diensten",
+      "description": "Waar deze site van afhangt, gecontroleerd bij het openen van deze pagina",
+      "operational": "{{count}} van {{total}} werken"
+    },
+    "service_status": {
+      "ok": "Werkt",
+      "degraded": "Verstoord",
+      "down": "Onbereikbaar",
+      "unknown": "Niet gecontroleerd"
+    },
+    "task_status": {
+      "QUEUED": "In de wachtrij",
+      "RUNNING": "Bezig",
+      "SUCCESS": "Geslaagd",
+      "FAILURE": "Mislukt",
+      "SCHEDULED": "Gepland"
+    },
+    "tasks": {
+      "title": "Recente taken",
+      "description": "Taken die wachten, bezig zijn of zijn afgerond",
+      "filter": "Taken filteren",
+      "filters": {
+        "all": "Alle",
+        "pending": "In afwachting",
+        "finished": "Afgerond"
+      },
+      "empty": {
+        "all": "Nog geen taken",
+        "pending": "Er wachten of draaien geen taken",
+        "finished": "Nog geen afgeronde taken"
+      },
+      "footer_one": "De laatste taak",
+      "footer_other": "De laatste {{count}} taken",
+      "started": "Gestart {{when}}",
+      "error": "De taken konden niet worden gelezen: {{error}}",
+      "disconnected_title": "Geen taaksysteem gekoppeld",
+      "disconnected_description": "Koppel een taaksysteem, zoals Huey, om de taken van deze site te zien."
+    },
+    "recurring": {
+      "title": "Terugkerende taken",
+      "description": "Taken die volgens een schema draaien, met hun laatste en volgende run",
+      "empty": "Geen terugkerende taken",
+      "next": "Volgende {{when}}",
+      "due": "Had {{when}} moeten draaien",
+      "running": "Nu bezig",
+      "succeeded": "Geslaagd {{when}}",
+      "failed": "Mislukt {{when}}",
+      "never": "Nog niet gedraaid"
+    }
   }
 }

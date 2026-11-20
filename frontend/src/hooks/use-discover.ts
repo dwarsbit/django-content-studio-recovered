@@ -35,6 +35,9 @@ export function useDiscover() {
           // Whether the site emails a digest of unread notifications.
           digest?: boolean;
         };
+        // The system status page, when the user may open it; absent
+        // from older servers.
+        status?: { enabled: boolean };
         multitenancy: {
           enabled: boolean;
           tenant_model: string | null;

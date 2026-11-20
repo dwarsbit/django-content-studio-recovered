@@ -28,6 +28,7 @@ from rest_framework.test import APIClient, APIRequestFactory
 from content_studio import importing
 from content_studio.admin import AdminSerializer, admin_site
 from content_studio.checks import check_content_studio
+from content_studio.contrib.status.registry import get_task_label
 from content_studio.settings import cs_settings
 from content_studio.token_backends.jwt import create_access_token
 from tests.testapp.models import Article, Category, Event, SiteSettings, Venue
@@ -707,6 +708,15 @@ class BackgroundDetectionTests(TestCase):
     )
     def test_the_dummy_backend_never_runs_tasks(self):
         self.assertFalse(importing.runs_in_background())
+
+
+class StatusPageTests(TestCase):
+    def test_the_status_page_names_the_import_task(self):
+        path = "content_studio.importing.run_import"
+
+        self.assertEqual(str(get_task_label(path)), "Import from a file")
+        if importing.run_import_task is not None:
+            self.assertEqual(importing.run_import_task.module_path, path)
 
 
 class ImportCheckTests(TestCase):

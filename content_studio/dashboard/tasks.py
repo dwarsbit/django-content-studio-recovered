@@ -23,6 +23,7 @@ from .._types import StrOrPromise
 __all__ = [
     "TaskAdapter",
     "TaskDashboard",
+    "TaskHealth",
     "TaskListWidget",
     "TaskRow",
     "TaskStatistic",
@@ -32,6 +33,8 @@ __all__ = [
 
 
 class TaskStatus(StrEnum):
+    # Waiting for a worker.
+    QUEUED = "QUEUED"
     RUNNING = "RUNNING"
     SCHEDULED = "SCHEDULED"
     SUCCESS = "SUCCESS"
@@ -63,6 +66,27 @@ class TaskRow:
     next_run_at: Optional[datetime] = None
     duration: Optional[int] = None
     error_message: Optional[str] = None
+    # What identifies the task among the backend's tasks, such as its
+    # dotted path ("shop.tasks.sync_orders"). The status page names the
+    # task and its app from it.
+    key: Optional[str] = None
+    # The app or part of the site the task belongs to, as shown.
+    source: Optional[str] = None
+    # A periodic task's schedule in words, such as "Every 15 minutes".
+    schedule: Optional[str] = None
+
+
+@dataclass
+class TaskHealth:
+    """
+    Whether a task backend works, for the status page: status is "ok",
+    "degraded", "down" or "unknown"; detail is a short line such as
+    "Huey · 3 queued"; message says what is wrong when something is.
+    """
+
+    status: str = "ok"
+    detail: str = ""
+    message: str = ""
 
 
 # The statistics a task dashboard knows: their title, whether they count
@@ -102,10 +126,13 @@ class TaskAdapter:
     - get_periodic_tasks(request): a list of TaskRow, one per periodic task.
     - get_recent_tasks(request, limit): a list of at most `limit` TaskRow,
       the latest first.
+    - get_pending_tasks(request, limit): a list of at most `limit` TaskRow
+      that are queued or running, for the status page.
+    - get_health(): a TaskHealth, for the status page's task queue row.
 
     A task dashboard leaves out the widgets of the methods an adapter
-    does not implement. Every method gets the request, so an adapter can
-    show each user or tenant their own tasks.
+    does not implement. Every method but get_health gets the request, so
+    an adapter can show each user or tenant their own tasks.
     """
 
     # The statistics the adapter reports, in the order they show. Keys
@@ -128,6 +155,12 @@ class TaskAdapter:
         raise NotImplementedError
 
     def get_recent_tasks(self, request, limit: int) -> list[TaskRow]:
+        raise NotImplementedError
+
+    def get_pending_tasks(self, request, limit: int) -> list[TaskRow]:
+        raise NotImplementedError
+
+    def get_health(self) -> TaskHealth:
         raise NotImplementedError
 
     def check(self) -> list[tuple[str, str]]:

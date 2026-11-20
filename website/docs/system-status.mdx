@@ -1,0 +1,224 @@
+# 🩺 System status
+
+The system status page shows whether the things your site depends on work:
+the database, the cache, the media storage, the task queue and outgoing
+email. Below that it lists the tasks that are waiting, running or finished,
+and the tasks that run on a schedule. Your own apps add their services and
+tasks to it.
+
+<Screenshot name="system-status" alt="The system status page with one degraded service, the list of services by app, the recent tasks and the recurring tasks" />
+
+## Setup
+
+Add the app to `INSTALLED_APPS`. It has no models, so there is nothing to
+migrate.
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    # ...
+    "content_studio",
+    "content_studio.contrib.status",
+]
+```
+
+Superusers then find **System status** in the user menu, the menu under
+their name.
+
+## What the page shows
+
+- **Services**, grouped by app, each with a status: Operational, Degraded,
+  Down or Not checked. A degraded or down service says what is wrong.
+- **Recent tasks**: the tasks that are queued or running, then the latest
+  finished ones, with their duration and the error of a failed task.
+- **Recurring tasks**: the tasks that run on a schedule, with their latest
+  run and their next. A task that is past its time shows as due.
+
+The services are checked when someone opens the page or presses Refresh.
+The results are remembered for a minute
+([`STATUS_CACHE_TIMEOUT`](/docs/settings#status_cache_timeout)), so opening
+the page again does not run every check again. The task lists refresh every
+10 seconds while the page is open.
+
+While a service is degraded or down, a dot shows on the avatar at the bottom
+of the main menu and on the menu item. For this the admin asks for the
+overall status every five minutes; within a minute of the last check that
+runs no checks.
+
+:::note
+Nothing is checked in the background, and no history is kept: the page shows
+how things are now. For alerts when nobody is looking, use a monitoring
+service.
+:::
+
+## Built-in checks
+
+| Service | What is checked | Not checked when |
+|---------|-----------------|------------------|
+| Database | Every database in `DATABASES` answers. An answer that takes more than a second is degraded. | |
+| Cache | A value can be stored in the default cache and read back. | The cache is Django's dummy cache. |
+| Media storage | The default file storage answers. More than two seconds is degraded. | |
+| Task queue | What the task adapter reports, see [Tasks](#tasks). | No task backend is connected, or its adapter has no `get_health()`. |
+| Email | The SMTP server accepts a connection and the login. No email is sent. | The email backend is not SMTP. |
+| Migrations | Every migration is applied. Unapplied migrations are degraded. | |
+
+## Add a service
+
+Register a service from your app's `AppConfig.ready()`. The check is a
+function without arguments that returns `status.ok()`, `status.degraded()`,
+`status.down()` or `status.unknown()`.
+
+```python
+# shop/apps.py
+from django.apps import AppConfig
+
+
+class ShopConfig(AppConfig):
+    name = "shop"
+
+    def ready(self):
+        from content_studio.contrib import status
+
+        from .payments import client
+
+        def check_payments():
+            seconds = client.ping()
+
+            if seconds > 1:
+                return status.degraded(
+                    "Mollie API",
+                    message=f"Responding slowly: {seconds:.1f} s.",
+                )
+            return status.ok("Mollie API")
+
+        status.register_service(
+            "shop.payments",
+            "Payment provider",
+            check_payments,
+            icon="ph-bold ph-credit-card",
+        )
+```
+
+`register_service(key, label, check, icon=None, group=None, timeout=5)`:
+
+- **`key`**: lowercase dotted words that start with your app, such as
+  `"shop.payments"`.
+- **`label`**: the name of the service on the page.
+- **`check`**: the function. The first argument of its result is a short
+  line about the service (`"Mollie API"`); `message` says what is wrong.
+  Returning `None` counts as operational.
+- **`icon`**: a [Phosphor](https://phosphoricons.com) icon class.
+- **`group`**: the heading the service is listed under. By default it is the
+  name of the app the check is defined in.
+- **`timeout`**: the seconds the check may take.
+
+A check that raises an exception, or does not answer within its `timeout`,
+shows the service as down with the exception as its message. The checks run
+side by side, so one slow service does not hold up the page.
+
+Use `status.unknown()` when there is nothing to check, such as an
+integration that is switched off. Services that are not checked do not count
+toward the overall status.
+
+:::caution
+Keep checks cheap and free of side effects: they run whenever a superuser
+opens the page. Do not send an email or charge a card to see whether it
+works.
+:::
+
+Registering works without the status app in `INSTALLED_APPS`, so a reusable
+app can register its services unconditionally. `manage.py check` reports a
+malformed key, a check that is not callable and a key registered twice with
+different definitions as `content_studio.E047`.
+
+## Tasks
+
+The task lists come from a [task adapter](/docs/dashboard#task-dashboard),
+the same class the task dashboard uses.
+
+- With [Huey](/docs/dashboard#huey) installed (`huey.contrib.djhuey`), the
+  page shows its queue without any setup. Add Huey's stats app to see
+  running and finished tasks.
+- For another backend, register your adapter:
+
+```python
+# shop/apps.py, in ready()
+status.register_task_adapter(CeleryAdapter())
+```
+
+A registered adapter replaces the automatic Huey one. Without an adapter,
+the page says that no task backend is connected.
+
+The status page uses two adapter methods the task dashboard does not need:
+
+- **`get_pending_tasks(request, limit)`**: the queued and running tasks, as
+  `TaskRow` with the status `TaskStatus.QUEUED` or `TaskStatus.RUNNING`.
+- **`get_health()`**: a `TaskHealth(status, detail, message)` for the Task
+  queue service, with the status `"ok"`, `"degraded"`, `"down"` or
+  `"unknown"`.
+
+A `TaskRow` can also carry a `key` (the task's dotted path, such as
+`"shop.tasks.sync_orders"`), a `source` (the app it belongs to, as shown)
+and, for a periodic task, a `schedule` in words. From the `key` the page
+names the task ("Sync orders") and its app. To choose the name yourself:
+
+```python
+status.register_task("shop.tasks.sync_orders", "Sync orders with the shop")
+```
+
+The Huey adapter reports the queue as degraded when the first task in the
+queue has waited for more than five minutes and no worker picked anything
+up in that time, which usually means the consumer is not running. This
+needs Huey's stats app.
+
+## Recurring tasks
+
+A task adapter's `get_periodic_tasks()` fills the list of recurring tasks.
+`register_recurring_task()` describes one of them, or adds a job that no
+task backend knows about, such as a cron job.
+
+```python
+from content_studio.contrib import status
+
+from .backups import last_backup, next_backup
+
+status.register_recurring_task(
+    "backups.database",
+    "Back up the database",
+    "Every day at 02:00",
+    get_last_run=last_backup,
+    get_next_run=next_backup,
+)
+```
+
+`register_recurring_task(key, label, schedule="", get_last_run=None, get_next_run=None, group=None)`:
+
+- **`key`**: lowercase dotted words. When it is the `key` of a periodic task
+  an adapter reports, the two show as one row with your `label` and
+  `schedule`.
+- **`schedule`**: when the task runs, in words.
+- **`get_last_run`**: a function that returns when the task last ran, as a
+  `datetime`. Return `status.Run(at, ok=False, message="...")` to say that
+  the run failed.
+- **`get_next_run`**: a function that returns when the task runs next. A
+  task more than a minute past that time shows as due.
+- **`group`**: where the task belongs, as shown. By default the app of the
+  key.
+
+## Who sees the page
+
+The service messages and task errors can reveal how your project works, so
+only superusers see the page. Override `has_status_permission(request)` on
+your admin site ([`ADMIN_SITE`](/docs/settings#admin_site)) to decide otherwise:
+
+```python
+from content_studio.admin import ContentStudioSite
+
+
+class BlogStudioSite(ContentStudioSite):
+    def has_status_permission(self, request):
+        return request.user.groups.filter(name="Operations").exists()
+```
+
+Users without the permission do not get the menu item, and the page's data
+is refused to them.

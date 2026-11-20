@@ -20,7 +20,7 @@ import { Widget, WidgetEmpty, WidgetLoading } from "./widget";
 
 dayjs.extend(relativeTime);
 
-type TaskStatus = "RUNNING" | "SCHEDULED" | "SUCCESS" | "FAILURE";
+type TaskStatus = "QUEUED" | "RUNNING" | "SCHEDULED" | "SUCCESS" | "FAILURE";
 
 /**
  * Background jobs and their last run: the title and description, a
@@ -85,7 +85,9 @@ export function ScheduledTasksWidget({ widget }: { widget: DashboardWidget }) {
                       className={cn("size-1.5 rounded-full", {
                         "bg-success": task.status === "SUCCESS",
                         "bg-destructive": task.status === "FAILURE",
-                        "bg-muted-foreground/60": task.status === "SCHEDULED",
+                        "bg-muted-foreground/60":
+                          task.status === "SCHEDULED" ||
+                          task.status === "QUEUED",
                       })}
                     />
                   )}

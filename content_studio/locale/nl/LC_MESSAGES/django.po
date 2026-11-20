@@ -1186,3 +1186,7 @@ msgid "The file needs the column %(columns)s to match rows."
 msgid_plural "The file needs the columns %(columns)s to match rows."
 msgstr[0] "Het bestand heeft de kolom %(columns)s nodig om rijen te koppelen."
 msgstr[1] "Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen."
+
+#: importing.py
+msgid "Import from a file"
+msgstr "Importeren uit een bestand"

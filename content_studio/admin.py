@@ -839,6 +839,12 @@ class ContentStudioSite:
 
             set_up_two_factor_router()
 
+        # The system status page, with the optional app installed.
+        if apps.is_installed("content_studio.contrib.status"):
+            from .contrib.status.views import set_up_router as set_up_status_router
+
+            set_up_status_router()
+
         # The notification endpoints, with the optional app installed.
         if apps.is_installed("content_studio.notifications"):
             from .notifications.viewsets import NotificationViewSet
@@ -848,6 +854,13 @@ class ContentStudioSite:
                 NotificationViewSet,
                 basename="content_studio_notifications",
             )
+
+    def has_status_permission(self, request: HttpRequest) -> bool:
+        """
+        Who may open the system status page (content_studio.contrib.status):
+        superusers, unless overridden.
+        """
+        return bool(request.user.is_active and request.user.is_superuser)
 
     def _register_default_user_studio(self):
         from .user_studios import GroupStudio, UserStudio

@@ -10,6 +10,7 @@ import {
   PiHouseSimpleBold,
   PiImageBold,
   PiMagnifyingGlassBold,
+  PiPulseBold,
   PiSidebarSimpleBold,
   PiSignOutBold,
   PiUserCircleBold,
@@ -48,6 +49,7 @@ import { useHttp } from "@/hooks/use-http";
 import { useMe } from "@/hooks/use-me";
 import { NARROW_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useRunButton } from "@/hooks/use-run-button";
+import { useStatusEnabled, useStatusSummary } from "@/hooks/use-status";
 import { safeStorage } from "@/lib/safe-storage";
 import { cn, getInitials } from "@/lib/utils";
 import { useTenant } from "@/tenant";
@@ -533,6 +535,16 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
     ExtensionType.UserMenuButton,
   ]);
 
+  const statusEnabled = useStatusEnabled();
+  const { data: summary } = useStatusSummary();
+  // A dot on the avatar and the menu item while a service is degraded
+  // or down.
+  const attention =
+    statusEnabled &&
+    (summary?.status === "down" || summary?.status === "degraded")
+      ? summary.status
+      : null;
+
   if (!me) {
     return null;
   }
@@ -553,11 +565,24 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
           )}
           aria-label={collapsed ? name || me.username : undefined}
         >
-          <UserAvatar
-            name={name || me.username}
-            initials={initials}
-            className="size-7 [&_[data-slot=avatar-fallback]]:text-[11px]"
-          />
+          <span className="relative shrink-0">
+            <UserAvatar
+              name={name || me.username}
+              initials={initials}
+              className="size-7 [&_[data-slot=avatar-fallback]]:text-[11px]"
+            />
+            {attention && (
+              <span
+                data-slot="status-dot"
+                role="img"
+                aria-label={t(`status.summary.${attention}`)}
+                className={cn(
+                  "absolute -top-0.5 -right-0.5 size-2.5 rounded-full ring-2 ring-sidebar",
+                  attention === "down" ? "bg-destructive" : "bg-warning",
+                )}
+              />
+            )}
+          </span>
           {!collapsed && (
             <>
               <div className="flex-1 min-w-0">
@@ -595,6 +620,26 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
                 <PiUserCircleBold />
               </Link>
             </DropdownMenuItem>
+            {statusEnabled && (
+              <DropdownMenuItem asChild>
+                <Link to="/status">
+                  <span className="flex-1 flex items-center gap-2">
+                    {t("main_menu.status")}
+                    {attention && (
+                      <span
+                        className={cn(
+                          "size-1.5 rounded-full",
+                          attention === "down"
+                            ? "bg-destructive"
+                            : "bg-warning",
+                        )}
+                      />
+                    )}
+                  </span>
+                  <PiPulseBold />
+                </Link>
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <div className="flex items-center justify-between gap-2 pl-2 pr-1 py-1 text-sm">
               <span>{t("main_menu.theme")}</span>

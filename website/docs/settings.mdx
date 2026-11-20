@@ -324,6 +324,14 @@ How many days delivered and failed webhook deliveries are kept.
 `content_studio_deliver_webhooks` removes older ones; pending deliveries are
 always kept. Default: `30`. `None` keeps every delivery.
 
+## System status
+
+### STATUS_CACHE_TIMEOUT {#status_cache_timeout}
+
+How many seconds the [system status page](/docs/system-status) remembers the
+results of its checks before it runs them again. Default: `60`. `0` runs the
+checks on every request.
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}

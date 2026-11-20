@@ -673,7 +673,9 @@ shows the check's progress, and a notice follows the import itself. The
 file and the job's progress wait in
 [`UPLOAD_FOLDER`](/docs/settings#upload_folder), so the storage must be
 shared with the task workers; `content_studio_clear_uploads` removes them
-after a day.
+after a day. On the [system status](/docs/system-status#tasks) page, when
+a task adapter lists your backend's tasks, the task is named "Import from
+a file".
 
 System check `content_studio.E048` reports import options that do not
 resolve, and `content_studio.W026` options that have no effect or keys that
