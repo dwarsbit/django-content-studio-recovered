@@ -25,6 +25,28 @@
   - Password reset codes are left out of backups, so a backup never
     holds a code that still works.
 
+- **File fields accepted HTML files.** A `FileWidget` upload was only
+  refused when its content started with `<`, so an editor with add or
+  change permission on a model with a file field could upload
+  `page.html` with text before a `<script>`. Served from the admin's
+  domain, it ran in the session of whoever opened it, a superuser
+  included. Now:
+  - The new setting `UPLOAD_ALLOWED_EXTENSIONS` limits FileWidget uploads
+    to a list of types, by default the media library's list (images,
+    audio, video, PDF, office documents, CSV and text). **File fields
+    that take other types, such as `.zip`, need them added**, for
+    example `[*DEFAULT_ALLOWED_EXTENSIONS, "zip"]` from
+    `content_studio.settings`, or `None` for every type.
+    `content_studio.E014` checks it.
+  - HTML, SVG, XML (RSS and every `+xml` type), JavaScript, CSS and the
+    other types a browser runs are always refused, in file fields and in
+    the media library, even when the allowed extensions are `None`, and
+    under any of a name's extensions (`page.html.gz`).
+  - A picked file waits in `UPLOAD_FOLDER` under a name without an
+    extension, and gets its own name when the object is saved.
+  - The Deployment page advises `X-Content-Type-Options: nosniff` for
+    media files.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

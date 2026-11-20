@@ -3,7 +3,8 @@ Temporary uploads for the FileWidget.
 
 The content API takes JSON, so a file picked in a FileWidget is uploaded
 first, on its own: it waits in UPLOAD_FOLDER (in the default storage)
-and the editor gets a signed token for it. Saving the object sends the
+and the editor gets a signed token for it. The waiting copy has no
+extension, so a web server never serves it as a page. Saving the object sends the
 token as the field's value, and the file is attached to the object then;
 an object that is never saved is never changed. Uploads that were not
 attached are removed by the content_studio_clear_uploads command.
@@ -19,10 +20,10 @@ from django.core.files import File
 from django.core.files.storage import default_storage
 from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
-from django.utils.text import get_valid_filename
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+from .file_types import extension_of, is_active_file
 from .settings import cs_settings
 
 SALT = "content_studio.uploads"
@@ -47,12 +48,21 @@ def upload_key(model, field_name) -> str:
 def validate_upload(model_field, file):
     """
     The upload policy: the field's own validators (an ImageField checks
-    that the file is an image), UPLOAD_MAX_SIZE, and never markup, which
-    a browser would run when the file is opened from MEDIA_URL.
+    that the file is an image), UPLOAD_ALLOWED_EXTENSIONS,
+    UPLOAD_MAX_SIZE, and never a type or content a browser would run when
+    the file is opened from MEDIA_URL (HTML, SVG, XML, scripts).
     """
     from .media_library.serializers import looks_like_markup
 
     max_size = cs_settings.UPLOAD_MAX_SIZE
+    allowed = cs_settings.UPLOAD_ALLOWED_EXTENSIONS
+    name = getattr(file, "name", "") or ""
+
+    if is_active_file(name) or (
+        allowed is not None
+        and extension_of(name) not in {extension.lower() for extension in allowed}
+    ):
+        raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
 
     if max_size is not None and file.size > max_size:
         raise serializers.ValidationError(
@@ -76,8 +86,9 @@ def save_upload(request, model, model_field, file) -> dict:
     validate_upload(model_field, file)
 
     original_name = posixpath.basename(file.name or "upload")
-    name = get_valid_filename(original_name) or "upload"
-    path = posixpath.join(cs_settings.UPLOAD_FOLDER, uuid.uuid4().hex, name)
+    # Without the original name or extension: until the object is saved,
+    # the copy is never served under a type a browser renders.
+    path = posixpath.join(cs_settings.UPLOAD_FOLDER, uuid.uuid4().hex, "upload")
     path = default_storage.save(path, file)
 
     token = signing.dumps(

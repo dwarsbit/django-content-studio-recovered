@@ -808,7 +808,7 @@ def test_valid_webhook_settings_pass():
     assert not [m for m in messages if m.id == "content_studio.E019"]
 
 
-# --- E014: media library upload settings -------------------------------------
+# --- E014: upload settings --------------------------------------------------
 
 
 @pytest.mark.parametrize(
@@ -816,6 +816,8 @@ def test_valid_webhook_settings_pass():
     [
         {"MEDIA_LIBRARY_ALLOWED_EXTENSIONS": "jpg"},
         {"MEDIA_LIBRARY_ALLOWED_EXTENSIONS": [".jpg"]},
+        {"UPLOAD_ALLOWED_EXTENSIONS": "pdf"},
+        {"UPLOAD_ALLOWED_EXTENSIONS": [".pdf"]},
         {"MEDIA_LIBRARY_MAX_UPLOAD_SIZE": 0},
         {"MEDIA_LIBRARY_MAX_UPLOAD_SIZE": "10MB"},
     ],

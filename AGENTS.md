@@ -41,6 +41,7 @@ content_studio/
 ├── blocks.py            # BlockField and Block: an ordered list of content blocks
 ├── managers.py          # Managers for the base models (SingletonManager, SoftDeletableManager)
 ├── sanitizers.py        # HTML sanitizer (allowlist based on nh3)
+├── file_types.py        # Upload types never accepted (HTML, SVG, XML, scripts), by every extension and the mimetypes table; used by the FileWidget uploads (uploads.py, UPLOAD_ALLOWED_EXTENSIONS) and the media library
 ├── uniqueness.py        # Duplicate check for unique_together and multi-field UniqueConstraints
 ├── validators.py        # Field validators (JSONSchemaValidator, ChoiceOptionsValidator, ColorValidator)
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts

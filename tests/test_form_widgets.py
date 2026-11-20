@@ -141,15 +141,25 @@ class APITestCase(TestCase):
         client.credentials(HTTP_AUTHORIZATION=f"Bearer {create_access_token(user)}")
         return client
 
-    def upload(self, client=None, field="manual", content=b"%PDF-1.4 manual"):
+    def upload(
+        self,
+        client=None,
+        field="manual",
+        content=b"%PDF-1.4 manual",
+        name="Hammer manual.pdf",
+    ):
         return (client or self.client).post(
             f"/api/content/testapp.product/uploads/{field}",
-            {"file": SimpleUploadedFile("Hammer manual.pdf", content)},
+            {"file": SimpleUploadedFile(name, content)},
             format="multipart",
         )
 
 
 class FileWidgetTests(APITestCase):
+    def tearDown(self):
+        # Uploads that were never attached would show up in later tests.
+        clear_expired_uploads(max_age=datetime.timedelta(minutes=-1))
+
     def test_upload_waits_until_the_object_is_saved(self):
         response = self.upload()
 
@@ -261,6 +271,55 @@ class FileWidgetTests(APITestCase):
 
         assert response.status_code == 400
         assert "file" in response.json()
+
+    def test_html_is_rejected_whatever_its_content(self):
+        # The review's reproduction: text before the markup.
+        response = self.upload(
+            name="page.html", content=b"hi <script>alert(document.domain)</script>"
+        )
+
+        assert response.status_code == 400
+        assert "file" in response.json()
+
+    @override_settings(CONTENT_STUDIO={"UPLOAD_ALLOWED_EXTENSIONS": None})
+    def test_types_a_browser_runs_are_rejected_even_when_every_type_is_allowed(self):
+        for name in [
+            "page.html",
+            "page.HTM",
+            "page.xhtml",
+            "logo.svg",
+            "feed.xml",
+            "feed.rss",
+            "script.js",
+            "style.css",
+            "page.html.gz",
+            "page.html.unknown",
+            "page.html.",
+        ]:
+            response = self.upload(name=name, content=b"hello")
+            assert response.status_code == 400, name
+
+        assert self.upload(name="archive.zip", content=b"PK").status_code == 201
+
+    def test_only_allowed_extensions_are_accepted(self):
+        assert self.upload(name="archive.zip", content=b"PK").status_code == 400
+        assert self.upload(name="notes.txt", content=b"notes").status_code == 201
+
+    @override_settings(CONTENT_STUDIO={"UPLOAD_ALLOWED_EXTENSIONS": ["zip"]})
+    def test_the_allowed_extensions_are_a_setting(self):
+        assert self.upload(name="archive.ZIP", content=b"PK").status_code == 201
+        assert self.upload().status_code == 400
+
+    def test_the_waiting_copy_has_no_extension(self):
+        from django.core import signing
+
+        from content_studio.uploads import SALT
+
+        token = self.upload().json()["upload"]
+        path = signing.loads(token, salt=SALT)["path"]
+
+        assert posixpath.basename(path) == "upload"
+        assert default_storage.exists(path)
 
     @override_settings(CONTENT_STUDIO={"UPLOAD_MAX_SIZE": 4})
     def test_large_files_are_rejected(self):

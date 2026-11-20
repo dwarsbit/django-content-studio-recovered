@@ -360,11 +360,15 @@ The file is uploaded right away and attached when the editor saves. Until
 then, the object keeps its saved file, so **Cancel** leaves it unchanged.
 
 Uploads go through the same checks as the media library: the field's own
-validators (an `ImageField` checks that the file is an image), a maximum
-size ([`UPLOAD_MAX_SIZE`](/docs/settings#upload_max_size)), and no markup
-such as HTML and SVG. A picked file waits in
-[`UPLOAD_FOLDER`](/docs/settings#upload_folder) in the default storage. It
-is moved into the field's `upload_to` on save.
+validators (an `ImageField` checks that the file is an image), a list of
+file types ([`UPLOAD_ALLOWED_EXTENSIONS`](/docs/settings#upload_allowed_extensions),
+by default images, audio, video, PDF and office files), a maximum size
+([`UPLOAD_MAX_SIZE`](/docs/settings#upload_max_size)), and never a type a
+browser runs, such as HTML, SVG, XML or JavaScript, by extension or by
+content. A picked file waits in
+[`UPLOAD_FOLDER`](/docs/settings#upload_folder) in the default storage,
+under a name without an extension. It is moved into the field's
+`upload_to`, under its own name, on save.
 
 Files that were picked but never saved stay in the upload folder. Remove
 them once a day, for example with cron:

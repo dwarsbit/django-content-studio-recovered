@@ -132,6 +132,27 @@ editor saves, in the default storage. Default:
 `"content_studio/uploads"`. `content_studio_clear_uploads` removes the
 ones that were never saved.
 
+### UPLOAD_ALLOWED_EXTENSIONS {#upload_allowed_extensions}
+
+The file extensions a [`FileWidget`](/docs/widgets#files) accepts, in
+lowercase and without the dot. Default: the same list as
+[`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](#media_library_allowed_extensions).
+Add the types your file fields take, such as `"zip"`:
+
+```python
+from content_studio.settings import DEFAULT_ALLOWED_EXTENSIONS
+
+CONTENT_STUDIO = {
+    # ...
+    "UPLOAD_ALLOWED_EXTENSIONS": [*DEFAULT_ALLOWED_EXTENSIONS, "zip"],
+}
+```
+
+`None` accepts every extension. Either way, HTML, SVG, XML, JavaScript,
+CSS and the other types a browser runs are refused, as in the media
+library. A field's own validators, such as Django's
+`FileExtensionValidator`, apply on top.
+
 ### UPLOAD_MAX_SIZE {#upload_max_size}
 
 The maximum size of a file picked in a `FileWidget`, in bytes. Default:
@@ -212,8 +233,11 @@ dot. By default:
   `pptx`, `txt`, `xls`, `xlsx`.
 
 SVG is left out because it can contain scripts. `None` accepts every
-extension. Files whose content is markup (HTML, SVG, XML) are rejected
-whatever their extension.
+extension, except the types a browser runs or renders as a page: HTML,
+SVG, XML (including RSS and other `+xml` types), JavaScript, CSS and the
+like are always refused, under any of a file's extensions
+(`page.html.gz` too). Files whose content is markup (HTML, SVG, XML) are
+rejected whatever their extension.
 
 ### MEDIA_LIBRARY_MAX_UPLOAD_SIZE {#media_library_max_upload_size}
 

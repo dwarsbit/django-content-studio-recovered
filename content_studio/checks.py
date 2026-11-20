@@ -803,28 +803,30 @@ def reorder_errors(studio) -> list[tuple[str, str]]:
 
 def media_upload_errors() -> list[tuple[str, str]]:
     """
-    Malformed media library upload settings, as (check id, message)
-    pairs: the allowed extensions must be a list of strings without a
+    Malformed upload settings, as (check id, message) pairs: the allowed
+    extensions (media library and FileWidget) must be a list of strings without a
     leading dot, the maximum size a positive number of bytes.
     """
     errors = []
-    extensions = cs_settings.MEDIA_LIBRARY_ALLOWED_EXTENSIONS
     max_size = cs_settings.MEDIA_LIBRARY_MAX_UPLOAD_SIZE
 
-    if extensions is not None and (
-        isinstance(extensions, str)
-        or not isinstance(extensions, (list, tuple, set))
-        or not all(
-            isinstance(e, str) and e and not e.startswith(".") for e in extensions
-        )
-    ):
-        errors.append(
-            (
-                "content_studio.E014",
-                "MEDIA_LIBRARY_ALLOWED_EXTENSIONS must be None or a list of "
-                "file extensions without the leading dot, like ['jpg', 'pdf'].",
+    for setting in ("MEDIA_LIBRARY_ALLOWED_EXTENSIONS", "UPLOAD_ALLOWED_EXTENSIONS"):
+        extensions = getattr(cs_settings, setting)
+
+        if extensions is not None and (
+            isinstance(extensions, str)
+            or not isinstance(extensions, (list, tuple, set))
+            or not all(
+                isinstance(e, str) and e and not e.startswith(".") for e in extensions
             )
-        )
+        ):
+            errors.append(
+                (
+                    "content_studio.E014",
+                    f"{setting} must be None or a list of file extensions "
+                    "without the leading dot, like ['jpg', 'pdf'].",
+                )
+            )
 
     if max_size is not None and (
         isinstance(max_size, bool) or not isinstance(max_size, int) or max_size <= 0

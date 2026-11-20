@@ -665,6 +665,19 @@ def test_upload_policy_can_be_opened_up(media_root):
     assert response.status_code == 201
 
 
+@pytest.mark.django_db
+@pytest.mark.parametrize("name", ["page.html", "drawing.svg", "feed.xml", "a.js"])
+def test_active_types_are_rejected_even_when_every_extension_is_allowed(
+    media_root, name
+):
+    response = upload(
+        make_superuser(), name, b"hello", MEDIA_LIBRARY_ALLOWED_EXTENSIONS=None
+    )
+
+    assert response.status_code == 400
+    assert not ItemModel.objects.exists()
+
+
 def staff_with_media_perms(*codenames):
     user = auth_models.User.objects.create_user(
         username="staff", password="x", is_staff=True

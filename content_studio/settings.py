@@ -20,6 +20,40 @@ from django.utils.module_loading import import_string
 
 SETTINGS_NAMESPACE = "CONTENT_STUDIO"
 
+# File extensions uploads accept by default, in the media library and in
+# a FileWidget (lowercase, without the dot).
+DEFAULT_ALLOWED_EXTENSIONS = [
+    # Images (SVG is left out: it can carry scripts).
+    "avif",
+    "gif",
+    "jpeg",
+    "jpg",
+    "png",
+    "webp",
+    # Video and audio.
+    "m4a",
+    "mov",
+    "mp3",
+    "mp4",
+    "ogg",
+    "wav",
+    "webm",
+    # Documents.
+    "csv",
+    "doc",
+    "docx",
+    "odp",
+    "ods",
+    "odt",
+    "pdf",
+    "ppt",
+    "pptx",
+    "txt",
+    "xls",
+    "xlsx",
+]
+
+
 DEFAULTS = {
     "ADMIN_SITE": "content_studio.admin.admin_site",
     "LOGIN_BACKENDS": [
@@ -46,36 +80,7 @@ DEFAULTS = {
     "MEDIA_METADATA_ATTR": "metadata",
     # File extensions the media library accepts (lowercase, without the
     # dot); None accepts every extension.
-    "MEDIA_LIBRARY_ALLOWED_EXTENSIONS": [
-        # Images (SVG is left out: it can carry scripts).
-        "avif",
-        "gif",
-        "jpeg",
-        "jpg",
-        "png",
-        "webp",
-        # Video and audio.
-        "m4a",
-        "mov",
-        "mp3",
-        "mp4",
-        "ogg",
-        "wav",
-        "webm",
-        # Documents.
-        "csv",
-        "doc",
-        "docx",
-        "odp",
-        "ods",
-        "odt",
-        "pdf",
-        "ppt",
-        "pptx",
-        "txt",
-        "xls",
-        "xlsx",
-    ],
+    "MEDIA_LIBRARY_ALLOWED_EXTENSIONS": list(DEFAULT_ALLOWED_EXTENSIONS),
     # Maximum upload size of a media library file in bytes; None for no
     # limit.
     "MEDIA_LIBRARY_MAX_UPLOAD_SIZE": 50 * 1024 * 1024,
@@ -101,6 +106,10 @@ DEFAULTS = {
     # Maximum size of a file picked in a FileWidget, in bytes; None for
     # no limit.
     "UPLOAD_MAX_SIZE": 50 * 1024 * 1024,
+    # File extensions a FileWidget accepts (lowercase, without the dot);
+    # None accepts every extension. HTML, SVG, XML, scripts and other
+    # types a browser runs are refused whatever this allows.
+    "UPLOAD_ALLOWED_EXTENSIONS": list(DEFAULT_ALLOWED_EXTENSIONS),
     # Import: the most rows a file can have to be imported in the
     # request. Larger files run as a task when the task backend runs
     # tasks in the background, and are refused otherwise. None: no limit.
