@@ -589,7 +589,12 @@ class ModelStudio(BaseStudio[T]):
     def has_delete_permission(
         self, request: HttpRequest, obj: Optional[T] = None
     ) -> bool:
+        from .users import may_delete_user
+
         if get_is_singleton(self):
+            return False
+
+        if obj is not None and not may_delete_user(request, obj):
             return False
 
         return super().has_delete_permission(request, obj)

@@ -56,6 +56,14 @@
   and holds no permission they lack (their own or a group's, active or
   not). Otherwise the email is read-only and the actions are not offered.
 
+- **Staff could lock out every superuser.** With `change_user` or
+  `delete_user`, a staff member could deactivate, revoke staff status from
+  or delete every superuser. On an account they do not outrank (see
+  above), `is_active` and `is_staff` are now read-only and deleting is
+  refused, one by one and in bulk. This is part of `ModelStudio`'s
+  `has_delete_permission`, so a user studio that overrides it should call
+  `super()`.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

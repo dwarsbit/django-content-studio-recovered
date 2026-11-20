@@ -8,7 +8,9 @@ superusers only take over the accounts they outrank (may_manage_account):
 not a superuser's, and not one holding a permission they lack. Setting
 the password, emailing a password link, resetting the two-factor login
 and changing the email (through a password reset) each hand over the
-account, so none is left to the change permission alone.
+account, so none is left to the change permission alone. Deactivating,
+revoking staff status and deleting lock the owner out, so they are
+guarded the same way.
 """
 
 from typing import Optional
@@ -114,12 +116,27 @@ def guarded_field_names(
         names.add("is_superuser")
 
     if obj is not None and not may_manage_account(user, obj):
-        email_field = model.get_email_field_name()
-
-        if _has_field(model, email_field):
-            names.add(email_field)
+        # Taking the account over (the email), or locking its owner out
+        # (deactivating it, revoking staff status).
+        for name in (model.get_email_field_name(), "is_active", "is_staff"):
+            if _has_field(model, name):
+                names.add(name)
 
     return names
+
+
+def may_delete_user(request: HttpRequest, obj) -> bool:
+    """
+    The guard on deleting a user, on top of the delete permission: only
+    accounts the request's user may manage (may_manage_account), so staff
+    cannot delete every superuser and lock the site's owners out.
+    """
+    if not is_user_model(type(obj)):
+        return True
+
+    user = getattr(request, "user", None)
+
+    return user is not None and may_manage_account(user, obj)
 
 
 def uses_password_login(site=None) -> bool:

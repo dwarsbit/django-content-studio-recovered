@@ -109,6 +109,10 @@ For editors who are not superusers:
 - The password of an account they do not outrank cannot be set, no
   password link can be sent to it, and its two-factor login cannot be
   reset.
+- An account they do not outrank cannot be deactivated or lose its staff
+  status (`is_active` and `is_staff` are read-only), and cannot be
+  deleted, one by one or in bulk. So staff cannot lock out the
+  superusers.
 
 So an editor with `change_user` can look after the accounts of editors
 with the same permissions or fewer, but not of a manager who also holds

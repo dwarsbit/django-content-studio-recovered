@@ -308,6 +308,80 @@ class OutrankedAccountTests(UserManagementTestCase):
         self.assertEqual(response.status_code, 204)
 
 
+class LockoutTests(UserManagementTestCase):
+    """Staff who are not superusers cannot lock the superusers out."""
+
+    def setUp(self):
+        super().setUp()
+        self.editor.user_permissions.add(
+            auth_models.Permission.objects.get(codename="delete_user")
+        )
+
+    def test_staff_cannot_deactivate_a_superuser_or_revoke_staff(self):
+        response = client_for(self.editor).patch(
+            f"/api/content/auth.user/{self.admin.pk}",
+            {"is_active": False, "is_staff": False},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+        self.assertTrue(self.admin.is_staff)
+        readonly = (
+            client_for(self.editor)
+            .get(f"/api/content/auth.user/{self.admin.pk}")
+            .json()["__readonly_fields__"]
+        )
+        self.assertIn("is_active", readonly)
+        self.assertIn("is_staff", readonly)
+
+    def test_staff_still_deactivates_accounts_they_outrank(self):
+        client_for(self.editor).patch(
+            f"/api/content/auth.user/{self.target.pk}",
+            {"is_active": False},
+            format="json",
+        )
+
+        self.target.refresh_from_db()
+        self.assertFalse(self.target.is_active)
+
+    def test_staff_cannot_delete_a_superuser(self):
+        response = client_for(self.editor).delete(
+            f"/api/content/auth.user/{self.admin.pk}"
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
+    def test_staff_cannot_bulk_delete_a_superuser(self):
+        response = client_for(self.editor).post(
+            "/api/content/auth.user/bulk",
+            {"action": "delete", "ids": [str(self.admin.pk), str(self.target.pk)]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+        self.assertTrue(User.objects.filter(pk=self.target.pk).exists())
+
+    def test_staff_deletes_accounts_they_outrank(self):
+        response = client_for(self.editor).delete(
+            f"/api/content/auth.user/{self.target.pk}"
+        )
+
+        self.assertIn(response.status_code, (200, 204))
+        self.assertFalse(User.objects.filter(pk=self.target.pk).exists())
+
+    def test_superusers_delete_superusers(self):
+        other = User.objects.create_superuser(username="root", password="Root-42-x")
+
+        response = client_for(self.admin).delete(f"/api/content/auth.user/{other.pk}")
+
+        self.assertIn(response.status_code, (200, 204))
+        self.assertFalse(User.objects.filter(pk=other.pk).exists())
+
+
 class UserInfoTests(UserManagementTestCase):
     def info(self, viewer, user):
         response = client_for(viewer).get(f"/api/content/auth.user/{user.pk}")
