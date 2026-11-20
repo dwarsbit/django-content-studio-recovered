@@ -268,3 +268,34 @@ def is_newer_version(latest: str, current: str) -> bool:
         return Version(latest) > Version(current)
     except InvalidVersion:
         return False
+
+
+# Link schemes the admin puts in an href; relative URLs are fine too.
+SAFE_LINK_SCHEMES = ("http", "https", "mailto")
+
+
+def safe_link_url(url) -> Optional[str]:
+    """
+    url when it is safe as an href in the admin: http(s), mailto or a
+    relative URL; None for anything else, such as javascript: or data:,
+    which would run in the admin when clicked. Browsers ignore control
+    characters and whitespace in a scheme ("java\tscript:"), so those do
+    not hide one. Mirrors isSafeHref in frontend/src/lib/html.ts.
+    """
+    import re
+
+    if not isinstance(url, str):
+        return None
+
+    trimmed = url.strip()
+
+    if not trimmed:
+        return None
+
+    compact = re.sub(r"[\x00-\x20\x7f]", "", trimmed)
+    scheme = re.match(r"^([a-z][a-z0-9+.\-]*):", compact, re.IGNORECASE)
+
+    if scheme:
+        return trimmed if scheme.group(1).lower() in SAFE_LINK_SCHEMES else None
+
+    return None if compact.startswith(("//", "\\\\", "/\\")) else trimmed

@@ -17,6 +17,7 @@ from .utils import (
     get_tenant_scoped_queryset,
     is_jsonable,
     normalize_version,
+    safe_link_url,
 )
 
 
@@ -424,7 +425,9 @@ class DjangoContentStudioConfig(AppConfig):
                             if not isinstance(obj, models.Model) or not obj.pk:
                                 return None
 
-                            return get_url(obj) if get_url else None
+                            # A stored value could be a javascript: URL,
+                            # which would run when an editor clicks it.
+                            return safe_link_url(get_url(obj)) if get_url else None
 
                         def get_object_permissions(self, obj):
                             request = self.context.get("request")

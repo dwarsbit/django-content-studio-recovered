@@ -97,6 +97,13 @@
   with a linkable studio, and saving refuses new links to objects the
   editor may not view.
 
+- **View on site linked any URL.** The button used the URL from
+  `get_absolute_url()` or `view_on_site` as it was, so a value built from
+  stored data could be a `javascript:` URL that ran in the admin when
+  another editor clicked it. The server and the browser now only link
+  `http`, `https`, `mailto` and relative URLs, and hide the button
+  otherwise.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

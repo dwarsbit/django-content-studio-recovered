@@ -137,3 +137,32 @@ def test_the_check_refuses_anything_else(monkeypatch):
 
     assert len(errors) == 1
     assert "view_on_site" in errors[0].msg
+
+
+@pytest.mark.django_db
+@pytest.mark.parametrize(
+    "url",
+    [
+        "javascript:alert(document.domain)",
+        " JavaScript:alert(1)",
+        "java\tscript:alert(1)",
+        "data:text/html,<script>alert(1)</script>",
+        "//evil.example/",
+    ],
+)
+def test_urls_that_would_run_a_script_are_dropped(client, article, monkeypatch, url):
+    monkeypatch.setattr(ArticleAdmin, "view_on_site", lambda self, obj: url)
+
+    response = client.get(f"{ARTICLES}/{article.pk}")
+
+    assert response.data["__view_on_site__"] is None
+
+
+@pytest.mark.parametrize(
+    "url",
+    ["/articles/1/", "https://example.com/a", "http://example.com", "a/b?c=d:e"],
+)
+def test_safe_urls_are_kept(url):
+    from content_studio.utils import safe_link_url
+
+    assert safe_link_url(url) == url

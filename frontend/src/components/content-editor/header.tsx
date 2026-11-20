@@ -29,6 +29,7 @@ import { useAdminInfo } from "@/hooks/use-admin-info";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useHttp } from "@/hooks/use-http";
 import { useRunAction } from "@/hooks/use-run-action";
+import { isSafeHref } from "@/lib/html";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type {
   DateTimeString,
@@ -129,7 +130,14 @@ export function Header({
   });
   const showUserActions = showSetPassword || showSendLink || showResetTwoFactor;
   // The object's public page (the studio's view_on_site), once saved.
-  const viewOnSiteUrl = !isCreate ? resource?.__view_on_site__ : null;
+  // Only http(s) and relative URLs: a stored javascript: URL would run
+  // in the admin (the server drops those too).
+  const viewOnSiteUrl =
+    !isCreate &&
+    resource?.__view_on_site__ &&
+    isSafeHref(resource.__view_on_site__)
+      ? resource.__view_on_site__
+      : null;
   // The studio's edit_actions: @bulk_action methods run on this object.
   const editActions =
     !dialog && !isCreate && !isSingleton
