@@ -101,6 +101,14 @@ DEFAULTS = {
     # Maximum size of a file picked in a FileWidget, in bytes; None for
     # no limit.
     "UPLOAD_MAX_SIZE": 50 * 1024 * 1024,
+    # Import: the most rows a file can have to be imported in the
+    # request. Larger files run as a task when the task backend runs
+    # tasks in the background, and are refused otherwise. None: no limit.
+    "IMPORT_MAX_ROWS": 10_000,
+    # Files with at least this many rows are imported as a task when the
+    # task backend runs tasks in the background. None: always in the
+    # request.
+    "IMPORT_TASK_ROWS": 1_000,
     # The map tiles MapWidget shows: a tile URL template with {z}, {x}
     # and {y}, and the attribution shown on the map (HTML).
     "MAP_TILE_URL": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",

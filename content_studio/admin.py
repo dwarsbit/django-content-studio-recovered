@@ -13,6 +13,7 @@ from . import widgets, formats, fields, blocks
 from .actions import get_bulk_actions
 from .exceptions import AlreadyRegistered, NotRegistered
 from .export import get_export_formats, is_exportable
+from .importing import serialize_import
 from .filters import serialize_list_filters
 from .form import (
     ButtonResult,
@@ -433,6 +434,19 @@ class ModelStudio(BaseStudio[T]):
     # table_display columns. Never offered for singletons.
     export_fields: Optional[list[Union[str, "TableColumn"]]] = None
     allow_export: bool = False
+
+    # Import, as an opt-in: the list page offers to create and update
+    # objects from a CSV, Excel or JSON file. import_fields names the
+    # fields a file may set; allow_import takes the fields the edit page
+    # writes. Rows are matched on import_id_fields (the primary key when
+    # unset): a match is updated, other rows create objects.
+    # import_lookups gives relations by a field of the related model
+    # instead of its primary key, e.g. {"author": "email"}. Never
+    # offered for singletons.
+    import_fields: Optional[list[str]] = None
+    allow_import: bool = False
+    import_id_fields: Optional[list[str]] = None
+    import_lookups: Optional[dict[str, str]] = None
 
     # Whether the edit and list pages show which other users have an
     # object open (when the PRESENCE setting is on).
@@ -1538,6 +1552,10 @@ class AdminSerializer:
                     if is_exportable(admin_class)
                     else None
                 ),
+                # The formats of the "For import" export, the template
+                # and the import itself, or None when the studio offers
+                # no import.
+                "import": serialize_import(admin_class, request),
                 "actions": [
                     action.serialize()
                     for action in get_bulk_actions(admin_class, request)

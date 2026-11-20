@@ -23,6 +23,7 @@ from .models import (
     SiteSettings,
     Step,
     Track,
+    Venue,
 )
 
 
@@ -182,6 +183,9 @@ class EventAdmin(ModelStudio):
         TableColumn(field="get_summary", header="Summary"),
     ]
 
+    allow_import = True
+    import_lookups = {"tags": "name"}
+
     def get_summary(self, obj, request):
         return f"{obj.title} ({obj.attendees})"
 
@@ -196,3 +200,11 @@ class ShelfAdmin(ModelStudio):
 class CouponAdmin(ModelStudio):
     table_display = ["code"]
     soft_delete = "removed_at"
+
+
+@register(Venue)
+class VenueAdmin(ModelStudio):
+    table_display = ["name", "slug", "kind"]
+    import_fields = ["name", "slug", "kind", "capacity", "opened", "host", "events"]
+    import_id_fields = ["slug"]
+    import_lookups = {"host": "username", "events": "title"}

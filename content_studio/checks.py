@@ -1464,6 +1464,287 @@ def export_warnings(studio) -> list[tuple[str, str]]:
     return warnings
 
 
+def _import_writable_error(studio, field, form_names) -> str | None:
+    """Why a file cannot set a model field, or None."""
+    from .admin import get_write_only_field_names
+
+    if field.primary_key:
+        return "is the primary key, which is never imported"
+
+    if field.auto_created and not field.concrete:
+        return "is a reverse relation"
+
+    if isinstance(field, models.FileField):
+        return "is a file field, which cannot be imported"
+
+    if field.name == get_tenant_field_name(studio.model):
+        return "is the tenant field, which comes from the selected tenant"
+
+    if field.name in get_write_only_field_names(studio, studio.model):
+        return "has a write-only PasswordWidget"
+
+    if field.name not in form_names:
+        return "is not a field the edit page writes"
+
+    if field.name in set(getattr(studio, "readonly_fields", None) or []):
+        return "is read-only"
+
+    return None
+
+
+def import_errors(studio) -> list[tuple[str, str]]:
+    """
+    A misconfigured import, as (check id, message) pairs: import_fields
+    must name model fields the edit page writes; import_id_fields must
+    name model fields, the ones other than the primary key among the
+    import fields; import_lookups must map relation fields to fields of
+    the related model.
+    """
+    from .importing import get_import_fields
+
+    name = config_name(studio)
+    model = studio.model
+    errors = []
+    import_fields = getattr(studio, "import_fields", None)
+    id_fields = getattr(studio, "import_id_fields", None)
+    lookups = getattr(studio, "import_lookups", None)
+    enabled = bool(import_fields) or bool(getattr(studio, "allow_import", False))
+
+    if import_fields is not None and (
+        not isinstance(import_fields, (list, tuple))
+        or not all(isinstance(entry, str) for entry in import_fields)
+    ):
+        return [
+            (
+                "content_studio.E048",
+                f"{name}.import_fields must be a list of field names.",
+            )
+        ]
+
+    if id_fields is not None and (
+        not isinstance(id_fields, (list, tuple))
+        or not all(isinstance(entry, str) for entry in id_fields)
+    ):
+        errors.append(
+            (
+                "content_studio.E048",
+                f"{name}.import_id_fields must be a list of field names.",
+            )
+        )
+        id_fields = None
+
+    if lookups is not None and (
+        not isinstance(lookups, dict)
+        or not all(
+            isinstance(key, str) and isinstance(value, str)
+            for key, value in lookups.items()
+        )
+    ):
+        errors.append(
+            (
+                "content_studio.E048",
+                f"{name}.import_lookups must map field names to field names "
+                "of the related model.",
+            )
+        )
+        lookups = None
+
+    if not enabled:
+        return errors
+
+    form_names = edit_form_field_names(studio)
+    seen = set()
+
+    for entry in import_fields or []:
+        if entry in seen:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_fields contains {entry!r} more than once.",
+                )
+            )
+            continue
+
+        seen.add(entry)
+
+        try:
+            field = model._meta.get_field(entry)
+        except FieldDoesNotExist:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_fields entry {entry!r} is not a field of "
+                    f"{model._meta.label}.",
+                )
+            )
+            continue
+
+        reason = _import_writable_error(studio, field, form_names)
+
+        if reason:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_fields entry {entry!r} {reason}.",
+                )
+            )
+
+    importable = {field.name for field in get_import_fields(studio, None)}
+    importable &= form_names
+
+    for entry in id_fields or []:
+        try:
+            field = model._meta.get_field(entry)
+        except FieldDoesNotExist:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_id_fields entry {entry!r} is not a field "
+                    f"of {model._meta.label}.",
+                )
+            )
+            continue
+
+        if field.many_to_many or (field.auto_created and not field.concrete):
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_id_fields entry {entry!r} must be a "
+                    "concrete field.",
+                )
+            )
+        elif not field.primary_key and entry not in importable:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_id_fields entry {entry!r} must be an "
+                    "import field too, so rows without a match can be created.",
+                )
+            )
+
+    for entry, lookup in (lookups or {}).items():
+        try:
+            field = model._meta.get_field(entry)
+        except FieldDoesNotExist:
+            field = None
+
+        if (
+            field is None
+            or not field.is_relation
+            or (field.auto_created and not field.concrete)
+        ):
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_lookups key {entry!r} is not a foreign "
+                    "key or many-to-many field.",
+                )
+            )
+            continue
+
+        if lookup == "pk":
+            continue
+
+        try:
+            field.related_model._meta.get_field(lookup)
+        except FieldDoesNotExist:
+            errors.append(
+                (
+                    "content_studio.E048",
+                    f"{name}.import_lookups[{entry!r}] names {lookup!r}, "
+                    f"which is not a field of {field.related_model._meta.label}.",
+                )
+            )
+
+    return errors
+
+
+def _is_unique_together(model, names: list[str]) -> bool:
+    """Whether a model's values for these fields are unique."""
+    names = set(names)
+
+    if len(names) == 1:
+        try:
+            field = model._meta.get_field(next(iter(names)))
+        except FieldDoesNotExist:
+            return False
+
+        if field.primary_key or field.unique:
+            return True
+
+    for unique_together in model._meta.unique_together:
+        if set(unique_together) <= names:
+            return True
+
+    for constraint in model._meta.constraints:
+        if (
+            isinstance(constraint, models.UniqueConstraint)
+            and constraint.fields
+            and constraint.condition is None
+            and set(constraint.fields) <= names
+        ):
+            return True
+
+    return False
+
+
+def import_warnings(studio) -> list[tuple[str, str]]:
+    """
+    Import options without effect or with surprises, as (check id,
+    message) pairs: singletons are never imported, an empty
+    import_fields enables nothing, and rows are matched on fields that
+    need not be unique.
+    """
+    name = config_name(studio)
+    import_fields = getattr(studio, "import_fields", None)
+    enabled = bool(import_fields) or bool(getattr(studio, "allow_import", False))
+
+    if enabled and get_is_singleton(studio):
+        option = "import_fields" if import_fields else "allow_import"
+        return [
+            (
+                "content_studio.W026",
+                f"{name}.{option} has no effect: singletons cannot be imported.",
+            )
+        ]
+
+    if isinstance(import_fields, (list, tuple)) and not import_fields:
+        return [
+            (
+                "content_studio.W026",
+                f"{name}.import_fields is empty, which offers no import. "
+                "Remove it, or set allow_import to import the fields the "
+                "edit page writes.",
+            )
+        ]
+
+    if not enabled:
+        return []
+
+    model = studio.model
+    warnings = []
+    id_fields = getattr(studio, "import_id_fields", None)
+
+    if isinstance(id_fields, (list, tuple)) and id_fields:
+        try:
+            for entry in id_fields:
+                model._meta.get_field(entry)
+        except (FieldDoesNotExist, TypeError):
+            id_fields = None
+
+        if id_fields and not _is_unique_together(model, list(id_fields)):
+            warnings.append(
+                (
+                    "content_studio.W026",
+                    f"{name}.import_id_fields {list(id_fields)!r} need not be "
+                    "unique: a row that matches more than one object fails. "
+                    "Use a unique field or a unique set of fields.",
+                )
+            )
+
+    return warnings
+
+
 # Fields a prepopulated value cannot go into, as in the classic admin.
 PREPOPULATED_TARGET_EXCLUDED = (
     models.DateTimeField,
@@ -3177,6 +3458,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         for check_id, error in export_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
+        for check_id, error in import_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
         for check_id, warning in edit_field_warnings(studio):
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
@@ -3208,6 +3492,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in export_warnings(studio):
+            messages.append(checks.Warning(warning, obj=obj, id=check_id))
+
+        for check_id, warning in import_warnings(studio):
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in condition_warnings(studio):
