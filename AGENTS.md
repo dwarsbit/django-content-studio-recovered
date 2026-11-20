@@ -62,6 +62,7 @@ content_studio/
 ├── user_studios.py      # The default UserStudio and GroupStudio, registered when a project registers none
 ├── extensions.py        # Extension base classes
 ├── filters.py           # Filter definitions
+├── languages.py         # The admin's languages (LANGUAGES), and the per-request pick: language cookie, Accept-Language, LANGUAGE_CODE; urls.py wraps every view with admin_language
 ├── dashboard/
 │   ├── __init__.py
 │   ├── content_list.py  # Dashboard content list component
@@ -87,7 +88,7 @@ content_studio/
 │   └── password_reset/  # Password reset functionality
 ├── static/              # Static files (compiled frontend)
 ├── templates/           # Django templates
-└── locale/              # Translations
+└── locale/              # Django catalogs (nl, de, fr, es, it, pt_BR); the frontend's are frontend/public/locales
 ```
 
 ### Frontend (React/TypeScript)
@@ -509,6 +510,14 @@ poetry run python scripts/test_wrapper.py test-cov    # With coverage
 2. Add frontend code in `frontend/src/`
 3. Add tests in `tests/`
 4. Update documentation if needed
+
+### Adding or changing a UI string
+
+Add it to every language: `frontend/public/locales/*/translation.json` for
+the interface, the `.po` catalogs in `content_studio/locale` for Python and
+template strings (then `django-admin makemessages --all --no-obsolete` and
+`compilemessages` in `content_studio/`). `tests/test_languages.py` checks
+that every language has every string; see CONTRIBUTING.md, Translations.
 
 ### Adding a Model
 

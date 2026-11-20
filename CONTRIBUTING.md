@@ -38,6 +38,46 @@ The `demo/` project runs the admin against example models; see
    [changelog](CHANGELOG.md).
 5. Open a pull request that explains what changed and why.
 
+## Translations
+
+The admin ships in English, Dutch, German, French, Spanish, Italian and
+Brazilian Portuguese. Its text lives in two places, and every language has
+every string in both:
+
+- **The admin's interface**: `frontend/public/locales/<locale>/translation.json`,
+  one file per language (`pt-BR` for Brazilian Portuguese). English is the
+  source. Plurals use i18next's suffixes: `_one` and `_other`, plus `_many`
+  for French, Spanish, Italian and Portuguese.
+- **Strings from Django** (field labels, errors, emails):
+  `content_studio/locale/<locale>/LC_MESSAGES/django.po` (`pt_BR`), with the
+  compiled `django.mo` next to it. Both are committed.
+
+When you add or change a string, add it to every language. If you cannot
+translate it, ask in the pull request. After changing Python or template
+strings, update and compile the catalogs (this needs GNU gettext):
+
+```bash
+cd content_studio
+django-admin makemessages --all --no-obsolete
+django-admin compilemessages
+```
+
+`tests/test_languages.py` fails when a language misses a string, has one
+English no longer has, or uses other placeholders than English.
+
+To add a language:
+
+1. Add it to `LANGUAGES` in `content_studio/languages.py`, with its own
+   name, and its plural forms to `PLURAL_CATEGORIES` in
+   `tests/test_languages.py`.
+2. Copy `frontend/public/locales/en/translation.json` to the new locale and
+   translate it.
+3. In `content_studio`, run `django-admin makemessages -l <locale>`,
+   translate the `.po` file and run `django-admin compilemessages`.
+4. If the date picker should name months and days in it, add its locale to
+   `frontend/src/lib/languages.ts`.
+5. List it in `scripts/check_wheel.py` and on the docs' Languages page.
+
 ## Questions and security
 
 Ask questions in [GitHub Discussions](https://github.com/dwarsbit/django-content-studio/discussions).

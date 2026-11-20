@@ -17,14 +17,18 @@ Including another URLconf
 
 from django.urls import path
 
+from content_studio.languages import in_admin_language
+
 from .views import (
     PasswordResetRequestView,
     PasswordResetSubmissionView,
     CodeValidationView,
 )
 
-urlpatterns = [
-    path("api/password-reset/request", PasswordResetRequestView.as_view()),
-    path("api/password-reset/submit", PasswordResetSubmissionView.as_view()),
-    path("api/password-reset/code", CodeValidationView.as_view()),
-]
+urlpatterns = in_admin_language(
+    [
+        path("api/password-reset/request", PasswordResetRequestView.as_view()),
+        path("api/password-reset/submit", PasswordResetSubmissionView.as_view()),
+        path("api/password-reset/code", CodeValidationView.as_view()),
+    ]
+)

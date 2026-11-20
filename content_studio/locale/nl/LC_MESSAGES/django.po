@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-02 18:08+0000\n"
+"POT-Creation-Date: 2026-11-20 11:31+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,15 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: actions.py:154
+#: actions.py:157
 msgid "Delete"
 msgstr "Verwijderen"
 
-#: actions.py:156
+#: actions.py:159
 msgid "Are you sure you want to delete the selected items?"
 msgstr "Weet je zeker dat je de geselecteerde items wilt verwijderen?"
 
-#: actions.py:165
+#: actions.py:168
 msgid ""
 "The selected items will be moved to the trash, where they can be restored. "
 "Are you sure you want to delete?"
@@ -34,13 +34,119 @@ msgstr ""
 "De geselecteerde items worden verplaatst naar de prullenbak, waar ze hersteld"
 " kunnen worden. Weet je zeker dat je ze wilt verwijderen?"
 
-#: actions.py:194
+#: actions.py:197
 msgid "Export"
 msgstr "Exporteren"
 
-#: admin.py:505 admin.py:506
+#: admin.py:604 admin.py:605 contrib/backups/status.py:21
+#: contrib/status/builtin.py:24
 msgid "Content Studio"
 msgstr "Content Studio"
+
+#: analytics/components.py:35 analytics/extensions.py:185
+#: analytics/extensions.py:233
+msgid "Analytics"
+msgstr "Statistieken"
+
+#: analytics/providers.py:27
+msgid "Visitors"
+msgstr "Bezoekers"
+
+#: analytics/providers.py:28
+msgid "Pageviews"
+msgstr "Paginaweergaven"
+
+#: analytics/providers.py:29
+msgid "Visits"
+msgstr "Bezoeken"
+
+#: analytics/providers.py:30
+msgid "Bounce rate"
+msgstr "Bouncepercentage"
+
+#: analytics/providers.py:31
+msgid "Visit duration"
+msgstr "Bezoekduur"
+
+#: analytics/providers.py:37
+msgid "Pages"
+msgstr "Pagina's"
+
+#: analytics/providers.py:38
+msgid "Entry pages"
+msgstr "Instappagina's"
+
+#: analytics/providers.py:39
+msgid "Exit pages"
+msgstr "Uitstappagina's"
+
+#: analytics/providers.py:40
+msgid "Referrers"
+msgstr "Verwijzers"
+
+#: analytics/providers.py:41
+msgid "Channels"
+msgstr "Kanalen"
+
+#: analytics/providers.py:42
+msgid "Campaigns"
+msgstr "Campagnes"
+
+#: analytics/providers.py:43
+msgid "Countries"
+msgstr "Landen"
+
+#: analytics/providers.py:44
+msgid "Regions"
+msgstr "Regio's"
+
+#: analytics/providers.py:45
+msgid "Cities"
+msgstr "Steden"
+
+#: analytics/providers.py:46
+msgid "Devices"
+msgstr "Apparaten"
+
+#: analytics/providers.py:47
+msgid "Browsers"
+msgstr "Browsers"
+
+#: analytics/providers.py:48
+msgid "Operating systems"
+msgstr "Besturingssystemen"
+
+#: analytics/widgets.py:23
+msgid "today"
+msgstr "vandaag"
+
+#: analytics/widgets.py:24
+msgid "last 7 days"
+msgstr "afgelopen 7 dagen"
+
+#: analytics/widgets.py:25
+msgid "last 30 days"
+msgstr "afgelopen 30 dagen"
+
+#: analytics/widgets.py:26
+msgid "last 90 days"
+msgstr "afgelopen 90 dagen"
+
+#: analytics/widgets.py:27
+msgid "last 12 months"
+msgstr "afgelopen 12 maanden"
+
+#: analytics/widgets.py:95 analytics/widgets.py:157
+msgid "Analytics are unavailable"
+msgstr "Statistieken zijn niet beschikbaar"
+
+#: analytics/widgets.py:105
+msgid "vs. the period before"
+msgstr "t.o.v. de vorige periode"
+
+#: analytics/widgets.py:143
+msgid "Top pages"
+msgstr "Toppagina's"
 
 #: blocks.py:229
 msgid "Unknown related item."
@@ -89,37 +195,217 @@ msgid_plural "Use at most %(num)d blocks."
 msgstr[0] "Gebruik hoogstens %(num)d blok."
 msgstr[1] "Gebruik hoogstens %(num)d blokken."
 
-#: contrib/huey.py:32 dashboard/tasks.py:74 webhooks/models.py:124
+#: contrib/backups/apps.py:8
+msgid "Backups"
+msgstr "Back-ups"
+
+#: contrib/backups/models.py:18 dashboard/tasks.py:95
+msgid "Queued"
+msgstr "In de wachtrij"
+
+#: contrib/backups/models.py:19 dashboard/tasks.py:97
+msgid "Running"
+msgstr "Bezig"
+
+#: contrib/backups/models.py:20
+msgid "Done"
+msgstr "Klaar"
+
+#: contrib/backups/models.py:21 contrib/huey.py:39 dashboard/tasks.py:99
+#: webhooks/models.py:124
 msgid "Failed"
 msgstr "Mislukt"
 
-#: contrib/huey.py:33
+#: contrib/backups/models.py:29 dashboard/tasks.py:96
+msgid "Scheduled"
+msgstr "Gepland"
+
+#: contrib/backups/models.py:30
+msgid "Back up now"
+msgstr "Nu back-uppen"
+
+#: contrib/backups/models.py:31
+msgid "Command"
+msgstr "Commando"
+
+#: contrib/backups/models.py:34
+msgid "database"
+msgstr "database"
+
+#: contrib/backups/models.py:36
+msgid "status"
+msgstr "status"
+
+#: contrib/backups/models.py:39
+msgid "trigger"
+msgstr "aanleiding"
+
+#: contrib/backups/models.py:42
+msgid "file"
+msgstr "bestand"
+
+#: contrib/backups/models.py:44
+msgid "size"
+msgstr "grootte"
+
+#: contrib/backups/models.py:46
+msgid "manifest"
+msgstr "manifest"
+
+#: contrib/backups/models.py:47
+msgid "error"
+msgstr "fout"
+
+#: contrib/backups/models.py:50
+msgid "created by"
+msgstr "aangemaakt door"
+
+#: contrib/backups/models.py:56 contrib/two_factor/models.py:31
+msgid "created at"
+msgstr "aangemaakt op"
+
+#: contrib/backups/models.py:57
+msgid "started at"
+msgstr "gestart op"
+
+#: contrib/backups/models.py:58
+msgid "finished at"
+msgstr "afgerond op"
+
+#: contrib/backups/models.py:61
+msgid "backup"
+msgstr "back-up"
+
+#: contrib/backups/models.py:62
+msgid "backups"
+msgstr "back-ups"
+
+#: contrib/backups/schedule.py:149
+#, python-format
+msgid "Daily at %(time)s"
+msgstr "Dagelijks om %(time)s"
+
+#: contrib/backups/schedule.py:151
+#, python-format
+msgid "Weekly on %(day)s at %(time)s"
+msgstr "Wekelijks op %(day)s om %(time)s"
+
+#: contrib/backups/schedule.py:156
+#, python-format
+msgid "Hourly at %(minute)s past"
+msgstr "Elk uur om %(minute)s"
+
+#: contrib/backups/schedule.py:163
+#, python-format
+msgid "Every %(hours)s hours"
+msgstr "Elke %(hours)s uur"
+
+#: contrib/backups/schedule.py:165
+#, python-format
+msgid "Cron: %(expression)s"
+msgstr "Cron: %(expression)s"
+
+#: contrib/backups/status.py:22
+msgid "Back up the database"
+msgstr "De database back-uppen"
+
+#: contrib/backups/status.py:37
+msgid "No backup storage"
+msgstr "Geen opslag voor back-ups"
+
+#: contrib/backups/status.py:46
+msgid "No databases to back up"
+msgstr "Geen databases om te back-uppen"
+
+#: contrib/backups/status.py:73
+#, python-format
+msgid "The last backup of %(database)s failed: %(error)s"
+msgstr "De laatste back-up van %(database)s is mislukt: %(error)s"
+
+#: contrib/backups/status.py:82
+msgid "No backup has been made yet."
+msgstr "Er is nog geen back-up gemaakt."
+
+#: contrib/backups/status.py:91
+#, python-format
+msgid "The backup of %(database)s is overdue by %(when)s."
+msgstr "De back-up van %(database)s is %(when)s te laat."
+
+#: contrib/backups/status.py:96
+msgid "No backups yet"
+msgstr "Nog geen back-ups"
+
+#: contrib/backups/status.py:101
+#, python-format
+msgid "Last backup just now · %(size)s"
+msgstr "Laatste back-up zojuist · %(size)s"
+
+#: contrib/backups/status.py:103
+#, python-format
+msgid "Last backup %(when)s ago · %(size)s"
+msgstr "Laatste back-up %(when)s geleden · %(size)s"
+
+#: contrib/backups/status.py:112
+msgid "Backups are not scheduled."
+msgstr "Back-ups zijn niet gepland."
+
+#: contrib/backups/status.py:150
+msgid "Database backups"
+msgstr "Databaseback-ups"
+
+#: contrib/backups/views.py:101
+msgid "A backup is already queued or running."
+msgstr "Er staat al een back-up in de wachtrij of er loopt er een."
+
+#: contrib/backups/views.py:115
+msgid "There is no such backup."
+msgstr "Deze back-up bestaat niet."
+
+#: contrib/backups/views.py:121
+msgid "The backup's file is no longer in the storage."
+msgstr "Het bestand van de back-up staat niet meer in de opslag."
+
+#: contrib/huey.py:40
 msgid "Timed out"
 msgstr "Time-out"
 
-#: contrib/huey.py:34
+#: contrib/huey.py:41
 msgid "Interrupted"
 msgstr "Onderbroken"
 
-#: contrib/huey.py:35
+#: contrib/huey.py:42
 msgid "Canceled"
 msgstr "Geannuleerd"
 
-#: contrib/huey.py:36
+#: contrib/huey.py:43
 msgid "Revoked"
 msgstr "Ingetrokken"
 
-#: contrib/huey.py:37
+#: contrib/huey.py:44
 msgid "Expired"
 msgstr "Verlopen"
 
-#: contrib/huey.py:38
+#: contrib/huey.py:45
 msgid "Locked"
 msgstr "Vergrendeld"
 
-#: contrib/huey.py:39
+#: contrib/huey.py:46
 msgid "Rate-limited"
 msgstr "Gelimiteerd"
+
+#: contrib/huey.py:153
+#, python-format
+msgid "Huey · %(count)s queued"
+msgstr "Huey · %(count)s in de wachtrij"
+
+#: contrib/huey.py:194
+#, python-format
+msgid ""
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
+"Is the consumer running?"
+msgstr ""
+"Taken wachten al %(minutes)s minuten en geen worker heeft er een opgepakt. "
+"Draait de consumer?"
 
 #: contrib/password_reset/tasks.py:65
 msgid "Your password reset code"
@@ -141,83 +427,373 @@ msgstr ""
 "Je wachtwoord is gewijzigd. Neem contact op met je administrator als jij dit "
 "niet hebt gedaan."
 
-#: dashboard/scheduled_tasks.py:27
+#: contrib/status/apps.py:8
+msgid "System status"
+msgstr "Systeemstatus"
+
+#: contrib/status/builtin.py:34
+msgid "Database cache"
+msgstr "Databasecache"
+
+#: contrib/status/builtin.py:35
+msgid "File cache"
+msgstr "Bestandscache"
+
+#: contrib/status/builtin.py:36 contrib/status/builtin.py:47
+msgid "Local memory"
+msgstr "Lokaal geheugen"
+
+#: contrib/status/builtin.py:40
+msgid "File system"
+msgstr "Bestandssysteem"
+
+#: contrib/status/builtin.py:41
+msgid "Memory"
+msgstr "Geheugen"
+
+#: contrib/status/builtin.py:46
+msgid "Console"
+msgstr "Console"
+
+#: contrib/status/builtin.py:48
+msgid "Files"
+msgstr "Bestanden"
+
+#: contrib/status/builtin.py:49
+msgid "Dummy"
+msgstr "Dummy"
+
+#: contrib/status/builtin.py:54
+#, python-format
+msgid "Answered in %(seconds).1f seconds."
+msgstr "Antwoord in %(seconds).1f seconden."
+
+#: contrib/status/builtin.py:65
+msgid "The connection is not usable."
+msgstr "De verbinding is niet bruikbaar."
+
+#: contrib/status/builtin.py:90
+msgid "Dummy cache"
+msgstr "Dummycache"
+
+#: contrib/status/builtin.py:90
+msgid "Nothing is cached."
+msgstr "Er wordt niets gecachet."
+
+#: contrib/status/builtin.py:98
+msgid "A value that was stored could not be read back."
+msgstr "Een opgeslagen waarde kon niet worden teruggelezen."
+
+#: contrib/status/builtin.py:123
+msgid "No task backend connected"
+msgstr "Geen taaksysteem gekoppeld"
+
+#: contrib/status/builtin.py:170
+#, python-format
+msgid "%(backend)s backend"
+msgstr "%(backend)s-backend"
+
+#: contrib/status/builtin.py:171
+msgid "Emails are not sent from this backend."
+msgstr "Met deze backend worden geen e-mails verstuurd."
+
+#: contrib/status/builtin.py:198
+#, python-format
+msgid "%(count)s not applied"
+msgstr "%(count)s niet toegepast"
+
+#: contrib/status/builtin.py:199
+msgid "Run manage.py migrate."
+msgstr "Voer manage.py migrate uit."
+
+#: contrib/status/builtin.py:201
+msgid "Up to date"
+msgstr "Bijgewerkt"
+
+#: contrib/status/builtin.py:214
+msgid "Database"
+msgstr "Database"
+
+#: contrib/status/builtin.py:214
+#, python-format
+msgid "Database (%(alias)s)"
+msgstr "Database (%(alias)s)"
+
+#: contrib/status/builtin.py:222
+msgid "Cache"
+msgstr "Cache"
+
+#: contrib/status/builtin.py:229
+msgid "Media storage"
+msgstr "Mediaopslag"
+
+#: contrib/status/builtin.py:236
+msgid "Task queue"
+msgstr "Takenwachtrij"
+
+#: contrib/status/builtin.py:243
+msgid "Email"
+msgstr "E-mail"
+
+#: contrib/status/builtin.py:251
+msgid "Migrations"
+msgstr "Migraties"
+
+#: contrib/status/runner.py:113
+#, python-format
+msgid "No answer within %(seconds)s seconds."
+msgstr "Geen antwoord binnen %(seconds)s seconden."
+
+#: contrib/two_factor/apps.py:11
+msgid "Two-factor login"
+msgstr "Tweestapsverificatie"
+
+#: contrib/two_factor/models.py:28 contrib/two_factor/models.py:55
+msgid "user"
+msgstr "gebruiker"
+
+#: contrib/two_factor/models.py:30
+msgid "secret"
+msgstr "geheim"
+
+#: contrib/two_factor/models.py:32
+msgid "last used at"
+msgstr "laatst gebruikt op"
+
+#: contrib/two_factor/models.py:37
+msgid "authenticator"
+msgstr "authenticator"
+
+#: contrib/two_factor/models.py:38
+msgid "authenticators"
+msgstr "authenticators"
+
+#: contrib/two_factor/models.py:58
+msgid "used at"
+msgstr "gebruikt op"
+
+#: contrib/two_factor/models.py:61
+msgid "recovery code"
+msgstr "herstelcode"
+
+#: contrib/two_factor/models.py:62
+msgid "recovery codes"
+msgstr "herstelcodes"
+
+#: contrib/two_factor/service.py:195
+#, python-format
+msgid "Your two-factor login for %(site)s was reset"
+msgstr "Je tweestapsverificatie voor %(site)s is gereset"
+
+#: contrib/two_factor/views.py:45
+msgid "This login has expired. Log in again."
+msgstr "Deze login is verlopen. Log opnieuw in."
+
+#: contrib/two_factor/views.py:50
+msgid "Too many wrong codes. Wait a while, then log in again."
+msgstr "Te veel verkeerde codes. Wacht even en log dan opnieuw in."
+
+#: contrib/two_factor/views.py:85
+msgid "Too many wrong codes. Log in again."
+msgstr "Te veel verkeerde codes. Log opnieuw in."
+
+#: contrib/two_factor/views.py:92
+#, python-format
+msgid "You have %(count)d more try."
+msgid_plural "You have %(count)d more tries."
+msgstr[0] "Je hebt nog %(count)d poging."
+msgstr[1] "Je hebt nog %(count)d pogingen."
+
+#: contrib/two_factor/views.py:119
+msgid "That recovery code is not right."
+msgstr "Die herstelcode klopt niet."
+
+#: contrib/two_factor/views.py:122 contrib/two_factor/views.py:166
+#: contrib/two_factor/views.py:251 contrib/two_factor/views.py:280
+msgid "That code is not right."
+msgstr "Die code klopt niet."
+
+#: contrib/two_factor/views.py:224 contrib/two_factor/views.py:240
+msgid "Two-factor login is already on."
+msgstr "Tweestapsverificatie staat al aan."
+
+#: contrib/two_factor/views.py:245
+msgid "This setup has expired. Start again."
+msgstr "Deze instelling is verlopen. Begin opnieuw."
+
+#: contrib/two_factor/views.py:267
+msgid "Two-factor login is off."
+msgstr "Tweestapsverificatie staat uit."
+
+#: contrib/two_factor/views.py:301
+msgid "Two-factor login is required for your account."
+msgstr "Tweestapsverificatie is verplicht voor je account."
+
+#: dashboard/scheduled_tasks.py:29
 msgid "Scheduled tasks"
 msgstr "Geplande taken"
 
-#: dashboard/scheduled_tasks.py:30
+#: dashboard/scheduled_tasks.py:32
 msgid "Monitor and manage automated tasks"
 msgstr "Monitor en beheer geautomatiseerde taken"
 
-#: dashboard/tasks.py:70
-msgid "Queued"
-msgstr "In de wachtrij"
-
-#: dashboard/tasks.py:71
-msgid "Scheduled"
-msgstr "Gepland"
-
-#: dashboard/tasks.py:72
-msgid "Running"
-msgstr "Bezig"
-
-#: dashboard/tasks.py:73
+#: dashboard/tasks.py:98
 msgid "Succeeded"
 msgstr "Geslaagd"
 
-#: dashboard/tasks.py:75
+#: dashboard/tasks.py:100
 msgid "Retried"
 msgstr "Opnieuw geprobeerd"
 
-#: dashboard/tasks.py:83
+#: dashboard/tasks.py:108
 msgid "Periodic tasks"
 msgstr "Periodieke taken"
 
-#: dashboard/tasks.py:84
+#: dashboard/tasks.py:109
 msgid "Tasks that run on a schedule, with their latest run"
 msgstr "Taken die volgens een schema draaien, met hun laatste run"
 
-#: dashboard/tasks.py:88
+#: dashboard/tasks.py:113
 msgid "Recent runs"
 msgstr "Recente runs"
 
-#: dashboard/tasks.py:89
+#: dashboard/tasks.py:114
 msgid "The latest tasks the workers ran"
 msgstr "De laatste taken die de workers hebben uitgevoerd"
 
-#: dashboard/tasks.py:268
+#: dashboard/tasks.py:302
 msgid "Tasks"
 msgstr "Taken"
 
-#: export.py:191
+#: export.py:202 importing.py:868
 msgid "Yes"
 msgstr "Ja"
 
-#: export.py:191
+#: export.py:202 importing.py:871
 msgid "No"
 msgstr "Nee"
 
-#: fields.py:102
+#: fields.py:109
 msgid "Only accepts letters, numbers, underscores, hyphens and slashes."
 msgstr ""
 "Alleen letters, cijfers, underscores, koppeltekens en slashes zijn "
 "toegestaan."
 
-#: fields.py:108
+#: fields.py:115
 msgid "Consecutive slashes are not allowed."
 msgstr "Opeenvolgende slashes zijn niet toegestaan."
 
-#: validators.py:99
-msgid "Enter a valid color."
-msgstr "Voer een geldige kleur in."
-
-#: validators.py:100
-msgid "Transparent colors are not allowed."
-msgstr "Transparante kleuren zijn niet toegestaan."
-
-#: form.py:385
+#: form.py:442
 msgid "Activity"
 msgstr "Activiteit"
+
+#: history/apps.py:11
+msgid "History"
+msgstr "Geschiedenis"
+
+#: history/models.py:30
+msgid "version"
+msgstr "versie"
+
+#: history/models.py:31
+msgid "versions"
+msgstr "versies"
+
+#: importing.py:515
+msgid "Excel files cannot be imported on this site."
+msgstr "Excel-bestanden kunnen op deze site niet worden geïmporteerd."
+
+#: importing.py:521
+msgid "Choose a CSV, Excel (.xlsx) or JSON file."
+msgstr "Kies een CSV-, Excel- (.xlsx) of JSON-bestand."
+
+#: importing.py:567 importing.py:610
+msgid "The file is empty."
+msgstr "Het bestand is leeg."
+
+#: importing.py:569 importing.py:580
+msgid "The file is not a valid CSV file."
+msgstr "Het bestand is geen geldig CSV-bestand."
+
+#: importing.py:599
+msgid "The file is not a valid Excel file."
+msgstr "Het bestand is geen geldig Excel-bestand."
+
+#: importing.py:629
+msgid "The file is not valid JSON."
+msgstr "Het bestand is geen geldige JSON."
+
+#: importing.py:632
+msgid "A JSON file must hold a list of objects."
+msgstr "Een JSON-bestand moet een lijst van objecten bevatten."
+
+#: importing.py:837
+msgid "Enter valid JSON."
+msgstr "Vul geldige JSON in."
+
+#: importing.py:874
+msgid "Enter true or false."
+msgstr "Vul true of false in."
+
+#: importing.py:910
+#, python-format
+msgid "No %(model)s with %(field)s %(value)s."
+msgstr "Geen %(model)s met %(field)s %(value)s."
+
+#: importing.py:921
+#, python-format
+msgid "More than one %(model)s has %(field)s %(value)s."
+msgstr "Meer dan één %(model)s heeft %(field)s %(value)s."
+
+#: importing.py:1007
+#, python-format
+msgid "The file needs the column %(columns)s to match rows."
+msgid_plural "The file needs the columns %(columns)s to match rows."
+msgstr[0] "Het bestand heeft de kolom %(columns)s nodig om rijen te koppelen."
+msgstr[1] ""
+"Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen."
+
+#: importing.py:1017
+msgid ""
+"The file has no column this import can set. Download the template for the "
+"columns."
+msgstr ""
+"Het bestand heeft geen kolom die deze import kan vullen. Download het "
+"sjabloon voor de kolommen."
+
+#: importing.py:1111
+#, python-format
+msgid "You may not create %(model)s."
+msgstr "Je mag geen %(model)s maken."
+
+#: importing.py:1124
+#, python-format
+msgid "You may not change this %(model)s."
+msgstr "Je mag deze %(model)s niet wijzigen."
+
+#: importing.py:1202
+#, python-format
+msgid "The row matches more than one %(model)s."
+msgstr "De rij past bij meer dan één %(model)s."
+
+#: importing.py:1212
+#, python-format
+msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
+msgstr "Geen %(model)s met id %(value)s. Laat het id leeg om er een te maken."
+
+#: importing.py:1459
+msgid "This model cannot be imported."
+msgstr "Dit model kan niet worden geïmporteerd."
+
+#: importing.py:1489
+msgid "The import failed. Try again, or ask a developer to check the logs."
+msgstr ""
+"De import is mislukt. Probeer het opnieuw, of vraag een developer de logs te "
+"bekijken."
+
+#: importing.py:1533
+msgid "Import from a file"
+msgstr "Importeren uit een bestand"
 
 #: media_library/apps.py:11
 msgid "Media Library"
@@ -293,16 +869,17 @@ msgstr "Bestandstype"
 msgid "Folders"
 msgstr "Mappen"
 
-#: media_library/serializers.py:49 media_library/serializers.py:57
+#: media_library/serializers.py:50 media_library/serializers.py:58
+#: uploads.py:63
 msgid "Files of this type cannot be uploaded."
 msgstr "Bestanden van dit type kunnen niet worden geüpload."
 
-#: media_library/serializers.py:53
+#: media_library/serializers.py:54 uploads.py:59
 #, python-format
 msgid "The file is larger than %(size)s."
 msgstr "Het bestand is groter dan %(size)s."
 
-#: media_library/serializers.py:171
+#: media_library/serializers.py:196
 msgid "A folder cannot be moved into itself or its subfolders."
 msgstr ""
 "Een map kan niet naar zichzelf of een van zijn submappen worden verplaatst."
@@ -331,12 +908,12 @@ msgstr "Verwijderd op"
 msgid "Singleton"
 msgstr "Singleton"
 
-#: notifications/apps.py:11 notifications/dashboard.py:46
+#: notifications/apps.py:11 notifications/dashboard.py:48
 #: notifications/models.py:24
 msgid "Notifications"
 msgstr "Meldingen"
 
-#: notifications/dashboard.py:47
+#: notifications/dashboard.py:49
 msgid "Your latest notifications"
 msgstr "Je laatste meldingen"
 
@@ -484,6 +1061,7 @@ msgid "Objects I created"
 msgstr "Objecten die ik heb aangemaakt"
 
 #: notifications/models.py:161 notifications/models.py:208
+#: preferences/models.py:24
 msgid "User"
 msgstr "Gebruiker"
 
@@ -502,6 +1080,100 @@ msgstr "Volgrelatie"
 #: notifications/models.py:193
 msgid "Follows"
 msgstr "Volgrelaties"
+
+#: oembed.py:167
+msgid "Enter a web address, starting with http."
+msgstr "Vul een webadres in dat begint met http."
+
+#: oembed.py:172
+msgid "No known provider embeds this address."
+msgstr "Geen bekende aanbieder kan dit adres insluiten."
+
+#: oembed.py:195
+msgid "The provider has no preview for this address."
+msgstr "De aanbieder heeft geen voorbeeld voor dit adres."
+
+#: oembed.py:197 oembed.py:199 oembed.py:207
+msgid "The provider did not answer."
+msgstr "De aanbieder gaf geen antwoord."
+
+#: password_links.py:175
+#, python-format
+msgid "%(count)d day"
+msgid_plural "%(count)d days"
+msgstr[0] "%(count)d dag"
+msgstr[1] "%(count)d dagen"
+
+#: password_links.py:177
+#, python-format
+msgid "%(count)d hour"
+msgid_plural "%(count)d hours"
+msgstr[0] "%(count)d uur"
+msgstr[1] "%(count)d uur"
+
+#: password_links.py:198
+#, python-format
+msgid "You are invited to %(site)s"
+msgstr "Je bent uitgenodigd voor %(site)s"
+
+#: password_links.py:201
+#, python-format
+msgid "Set a new password for %(site)s"
+msgstr "Stel een nieuw wachtwoord in voor %(site)s"
+
+#: password_links.py:238
+msgid "This link is no longer valid."
+msgstr "Deze link is niet meer geldig."
+
+#: permission_matrix.py:199
+#, python-format
+msgid ""
+"You can only grant or revoke permissions you have yourself. Not allowed: "
+"%(permissions)s."
+msgstr ""
+"Je kunt alleen rechten geven of afnemen die je zelf hebt. Niet toegestaan: "
+"%(permissions)s."
+
+#: permission_matrix.py:217
+#, python-format
+msgid ""
+"You can only add or remove groups whose permissions you all have yourself. "
+"Not allowed: %(groups)s."
+msgstr ""
+"Je kunt alleen groepen toevoegen of verwijderen waarvan je zelf alle rechten "
+"hebt. Niet toegestaan: %(groups)s."
+
+#: preferences/apps.py:8
+msgid "Preferences"
+msgstr "Voorkeuren"
+
+#: preferences/models.py:13
+msgid "Save"
+msgstr "Opslaan"
+
+#: preferences/models.py:14
+msgid "Save and add another"
+msgstr "Opslaan en nieuwe toevoegen"
+
+#: preferences/models.py:15
+msgid "Save and close"
+msgstr "Opslaan en sluiten"
+
+#: preferences/models.py:32
+msgid "Default save action"
+msgstr "Standaard opslagactie"
+
+#: preferences/models.py:36 preferences/models.py:37
+msgid "user preferences"
+msgstr "gebruikersvoorkeuren"
+
+#: profile.py:341
+msgid "Your current password is not correct."
+msgstr "Je huidige wachtwoord is niet juist."
+
+#: profile.py:347
+msgid "Enter a new password."
+msgstr "Vul een nieuw wachtwoord in."
 
 #: templates/content_studio/notifications/digest.html:13
 #: templates/content_studio/notifications/digest.txt:1
@@ -548,17 +1220,206 @@ msgstr ""
 "Je krijgt deze e-mail omdat deze meldingen ongelezen zijn. Zet deze e-mails "
 "uit in je instellingen voor meldingen:"
 
-#: validators.py:15
+#: templates/content_studio/users/invite.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s invited you to %(site_title)s. Set your password to log in:"
+msgstr ""
+"Hoi %(name)s,\n"
+"\n"
+"%(sender)s heeft je uitgenodigd voor %(site_title)s. Stel je wachtwoord in om in te loggen:"
+
+#: templates/content_studio/users/invite.txt:7
+#, python-format
+msgid ""
+"Your username is %(username)s. The link works once and expires in "
+"%(expires)s. If it has expired, ask %(sender)s for a new one."
+msgstr ""
+"Je gebruikersnaam is %(username)s. De link werkt één keer en verloopt over "
+"%(expires)s. Is hij verlopen, vraag %(sender)s dan om een nieuwe."
+
+#: templates/content_studio/users/password_link.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s sent you a link to set a new password for %(site_title)s:"
+msgstr ""
+"Hoi %(name)s,\n"
+"\n"
+"%(sender)s heeft je een link gestuurd om een nieuw wachtwoord in te stellen voor %(site_title)s:"
+
+#: templates/content_studio/users/password_link.txt:7
+#, python-format
+msgid ""
+"Your username is %(username)s. The link works once and expires in "
+"%(expires)s. If you did not expect this email, contact your administrator."
+msgstr ""
+"Je gebruikersnaam is %(username)s. De link werkt één keer en verloopt over "
+"%(expires)s. Verwachtte je deze e-mail niet, neem dan contact op met je "
+"beheerder."
+
+#: templates/content_studio/users/two_factor_reset.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"%(sender)s reset your two-factor login for %(site_title)s. You log in with your password alone now, and your old recovery codes no longer work. If two-factor login is required, you set it up again the next time you log in."
+msgstr ""
+"Hoi %(name)s,\n"
+"\n"
+"%(sender)s heeft je tweestapsverificatie voor %(site_title)s gereset. Je logt nu alleen met je wachtwoord in, en je oude herstelcodes werken niet meer. Is tweestapsverificatie verplicht, dan stel je het de volgende keer dat je inlogt opnieuw in."
+
+#: templates/content_studio/users/two_factor_reset.txt:5
+msgid "If you did not ask for this, contact your administrator."
+msgstr "Heb je hier niet om gevraagd? Neem dan contact op met je beheerder."
+
+#: uploads.py:105 uploads.py:117
+msgid "The upload has expired. Choose the file again."
+msgstr "De upload is verlopen. Kies het bestand opnieuw."
+
+#: uploads.py:111
+msgid "The upload is not valid."
+msgstr "De upload is niet geldig."
+
+#: user_studios.py:67
+msgid "This user has not logged in yet."
+msgstr "Deze gebruiker heeft nog niet ingelogd."
+
+#: user_studios.py:73
+msgid "**Resend invite** in the more actions menu sends the invite again."
+msgstr ""
+"Met **Uitnodiging opnieuw sturen** in het menu Meer acties stuur je de "
+"uitnodiging nogmaals."
+
+#: user_studios.py:96
+msgid "Two-factor login is on."
+msgstr "Tweestapsverificatie staat aan."
+
+#: user_studios.py:103
+msgid "Lost their phone? **Reset two-factor login** in the more actions menu."
+msgstr ""
+"Telefoon kwijt? **Tweestapsverificatie resetten** staat in het menu met meer "
+"acties."
+
+#: user_studios.py:122
+msgid "Two-factor login is required: this user sets it up at their next login."
+msgstr ""
+"Tweestapsverificatie is verplicht: deze gebruiker stelt het in bij de "
+"volgende login."
+
+#: user_studios.py:214
+msgid "Account"
+msgstr "Account"
+
+#: user_studios.py:226
+msgid "Personal info"
+msgstr "Persoonlijke gegevens"
+
+#: user_studios.py:234
+msgid "Details"
+msgstr "Details"
+
+#: user_studios.py:246
+msgid ""
+"A superuser has every permission. To pick permissions one by one, turn off "
+"superuser status first."
+msgstr ""
+"Een supergebruiker heeft alle rechten. Zet de supergebruikerstatus eerst uit "
+"om rechten afzonderlijk te kiezen."
+
+#: user_studios.py:262
+msgid "Profile"
+msgstr "Profiel"
+
+#: user_studios.py:265
+msgid "Permissions"
+msgstr "Rechten"
+
+#: user_studios.py:275
+msgid "Inactive users cannot log in."
+msgstr "Inactieve gebruikers kunnen niet inloggen."
+
+#: user_studios.py:284
+msgid "Only staff users can log in to the admin."
+msgstr "Alleen stafgebruikers kunnen inloggen op de admin."
+
+#: user_studios.py:296 webhooks/models.py:138
+msgid "Status"
+msgstr "Status"
+
+#: user_studios.py:307
+msgid "Important dates"
+msgstr "Belangrijke datums"
+
+#: users.py:185
+msgid "Enter an email address: the invite is sent to it."
+msgstr "Vul een e-mailadres in: de uitnodiging wordt daarheen gestuurd."
+
+#: users.py:204
+msgid ""
+"No invite was sent: only active staff users can log in. Send one from the "
+"user's page once they can."
+msgstr ""
+"Er is geen uitnodiging gestuurd: alleen actieve stafgebruikers kunnen "
+"inloggen. Stuur er een vanaf de pagina van de gebruiker zodra dat kan."
+
+#: users.py:210
+#, python-format
+msgid "Invite sent to %(email)s."
+msgstr "Uitnodiging gestuurd naar %(email)s."
+
+#: users.py:220
+msgid "Enter a password."
+msgstr "Vul een wachtwoord in."
+
+#: users.py:223
+msgid "This password is too long."
+msgstr "Dit wachtwoord is te lang."
+
+#: validators.py:18
 msgid "Enter a valid value."
 msgstr "Voer een geldige waarde in."
 
-#: validators.py:47
+#: validators.py:50
 msgid "One or more values are not valid choices."
 msgstr "Een of meer waarden zijn geen geldige keuzes."
 
-#: views.py:285
+#: validators.py:102
+msgid "Enter a valid color."
+msgstr "Voer een geldige kleur in."
+
+#: validators.py:103
+msgid "Transparent colors are not allowed."
+msgstr "Transparante kleuren zijn niet toegestaan."
+
+#: views.py:279
+msgid "Pass the address to preview as url."
+msgstr "Geef het adres voor het voorbeeld mee als url."
+
+#: views.py:349
+msgid "This language is not available."
+msgstr "Deze taal is niet beschikbaar."
+
+#: views.py:434
 msgid "Content"
 msgstr "Content"
+
+#: viewsets.py:488
+#, python-format
+msgid "The file is too large; it can be %(size)s at most."
+msgstr "Het bestand is te groot; het mag hoogstens %(size)s zijn."
+
+#: viewsets.py:526
+#, python-format
+msgid ""
+"The file has %(count)s rows; at most %(max)s can be imported at once. Split "
+"it into smaller files."
+msgstr ""
+"Het bestand heeft %(count)s rijen; er kunnen er hoogstens %(max)s tegelijk "
+"worden geïmporteerd. Splits het op in kleinere bestanden."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -610,31 +1471,31 @@ msgstr ""
 "De webhook is aangemaakt. Kopieer nu het geheim: het wordt niet opnieuw "
 "getoond."
 
-#: webhooks/apps.py:11 webhooks/dashboard.py:28 webhooks/models.py:50
+#: webhooks/apps.py:11 webhooks/dashboard.py:30 webhooks/models.py:50
 msgid "Webhooks"
 msgstr "Webhooks"
 
-#: webhooks/dashboard.py:29
+#: webhooks/dashboard.py:31
 msgid "The latest delivery of each webhook"
 msgstr "De laatste levering van elke webhook"
 
-#: webhooks/dashboard.py:67
+#: webhooks/dashboard.py:69
 msgid "Paused"
 msgstr "Gepauzeerd"
 
-#: webhooks/extensions.py:26
+#: webhooks/extensions.py:28
 msgid "Deploy"
 msgstr "Publiceren"
 
-#: webhooks/extensions.py:28
+#: webhooks/extensions.py:30
 msgid "Trigger the webhooks to rebuild the site?"
 msgstr "De webhooks aanroepen om de site opnieuw op te bouwen?"
 
-#: webhooks/extensions.py:75
+#: webhooks/extensions.py:77
 msgid "There are no active webhooks to trigger."
 msgstr "Er zijn geen actieve webhooks om aan te roepen."
 
-#: webhooks/extensions.py:81
+#: webhooks/extensions.py:83
 #, python-format
 msgid "Triggered %(count)d webhook. Its delivery log shows how it responded."
 msgid_plural ""
@@ -747,10 +1608,6 @@ msgstr "In afwachting"
 msgid "Payload"
 msgstr "Inhoud"
 
-#: webhooks/models.py:138
-msgid "Status"
-msgstr "Status"
-
 #: webhooks/models.py:140
 msgid "Attempts"
 msgstr "Pogingen"
@@ -762,449 +1619,3 @@ msgstr "Antwoordstatus"
 #: webhooks/models.py:145
 msgid "Response"
 msgstr "Antwoord"
-
-#: analytics/providers.py
-msgid "Visitors"
-msgstr "Bezoekers"
-
-#: analytics/providers.py
-msgid "Pageviews"
-msgstr "Paginaweergaven"
-
-#: analytics/providers.py
-msgid "Visits"
-msgstr "Bezoeken"
-
-#: analytics/providers.py
-msgid "Bounce rate"
-msgstr "Bouncepercentage"
-
-#: analytics/providers.py
-msgid "Visit duration"
-msgstr "Bezoekduur"
-
-#: analytics/providers.py
-msgid "Pages"
-msgstr "Pagina's"
-
-#: analytics/providers.py
-msgid "Entry pages"
-msgstr "Instappagina's"
-
-#: analytics/providers.py
-msgid "Exit pages"
-msgstr "Uitstappagina's"
-
-#: analytics/providers.py
-msgid "Referrers"
-msgstr "Verwijzers"
-
-#: analytics/providers.py
-msgid "Channels"
-msgstr "Kanalen"
-
-#: analytics/providers.py
-msgid "Campaigns"
-msgstr "Campagnes"
-
-#: analytics/providers.py
-msgid "Countries"
-msgstr "Landen"
-
-#: analytics/providers.py
-msgid "Regions"
-msgstr "Regio's"
-
-#: analytics/providers.py
-msgid "Cities"
-msgstr "Steden"
-
-#: analytics/providers.py
-msgid "Devices"
-msgstr "Apparaten"
-
-#: analytics/providers.py
-msgid "Browsers"
-msgstr "Browsers"
-
-#: analytics/providers.py
-msgid "Operating systems"
-msgstr "Besturingssystemen"
-
-#: analytics/extensions.py
-msgid "Analytics"
-msgstr "Statistieken"
-
-#: analytics/widgets.py
-msgid "today"
-msgstr "vandaag"
-
-#: analytics/widgets.py
-msgid "last 7 days"
-msgstr "afgelopen 7 dagen"
-
-#: analytics/widgets.py
-msgid "last 30 days"
-msgstr "afgelopen 30 dagen"
-
-#: analytics/widgets.py
-msgid "last 90 days"
-msgstr "afgelopen 90 dagen"
-
-#: analytics/widgets.py
-msgid "last 12 months"
-msgstr "afgelopen 12 maanden"
-
-#: analytics/widgets.py
-msgid "Analytics are unavailable"
-msgstr "Statistieken zijn niet beschikbaar"
-
-#: analytics/widgets.py
-msgid "vs. the period before"
-msgstr "t.o.v. de vorige periode"
-
-#: analytics/widgets.py
-msgid "Top pages"
-msgstr "Toppagina's"
-
-#: profile.py
-msgid "Your current password is not correct."
-msgstr "Je huidige wachtwoord is niet juist."
-
-#: profile.py
-msgid "Enter a new password."
-msgstr "Vul een nieuw wachtwoord in."
-
-#: users.py
-msgid "Enter a password."
-msgstr "Vul een wachtwoord in."
-
-#: users.py
-msgid "This password is too long."
-msgstr "Dit wachtwoord is te lang."
-
-#: users.py
-msgid "Enter an email address: the invite is sent to it."
-msgstr "Vul een e-mailadres in: de uitnodiging wordt daarheen gestuurd."
-
-#: users.py
-msgid "No invite was sent: only active staff users can log in. Send one from the user's page once they can."
-msgstr "Er is geen uitnodiging gestuurd: alleen actieve stafgebruikers kunnen inloggen. Stuur er een vanaf de pagina van de gebruiker zodra dat kan."
-
-#: users.py
-#, python-format
-msgid "Invite sent to %(email)s."
-msgstr "Uitnodiging gestuurd naar %(email)s."
-
-#: password_links.py
-#, python-format
-msgid "You are invited to %(site)s"
-msgstr "Je bent uitgenodigd voor %(site)s"
-
-#: password_links.py
-#, python-format
-msgid "Set a new password for %(site)s"
-msgstr "Stel een nieuw wachtwoord in voor %(site)s"
-
-#: password_links.py
-msgid "This link is no longer valid."
-msgstr "Deze link is niet meer geldig."
-
-#: templates/content_studio/users/invite.txt
-#, python-format
-msgid ""
-"Hi %(name)s,\n"
-"\n"
-"%(sender)s invited you to %(site_title)s. Set your password to log in:"
-msgstr ""
-"Hoi %(name)s,\n"
-"\n"
-"%(sender)s heeft je uitgenodigd voor %(site_title)s. Stel je wachtwoord in om in te loggen:"
-
-#: templates/content_studio/users/invite.txt
-#, python-format
-msgid "Your username is %(username)s. The link works once and expires in %(expires)s. If it has expired, ask %(sender)s for a new one."
-msgstr "Je gebruikersnaam is %(username)s. De link werkt één keer en verloopt over %(expires)s. Is hij verlopen, vraag %(sender)s dan om een nieuwe."
-
-#: templates/content_studio/users/password_link.txt
-#, python-format
-msgid ""
-"Hi %(name)s,\n"
-"\n"
-"%(sender)s sent you a link to set a new password for %(site_title)s:"
-msgstr ""
-"Hoi %(name)s,\n"
-"\n"
-"%(sender)s heeft je een link gestuurd om een nieuw wachtwoord in te stellen voor %(site_title)s:"
-
-#: templates/content_studio/users/password_link.txt
-#, python-format
-msgid "Your username is %(username)s. The link works once and expires in %(expires)s. If you did not expect this email, contact your administrator."
-msgstr "Je gebruikersnaam is %(username)s. De link werkt één keer en verloopt over %(expires)s. Verwachtte je deze e-mail niet, neem dan contact op met je beheerder."
-
-#: password_links.py
-#, python-format
-msgid "%(count)d day"
-msgid_plural "%(count)d days"
-msgstr[0] "%(count)d dag"
-msgstr[1] "%(count)d dagen"
-
-#: password_links.py
-#, python-format
-msgid "%(count)d hour"
-msgid_plural "%(count)d hours"
-msgstr[0] "%(count)d uur"
-msgstr[1] "%(count)d uur"
-
-#: user_studios.py
-msgid "Account"
-msgstr "Account"
-
-#: user_studios.py
-msgid "Personal info"
-msgstr "Persoonlijke gegevens"
-
-#: user_studios.py
-msgid "Profile"
-msgstr "Profiel"
-
-#: user_studios.py
-msgid "Details"
-msgstr "Details"
-
-#: user_studios.py
-msgid "Permissions"
-msgstr "Rechten"
-
-#: user_studios.py
-msgid "Important dates"
-msgstr "Belangrijke datums"
-
-#: user_studios.py
-msgid "A superuser has every permission. To pick permissions one by one, turn off superuser status first."
-msgstr "Een supergebruiker heeft alle rechten. Zet de supergebruikerstatus eerst uit om rechten afzonderlijk te kiezen."
-
-#: user_studios.py
-msgid "Inactive users cannot log in."
-msgstr "Inactieve gebruikers kunnen niet inloggen."
-
-#: user_studios.py
-msgid "Only staff users can log in to the admin."
-msgstr "Alleen stafgebruikers kunnen inloggen op de admin."
-
-#: user_studios.py
-msgid "This user has not logged in yet."
-msgstr "Deze gebruiker heeft nog niet ingelogd."
-
-#: user_studios.py
-msgid "**Resend invite** in the more actions menu sends the invite again."
-msgstr "Met **Uitnodiging opnieuw sturen** in het menu Meer acties stuur je de uitnodiging nogmaals."
-
-#: permission_matrix.py
-#, python-format
-msgid "You can only grant or revoke permissions you have yourself. Not allowed: %(permissions)s."
-msgstr "Je kunt alleen rechten geven of afnemen die je zelf hebt. Niet toegestaan: %(permissions)s."
-
-#: permission_matrix.py
-#, python-format
-msgid "You can only add or remove groups whose permissions you all have yourself. Not allowed: %(groups)s."
-msgstr "Je kunt alleen groepen toevoegen of verwijderen waarvan je zelf alle rechten hebt. Niet toegestaan: %(groups)s."
-
-#: contrib/two_factor/apps.py contrib/two_factor/models.py
-msgid "Two-factor login"
-msgstr "Tweestapsverificatie"
-
-msgid "secret"
-msgstr "geheim"
-
-msgid "created at"
-msgstr "aangemaakt op"
-
-msgid "last used at"
-msgstr "laatst gebruikt op"
-
-msgid "authenticator"
-msgstr "authenticator"
-
-msgid "authenticators"
-msgstr "authenticators"
-
-msgid "used at"
-msgstr "gebruikt op"
-
-msgid "recovery code"
-msgstr "herstelcode"
-
-msgid "recovery codes"
-msgstr "herstelcodes"
-
-#: contrib/two_factor/service.py
-#, python-format
-msgid "Your two-factor login for %(site)s was reset"
-msgstr "Je tweestapsverificatie voor %(site)s is gereset"
-
-#: templates/content_studio/users/two_factor_reset.txt
-#, python-format
-msgid ""
-"Hi %(name)s,\n"
-"\n"
-"%(sender)s reset your two-factor login for %(site_title)s. You log in with your password alone now, and your old recovery codes no longer work. If two-factor login is required, you set it up again the next time you log in."
-msgstr ""
-"Hoi %(name)s,\n"
-"\n"
-"%(sender)s heeft je tweestapsverificatie voor %(site_title)s gereset. Je logt nu alleen met je wachtwoord in, en je oude herstelcodes werken niet meer. Is tweestapsverificatie verplicht, dan stel je het de volgende keer dat je inlogt opnieuw in."
-
-msgid "If you did not ask for this, contact your administrator."
-msgstr "Heb je hier niet om gevraagd? Neem dan contact op met je beheerder."
-
-#: contrib/two_factor/views.py
-msgid "This login has expired. Log in again."
-msgstr "Deze login is verlopen. Log opnieuw in."
-
-msgid "Too many wrong codes. Wait a while, then log in again."
-msgstr "Te veel verkeerde codes. Wacht even en log dan opnieuw in."
-
-msgid "Too many wrong codes. Log in again."
-msgstr "Te veel verkeerde codes. Log opnieuw in."
-
-msgid "That code is not right."
-msgstr "Die code klopt niet."
-
-msgid "That recovery code is not right."
-msgstr "Die herstelcode klopt niet."
-
-#, python-format
-msgid "You have %(count)d more try."
-msgid_plural "You have %(count)d more tries."
-msgstr[0] "Je hebt nog %(count)d poging."
-msgstr[1] "Je hebt nog %(count)d pogingen."
-
-msgid "Two-factor login is already on."
-msgstr "Tweestapsverificatie staat al aan."
-
-msgid "Two-factor login is off."
-msgstr "Tweestapsverificatie staat uit."
-
-msgid "Two-factor login is required for your account."
-msgstr "Tweestapsverificatie is verplicht voor je account."
-
-msgid "This setup has expired. Start again."
-msgstr "Deze instelling is verlopen. Begin opnieuw."
-
-#: user_studios.py
-msgid "Two-factor login is on."
-msgstr "Tweestapsverificatie staat aan."
-
-msgid "Two-factor login is required: this user sets it up at their next login."
-msgstr "Tweestapsverificatie is verplicht: deze gebruiker stelt het in bij de volgende login."
-
-msgid "Lost their phone? **Reset two-factor login** in the more actions menu."
-msgstr "Telefoon kwijt? **Tweestapsverificatie resetten** staat in het menu met meer acties."
-
-#: importing.py
-msgid "Choose a CSV, Excel (.xlsx) or JSON file."
-msgstr "Kies een CSV-, Excel- (.xlsx) of JSON-bestand."
-
-#: importing.py
-msgid "A JSON file must hold a list of objects."
-msgstr "Een JSON-bestand moet een lijst van objecten bevatten."
-
-#: importing.py
-msgid "Enter true or false."
-msgstr "Vul true of false in."
-
-#: importing.py
-msgid "The import failed. Try again, or ask a developer to check the logs."
-msgstr "De import is mislukt. Probeer het opnieuw, of vraag een developer de logs te bekijken."
-
-#: importing.py
-msgid "Excel files cannot be imported on this site."
-msgstr "Excel-bestanden kunnen op deze site niet worden geïmporteerd."
-
-#: importing.py
-msgid "The file is empty."
-msgstr "Het bestand is leeg."
-
-#: importing.py
-msgid "The file is not a valid CSV file."
-msgstr "Het bestand is geen geldig CSV-bestand."
-
-#: importing.py
-msgid "The file is not a valid Excel file."
-msgstr "Het bestand is geen geldig Excel-bestand."
-
-#: importing.py
-msgid "The file is not valid JSON."
-msgstr "Het bestand is geen geldige JSON."
-
-#: importing.py
-msgid "The file has no column this import can set. Download the template for the columns."
-msgstr "Het bestand heeft geen kolom die deze import kan vullen. Download het sjabloon voor de kolommen."
-
-#: importing.py
-msgid "This model cannot be imported."
-msgstr "Dit model kan niet worden geïmporteerd."
-
-#: importing.py
-msgid "No %(model)s with %(field)s %(value)s."
-msgstr "Geen %(model)s met %(field)s %(value)s."
-
-#: importing.py
-msgid "More than one %(model)s has %(field)s %(value)s."
-msgstr "Meer dan één %(model)s heeft %(field)s %(value)s."
-
-#: importing.py
-msgid "The row matches more than one %(model)s."
-msgstr "De rij past bij meer dan één %(model)s."
-
-#: importing.py
-msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
-msgstr "Geen %(model)s met id %(value)s. Laat het id leeg om er een te maken."
-
-#: importing.py
-msgid "Enter valid JSON."
-msgstr "Vul geldige JSON in."
-
-#: importing.py
-msgid "You may not create %(model)s."
-msgstr "Je mag geen %(model)s maken."
-
-#: importing.py
-msgid "You may not change this %(model)s."
-msgstr "Je mag deze %(model)s niet wijzigen."
-
-#: importing.py
-msgid "The file is too large; it can be %(size)s at most."
-msgstr "Het bestand is te groot; het mag hoogstens %(size)s zijn."
-
-#: importing.py
-msgid "The file has %(count)s rows; at most %(max)s can be imported at once. Split it into smaller files."
-msgstr "Het bestand heeft %(count)s rijen; er kunnen er hoogstens %(max)s tegelijk worden geïmporteerd. Splits het op in kleinere bestanden."
-
-#: importing.py
-msgid "The file needs the column %(columns)s to match rows."
-msgid_plural "The file needs the columns %(columns)s to match rows."
-msgstr[0] "Het bestand heeft de kolom %(columns)s nodig om rijen te koppelen."
-msgstr[1] "Het bestand heeft de kolommen %(columns)s nodig om rijen te koppelen."
-
-#: importing.py
-msgid "Import from a file"
-msgstr "Importeren uit een bestand"
-
-msgid "Preferences"
-msgstr "Voorkeuren"
-
-msgid "Save"
-msgstr "Opslaan"
-
-msgid "Save and add another"
-msgstr "Opslaan en nieuwe toevoegen"
-
-msgid "Save and close"
-msgstr "Opslaan en sluiten"
-
-msgid "Default save action"
-msgstr "Standaard opslagactie"
-
-msgid "user preferences"
-msgstr "gebruikersvoorkeuren"

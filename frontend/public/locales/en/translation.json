@@ -88,7 +88,9 @@
     "expand": "Expand menu",
     "title": "Main menu",
     "profile": "Profile",
-    "status": "System status"
+    "status": "System status",
+    "language": "Language",
+    "language_failed": "The language could not be changed."
   },
   "editor": {
     "title_create": "Create {{modelName}}",

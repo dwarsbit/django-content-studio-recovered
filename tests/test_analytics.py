@@ -546,6 +546,16 @@ def test_the_statistic_widget_reports_the_metric_and_trend(analytics):
     assert len(data.data["series"]) == 7
 
 
+def test_the_statistic_widget_keeps_the_capitals_of_its_language(analytics):
+    from django.utils import translation
+
+    with translation.override("de"):
+        data = AnalyticsStatisticWidget("visitors", range="7d").get_data(request_for())
+        data.is_valid(raise_exception=True)
+
+        assert data.data["footnote"] == "Letzte 7 Tage"
+
+
 def test_a_falling_bounce_rate_is_positive(analytics):
     data = AnalyticsStatisticWidget("bounce_rate").get_data(request_for())
     data.is_valid(raise_exception=True)

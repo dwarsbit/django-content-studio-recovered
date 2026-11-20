@@ -6,6 +6,7 @@ content list, read from the site's AnalyticsExtension.
 from decimal import Decimal
 from typing import Any
 
+from django.utils.text import capfirst
 from django.utils.translation import gettext_lazy as _
 from rest_framework.exceptions import NotFound
 
@@ -75,7 +76,7 @@ class AnalyticsStatisticWidget(StatisticWidget):
         data = {
             "title": str(self.title or label),
             "value": 0,
-            "footnote": str(RANGE_LABELS[self.range]).capitalize(),
+            "footnote": capfirst(str(RANGE_LABELS[self.range])),
         }
 
         try:
@@ -140,7 +141,7 @@ class AnalyticsTopPagesWidget(ContentListWidget):
         page = get_analytics_page()
         data = {
             "title": str(self.title or _("Top pages")),
-            "description": str(RANGE_LABELS[self.range]).capitalize(),
+            "description": capfirst(str(RANGE_LABELS[self.range])),
             "view_all": f"/{page.path.strip('/')}/" if page else "",
             "content": [],
         }

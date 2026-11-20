@@ -23,6 +23,7 @@ import {
   useMatch,
   useNavigate,
 } from "react-router";
+import { toast } from "sonner";
 
 import { useAuth } from "@/auth";
 import { NotificationsMenuItem } from "@/components/notifications/menu-item";
@@ -32,7 +33,12 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
   DropdownMenuSeparator,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
@@ -50,6 +56,7 @@ import { useMe } from "@/hooks/use-me";
 import { NARROW_QUERY, useMediaQuery } from "@/hooks/use-media-query";
 import { useRunButton } from "@/hooks/use-run-button";
 import { useStatusEnabled, useStatusSummary } from "@/hooks/use-status";
+import { getPageLanguages } from "@/lib/languages";
 import { safeStorage } from "@/lib/safe-storage";
 import { cn, getInitials } from "@/lib/utils";
 import { useTenant } from "@/tenant";
@@ -674,6 +681,7 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
                 </ToggleGroupItem>
               </ToggleGroup>
             </div>
+            <LanguageMenu />
             <DropdownMenuSeparator />
             {menuExtensions.length > 0 && (
               <>
@@ -717,6 +725,68 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
         </DropdownMenuContent>
       </DropdownMenu>
     </div>
+  );
+}
+
+/**
+ * The language picker: sets Django's language cookie and reloads, so the
+ * menus and the labels and errors from the server switch together. Shown
+ * when the project offers more than one language.
+ */
+function LanguageMenu() {
+  const { t, i18n } = useTranslation();
+  const http = useHttp();
+  const [languages] = useState(getPageLanguages);
+  const [pending, setPending] = useState(false);
+
+  if (languages.length < 2) {
+    return null;
+  }
+
+  const current =
+    languages.find((language) => language.locale === i18n.language) ??
+    languages.find(
+      (language) => language.locale === i18n.language?.split("-")[0],
+    );
+
+  return (
+    <DropdownMenuSub>
+      <DropdownMenuSubTrigger disabled={pending} className="gap-2">
+        <span>{t("main_menu.language")}</span>
+        <span className="ml-auto text-muted-foreground truncate">
+          {current?.name}
+        </span>
+      </DropdownMenuSubTrigger>
+      <DropdownMenuSubContent>
+        <DropdownMenuRadioGroup
+          value={current?.code}
+          onValueChange={(code) => {
+            if (code === current?.code) {
+              return;
+            }
+
+            setPending(true);
+            http
+              .post("/language", { language: code })
+              .then(() => window.location.reload())
+              .catch(() => {
+                setPending(false);
+                toast.error(t("main_menu.language_failed"));
+              });
+          }}
+        >
+          {languages.map((language) => (
+            <DropdownMenuRadioItem
+              key={language.code}
+              value={language.code}
+              lang={language.locale}
+            >
+              {language.name}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuSubContent>
+    </DropdownMenuSub>
   );
 }
 

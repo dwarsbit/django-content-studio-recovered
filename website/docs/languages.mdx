@@ -1,0 +1,85 @@
+# 🌍 Languages
+
+The admin speaks English, Dutch, German, French, Spanish, Italian and
+Brazilian Portuguese. Each editor sees it in their own language: the menus,
+buttons and messages, and also the labels, choices and errors that come from
+Django and your models.
+
+## How the admin picks a language
+
+For every page and request of the admin, Content Studio picks the first
+of these that it ships and that your project allows:
+
+1. The language the editor chose with **Language** in the user menu.
+2. The languages of the editor's browser, in the browser's order.
+3. Your project's `LANGUAGE_CODE`.
+4. English.
+
+Content Studio does this for the admin's URLs only. It needs no
+`LocaleMiddleware`, and the rest of your project keeps its own language
+handling. The choice in the user menu is stored in Django's language cookie
+(`LANGUAGE_COOKIE_NAME`), so it applies in that browser until the editor
+changes it again.
+
+## Limit the languages
+
+Django's [`LANGUAGES`](https://docs.djangoproject.com/en/stable/ref/settings/#languages)
+setting decides which languages the admin offers. By default it lists every
+language Django knows, so all of the admin's languages are available. List
+fewer to offer fewer:
+
+```python
+# mysite/settings.py
+from django.utils.translation import gettext_lazy as _
+
+LANGUAGE_CODE = "en"
+
+LANGUAGES = [
+    ("en", _("English")),
+    ("nl", _("Dutch")),
+    ("de", _("German")),
+]
+```
+
+A generic code also allows a regional one, and the other way around: `"pt"`
+allows Brazilian Portuguese, and `"de-at"` allows German. With a single
+language left, the user menu has no language picker. When none of the
+admin's languages is allowed, the admin uses English.
+
+## Your own strings
+
+Labels and texts from your project show in the editor's language when you
+mark them for translation, as you would for the classic Django admin: use
+`gettext_lazy` for `verbose_name`, `help_text`, choices and the labels you
+give studios, and add your project's translations with
+[`makemessages`](https://docs.djangoproject.com/en/stable/topics/i18n/translation/#localization-how-to-create-language-files).
+
+```python
+# blog/models.py
+from django.db import models
+from django.utils.translation import gettext_lazy as _
+
+
+class Article(models.Model):
+    title = models.CharField(_("title"), max_length=200)
+    summary = models.TextField(
+        _("summary"), blank=True, help_text=_("Shown on the article's card.")
+    )
+
+    class Meta:
+        verbose_name = _("article")
+        verbose_name_plural = _("articles")
+```
+
+Emails the admin sends while an editor works, such as invites and password
+links, are written in that editor's language. The notification digest is a
+command, so it uses `LANGUAGE_CODE` (see [Notifications](/docs/notifications)).
+
+## Translations
+
+The German, French, Spanish, Italian and Brazilian Portuguese translations
+have not yet been reviewed by native speakers. If a translation is wrong or
+reads awkwardly, open an issue or a pull request on
+[GitHub](https://github.com/dwarsbit/django-content-studio). The
+[contributing guide](https://github.com/dwarsbit/django-content-studio/blob/main/CONTRIBUTING.md#translations)
+explains where the translations live and how to add a language.

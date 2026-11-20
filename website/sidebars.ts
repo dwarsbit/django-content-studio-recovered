@@ -25,6 +25,7 @@ const sidebars: SidebarsConfig = {
     "presence",
     "system-status",
     "backups",
+    "languages",
     "command-palette",
     "deployment",
     "developer-tools",

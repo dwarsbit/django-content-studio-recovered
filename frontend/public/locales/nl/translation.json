@@ -88,7 +88,9 @@
     "expand": "Menu uitklappen",
     "title": "Hoofdmenu",
     "profile": "Profiel",
-    "status": "Systeemstatus"
+    "status": "Systeemstatus",
+    "language": "Taal",
+    "language_failed": "De taal kon niet worden gewijzigd."
   },
   "editor": {
     "title_create": "Maak {{modelName}} aan",

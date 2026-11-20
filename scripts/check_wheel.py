@@ -28,9 +28,18 @@ def main():
             "content_studio/static/content_studio/assets/": (
                 "compiled frontend assets (run `npm run build` first)"
             ),
-            "content_studio/locale/nl/LC_MESSAGES/django.mo": (
-                "compiled translation catalogs"
-            ),
+            **{
+                f"content_studio/locale/{locale}/LC_MESSAGES/django.mo": (
+                    f"the compiled {locale} translation catalog"
+                )
+                for locale in ("de", "es", "fr", "it", "nl", "pt_BR")
+            },
+            **{
+                f"content_studio/static/content_studio/locales/{locale}/translation.json": (
+                    f"the {locale} frontend translations"
+                )
+                for locale in ("en", "de", "es", "fr", "it", "nl", "pt-BR")
+            },
             "content_studio/viewsets.py": ("the python package itself"),
             "content_studio/py.typed": (
                 "the PEP 561 marker that lets type checkers use the hints"
