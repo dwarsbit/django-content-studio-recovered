@@ -16,7 +16,7 @@ import datetime
 import io
 import json
 from decimal import Decimal
-from unittest import mock
+from unittest import mock, skipIf
 
 from django.contrib.admin.models import ADDITION, CHANGE, LogEntry
 from django.contrib.auth import models as auth_models
@@ -615,6 +615,7 @@ class LimitTests(ImportTestCase):
         self.assertEqual(response.status_code, 400)
 
 
+@skipIf(importing.run_import_task is None, "Django tasks is not installed")
 @override_settings(
     TASKS={"default": {"BACKEND": "django.tasks.backends.immediate.ImmediateBackend"}}
 )
@@ -691,6 +692,7 @@ class BackgroundTests(ImportTestCase):
         self.assertEqual(response.status_code, 400)
 
 
+@skipIf(importing.run_import_task is None, "Django tasks is not installed")
 class BackgroundDetectionTests(TestCase):
     @override_settings(
         TASKS={
