@@ -166,6 +166,18 @@ in the request. Default: `10000`. Larger files run as a task when the task
 backend runs tasks in the background, and are refused otherwise. `None`
 removes the limit.
 
+### IMPORT_FILE_MAX_ROWS {#import_file_max_rows}
+
+The most rows any [import](/docs/list-page#large-files) file can hold, also
+when it runs as a task. Reading stops at the first row beyond it, so a huge
+file is not parsed whole. Default: `100000`. `None` removes the limit.
+
+### IMPORT_MAX_SIZE {#import_max_size}
+
+The largest file an import accepts, in bytes. Default: `10485760` (10 MB).
+An Excel file may unpack to at most ten times this size. `None` removes the
+limit; your web server's own request size limit still applies.
+
 ### IMPORT_TASK_ROWS {#import_task_rows}
 
 From this many rows, an import runs as a Django task when the task backend

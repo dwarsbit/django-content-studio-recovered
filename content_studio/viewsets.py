@@ -449,6 +449,7 @@ class BaseModelViewSet(ModelViewSet):
             Importer,
             create_job,
             detect_format,
+            file_max_rows,
             is_importable,
             public_state,
             read_rows,
@@ -482,7 +483,7 @@ class BaseModelViewSet(ModelViewSet):
         if file is None:
             raise ValidationError({"file": ["No file was submitted."]})
 
-        max_size = cs_settings.UPLOAD_MAX_SIZE
+        max_size = cs_settings.IMPORT_MAX_SIZE
 
         if max_size is not None and file.size > max_size:
             from django.template.defaultfilters import filesizeformat
@@ -499,7 +500,8 @@ class BaseModelViewSet(ModelViewSet):
         try:
             file_format = detect_format(file.name)
             content = file.read()
-            headers, rows = read_rows(content, file_format)
+            # Stops at the first row too many, before parsing the rest.
+            headers, rows = read_rows(content, file_format, file_max_rows())
         except ImportFileError as error:
             raise ValidationError({"file": [str(error)]})
 

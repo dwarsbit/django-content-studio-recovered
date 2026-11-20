@@ -72,6 +72,16 @@
   and the old address gets an email when the email changes. Wrong
   passwords count toward `LOGIN_THROTTLE_RATE`, like the password change.
 
+- **An import file could exhaust the server's memory.** Imports read and
+  parsed the whole file (up to `UPLOAD_MAX_SIZE`, 50 MB) before checking
+  `IMPORT_MAX_ROWS`, so a small, highly compressed Excel file or a huge
+  JSON list kept a web process busy for a long time. Reading now stops at
+  the first row too many, files with more than 1,000 columns or deep JSON
+  nesting are refused, and an Excel file may unpack to at most ten times
+  the size limit. Two new settings: **`IMPORT_MAX_SIZE`** (10 MB) replaces
+  `UPLOAD_MAX_SIZE` for imports, and **`IMPORT_FILE_MAX_ROWS`** (100,000)
+  caps imports that run as a task, which had no row limit.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

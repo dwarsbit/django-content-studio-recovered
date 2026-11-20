@@ -118,6 +118,11 @@ DEFAULTS = {
     # task backend runs tasks in the background. None: always in the
     # request.
     "IMPORT_TASK_ROWS": 1_000,
+    # Import: the most rows any file can have, also as a task; reading
+    # stops at the first row beyond it. None: no limit.
+    "IMPORT_FILE_MAX_ROWS": 100_000,
+    # Import: the largest file accepted, in bytes; None for no limit.
+    "IMPORT_MAX_SIZE": 10 * 1024 * 1024,
     # The map tiles MapWidget shows: a tile URL template with {z}, {x}
     # and {y}, and the attribution shown on the map (HTML).
     "MAP_TILE_URL": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",

@@ -759,7 +759,12 @@ default) are refused. When your project's
 [Django tasks](https://docs.djangoproject.com/en/stable/topics/tasks/)
 backend runs tasks in the background, files with at least
 [`IMPORT_TASK_ROWS`](/docs/settings#import_task_rows) rows (1,000 by
-default) run as a task instead, without the row limit. The dialog then
+default) run as a task instead, up to
+[`IMPORT_FILE_MAX_ROWS`](/docs/settings#import_file_max_rows) rows
+(100,000 by default). Files over
+[`IMPORT_MAX_SIZE`](/docs/settings#import_max_size) (10 MB by default) or
+with more than 1,000 columns are refused, and reading a file stops at the
+first row too many, so a large file is never parsed whole. The dialog then
 shows the check's progress, and a notice follows the import itself. The
 file and the job's progress wait in
 [`UPLOAD_FOLDER`](/docs/settings#upload_folder), so the storage must be
