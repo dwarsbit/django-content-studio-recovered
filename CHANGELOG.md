@@ -38,7 +38,7 @@
   (`has_backup_permission()` on the admin site decides who may), and
   `manage.py content_studio_restore` restores one after checking its
   migrations. `status.register_service()` gains `url`, which makes the
-  service's name a link. System checks `content_studio.E049` (settings
+  service's name a link. System checks `content_studio.E050` (settings
   that cannot work), `W027` (a backup storage that may serve backups
   publicly) and `W028` (a schedule without Huey to run it).
 
@@ -53,9 +53,21 @@
   library are always counted exactly. System check `content_studio.E046`
   reports an unknown value. A list whose exact count takes longer than half
   a second logs a warning that suggests `list_count`, and shows the hint
-  below the list while `DEBUG` is on. Counts and page numbers on the list
+  in the developer tools while `DEBUG` is on. Counts and page numbers on the list
   page are now grouped (460,003), and page buttons widen to fit large page
   numbers.
+- **Developer tools.** While `DEBUG` is on, staff see a button in the
+  bottom-right corner with the number of issues to act on: amber for
+  warnings, red for errors. Its panel lists system check warnings, slow
+  counts (the hint moved here from below the list), unhandled exceptions in
+  the admin API with their traceback, requests that run many alike queries,
+  warnings and errors of Content Studio's loggers, and failed requests and
+  uncaught errors in the browser. A Requests tab shows your last 50 admin
+  API requests with their time and queries, and an Info tab the page's
+  studio and the environment. `content_studio.devtools.report()` adds your
+  own issues. New settings `DEVTOOLS` (`False` turns them off) and
+  `DEVTOOLS_LOGGERS`; system check `content_studio.E049`. Nothing is
+  recorded or loaded without `DEBUG`.
 
 - **Import from CSV, Excel or JSON.** A studio's new `allow_import` (or
   `import_fields`) adds Import to the list page. Import and Export now

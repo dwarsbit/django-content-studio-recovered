@@ -294,6 +294,21 @@ The alias of the cache in `CACHES` that presence is kept in. Default:
 cache, such as Redis, Memcached or the database cache. System check
 `content_studio.E023` reports an alias that is not in `CACHES`.
 
+## Developer tools
+
+### DEVTOOLS {#devtools}
+
+Whether staff see the [developer tools](/docs/developer-tools) while `DEBUG`
+is on. Default: `True`. `False` turns them off; they are never on without
+`DEBUG`. System check `content_studio.E049` reports a value that is not
+`True` or `False`.
+
+### DEVTOOLS_LOGGERS {#devtools_loggers}
+
+Loggers, besides Content Studio's own, whose warnings and errors show in the
+developer tools, such as `["myproject"]`. Default: `[]`. System check
+`content_studio.E049` reports a value that is not a list of logger names.
+
 ## Webhooks
 
 These settings apply when the `content_studio.webhooks` app is installed;

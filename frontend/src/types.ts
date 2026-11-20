@@ -33,7 +33,6 @@ export interface ListPagination {
    * While the server runs with DEBUG: a slow exact count, with the
    * studio that can set list_count to avoid it.
    */
-  slow_count?: { seconds: number; studio: string } | null;
 }
 
 export interface ListResponse<T> {

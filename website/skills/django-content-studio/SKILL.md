@@ -571,6 +571,10 @@ Each is optional and has its own page:
   https://djangocontentstudio.org/docs/presence.md,
   https://djangocontentstudio.org/docs/command-palette.md,
   https://djangocontentstudio.org/docs/deployment.md
+- Developer tools (while `DEBUG` is on: system check warnings, slow counts,
+  server errors, many similar queries and log warnings behind a button, plus
+  the admin API's requests; `content_studio.devtools.report()` adds your
+  own): https://djangocontentstudio.org/docs/developer-tools.md
 
 ## Common mistakes
 

@@ -673,7 +673,7 @@ def test_misconfigured_backups_are_errors(setting, value, message):
     with mock.patch.object(cs_settings, setting, value):
         [(check_id, error)] = backup_errors()
 
-    assert check_id == "content_studio.E049"
+    assert check_id == "content_studio.E050"
     assert message in error
 
 

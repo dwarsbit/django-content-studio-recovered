@@ -143,7 +143,6 @@
     "page": "Page {{current, number}}",
     "previous_page": "Previous page",
     "next_page": "Next page",
-    "slow_count": "Counting this list took {{seconds, number}} s. Set list_count = \"estimated\" on {{studio}} to show an estimate on large tables. Shown while DEBUG is on.",
     "view": "View",
     "more_actions": "More actions"
   },

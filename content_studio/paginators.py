@@ -3,13 +3,14 @@ import logging
 import math
 import time
 
-from django.conf import settings
 from django.core.paginator import Paginator
 from django.db import DatabaseError, connections, transaction
 from django.utils.functional import cached_property
 from rest_framework.exceptions import NotFound
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
+
+from . import devtools
 
 # Query parameters that page or sort the list without narrowing it; any
 # other parameter is a search or a filter.
@@ -102,7 +103,6 @@ class ContentPagination(PageNumberPagination):
     def paginate_queryset(self, queryset, request, view=None):
         self.count = None
         self.approximate = False
-        self.slow_count = None
         mode = self.get_count_mode(request, view)
         estimate = None
 
@@ -128,11 +128,10 @@ class ContentPagination(PageNumberPagination):
         """
         A slow exact count of an unfiltered list, on a studio that counts
         exactly: logged as a warning once per studio and process, and
-        returned with the list while DEBUG is on, so the list page can
-        suggest list_count = "estimated". Filtered lists and the trash
-        are counted exactly whatever list_count is, so they get no hint.
+        shown in the developer tools while they are on, suggesting
+        list_count = "estimated". Filtered lists and the trash are counted
+        exactly whatever list_count is, so they get no hint.
         """
-        self.slow_count = None
         seconds = self.page.paginator.count_seconds
 
         if (
@@ -144,22 +143,33 @@ class ContentPagination(PageNumberPagination):
         ):
             return
 
+        message = (
+            f"Counting the list of {self.studio_name} took {seconds:.1f} "
+            f'seconds. Set list_count = "estimated" on {self.studio_name} '
+            'to show an estimate on large tables, or "none" to skip the count.'
+        )
+
         if self.studio_name not in _warned_studios:
             _warned_studios.add(self.studio_name)
-            logger.warning(
-                "Counting the list of %s took %.1f seconds. Set "
-                'list_count = "estimated" on %s to show an estimate on '
-                'large tables, or "none" to skip the count.',
-                self.studio_name,
-                seconds,
-                self.studio_name,
-            )
+            # The developer tools count every slow count (below), so the
+            # log record stays out of them.
+            logger.warning(message, extra={"devtools": False})
 
-        if settings.DEBUG:
-            self.slow_count = {
-                "seconds": round(seconds, 1),
-                "studio": self.studio_name,
-            }
+        devtools.report(
+            "warning",
+            message,
+            code="slow_count",
+            title=f"Slow count on {self.studio_name}",
+            snippet=(
+                f"class {self.studio_name}(ModelStudio):\n"
+                '    list_count = "estimated"'
+            ),
+            docs=f"{devtools.DOCS_URL}/list-page#large-tables",
+            studio=self.studio_name,
+            key=f"slow_count:{self.studio_name}",
+            source="server",
+            request=request,
+        )
 
     def paginate_without_count(self, queryset, request, estimate):
         """
@@ -215,9 +225,6 @@ class ContentPagination(PageNumberPagination):
                     "current": self.current,
                     "pages": self.pages,
                     "has_next": self.has_next,
-                    # While DEBUG is on: a slow exact count, with the
-                    # studio to set list_count on.
-                    "slow_count": self.slow_count,
                 },
                 "results": data,
             }

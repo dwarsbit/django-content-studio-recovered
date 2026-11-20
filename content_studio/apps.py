@@ -31,6 +31,7 @@ class DjangoContentStudioConfig(AppConfig):
         from django.db.models.signals import post_delete, post_save, pre_save
 
         from . import checks  # noqa: F401 -- registers the system checks
+        from .devtools import install_log_handler
         from .media_library.cropping import delete_original
         from .media_library.sizes import (
             delete_sizes_of_deleted_item,
@@ -77,6 +78,10 @@ class DjangoContentStudioConfig(AppConfig):
             dispatch_uid="content_studio_delete_image_sizes",
         )
         self._create_crud_api()
+
+        # Warnings and errors of Content Studio's loggers show in the
+        # developer tools while they are on.
+        install_log_handler()
 
         # The boot log and PyPI version check are decorative: show them
         # in interactive server mode only.

@@ -27,6 +27,7 @@ const sidebars: SidebarsConfig = {
     "backups",
     "command-palette",
     "deployment",
+    "developer-tools",
     "settings",
     "public-api",
     "ai-agents",
