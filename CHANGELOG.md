@@ -1,5 +1,18 @@
 # Changelog
 
+## 1.18.1 (unreleased)
+
+### Fixes
+
+- **The first backups after a restore failed on PostgreSQL** with
+  `duplicate key value violates unique constraint
+  "content_studio_backups_backup_pkey"`. Emptying the database reset the
+  id sequences, and the backup and restore records put back kept their
+  ids. The sequences now move past them again. On a site that already
+  restored, each failed backup moved the sequence on by one, so it heals
+  by itself, or right away with `manage.py sqlsequencereset
+  content_studio_backups | manage.py dbshell`.
+
 ## 1.18.0 (2026-11-20)
 
 ### Features

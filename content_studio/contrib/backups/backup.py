@@ -27,6 +27,7 @@ from django.core.files import File
 from django.core.files.base import ContentFile
 from django.core.files.storage import InvalidStorageError, storages
 from django.core.management import call_command
+from django.core.management.color import no_style
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import connections, router, transaction
 from django.db.migrations.recorder import MigrationRecorder
@@ -615,7 +616,12 @@ def snapshot_records(using: str) -> tuple[list, list]:
 
 
 def keep_records(backups: list, restores: list, using: str) -> None:
-    """Put the backup and restore records back after a restore emptied them."""
+    """
+    Put the backup and restore records back after a restore emptied them.
+
+    Emptying the database reset its sequences, and the records keep their
+    ids, so the sequences are moved past them again.
+    """
     from django.contrib.auth import get_user_model
 
     from .models import Restore
@@ -635,6 +641,14 @@ def keep_records(backups: list, restores: list, using: str) -> None:
 
     Backup.objects.using(using).bulk_create(backups)
     Restore.objects.using(using).bulk_create(restores)
+
+    connection = connections[using]
+    statements = connection.ops.sequence_reset_sql(no_style(), [Backup, Restore])
+
+    if statements:
+        with connection.cursor() as cursor:
+            for statement in statements:
+                cursor.execute(statement)
 
 
 def clear_content_type_cache() -> None:
