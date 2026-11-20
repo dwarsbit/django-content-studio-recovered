@@ -36,6 +36,7 @@ export function CustomFilter({
   model,
   values,
   onChange,
+  defaultOpen,
 }: {
   name: string;
   label: string;
@@ -43,10 +44,11 @@ export function CustomFilter({
   model: Model;
   values: FilterValues;
   onChange(changes: FilterChanges): void;
+  defaultOpen?: boolean;
 }) {
   const { t } = useTranslation();
   const http = useHttp();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!defaultOpen);
   const value = values[""] ?? "";
   const selected = value.split(",").filter(Boolean);
 

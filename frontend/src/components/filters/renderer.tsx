@@ -35,12 +35,14 @@ export function FilterRenderer({
   model,
   values,
   onValueChange,
+  defaultOpen,
 }: {
   field: ModelField;
   name: string;
   model: Model;
   values: FilterValues;
   onValueChange(changes: FilterChanges): void;
+  defaultOpen?: boolean;
 }) {
   const { data: info } = useAdminInfo();
   const widgetClass = field.widget_class ?? info?.widgets[field.type]?.name;
@@ -84,6 +86,7 @@ export function FilterRenderer({
         model={model}
         values={values}
         onChange={onValueChange}
+        defaultOpen={defaultOpen}
       />
     )
   );

@@ -5,8 +5,8 @@ import { PiCaretDownBold, PiXBold } from "react-icons/pi";
 import { cn } from "@/lib/utils";
 
 /**
- * The button a filter opens from: the field's name while it is unset,
- * "Field is value" with an inline clear once it has a value. Radix
+ * The button a filter opens from: a quiet label while it is unset, a
+ * "Field is value" chip with an inline clear once it has a value. Radix
  * triggers render it through `asChild`, so every prop reaches the
  * button.
  */
@@ -30,18 +30,18 @@ export function FilterTrigger({
       type="button"
       {...props}
       className={cn(
-        "h-8 max-w-full px-2.5 inline-flex items-center gap-1.5 rounded-lg border text-sm font-medium whitespace-nowrap cursor-pointer select-none",
-        "outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring",
+        "h-7 max-w-full inline-flex items-center gap-1.5 text-sm font-medium whitespace-nowrap cursor-pointer select-none",
+        "outline-none focus-visible:ring-3 focus-visible:ring-ring",
         active
-          ? "bg-accent border-transparent text-foreground"
-          : "bg-background text-muted-foreground shadow-xs hover:text-foreground hover:bg-muted/50",
+          ? "px-3 rounded-full bg-secondary text-secondary-foreground"
+          : "px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted",
         className,
       )}
     >
       <span className="first-letter:uppercase shrink-0">{label}</span>
       {active ? (
         <>
-          <span className="text-muted-foreground">
+          <span className="font-normal text-muted-foreground">
             {t("list_view.filters.is")}
           </span>
           <span className="truncate min-w-0">{value}</span>
@@ -50,7 +50,7 @@ export function FilterTrigger({
               role="button"
               tabIndex={0}
               aria-label={t("list_view.filters.clear", { field: label })}
-              className="-mr-1 ml-0.5 size-4 shrink-0 rounded-sm inline-flex items-center justify-center hover:bg-foreground/10"
+              className="-mr-1.5 size-5 shrink-0 rounded-full inline-flex items-center justify-center hover:bg-foreground/10"
               onClick={(event) => {
                 event.stopPropagation();
                 onClear();

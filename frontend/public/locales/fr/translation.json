@@ -139,6 +139,7 @@
     "sort_descending": "Tri décroissant",
     "trash": "Corbeille",
     "filters": {
+      "add": "Filtre",
       "all": "Tous",
       "yes": "Oui",
       "no": "Non",

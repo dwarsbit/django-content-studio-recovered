@@ -63,11 +63,12 @@ export function ManyToManyFilter({
   name,
   values,
   onChange,
+  defaultOpen,
 }: FilterComponentProps) {
   const { t } = useTranslation();
   const http = useHttp();
   const [search, setSearch] = useState("");
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!defaultOpen);
   const selected = (values[""] ?? "").split(",").filter(Boolean);
 
   const { data = [], isLoading } = useQuery({

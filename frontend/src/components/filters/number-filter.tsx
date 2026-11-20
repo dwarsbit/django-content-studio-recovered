@@ -21,6 +21,7 @@ export function NumberFilter({
   field,
   values,
   onChange,
+  defaultOpen,
 }: FilterComponentProps) {
   const { t } = useTranslation();
   const [min, setMin] = useState(values["gte"] ?? "");
@@ -50,7 +51,7 @@ export function NumberFilter({
   const range = [min, max].filter(Boolean).join(" – ");
 
   return (
-    <Popover>
+    <Popover defaultOpen={defaultOpen}>
       <PopoverTrigger asChild>
         <FilterTrigger
           label={field.verbose_name}
