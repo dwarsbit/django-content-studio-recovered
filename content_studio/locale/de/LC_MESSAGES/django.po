@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:51+0000\n"
+"POT-Creation-Date: 2026-11-20 15:02+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -45,8 +45,8 @@ msgid ""
 "The item will be moved to the trash, where it can be restored. Are you sure "
 "you want to delete it?"
 msgstr ""
-"Das Element wird in den Papierkorb verschoben, wo es wiederhergestellt werden"
-" kann. Möchten Sie es wirklich löschen?"
+"Das Element wird in den Papierkorb verschoben, wo es wiederhergestellt "
+"werden kann. Möchten Sie es wirklich löschen?"
 
 #: actions.py:258
 msgid "Duplicate"
@@ -415,8 +415,8 @@ msgstr "Huey · %(count)s in der Warteschlange"
 #: contrib/huey.py:194
 #, python-format
 msgid ""
-"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
-"Is the consumer running?"
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up."
+" Is the consumer running?"
 msgstr ""
 "Aufgaben warten seit %(minutes)s Minuten, und kein Worker hat eine "
 "übernommen. Läuft der Consumer?"
@@ -606,8 +606,8 @@ msgstr "Diese Anmeldung ist abgelaufen. Melden Sie sich erneut an."
 #: contrib/two_factor/views.py:50
 msgid "Too many wrong codes. Wait a while, then log in again."
 msgstr ""
-"Zu viele falsche Codes. Warten Sie eine Weile und melden Sie sich dann erneut"
-" an."
+"Zu viele falsche Codes. Warten Sie eine Weile und melden Sie sich dann "
+"erneut an."
 
 #: contrib/two_factor/views.py:85
 msgid "Too many wrong codes. Log in again."
@@ -726,8 +726,8 @@ msgstr "Wählen Sie eine CSV-, Excel- (.xlsx) oder JSON-Datei."
 #: importing.py:551
 #, python-format
 msgid ""
-"The file has more than %(max)s rows; at most %(max)s can be imported at once."
-" Split it into smaller files."
+"The file has more than %(max)s rows; at most %(max)s can be imported at "
+"once. Split it into smaller files."
 msgstr ""
 "Die Datei hat mehr als %(max)s Zeilen; höchstens %(max)s können auf einmal "
 "importiert werden. Teile sie in kleinere Dateien auf."
@@ -813,8 +813,8 @@ msgstr "Die Zeile passt zu mehr als einem/einer %(model)s."
 #, python-format
 msgid "No %(model)s with id %(value)s. Leave the id empty to create one."
 msgstr ""
-"Kein(e) %(model)s mit der ID %(value)s. Lassen Sie die ID leer, um eine(n) zu"
-" erstellen."
+"Kein(e) %(model)s mit der ID %(value)s. Lassen Sie die ID leer, um eine(n) "
+"zu erstellen."
 
 #: importing.py:1551
 msgid "This model cannot be imported."
@@ -823,8 +823,8 @@ msgstr "Dieses Modell kann nicht importiert werden."
 #: importing.py:1585
 msgid "The import failed. Try again, or ask a developer to check the logs."
 msgstr ""
-"Der Import ist fehlgeschlagen. Versuchen Sie es erneut oder bitten Sie einen "
-"Entwickler, die Logs zu prüfen."
+"Der Import ist fehlgeschlagen. Versuchen Sie es erneut oder bitten Sie einen"
+" Entwickler, die Logs zu prüfen."
 
 #: importing.py:1642
 msgid "Import from a file"
@@ -842,7 +842,8 @@ msgstr "Medien"
 msgid "File"
 msgstr "Datei"
 
-#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:53
+#: media_library/models.py:31 media_library/models.py:133
+#: webhooks/models.py:53
 msgid "Name"
 msgstr "Name"
 
@@ -916,8 +917,8 @@ msgstr "Die Datei ist größer als %(size)s."
 #: media_library/serializers.py:201
 msgid "A folder cannot be moved into itself or its subfolders."
 msgstr ""
-"Ein Ordner kann nicht in sich selbst oder einen seiner Unterordner verschoben"
-" werden."
+"Ein Ordner kann nicht in sich selbst oder einen seiner Unterordner "
+"verschoben werden."
 
 #: models.py:40
 msgid "Created at"
@@ -1166,8 +1167,8 @@ msgid ""
 "You can only grant or revoke permissions you have yourself. Not allowed: "
 "%(permissions)s."
 msgstr ""
-"Sie können nur Berechtigungen vergeben oder entziehen, die Sie selbst haben. "
-"Nicht erlaubt: %(permissions)s."
+"Sie können nur Berechtigungen vergeben oder entziehen, die Sie selbst haben."
+" Nicht erlaubt: %(permissions)s."
 
 #: permission_matrix.py:217
 #, python-format
@@ -1256,7 +1257,8 @@ msgstr ""
 msgid "You have %(count)s unread notification in %(site_name)s:"
 msgid_plural "You have %(count)s unread notifications in %(site_name)s:"
 msgstr[0] "Sie haben %(count)s ungelesene Benachrichtigung in %(site_name)s:"
-msgstr[1] "Sie haben %(count)s ungelesene Benachrichtigungen in %(site_name)s:"
+msgstr[1] ""
+"Sie haben %(count)s ungelesene Benachrichtigungen in %(site_name)s:"
 
 #: templates/content_studio/notifications/digest.txt:11
 msgid "See all notifications:"
@@ -1264,11 +1266,11 @@ msgstr "Alle Benachrichtigungen ansehen:"
 
 #: templates/content_studio/notifications/digest.txt:13
 msgid ""
-"You get this email because these notifications are unread. Turn these emails "
-"off in your notification settings:"
+"You get this email because these notifications are unread. Turn these emails"
+" off in your notification settings:"
 msgstr ""
-"Sie erhalten diese E-Mail, weil diese Benachrichtigungen ungelesen sind. Sie "
-"können diese E-Mails in Ihren Benachrichtigungseinstellungen abschalten:"
+"Sie erhalten diese E-Mail, weil diese Benachrichtigungen ungelesen sind. Sie"
+" können diese E-Mails in Ihren Benachrichtigungseinstellungen abschalten:"
 
 #: templates/content_studio/users/email_changed.txt:1
 #, python-format
@@ -1303,8 +1305,8 @@ msgid ""
 "Your username is %(username)s. The link works once and expires in "
 "%(expires)s. If it has expired, ask %(sender)s for a new one."
 msgstr ""
-"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in "
-"%(expires)s ab. Ist er abgelaufen, bitten Sie %(sender)s um einen neuen."
+"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in"
+" %(expires)s ab. Ist er abgelaufen, bitten Sie %(sender)s um einen neuen."
 
 #: templates/content_studio/users/password_link.txt:1
 #, python-format
@@ -1323,9 +1325,9 @@ msgid ""
 "Your username is %(username)s. The link works once and expires in "
 "%(expires)s. If you did not expect this email, contact your administrator."
 msgstr ""
-"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in "
-"%(expires)s ab. Wenn Sie diese E-Mail nicht erwartet haben, wenden Sie sich "
-"an Ihren Administrator."
+"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in"
+" %(expires)s ab. Wenn Sie diese E-Mail nicht erwartet haben, wenden Sie sich"
+" an Ihren Administrator."
 
 #: templates/content_studio/users/two_factor_reset.txt:1
 #, python-format
@@ -1341,7 +1343,8 @@ msgstr ""
 #: templates/content_studio/users/two_factor_reset.txt:5
 msgid "If you did not ask for this, contact your administrator."
 msgstr ""
-"Wenn Sie das nicht angefordert haben, wenden Sie sich an Ihren Administrator."
+"Wenn Sie das nicht angefordert haben, wenden Sie sich an Ihren "
+"Administrator."
 
 #: uploads.py:124 uploads.py:136
 msgid "The upload has expired. Choose the file again."
@@ -1368,11 +1371,12 @@ msgstr "Die Zwei-Faktor-Anmeldung ist an."
 #: user_studios.py:103
 msgid "Lost their phone? **Reset two-factor login** in the more actions menu."
 msgstr ""
-"Handy verloren? **Zwei-Faktor-Anmeldung zurücksetzen** finden Sie im Menü mit"
-" weiteren Aktionen."
+"Handy verloren? **Zwei-Faktor-Anmeldung zurücksetzen** finden Sie im Menü "
+"mit weiteren Aktionen."
 
 #: user_studios.py:122
-msgid "Two-factor login is required: this user sets it up at their next login."
+msgid ""
+"Two-factor login is required: this user sets it up at their next login."
 msgstr ""
 "Die Zwei-Faktor-Anmeldung ist Pflicht: Dieser Benutzer richtet sie bei der "
 "nächsten Anmeldung ein."
@@ -1394,8 +1398,8 @@ msgid ""
 "A superuser has every permission. To pick permissions one by one, turn off "
 "superuser status first."
 msgstr ""
-"Ein Superuser hat alle Berechtigungen. Um Berechtigungen einzeln auszuwählen,"
-" schalten Sie zuerst den Superuser-Status ab."
+"Ein Superuser hat alle Berechtigungen. Um Berechtigungen einzeln "
+"auszuwählen, schalten Sie zuerst den Superuser-Status ab."
 
 #: user_studios.py:262
 msgid "Profile"
@@ -1464,24 +1468,30 @@ msgstr "Geben Sie eine gültige Farbe ein."
 msgid "Transparent colors are not allowed."
 msgstr "Transparente Farben sind nicht erlaubt."
 
-#: views.py:279
+#: views.py:295
 msgid "Pass the address to preview as url."
 msgstr "Übergeben Sie die Adresse für die Vorschau als url."
 
-#: views.py:349
+#: views.py:365
 msgid "This language is not available."
 msgstr "Diese Sprache ist nicht verfügbar."
 
-#: views.py:434
+#: views.py:450
 msgid "Content"
 msgstr "Inhalte"
 
-#: viewsets.py:494
+#: viewsets.py:306
+msgid "The object could not be saved: it conflicts with an existing object."
+msgstr ""
+"Das Objekt konnte nicht gespeichert werden: Es steht im Konflikt mit einem "
+"vorhandenen Objekt."
+
+#: viewsets.py:507
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Die Datei ist zu groß; sie darf höchstens %(size)s groß sein."
 
-#: viewsets.py:533
+#: viewsets.py:546
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
@@ -1489,6 +1499,13 @@ msgid ""
 msgstr ""
 "Die Datei hat %(count)s Zeilen; höchstens %(max)s können auf einmal "
 "importiert werden. Teilen Sie sie in kleinere Dateien auf."
+
+#: viewsets.py:642
+msgid ""
+"The object could not be restored: it conflicts with an existing object."
+msgstr ""
+"Das Objekt konnte nicht wiederhergestellt werden: Es steht im Konflikt mit "
+"einem vorhandenen Objekt."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -1516,8 +1533,8 @@ msgstr "Secret neu erzeugen"
 
 #: webhooks/admin.py:60
 msgid ""
-"Requests are signed with the new secret from now on: receivers that check the"
-" signature need the new secret. Regenerate it?"
+"Requests are signed with the new secret from now on: receivers that check "
+"the signature need the new secret. Regenerate it?"
 msgstr ""
 "Anfragen werden ab jetzt mit dem neuen Secret signiert: Empfänger, die die "
 "Signatur prüfen, brauchen das neue Secret. Neu erzeugen?"
@@ -1570,8 +1587,8 @@ msgid "Triggered %(count)d webhook. Its delivery log shows how it responded."
 msgid_plural ""
 "Triggered %(count)d webhooks. Their delivery logs show how they responded."
 msgstr[0] ""
-"%(count)d Webhook ausgelöst. Sein Zustellprotokoll zeigt, wie er geantwortet "
-"hat."
+"%(count)d Webhook ausgelöst. Sein Zustellprotokoll zeigt, wie er geantwortet"
+" hat."
 msgstr[1] ""
 "%(count)d Webhooks ausgelöst. Ihre Zustellprotokolle zeigen, wie sie "
 "geantwortet haben."
@@ -1582,8 +1599,8 @@ msgstr "Webhook-Zustellung fehlgeschlagen"
 
 #: webhooks/failures.py:33
 msgid ""
-"A webhook delivery failed after its last attempt. Only editors who may change"
-" webhooks are notified."
+"A webhook delivery failed after its last attempt. Only editors who may "
+"change webhooks are notified."
 msgstr ""
 "Eine Webhook-Zustellung ist nach dem letzten Versuch fehlgeschlagen. Nur "
 "Redakteure, die Webhooks ändern dürfen, werden benachrichtigt."

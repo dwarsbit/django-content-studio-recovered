@@ -90,9 +90,18 @@ class SoftDeleteTests(AuthenticatedTestCase):
         self.client.delete(f"/api/content/testapp.coupon/{trashed.pk}")
         Coupon.objects.create(code="spring")
 
-        response = self.client.post(f"/api/content/testapp.coupon/{trashed.pk}/restore")
+        with self.assertLogs("content_studio.viewsets", "WARNING") as logs:
+            response = self.client.post(
+                f"/api/content/testapp.coupon/{trashed.pk}/restore"
+            )
 
         self.assertEqual(response.status_code, 400)
+        # The database's text (constraint names, values) is only logged.
+        self.assertEqual(
+            response.json(),
+            ["The object could not be restored: it conflicts with an existing object."],
+        )
+        self.assertIn("IntegrityError", logs.output[0])
         trashed.refresh_from_db()
         self.assertIsNotNone(trashed.removed_at)
         self.assertFalse(

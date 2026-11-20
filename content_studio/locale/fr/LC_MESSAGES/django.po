@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:51+0000\n"
+"POT-Creation-Date: 2026-11-20 15:02+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -417,11 +417,11 @@ msgstr "Huey · %(count)s en attente"
 #: contrib/huey.py:194
 #, python-format
 msgid ""
-"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
-"Is the consumer running?"
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up."
+" Is the consumer running?"
 msgstr ""
-"Des tâches attendent depuis %(minutes)s minutes et aucun worker n’en a pris. "
-"Le consumer tourne-t-il ?"
+"Des tâches attendent depuis %(minutes)s minutes et aucun worker n’en a pris."
+" Le consumer tourne-t-il ?"
 
 #: contrib/password_reset/tasks.py:65
 msgid "Your password reset code"
@@ -727,11 +727,11 @@ msgstr "Choisissez un fichier CSV, Excel (.xlsx) ou JSON."
 #: importing.py:551
 #, python-format
 msgid ""
-"The file has more than %(max)s rows; at most %(max)s can be imported at once."
-" Split it into smaller files."
+"The file has more than %(max)s rows; at most %(max)s can be imported at "
+"once. Split it into smaller files."
 msgstr ""
-"Le fichier a plus de %(max)s lignes ; au plus %(max)s peuvent être importées "
-"à la fois. Divisez-le en fichiers plus petits."
+"Le fichier a plus de %(max)s lignes ; au plus %(max)s peuvent être importées"
+" à la fois. Divisez-le en fichiers plus petits."
 
 #: importing.py:581
 #, python-format
@@ -796,8 +796,8 @@ msgid ""
 "The file has no column this import can set. Download the template for the "
 "columns."
 msgstr ""
-"Le fichier n’a aucune colonne que cet import peut renseigner. Téléchargez le "
-"modèle pour voir les colonnes."
+"Le fichier n’a aucune colonne que cet import peut renseigner. Téléchargez le"
+" modèle pour voir les colonnes."
 
 #: importing.py:1197
 #, python-format
@@ -847,7 +847,8 @@ msgstr "Médias"
 msgid "File"
 msgstr "Fichier"
 
-#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:53
+#: media_library/models.py:31 media_library/models.py:133
+#: webhooks/models.py:53
 msgid "Name"
 msgstr "Nom"
 
@@ -1281,8 +1282,8 @@ msgstr "Voir toutes les notifications :"
 
 #: templates/content_studio/notifications/digest.txt:13
 msgid ""
-"You get this email because these notifications are unread. Turn these emails "
-"off in your notification settings:"
+"You get this email because these notifications are unread. Turn these emails"
+" off in your notification settings:"
 msgstr ""
 "Vous recevez cet e-mail parce que ces notifications ne sont pas lues. "
 "Désactivez ces e-mails dans vos paramètres de notification :"
@@ -1301,7 +1302,8 @@ msgstr ""
 #: templates/content_studio/users/email_changed.txt:5
 msgid "If you did not change it, contact your administrator right away."
 msgstr ""
-"Si vous ne l’avez pas modifiée, contactez immédiatement votre administrateur."
+"Si vous ne l’avez pas modifiée, contactez immédiatement votre "
+"administrateur."
 
 #: templates/content_studio/users/invite.txt:1
 #, python-format
@@ -1391,10 +1393,11 @@ msgstr ""
 "dans le menu Plus d’actions."
 
 #: user_studios.py:122
-msgid "Two-factor login is required: this user sets it up at their next login."
+msgid ""
+"Two-factor login is required: this user sets it up at their next login."
 msgstr ""
-"La connexion à deux facteurs est obligatoire : cet utilisateur la configurera"
-" à sa prochaine connexion."
+"La connexion à deux facteurs est obligatoire : cet utilisateur la "
+"configurera à sa prochaine connexion."
 
 #: user_studios.py:214
 msgid "Account"
@@ -1430,7 +1433,8 @@ msgstr "Les utilisateurs inactifs ne peuvent pas se connecter."
 
 #: user_studios.py:284
 msgid "Only staff users can log in to the admin."
-msgstr "Seuls les membres de l’équipe peuvent se connecter à l’administration."
+msgstr ""
+"Seuls les membres de l’équipe peuvent se connecter à l’administration."
 
 #: user_studios.py:296 webhooks/models.py:138
 msgid "Status"
@@ -1450,8 +1454,8 @@ msgid ""
 "user's page once they can."
 msgstr ""
 "Aucune invitation n’a été envoyée : seuls les membres actifs de l’équipe "
-"peuvent se connecter. Envoyez-en une depuis la page de l’utilisateur dès que "
-"c’est possible."
+"peuvent se connecter. Envoyez-en une depuis la page de l’utilisateur dès que"
+" c’est possible."
 
 #: users.py:279
 #, python-format
@@ -1482,31 +1486,43 @@ msgstr "Saisissez une couleur valide."
 msgid "Transparent colors are not allowed."
 msgstr "Les couleurs transparentes ne sont pas autorisées."
 
-#: views.py:279
+#: views.py:295
 msgid "Pass the address to preview as url."
 msgstr "Passez l’adresse à prévisualiser dans url."
 
-#: views.py:349
+#: views.py:365
 msgid "This language is not available."
 msgstr "Cette langue n’est pas disponible."
 
-#: views.py:434
+#: views.py:450
 msgid "Content"
 msgstr "Contenu"
 
-#: viewsets.py:494
+#: viewsets.py:306
+msgid "The object could not be saved: it conflicts with an existing object."
+msgstr ""
+"L’objet n’a pas pu être enregistré : il est en conflit avec un objet "
+"existant."
+
+#: viewsets.py:507
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Le fichier est trop volumineux ; il peut faire %(size)s au maximum."
 
-#: viewsets.py:533
+#: viewsets.py:546
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
 "it into smaller files."
 msgstr ""
-"Le fichier contient %(count)s lignes ; au plus %(max)s peuvent être importées"
-" à la fois. Divisez-le en fichiers plus petits."
+"Le fichier contient %(count)s lignes ; au plus %(max)s peuvent être "
+"importées à la fois. Divisez-le en fichiers plus petits."
+
+#: viewsets.py:642
+msgid ""
+"The object could not be restored: it conflicts with an existing object."
+msgstr ""
+"L’objet n’a pas pu être restauré : il est en conflit avec un objet existant."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -1533,8 +1549,8 @@ msgstr "Régénérer le secret"
 
 #: webhooks/admin.py:60
 msgid ""
-"Requests are signed with the new secret from now on: receivers that check the"
-" signature need the new secret. Regenerate it?"
+"Requests are signed with the new secret from now on: receivers that check "
+"the signature need the new secret. Regenerate it?"
 msgstr ""
 "Les requêtes seront désormais signées avec le nouveau secret : les "
 "destinataires qui vérifient la signature en auront besoin. Le régénérer ?"
@@ -1601,8 +1617,8 @@ msgstr "Échec de la livraison du webhook"
 
 #: webhooks/failures.py:33
 msgid ""
-"A webhook delivery failed after its last attempt. Only editors who may change"
-" webhooks are notified."
+"A webhook delivery failed after its last attempt. Only editors who may "
+"change webhooks are notified."
 msgstr ""
 "La livraison d’un webhook a échoué après sa dernière tentative. Seuls les "
 "rédacteurs autorisés à modifier les webhooks sont notifiés."
@@ -1677,8 +1693,8 @@ msgstr "Locataire"
 #: webhooks/models.py:82
 msgid "Only changes in this tenant trigger the webhook; empty for all."
 msgstr ""
-"Seules les modifications dans ce locataire déclenchent le webhook ; vide pour"
-" tous."
+"Seules les modifications dans ce locataire déclenchent le webhook ; vide "
+"pour tous."
 
 #: webhooks/models.py:84
 msgid "Active"

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:51+0000\n"
+"POT-Creation-Date: 2026-11-20 15:02+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -417,11 +417,11 @@ msgstr "Huey · %(count)s en cola"
 #: contrib/huey.py:194
 #, python-format
 msgid ""
-"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
-"Is the consumer running?"
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up."
+" Is the consumer running?"
 msgstr ""
-"Hay tareas esperando desde hace %(minutes)s minutos y ningún worker ha tomado"
-" ninguna. ¿Está en marcha el consumer?"
+"Hay tareas esperando desde hace %(minutes)s minutos y ningún worker ha "
+"tomado ninguna. ¿Está en marcha el consumer?"
 
 #: contrib/password_reset/tasks.py:65
 msgid "Your password reset code"
@@ -726,11 +726,11 @@ msgstr "Elija un archivo CSV, Excel (.xlsx) o JSON."
 #: importing.py:551
 #, python-format
 msgid ""
-"The file has more than %(max)s rows; at most %(max)s can be imported at once."
-" Split it into smaller files."
+"The file has more than %(max)s rows; at most %(max)s can be imported at "
+"once. Split it into smaller files."
 msgstr ""
-"El archivo tiene más de %(max)s filas; se pueden importar como máximo %(max)s"
-" a la vez. Divídelo en archivos más pequeños."
+"El archivo tiene más de %(max)s filas; se pueden importar como máximo "
+"%(max)s a la vez. Divídelo en archivos más pequeños."
 
 #: importing.py:581
 #, python-format
@@ -845,7 +845,8 @@ msgstr "Medios"
 msgid "File"
 msgstr "Archivo"
 
-#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:53
+#: media_library/models.py:31 media_library/models.py:133
+#: webhooks/models.py:53
 msgid "Name"
 msgstr "Nombre"
 
@@ -884,7 +885,8 @@ msgstr "Propiedades"
 #: media_library/models.py:69
 msgid "Set by editors for some types of media, such as a focal point."
 msgstr ""
-"Definidas por los editores para algunos tipos de medios, como un punto focal."
+"Definidas por los editores para algunos tipos de medios, como un punto "
+"focal."
 
 #: media_library/models.py:74
 msgid "Image"
@@ -1275,8 +1277,8 @@ msgstr "Ver todas las notificaciones:"
 
 #: templates/content_studio/notifications/digest.txt:13
 msgid ""
-"You get this email because these notifications are unread. Turn these emails "
-"off in your notification settings:"
+"You get this email because these notifications are unread. Turn these emails"
+" off in your notification settings:"
 msgstr ""
 "Recibe este correo porque estas notificaciones no se han leído. Desactive "
 "estos correos en sus ajustes de notificaciones:"
@@ -1336,8 +1338,8 @@ msgid ""
 "%(expires)s. If you did not expect this email, contact your administrator."
 msgstr ""
 "Su nombre de usuario es %(username)s. El enlace funciona una sola vez y "
-"caduca en %(expires)s. Si no esperaba este correo, póngase en contacto con su"
-" administrador."
+"caduca en %(expires)s. Si no esperaba este correo, póngase en contacto con "
+"su administrador."
 
 #: templates/content_studio/users/two_factor_reset.txt:1
 #, python-format
@@ -1383,10 +1385,11 @@ msgstr ""
 "está en el menú Más acciones."
 
 #: user_studios.py:122
-msgid "Two-factor login is required: this user sets it up at their next login."
+msgid ""
+"Two-factor login is required: this user sets it up at their next login."
 msgstr ""
-"El inicio de sesión en dos pasos es obligatorio: este usuario lo configurará "
-"en su próximo inicio de sesión."
+"El inicio de sesión en dos pasos es obligatorio: este usuario lo configurará"
+" en su próximo inicio de sesión."
 
 #: user_studios.py:214
 msgid "Account"
@@ -1405,8 +1408,8 @@ msgid ""
 "A superuser has every permission. To pick permissions one by one, turn off "
 "superuser status first."
 msgstr ""
-"Un superusuario tiene todos los permisos. Para elegir los permisos uno a uno,"
-" desactive primero el estado de superusuario."
+"Un superusuario tiene todos los permisos. Para elegir los permisos uno a "
+"uno, desactive primero el estado de superusuario."
 
 #: user_studios.py:262
 msgid "Profile"
@@ -1475,31 +1478,42 @@ msgstr "Introduzca un color válido."
 msgid "Transparent colors are not allowed."
 msgstr "No se permiten colores transparentes."
 
-#: views.py:279
+#: views.py:295
 msgid "Pass the address to preview as url."
 msgstr "Pase la dirección para la vista previa como url."
 
-#: views.py:349
+#: views.py:365
 msgid "This language is not available."
 msgstr "Este idioma no está disponible."
 
-#: views.py:434
+#: views.py:450
 msgid "Content"
 msgstr "Contenido"
 
-#: viewsets.py:494
+#: viewsets.py:306
+msgid "The object could not be saved: it conflicts with an existing object."
+msgstr ""
+"No se pudo guardar el objeto: entra en conflicto con un objeto existente."
+
+#: viewsets.py:507
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "El archivo es demasiado grande; puede ocupar como máximo %(size)s."
 
-#: viewsets.py:533
+#: viewsets.py:546
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
 "it into smaller files."
 msgstr ""
-"El archivo tiene %(count)s filas; se pueden importar como máximo %(max)s a la"
-" vez. Divídalo en archivos más pequeños."
+"El archivo tiene %(count)s filas; se pueden importar como máximo %(max)s a "
+"la vez. Divídalo en archivos más pequeños."
+
+#: viewsets.py:642
+msgid ""
+"The object could not be restored: it conflicts with an existing object."
+msgstr ""
+"No se pudo restaurar el objeto: entra en conflicto con un objeto existente."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -1526,8 +1540,8 @@ msgstr "Regenerar secreto"
 
 #: webhooks/admin.py:60
 msgid ""
-"Requests are signed with the new secret from now on: receivers that check the"
-" signature need the new secret. Regenerate it?"
+"Requests are signed with the new secret from now on: receivers that check "
+"the signature need the new secret. Regenerate it?"
 msgstr ""
 "A partir de ahora las solicitudes se firman con el nuevo secreto: los "
 "receptores que comprueban la firma lo necesitarán. ¿Regenerarlo?"
@@ -1594,11 +1608,11 @@ msgstr "Ha fallado la entrega del webhook"
 
 #: webhooks/failures.py:33
 msgid ""
-"A webhook delivery failed after its last attempt. Only editors who may change"
-" webhooks are notified."
+"A webhook delivery failed after its last attempt. Only editors who may "
+"change webhooks are notified."
 msgstr ""
-"La entrega de un webhook ha fallado tras su último intento. Solo se notifica "
-"a los editores que pueden modificar webhooks."
+"La entrega de un webhook ha fallado tras su último intento. Solo se notifica"
+" a los editores que pueden modificar webhooks."
 
 #: webhooks/failures.py:89
 #, python-format

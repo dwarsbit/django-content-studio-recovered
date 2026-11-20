@@ -112,6 +112,12 @@
   showcase and the developer tools learn they are on from `discover`,
   behind sign-in.
 
+- **Save and restore errors showed the database's text.** When a save or
+  a restore broke a database constraint, the editor saw the database's
+  message, with constraint names and sometimes values. Editors now see
+  a plain conflict message; the details go to the `content_studio.viewsets`
+  log (and the developer tools while `DEBUG` is on).
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

@@ -7,6 +7,8 @@ per field, or as non-field errors for the editor to show above the form.
 import pytest
 from django.contrib.auth.models import Permission, User
 from django.core.exceptions import NON_FIELD_ERRORS, ValidationError
+from django.db import IntegrityError
+from rest_framework import serializers
 from rest_framework.test import APIClient
 
 from content_studio.token_backends.jwt import create_access_token
@@ -183,3 +185,26 @@ def test_save_model_is_not_called_when_validation_fails(client, monkeypatch):
 
     assert response.status_code == 201, response.content
     assert calls == ["B"]
+
+
+def test_a_database_conflict_does_not_show_the_database_error(
+    client, monkeypatch, caplog
+):
+    # A constraint the model's validation does not know: the database's
+    # text names the constraint and the value, so it is only logged.
+    def save(self, **kwargs):
+        raise IntegrityError(
+            'duplicate key value violates unique constraint "secret_idx" '
+            "DETAIL: Key (title)=(Hidden) already exists."
+        )
+
+    monkeypatch.setattr(serializers.BaseSerializer, "save", save)
+
+    with caplog.at_level("WARNING", logger="content_studio.viewsets"):
+        response = client.post(URL, {"title": "A"}, format="json")
+
+    assert response.status_code == 400
+    assert response.json() == [
+        "The object could not be saved: it conflicts with an existing object."
+    ]
+    assert "secret_idx" in caplog.text

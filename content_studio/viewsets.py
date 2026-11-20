@@ -1,4 +1,5 @@
 import json
+import logging
 import operator
 import uuid
 from contextlib import nullcontext
@@ -72,6 +73,8 @@ from .utils import (
     get_tenant_scoped_queryset,
     validate_tenant_access,
 )
+
+logger = logging.getLogger("content_studio.viewsets")
 
 
 def _is_true(value) -> bool:
@@ -289,10 +292,20 @@ class BaseModelViewSet(ModelViewSet):
                 using=router.db_for_write(self.get_queryset().model)
             ):
                 return serializer.save(**attrs)
-        except IntegrityError as error:
+        except IntegrityError:
+            # The database's text names constraints and sometimes values,
+            # so it goes to the log (and the developer tools), not to the
+            # editor.
+            logger.warning(
+                "Saving %s hit a database constraint.",
+                self.get_queryset().model._meta.label,
+                exc_info=True,
+            )
             raise ValidationError(
-                "The object could not be saved: it conflicts with an existing "
-                f"object ({error})."
+                _(
+                    "The object could not be saved: it conflicts with an "
+                    "existing object."
+                )
             )
         except DjangoValidationError as error:
             raise ValidationError(get_error_detail(error))
@@ -618,10 +631,17 @@ class BaseModelViewSet(ModelViewSet):
         try:
             with transaction.atomic(using=router.db_for_write(instance.__class__)):
                 instance.save(update_fields=[soft_delete_field])
-        except IntegrityError as error:
+        except IntegrityError:
+            logger.warning(
+                "Restoring %s hit a database constraint.",
+                instance._meta.label,
+                exc_info=True,
+            )
             raise ValidationError(
-                "The object could not be restored: it conflicts with an "
-                f"existing object ({error})."
+                _(
+                    "The object could not be restored: it conflicts with an "
+                    "existing object."
+                )
             )
 
         record_change(self.request, instance, RESTORED, "Restored from trash.")

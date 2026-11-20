@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 14:51+0000\n"
+"POT-Creation-Date: 2026-11-20 15:02+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: it\n"
 "MIME-Version: 1.0\n"
@@ -45,8 +45,8 @@ msgid ""
 "The item will be moved to the trash, where it can be restored. Are you sure "
 "you want to delete it?"
 msgstr ""
-"L’elemento verrà spostato nel cestino, da cui potrà essere ripristinato. Vuoi"
-" davvero eliminarlo?"
+"L’elemento verrà spostato nel cestino, da cui potrà essere ripristinato. "
+"Vuoi davvero eliminarlo?"
 
 #: actions.py:258
 msgid "Duplicate"
@@ -415,8 +415,8 @@ msgstr "Huey · %(count)s in coda"
 #: contrib/huey.py:194
 #, python-format
 msgid ""
-"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
-"Is the consumer running?"
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up."
+" Is the consumer running?"
 msgstr ""
 "Alcune attività aspettano da %(minutes)s minuti e nessun worker ne ha presa "
 "una. Il consumer è in esecuzione?"
@@ -723,8 +723,8 @@ msgstr "Scegli un file CSV, Excel (.xlsx) o JSON."
 #: importing.py:551
 #, python-format
 msgid ""
-"The file has more than %(max)s rows; at most %(max)s can be imported at once."
-" Split it into smaller files."
+"The file has more than %(max)s rows; at most %(max)s can be imported at "
+"once. Split it into smaller files."
 msgstr ""
 "Il file ha più di %(max)s righe; se ne possono importare al massimo %(max)s "
 "alla volta. Dividilo in file più piccoli."
@@ -837,7 +837,8 @@ msgstr "Media"
 msgid "File"
 msgstr "File"
 
-#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:53
+#: media_library/models.py:31 media_library/models.py:133
+#: webhooks/models.py:53
 msgid "Name"
 msgstr "Nome"
 
@@ -1160,8 +1161,8 @@ msgid ""
 "You can only grant or revoke permissions you have yourself. Not allowed: "
 "%(permissions)s."
 msgstr ""
-"Puoi concedere o revocare solo i permessi che hai tu stesso. Non consentiti: "
-"%(permissions)s."
+"Puoi concedere o revocare solo i permessi che hai tu stesso. Non consentiti:"
+" %(permissions)s."
 
 #: permission_matrix.py:217
 #, python-format
@@ -1256,8 +1257,8 @@ msgstr "Vedi tutte le notifiche:"
 
 #: templates/content_studio/notifications/digest.txt:13
 msgid ""
-"You get this email because these notifications are unread. Turn these emails "
-"off in your notification settings:"
+"You get this email because these notifications are unread. Turn these emails"
+" off in your notification settings:"
 msgstr ""
 "Ricevi questa email perché queste notifiche non sono state lette. Disattiva "
 "queste email nelle impostazioni delle notifiche:"
@@ -1361,7 +1362,8 @@ msgstr ""
 "Altre azioni."
 
 #: user_studios.py:122
-msgid "Two-factor login is required: this user sets it up at their next login."
+msgid ""
+"Two-factor login is required: this user sets it up at their next login."
 msgstr ""
 "L’accesso in due passaggi è obbligatorio: questo utente lo configurerà al "
 "prossimo accesso."
@@ -1451,24 +1453,29 @@ msgstr "Inserisci un colore valido."
 msgid "Transparent colors are not allowed."
 msgstr "I colori trasparenti non sono ammessi."
 
-#: views.py:279
+#: views.py:295
 msgid "Pass the address to preview as url."
 msgstr "Passa l’indirizzo da mostrare in anteprima come url."
 
-#: views.py:349
+#: views.py:365
 msgid "This language is not available."
 msgstr "Questa lingua non è disponibile."
 
-#: views.py:434
+#: views.py:450
 msgid "Content"
 msgstr "Contenuti"
 
-#: viewsets.py:494
+#: viewsets.py:306
+msgid "The object could not be saved: it conflicts with an existing object."
+msgstr ""
+"Impossibile salvare l’oggetto: è in conflitto con un oggetto esistente."
+
+#: viewsets.py:507
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Il file è troppo grande; può essere al massimo %(size)s."
 
-#: viewsets.py:533
+#: viewsets.py:546
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
@@ -1476,6 +1483,12 @@ msgid ""
 msgstr ""
 "Il file ha %(count)s righe; se ne possono importare al massimo %(max)s alla "
 "volta. Dividilo in file più piccoli."
+
+#: viewsets.py:642
+msgid ""
+"The object could not be restored: it conflicts with an existing object."
+msgstr ""
+"Impossibile ripristinare l’oggetto: è in conflitto con un oggetto esistente."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -1502,11 +1515,11 @@ msgstr "Rigenera il segreto"
 
 #: webhooks/admin.py:60
 msgid ""
-"Requests are signed with the new secret from now on: receivers that check the"
-" signature need the new secret. Regenerate it?"
+"Requests are signed with the new secret from now on: receivers that check "
+"the signature need the new secret. Regenerate it?"
 msgstr ""
-"D’ora in poi le richieste saranno firmate con il nuovo segreto: i destinatari"
-" che verificano la firma ne avranno bisogno. Rigenerarlo?"
+"D’ora in poi le richieste saranno firmate con il nuovo segreto: i "
+"destinatari che verificano la firma ne avranno bisogno. Rigenerarlo?"
 
 #: webhooks/admin.py:70
 msgid "The secret was regenerated."
@@ -1567,11 +1580,11 @@ msgstr "Consegna del webhook non riuscita"
 
 #: webhooks/failures.py:33
 msgid ""
-"A webhook delivery failed after its last attempt. Only editors who may change"
-" webhooks are notified."
+"A webhook delivery failed after its last attempt. Only editors who may "
+"change webhooks are notified."
 msgstr ""
-"La consegna di un webhook non è riuscita dopo l’ultimo tentativo. Ricevono la"
-" notifica solo i redattori che possono modificare i webhook."
+"La consegna di un webhook non è riuscita dopo l’ultimo tentativo. Ricevono "
+"la notifica solo i redattori che possono modificare i webhook."
 
 #: webhooks/failures.py:89
 #, python-format
