@@ -87,7 +87,8 @@
     "collapse": "Collapse menu",
     "expand": "Expand menu",
     "title": "Main menu",
-    "profile": "Profile"
+    "profile": "Profile",
+    "status": "System status"
   },
   "editor": {
     "title_create": "Create {{modelName}}",
@@ -516,7 +517,8 @@
           "SUCCESS": "Successful",
           "RUNNING": "Running",
           "SCHEDULED": "Scheduled",
-          "FAILURE": "Failed"
+          "FAILURE": "Failed",
+          "QUEUED": "Queued"
         }
       },
       "content_list": {
@@ -929,5 +931,82 @@
     "turn_off_title": "Turn off two-factor login?",
     "turn_off_description": "Enter a code from your authenticator app. You then log in with your password alone, and your other devices are logged out.",
     "turned_off": "Two-factor login is off"
+  },
+  "status": {
+    "title": "System status",
+    "refresh": "Refresh",
+    "checked": "Checked {{when}}",
+    "unavailable_title": "The system status is not available",
+    "unavailable_description": "The status page is not enabled on this site, or your account may not open it.",
+    "of": "{{count}} of {{total}}",
+    "summary": {
+      "degraded": "A service needs attention",
+      "down": "A service is down"
+    },
+    "overview": {
+      "ok": "All systems operational",
+      "ok_description": "Every service that is checked answers as expected.",
+      "degraded_one": "{{count}} service needs attention",
+      "degraded_other": "{{count}} services need attention",
+      "down_one": "{{count}} service is down",
+      "down_other": "{{count}} services are down",
+      "failed_tasks_one": "{{count}} task failed in the last 24 hours.",
+      "failed_tasks_other": "{{count}} tasks failed in the last 24 hours."
+    },
+    "figures": {
+      "services": "Services operational",
+      "pending": "Tasks pending",
+      "failed": "Failed in 24 hours"
+    },
+    "services": {
+      "title": "Services",
+      "description": "What this site depends on, checked when this page opens",
+      "operational": "{{count}} of {{total}} operational"
+    },
+    "service_status": {
+      "ok": "Operational",
+      "degraded": "Degraded",
+      "down": "Down",
+      "unknown": "Not checked"
+    },
+    "task_status": {
+      "QUEUED": "Queued",
+      "RUNNING": "Running",
+      "SUCCESS": "Succeeded",
+      "FAILURE": "Failed",
+      "SCHEDULED": "Scheduled"
+    },
+    "tasks": {
+      "title": "Recent tasks",
+      "description": "Tasks that are waiting, running or finished",
+      "filter": "Filter tasks",
+      "filters": {
+        "all": "All",
+        "pending": "Pending",
+        "finished": "Finished"
+      },
+      "empty": {
+        "all": "No tasks yet",
+        "pending": "No tasks are waiting or running",
+        "finished": "No finished tasks yet"
+      },
+      "footer_one": "Showing the latest task",
+      "footer_other": "Showing the latest {{count}} tasks",
+      "started": "Started {{when}}",
+      "error": "The tasks could not be read: {{error}}",
+      "disconnected_title": "No task backend connected",
+      "disconnected_description": "Connect a task backend, such as Huey, to see the tasks this site runs."
+    },
+    "recurring": {
+      "title": "Recurring tasks",
+      "description": "Tasks that run on a schedule, with their latest and next run",
+      "empty": "No recurring tasks",
+      "next": "Next {{when}}",
+      "due": "Due {{when}}",
+      "running": "Running now",
+      "succeeded": "Succeeded {{when}}",
+      "failed": "Failed {{when}}",
+      "never": "Not run yet"
+    }
   }
 }

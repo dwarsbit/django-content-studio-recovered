@@ -131,6 +131,10 @@ DEFAULTS = {
     "WEBHOOK_TIMEOUT": 5,
     # Days finished webhook deliveries are kept; None keeps them.
     "WEBHOOK_DELIVERY_RETENTION": 30,
+    # Seconds the status page (content_studio.contrib.status) remembers
+    # the services' results before checking them again; 0 checks on
+    # every request.
+    "STATUS_CACHE_TIMEOUT": 60,
     # Days read notifications are kept; None keeps them.
     "NOTIFICATION_RETENTION": 90,
     # Days unread notifications are kept; None (the default) keeps them.

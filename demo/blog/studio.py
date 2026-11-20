@@ -32,7 +32,7 @@ from .dashboard import (
     PublishedArticlesWidget,
     TotalViewsWidget,
 )
-from .task_queue import DemoTaskAdapter
+from .task_queue import demo_task_adapter
 
 
 class DemoStudioSite(ContentStudioSite):
@@ -72,7 +72,7 @@ class DemoStudioSite(ContentStudioSite):
         AnalyticsExtension(provider=DemoAnalyticsProvider()),
         AnalyticsPage(),
         AnalyticsLink(),
-        TaskDashboard(adapter=DemoTaskAdapter()),
+        TaskDashboard(adapter=demo_task_adapter),
         UserMenuLink(url="/tasks/", label="Tasks", icon="ph-bold ph-queue"),
     ]
 

@@ -10,12 +10,19 @@ system check warns.
 """
 
 from datetime import UTC, datetime, timedelta
+from types import SimpleNamespace
 from typing import Optional
 
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
-from ..dashboard.tasks import TaskAdapter, TaskRow, TaskStatistic, TaskStatus
+from ..dashboard.tasks import (
+    TaskAdapter,
+    TaskHealth,
+    TaskRow,
+    TaskStatistic,
+    TaskStatus,
+)
 
 __all__ = [
     "HueyAdapter",
@@ -39,6 +46,13 @@ OUTCOMES = {
     "rate-limited": _("Rate-limited"),
 }
 RETRYING = "retrying"
+ENQUEUED = "enqueued"
+EXECUTING = "executing"
+
+# How long the first task in the queue may wait, without a worker
+# picking anything up, before the status page reports the queue as
+# degraded.
+STALLED_AFTER = timedelta(minutes=5)
 
 # The Huey task that runs Django tasks enqueued through Huey's Django
 # tasks backend, and the key of the record holding the task's path.
@@ -130,6 +144,58 @@ class HueyAdapter(TaskAdapter):
         if method == "get_recent_tasks" and not self.has_stats():
             return False
         return super().implements(method)
+
+    # Health
+
+    def get_health(self) -> TaskHealth:
+        huey = self.huey
+        queued = huey.pending_count()
+        detail = _("Huey · %(count)s queued") % {"count": queued}
+        stats = self.stats
+
+        if stats is None or not queued:
+            return TaskHealth("ok", detail)
+
+        from huey.contrib.stats import HueyEvent
+
+        events = HueyEvent.select().where(HueyEvent.queue == stats.name)
+        first = next(iter(huey.pending(1)), None)
+        enqueued = (
+            first
+            and events.where(
+                HueyEvent.task_id == str(first.id), HueyEvent.signal == ENQUEUED
+            )
+            .order_by(HueyEvent.ts.desc())
+            .first()
+        )
+
+        if not enqueued:
+            # How long the task waits is unknown.
+            return TaskHealth("ok", detail)
+
+        now = datetime.now(tz=UTC).timestamp()
+        waiting = now - enqueued.ts
+        active = (
+            events.where(
+                HueyEvent.signal != ENQUEUED,
+                HueyEvent.ts >= now - STALLED_AFTER.total_seconds(),
+            )
+            .limit(1)
+            .count()
+        )
+
+        if waiting < STALLED_AFTER.total_seconds() or active:
+            return TaskHealth("ok", detail)
+
+        return TaskHealth(
+            "degraded",
+            detail,
+            _(
+                "Tasks have been waiting for %(minutes)s minutes and no "
+                "worker picked one up. Is the consumer running?"
+            )
+            % {"minutes": int(waiting // 60)},
+        )
 
     def check(self) -> list[tuple[str, str]]:
         if self.has_stats():
@@ -230,6 +296,7 @@ class HueyAdapter(TaskAdapter):
                 description=self.get_task_description(task_class),
                 status=TaskStatus.SCHEDULED,
                 next_run_at=self.get_next_run(task_class),
+                key=full_name,
             )
 
             if last is not None:
@@ -291,6 +358,52 @@ class HueyAdapter(TaskAdapter):
 
         return name, module
 
+    def get_pending_tasks(self, request, limit: int) -> list[TaskRow]:
+        """
+        The running tasks (known through the stats app), then the queued
+        ones in the order a worker takes them. Periodic tasks waiting
+        for their minute are left to get_periodic_tasks.
+        """
+        rows = []
+        stats = self.stats
+
+        if stats is not None:
+            from huey.contrib.stats import HueyInflight
+
+            for run in (
+                HueyInflight.select()
+                .where(HueyInflight.queue == stats.name)
+                .order_by(HueyInflight.started.desc())
+                .limit(limit)
+            ):
+                title, description = self.get_run_name(run)
+                rows.append(
+                    TaskRow(
+                        title=title,
+                        description=description,
+                        status=TaskStatus.RUNNING,
+                        last_run_at=from_timestamp(run.started),
+                        key=f"{description}.{title}" if description else title,
+                    )
+                )
+
+        registry = self.huey._registry
+
+        for task in self.huey.pending(max(limit - len(rows), 0)):
+            full_name = registry.task_to_string(type(task))
+            run = SimpleNamespace(task=full_name, task_id=str(task.id))
+            title, description = self.get_run_name(run)
+            rows.append(
+                TaskRow(
+                    title=title,
+                    description=description,
+                    status=TaskStatus.QUEUED,
+                    key=f"{description}.{title}" if description else title,
+                )
+            )
+
+        return rows
+
     def get_recent_tasks(self, request, limit: int) -> list[TaskRow]:
         if self.stats is None:
             return []
@@ -319,6 +432,7 @@ class HueyAdapter(TaskAdapter):
                     last_run_at=from_timestamp(event.ts),
                     duration=seconds(event.duration),
                     error_message=error,
+                    key=f"{description}.{title}" if description else title,
                 )
             )
 
