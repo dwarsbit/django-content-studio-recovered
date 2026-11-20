@@ -37,9 +37,8 @@ test("categories are dragged into order and keep it", async ({ page }) => {
   await expect(seeded(page).first()).toContainText("Opinion");
 
   // The row menu moves it back to the bottom.
-  await rows(page)
-    .filter({ hasText: "Opinion" })
-    .getByRole("button", { name: "Move" })
+  await page
+    .getByRole("button", { name: "Actions for Opinion", exact: true })
     .click();
   await page.getByRole("menuitem", { name: "Move to bottom" }).click();
   await expect(seeded(page).last()).toContainText("Opinion");
