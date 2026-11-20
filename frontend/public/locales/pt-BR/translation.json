@@ -854,6 +854,11 @@
       "mismatch": "As novas senhas não coincidem.",
       "changed": "Senha alterada"
     },
+    "confirm_password": {
+      "title": "Confirme com sua senha",
+      "email_description": "Para alterar seu endereço de e-mail, é preciso sua senha atual. Os links de senha irão para o novo endereço.",
+      "submit": "Confirmar"
+    },
     "preferences": {
       "title": "Preferências",
       "save_action": "Ação de salvar padrão",
@@ -965,6 +970,7 @@
     "cannot_scan": "Não consegue escanear? Digite esta chave:",
     "qr_label": "Código QR para adicionar sua conta a um app autenticador",
     "copy_key": "Copiar chave",
+    "setup_password": "Senha atual",
     "setup_code": "Código do app",
     "codes_title": "Guarde seus códigos de recuperação",
     "codes_description": "Se você perder o celular, cada um destes códigos permite entrar uma vez. Guarde-os em um lugar seguro, como seu gerenciador de senhas.",

@@ -1,0 +1,6 @@
+{% load i18n %}{% autoescape off %}{% blocktranslate %}Hi {{ name }},
+
+The email address of your account for {{ site_title }} was changed from {{ email }} to another address. Password links and notifications now go to the new address.{% endblocktranslate %}
+
+{% blocktranslate %}If you did not change it, contact your administrator right away.{% endblocktranslate %}
+{% endautoescape %}

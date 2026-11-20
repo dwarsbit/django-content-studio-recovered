@@ -64,6 +64,14 @@
   `has_delete_permission`, so a user studio that overrides it should call
   `super()`.
 
+- **A stolen session could take over the account.** The profile changed
+  the email address with no password, after which a password reset to
+  the new address set a new password, and turning on two-factor login
+  needed no password either, which locked the owner out. Both now ask for
+  the current password (users without a usable password are not asked),
+  and the old address gets an email when the email changes. Wrong
+  passwords count toward `LOGIN_THROTTLE_RATE`, like the password change.
+
 ## 1.17.0 (2026-11-20)
 
 ### Features

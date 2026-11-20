@@ -249,6 +249,56 @@ class ProfileSaveTests(ProfileTestCase):
         self.user.refresh_from_db()
         self.assertEqual(self.user.email, "maya@example.com")
 
+    def test_changing_the_email_needs_the_current_password(self):
+        for data in (
+            {"email": "taken@example.org"},
+            {"email": "taken@example.org", "current_password": "wrong"},
+        ):
+            response = self.client.patch("/api/profile", data, format="json")
+
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("current_password", response.json())
+
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "maya@example.com")
+
+    def test_the_old_address_is_told_of_a_new_email(self):
+        from django.core import mail
+
+        with self.captureOnCommitCallbacks(execute=True):
+            response = self.client.patch(
+                "/api/profile",
+                {"email": "maya@example.org", "current_password": "old-Secret-42"},
+                format="json",
+            )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.user.refresh_from_db()
+        self.assertEqual(self.user.email, "maya@example.org")
+        self.assertEqual(len(mail.outbox), 1)
+        self.assertEqual(mail.outbox[0].to, ["maya@example.com"])
+        self.assertIn("maya@example.com", mail.outbox[0].body)
+        self.assertNotIn("maya@example.org", mail.outbox[0].body)
+
+    def test_other_fields_and_the_same_email_need_no_password(self):
+        response = self.client.patch(
+            "/api/profile",
+            {"first_name": "Mia", "email": "MAYA@example.com"},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+
+    def test_without_a_password_the_email_changes_alone(self):
+        self.user.set_unusable_password()
+        self.user.save()
+
+        response = client_for(self.user).patch(
+            "/api/profile", {"email": "maya@example.org"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+
     def test_invalid_values_are_field_errors(self):
         response = self.client.patch(
             "/api/profile", {"email": "not an address"}, format="json"

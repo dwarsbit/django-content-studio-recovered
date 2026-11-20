@@ -836,6 +836,11 @@
       "mismatch": "De nieuwe wachtwoorden komen niet overeen.",
       "changed": "Wachtwoord gewijzigd"
     },
+    "confirm_password": {
+      "title": "Bevestig met je wachtwoord",
+      "email_description": "Voor het wijzigen van je e-mailadres is je huidige wachtwoord nodig. Wachtwoordlinks gaan voortaan naar het nieuwe adres.",
+      "submit": "Bevestigen"
+    },
     "preferences": {
       "title": "Voorkeuren",
       "save_action": "Standaard opslagactie",
@@ -946,6 +951,7 @@
     "cannot_scan": "Lukt scannen niet? Vul dan deze sleutel in:",
     "qr_label": "QR-code om je account aan een authenticator-app toe te voegen",
     "copy_key": "Sleutel kopiëren",
+    "setup_password": "Huidig wachtwoord",
     "setup_code": "Code uit de app",
     "codes_title": "Bewaar je herstelcodes",
     "codes_description": "Als je je telefoon kwijtraakt, log je met elk van deze codes één keer in. Bewaar ze op een veilige plek, zoals je wachtwoordmanager.",

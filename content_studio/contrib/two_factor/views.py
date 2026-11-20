@@ -244,6 +244,15 @@ class TwoFactorProfileViewSet(ViewSet):
         except InvalidChallenge:
             return _error(_("This setup has expired. Start again."))
 
+        # Turning it on locks out whoever lacks the app: a stolen session
+        # alone must not do it, so the current password confirms it.
+        from ...profile import check_current_password
+
+        error = check_current_password(user, request)
+
+        if error is not None:
+            return error
+
         codes = service.enable(user, secret, _text(request, "code"))
 
         if codes is None:

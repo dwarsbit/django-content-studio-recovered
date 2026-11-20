@@ -854,6 +854,11 @@
       "mismatch": "Le nuove password non coincidono.",
       "changed": "Password modificata"
     },
+    "confirm_password": {
+      "title": "Conferma con la tua password",
+      "email_description": "Per cambiare il tuo indirizzo email serve la password attuale. I link per la password andranno al nuovo indirizzo.",
+      "submit": "Conferma"
+    },
     "preferences": {
       "title": "Preferenze",
       "save_action": "Azione di salvataggio predefinita",
@@ -965,6 +970,7 @@
     "cannot_scan": "Non riesci a scansionarlo? Inserisci invece questa chiave:",
     "qr_label": "Codice QR per aggiungere il tuo account a un’app di autenticazione",
     "copy_key": "Copia la chiave",
+    "setup_password": "Password attuale",
     "setup_code": "Codice dall’app",
     "codes_title": "Salva i codici di recupero",
     "codes_description": "Se perdi il telefono, ognuno di questi codici ti fa accedere una volta. Conservali in un posto sicuro, come il tuo gestore di password.",

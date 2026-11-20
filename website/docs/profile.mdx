@@ -65,6 +65,13 @@ admin_site = BlogStudioSite()
 The fields use the same widgets as on the edit page. Set `profile_fields`
 to an empty list to leave only the password section.
 
+Changing the email address asks for the current password in a dialog,
+because a password reset sent to the new address would hand the account
+over: a stolen session alone cannot do it. The old address then gets an
+email that it was changed. Wrong passwords count toward the same limit as
+the password change. Users without a usable password change it without
+the prompt.
+
 Editors can never change who they are or what they may do on their own
 profile: the username, `is_active`, `is_staff`, `is_superuser`, the groups
 and the permissions are only shown read-only, and the password is never a
@@ -93,9 +100,10 @@ With the [two-factor app](/docs/authentication#two-factor-login) installed,
 the edit tab has a **Two-factor login** card.
 
 - **Turn on two-factor login** opens a dialog with a QR code (and the key
-  to type in, for apps that cannot scan). The first code from the app turns
-  it on, and the dialog shows ten recovery codes to copy or download. They
-  are shown only then.
+  to type in, for apps that cannot scan). The current password and the
+  first code from the app turn it on, so a stolen session cannot lock the
+  owner out, and the dialog shows ten recovery codes to copy or download.
+  They are shown only then.
 - **New recovery codes** replaces them; the old ones stop working.
 - **Turn off** asks for a code from the app or a recovery code. It is not
   offered when [`TWO_FACTOR_REQUIRED`](/docs/settings#two_factor_required)

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 11:31+0000\n"
+"POT-Creation-Date: 2026-11-20 14:42+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: fr\n"
 "MIME-Version: 1.0\n"
@@ -12,15 +12,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=3; plural=(n == 0 || n == 1) ? 0 : n != 0 && n % 1000000 == 0 ? 1 : 2;\n"
 
-#: actions.py:157
+#: action_forms.py:198
+msgid "This field is required."
+msgstr "Ce champ est obligatoire."
+
+#: actions.py:190
 msgid "Delete"
 msgstr "Supprimer"
 
-#: actions.py:159
+#: actions.py:192
 msgid "Are you sure you want to delete the selected items?"
 msgstr "Voulez-vous vraiment supprimer les éléments sélectionnés ?"
 
-#: actions.py:168
+#: actions.py:201
 msgid ""
 "The selected items will be moved to the trash, where they can be restored. "
 "Are you sure you want to delete?"
@@ -28,11 +32,15 @@ msgstr ""
 "Les éléments sélectionnés seront déplacés dans la corbeille, d’où ils "
 "pourront être restaurés. Voulez-vous vraiment les supprimer ?"
 
-#: actions.py
+#: actions.py:230
+msgid "Export"
+msgstr "Exporter"
+
+#: actions.py:241
 msgid "Are you sure you want to delete this item?"
 msgstr "Voulez-vous vraiment supprimer cet élément ?"
 
-#: actions.py
+#: actions.py:250
 msgid ""
 "The item will be moved to the trash, where it can be restored. Are you sure "
 "you want to delete it?"
@@ -40,19 +48,11 @@ msgstr ""
 "L’élément sera déplacé dans la corbeille, d’où il pourra être restauré. "
 "Voulez-vous vraiment le supprimer ?"
 
-#: actions.py
+#: actions.py:258
 msgid "Duplicate"
 msgstr "Dupliquer"
 
-#: action_forms.py
-msgid "This field is required."
-msgstr "Ce champ est obligatoire."
-
-#: actions.py:197
-msgid "Export"
-msgstr "Exporter"
-
-#: admin.py:604 admin.py:605 contrib/backups/status.py:21
+#: admin.py:641 admin.py:642 contrib/backups/status.py:21
 #: contrib/status/builtin.py:24
 msgid "Content Studio"
 msgstr "Content Studio"
@@ -626,7 +626,7 @@ msgid "That recovery code is not right."
 msgstr "Ce code de récupération n’est pas correct."
 
 #: contrib/two_factor/views.py:122 contrib/two_factor/views.py:166
-#: contrib/two_factor/views.py:251 contrib/two_factor/views.py:280
+#: contrib/two_factor/views.py:260 contrib/two_factor/views.py:289
 msgid "That code is not right."
 msgstr "Ce code n’est pas correct."
 
@@ -638,11 +638,11 @@ msgstr "La connexion à deux facteurs est déjà activée."
 msgid "This setup has expired. Start again."
 msgstr "Cette configuration a expiré. Recommencez."
 
-#: contrib/two_factor/views.py:267
+#: contrib/two_factor/views.py:276
 msgid "Two-factor login is off."
 msgstr "La connexion à deux facteurs est désactivée."
 
-#: contrib/two_factor/views.py:301
+#: contrib/two_factor/views.py:310
 msgid "Two-factor login is required for your account."
 msgstr "La connexion à deux facteurs est obligatoire pour votre compte."
 
@@ -700,7 +700,7 @@ msgstr ""
 msgid "Consecutive slashes are not allowed."
 msgstr "Les barres obliques consécutives ne sont pas autorisées."
 
-#: form.py:442
+#: form.py:473
 msgid "Activity"
 msgstr "Activité"
 
@@ -891,17 +891,17 @@ msgstr "Type de fichier"
 msgid "Folders"
 msgstr "Dossiers"
 
-#: media_library/serializers.py:50 media_library/serializers.py:58
-#: uploads.py:63
+#: media_library/serializers.py:52 media_library/serializers.py:55
+#: media_library/serializers.py:63 uploads.py:65 uploads.py:73
 msgid "Files of this type cannot be uploaded."
 msgstr "Les fichiers de ce type ne peuvent pas être importés."
 
-#: media_library/serializers.py:54 uploads.py:59
+#: media_library/serializers.py:59 uploads.py:69
 #, python-format
 msgid "The file is larger than %(size)s."
 msgstr "Le fichier dépasse %(size)s."
 
-#: media_library/serializers.py:196
+#: media_library/serializers.py:201
 msgid "A folder cannot be moved into itself or its subfolders."
 msgstr ""
 "Un dossier ne peut pas être déplacé dans lui-même ou dans l’un de ses sous-"
@@ -1200,11 +1200,20 @@ msgstr "Action d’enregistrement par défaut"
 msgid "user preferences"
 msgstr "préférences utilisateur"
 
-#: profile.py:341
+#: profile.py:145
+msgid "Enter your current password to confirm."
+msgstr "Saisissez votre mot de passe actuel pour confirmer."
+
+#: profile.py:151 profile.py:450
 msgid "Your current password is not correct."
 msgstr "Votre mot de passe actuel est incorrect."
 
-#: profile.py:347
+#: profile.py:188
+#, python-format
+msgid "Your email address for %(site)s was changed"
+msgstr "Votre adresse e-mail pour %(site)s a été modifiée"
+
+#: profile.py:456
 msgid "Enter a new password."
 msgstr "Saisissez un nouveau mot de passe."
 
@@ -1254,6 +1263,22 @@ msgid ""
 msgstr ""
 "Vous recevez cet e-mail parce que ces notifications ne sont pas lues. "
 "Désactivez ces e-mails dans vos paramètres de notification :"
+
+#: templates/content_studio/users/email_changed.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"The email address of your account for %(site_title)s was changed from %(email)s to another address. Password links and notifications now go to the new address."
+msgstr ""
+"Bonjour %(name)s,\n"
+"\n"
+"L’adresse e-mail de votre compte pour %(site_title)s a été changée de %(email)s en une autre adresse. Les liens de mot de passe et les notifications sont désormais envoyés à la nouvelle adresse."
+
+#: templates/content_studio/users/email_changed.txt:5
+msgid "If you did not change it, contact your administrator right away."
+msgstr ""
+"Si vous ne l’avez pas modifiée, contactez immédiatement votre administrateur."
 
 #: templates/content_studio/users/invite.txt:1
 #, python-format
@@ -1314,11 +1339,11 @@ msgstr ""
 "Si vous n’êtes pas à l’origine de cette demande, contactez votre "
 "administrateur."
 
-#: uploads.py:105 uploads.py:117
+#: uploads.py:116 uploads.py:128
 msgid "The upload has expired. Choose the file again."
 msgstr "L’import a expiré. Choisissez à nouveau le fichier."
 
-#: uploads.py:111
+#: uploads.py:122
 msgid "The upload is not valid."
 msgstr "L’import n’est pas valide."
 
@@ -1392,11 +1417,11 @@ msgstr "Statut"
 msgid "Important dates"
 msgstr "Dates importantes"
 
-#: users.py:185
+#: users.py:254
 msgid "Enter an email address: the invite is sent to it."
 msgstr "Saisissez une adresse e-mail : l’invitation y est envoyée."
 
-#: users.py:204
+#: users.py:273
 msgid ""
 "No invite was sent: only active staff users can log in. Send one from the "
 "user's page once they can."
@@ -1405,16 +1430,16 @@ msgstr ""
 "peuvent se connecter. Envoyez-en une depuis la page de l’utilisateur dès que "
 "c’est possible."
 
-#: users.py:210
+#: users.py:279
 #, python-format
 msgid "Invite sent to %(email)s."
 msgstr "Invitation envoyée à %(email)s."
 
-#: users.py:220
+#: users.py:289
 msgid "Enter a password."
 msgstr "Saisissez un mot de passe."
 
-#: users.py:223
+#: users.py:292
 msgid "This password is too long."
 msgstr "Ce mot de passe est trop long."
 
@@ -1446,12 +1471,12 @@ msgstr "Cette langue n’est pas disponible."
 msgid "Content"
 msgstr "Contenu"
 
-#: viewsets.py:488
+#: viewsets.py:493
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Le fichier est trop volumineux ; il peut faire %(size)s au maximum."
 
-#: viewsets.py:526
+#: viewsets.py:531
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "

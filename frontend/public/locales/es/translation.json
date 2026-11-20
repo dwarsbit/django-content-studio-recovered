@@ -854,6 +854,11 @@
       "mismatch": "Las contraseñas nuevas no coinciden.",
       "changed": "Contraseña cambiada"
     },
+    "confirm_password": {
+      "title": "Confirma con tu contraseña",
+      "email_description": "Para cambiar tu dirección de correo necesitas tu contraseña actual. Los enlaces de contraseña irán a la nueva dirección.",
+      "submit": "Confirmar"
+    },
     "preferences": {
       "title": "Preferencias",
       "save_action": "Acción de guardado predeterminada",
@@ -965,6 +970,7 @@
     "cannot_scan": "¿No puede escanearlo? Introduzca esta clave:",
     "qr_label": "Código QR para añadir su cuenta a una aplicación de autenticación",
     "copy_key": "Copiar la clave",
+    "setup_password": "Contraseña actual",
     "setup_code": "Código de la aplicación",
     "codes_title": "Guarde sus códigos de recuperación",
     "codes_description": "Si pierde su teléfono, cada uno de estos códigos le permite iniciar sesión una vez. Guárdelos en un lugar seguro, como su gestor de contraseñas.",

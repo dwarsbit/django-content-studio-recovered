@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 11:31+0000\n"
+"POT-Creation-Date: 2026-11-20 14:42+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -18,15 +18,19 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
-#: actions.py:157
+#: action_forms.py:198
+msgid "This field is required."
+msgstr "Dit veld is verplicht."
+
+#: actions.py:190
 msgid "Delete"
 msgstr "Verwijderen"
 
-#: actions.py:159
+#: actions.py:192
 msgid "Are you sure you want to delete the selected items?"
 msgstr "Weet je zeker dat je de geselecteerde items wilt verwijderen?"
 
-#: actions.py:168
+#: actions.py:201
 msgid ""
 "The selected items will be moved to the trash, where they can be restored. "
 "Are you sure you want to delete?"
@@ -34,11 +38,15 @@ msgstr ""
 "De geselecteerde items worden verplaatst naar de prullenbak, waar ze hersteld"
 " kunnen worden. Weet je zeker dat je ze wilt verwijderen?"
 
-#: actions.py
+#: actions.py:230
+msgid "Export"
+msgstr "Exporteren"
+
+#: actions.py:241
 msgid "Are you sure you want to delete this item?"
 msgstr "Weet je zeker dat je dit item wilt verwijderen?"
 
-#: actions.py
+#: actions.py:250
 msgid ""
 "The item will be moved to the trash, where it can be restored. Are you sure "
 "you want to delete it?"
@@ -46,19 +54,11 @@ msgstr ""
 "Het item wordt verplaatst naar de prullenbak, waar het hersteld kan worden. "
 "Weet je zeker dat je het wilt verwijderen?"
 
-#: actions.py
+#: actions.py:258
 msgid "Duplicate"
 msgstr "Dupliceren"
 
-#: action_forms.py
-msgid "This field is required."
-msgstr "Dit veld is verplicht."
-
-#: actions.py:197
-msgid "Export"
-msgstr "Exporteren"
-
-#: admin.py:604 admin.py:605 contrib/backups/status.py:21
+#: admin.py:641 admin.py:642 contrib/backups/status.py:21
 #: contrib/status/builtin.py:24
 msgid "Content Studio"
 msgstr "Content Studio"
@@ -629,7 +629,7 @@ msgid "That recovery code is not right."
 msgstr "Die herstelcode klopt niet."
 
 #: contrib/two_factor/views.py:122 contrib/two_factor/views.py:166
-#: contrib/two_factor/views.py:251 contrib/two_factor/views.py:280
+#: contrib/two_factor/views.py:260 contrib/two_factor/views.py:289
 msgid "That code is not right."
 msgstr "Die code klopt niet."
 
@@ -641,11 +641,11 @@ msgstr "Tweestapsverificatie staat al aan."
 msgid "This setup has expired. Start again."
 msgstr "Deze instelling is verlopen. Begin opnieuw."
 
-#: contrib/two_factor/views.py:267
+#: contrib/two_factor/views.py:276
 msgid "Two-factor login is off."
 msgstr "Tweestapsverificatie staat uit."
 
-#: contrib/two_factor/views.py:301
+#: contrib/two_factor/views.py:310
 msgid "Two-factor login is required for your account."
 msgstr "Tweestapsverificatie is verplicht voor je account."
 
@@ -703,7 +703,7 @@ msgstr ""
 msgid "Consecutive slashes are not allowed."
 msgstr "Opeenvolgende slashes zijn niet toegestaan."
 
-#: form.py:442
+#: form.py:473
 msgid "Activity"
 msgstr "Activiteit"
 
@@ -889,17 +889,17 @@ msgstr "Bestandstype"
 msgid "Folders"
 msgstr "Mappen"
 
-#: media_library/serializers.py:50 media_library/serializers.py:58
-#: uploads.py:63
+#: media_library/serializers.py:52 media_library/serializers.py:55
+#: media_library/serializers.py:63 uploads.py:65 uploads.py:73
 msgid "Files of this type cannot be uploaded."
 msgstr "Bestanden van dit type kunnen niet worden geüpload."
 
-#: media_library/serializers.py:54 uploads.py:59
+#: media_library/serializers.py:59 uploads.py:69
 #, python-format
 msgid "The file is larger than %(size)s."
 msgstr "Het bestand is groter dan %(size)s."
 
-#: media_library/serializers.py:196
+#: media_library/serializers.py:201
 msgid "A folder cannot be moved into itself or its subfolders."
 msgstr ""
 "Een map kan niet naar zichzelf of een van zijn submappen worden verplaatst."
@@ -1187,11 +1187,20 @@ msgstr "Standaard opslagactie"
 msgid "user preferences"
 msgstr "gebruikersvoorkeuren"
 
-#: profile.py:341
+#: profile.py:145
+msgid "Enter your current password to confirm."
+msgstr "Vul je huidige wachtwoord in om te bevestigen."
+
+#: profile.py:151 profile.py:450
 msgid "Your current password is not correct."
 msgstr "Je huidige wachtwoord is niet juist."
 
-#: profile.py:347
+#: profile.py:188
+#, python-format
+msgid "Your email address for %(site)s was changed"
+msgstr "Je e-mailadres voor %(site)s is gewijzigd"
+
+#: profile.py:456
 msgid "Enter a new password."
 msgstr "Vul een nieuw wachtwoord in."
 
@@ -1239,6 +1248,22 @@ msgid ""
 msgstr ""
 "Je krijgt deze e-mail omdat deze meldingen ongelezen zijn. Zet deze e-mails "
 "uit in je instellingen voor meldingen:"
+
+#: templates/content_studio/users/email_changed.txt:1
+#, python-format
+msgid ""
+"Hi %(name)s,\n"
+"\n"
+"The email address of your account for %(site_title)s was changed from %(email)s to another address. Password links and notifications now go to the new address."
+msgstr ""
+"Hoi %(name)s,\n"
+"\n"
+"Het e-mailadres van je account voor %(site_title)s is gewijzigd van %(email)s naar een ander adres. Wachtwoordlinks en meldingen gaan voortaan naar het nieuwe adres."
+
+#: templates/content_studio/users/email_changed.txt:5
+msgid "If you did not change it, contact your administrator right away."
+msgstr ""
+"Heb je dit niet zelf gewijzigd? Neem dan meteen contact op met je beheerder."
 
 #: templates/content_studio/users/invite.txt:1
 #, python-format
@@ -1296,11 +1321,11 @@ msgstr ""
 msgid "If you did not ask for this, contact your administrator."
 msgstr "Heb je hier niet om gevraagd? Neem dan contact op met je beheerder."
 
-#: uploads.py:105 uploads.py:117
+#: uploads.py:116 uploads.py:128
 msgid "The upload has expired. Choose the file again."
 msgstr "De upload is verlopen. Kies het bestand opnieuw."
 
-#: uploads.py:111
+#: uploads.py:122
 msgid "The upload is not valid."
 msgstr "De upload is niet geldig."
 
@@ -1374,11 +1399,11 @@ msgstr "Status"
 msgid "Important dates"
 msgstr "Belangrijke datums"
 
-#: users.py:185
+#: users.py:254
 msgid "Enter an email address: the invite is sent to it."
 msgstr "Vul een e-mailadres in: de uitnodiging wordt daarheen gestuurd."
 
-#: users.py:204
+#: users.py:273
 msgid ""
 "No invite was sent: only active staff users can log in. Send one from the "
 "user's page once they can."
@@ -1386,16 +1411,16 @@ msgstr ""
 "Er is geen uitnodiging gestuurd: alleen actieve stafgebruikers kunnen "
 "inloggen. Stuur er een vanaf de pagina van de gebruiker zodra dat kan."
 
-#: users.py:210
+#: users.py:279
 #, python-format
 msgid "Invite sent to %(email)s."
 msgstr "Uitnodiging gestuurd naar %(email)s."
 
-#: users.py:220
+#: users.py:289
 msgid "Enter a password."
 msgstr "Vul een wachtwoord in."
 
-#: users.py:223
+#: users.py:292
 msgid "This password is too long."
 msgstr "Dit wachtwoord is te lang."
 
@@ -1427,12 +1452,12 @@ msgstr "Deze taal is niet beschikbaar."
 msgid "Content"
 msgstr "Content"
 
-#: viewsets.py:488
+#: viewsets.py:493
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Het bestand is te groot; het mag hoogstens %(size)s zijn."
 
-#: viewsets.py:526
+#: viewsets.py:531
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "

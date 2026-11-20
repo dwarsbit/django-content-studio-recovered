@@ -45,7 +45,14 @@ type DialogName = "setup" | "codes" | "off";
  * Two-factor login on the edit tab: turn it on with the app, get new
  * recovery codes, or turn it off.
  */
-export function TwoFactorCard({ state }: { state: ProfileTwoFactor }) {
+export function TwoFactorCard({
+  state,
+  passwordRequired = false,
+}: {
+  state: ProfileTwoFactor;
+  // Turning it on asks for the current password (the user has one).
+  passwordRequired?: boolean;
+}) {
   const { t } = useTranslation();
   const [dialog, setDialog] = useState<DialogName | null>(null);
   const onOpenChange = (name: DialogName) => (open: boolean) =>
@@ -105,7 +112,11 @@ export function TwoFactorCard({ state }: { state: ProfileTwoFactor }) {
         </div>
       </div>
       {dialog === "setup" && (
-        <SetupDialog open onOpenChange={onOpenChange("setup")} />
+        <SetupDialog
+          open
+          onOpenChange={onOpenChange("setup")}
+          passwordRequired={passwordRequired}
+        />
       )}
       {dialog === "codes" && (
         <NewCodesDialog open onOpenChange={onOpenChange("codes")} />
@@ -117,8 +128,8 @@ export function TwoFactorCard({ state }: { state: ProfileTwoFactor }) {
   );
 }
 
-function fieldError(e: unknown): string {
-  const messages = getFieldErrors(e)?.code;
+function fieldError(e: unknown, name = "code"): string {
+  const messages = getFieldErrors(e)?.[name];
 
   if (messages) {
     return Array.isArray(messages) ? messages.join(" ") : String(messages);
@@ -127,19 +138,26 @@ function fieldError(e: unknown): string {
   return getErrorMessage(e);
 }
 
-/** Turning it on: scan, confirm with a code, then the recovery codes. */
+/**
+ * Turning it on: scan, confirm with a code (and the current password,
+ * when the user has one), then the recovery codes.
+ */
 function SetupDialog({
   open,
   onOpenChange,
+  passwordRequired,
 }: {
   open: boolean;
   onOpenChange(open: boolean): void;
+  passwordRequired: boolean;
 }) {
   const { t } = useTranslation();
   const http = useHttp();
   const { setToken } = useAuth();
   const queryClient = useQueryClient();
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [passwordError, setPasswordError] = useState<string | null>(null);
   const [codes, setCodes] = useState<string[] | null>(null);
   // A new secret each time the dialog opens; saved once a code confirms it.
   const { data, error: setupError } = useQuery({
@@ -162,14 +180,28 @@ function SetupDialog({
         const { data: result } = await http.post<{
           access: string;
           recovery_codes: string[];
-        }>("/profile/two-factor/confirm", { setup: data?.setup, code: value });
+        }>("/profile/two-factor/confirm", {
+          setup: data?.setup,
+          code: value,
+          ...(passwordRequired ? { current_password: password } : {}),
+        });
         return result;
       } catch (e: unknown) {
+        if (getFieldErrors(e)?.current_password) {
+          // The code may still be right: only the password is asked again.
+          setPasswordError(fieldError(e, "current_password"));
+          return null;
+        }
+
         setCode("");
         throw new Error(fieldError(e), { cause: e });
       }
     },
     onSuccess(result) {
+      if (!result) {
+        return;
+      }
+
       // Turning it on ended the other sessions; this one continues.
       setToken(result.access);
       setCodes(result.recovery_codes);
@@ -223,6 +255,28 @@ function SetupDialog({
               ) : (
                 <SetupScan data={data} size={128} />
               )}
+              {passwordRequired && (
+                <div className="grid gap-1.5">
+                  <Label htmlFor="profile-two-factor-password">
+                    {t("two_factor.setup_password")}
+                  </Label>
+                  <Input
+                    id="profile-two-factor-password"
+                    name="current_password"
+                    type="password"
+                    autoComplete="current-password"
+                    value={password}
+                    aria-invalid={!!passwordError}
+                    onChange={(event) => {
+                      setPassword(event.target.value);
+                      setPasswordError(null);
+                    }}
+                  />
+                  {passwordError && (
+                    <p className="text-destructive text-xs">{passwordError}</p>
+                  )}
+                </div>
+              )}
               <div className="grid gap-1.5">
                 <Label htmlFor="profile-two-factor-code">
                   {t("two_factor.setup_code")}
@@ -231,7 +285,13 @@ function SetupDialog({
                   id="profile-two-factor-code"
                   value={code}
                   onChange={setCode}
-                  onComplete={(value) => confirm.mutate(value)}
+                  onComplete={(value) => {
+                    // Typing the code last confirms; with the password
+                    // still empty, Continue does once it is filled in.
+                    if (!passwordRequired || password) {
+                      confirm.mutate(value);
+                    }
+                  }}
                   disabled={!data || confirm.isPending}
                   invalid={!!confirm.error}
                   className="justify-start"
@@ -251,7 +311,11 @@ function SetupDialog({
                 type="submit"
                 form="two-factor-setup"
                 isLoading={confirm.isPending}
-                disabled={!data || code.length < CODE_LENGTH}
+                disabled={
+                  !data ||
+                  code.length < CODE_LENGTH ||
+                  (passwordRequired && !password)
+                }
               >
                 {t("common.continue")}
               </Button>

@@ -25,9 +25,14 @@ import {
   useChangePassword,
   useUpdateProfile,
 } from "@/hooks/use-profile";
-import { applyFieldErrors, getFieldErrors } from "@/lib/server-errors";
+import {
+  applyFieldErrors,
+  getFieldErrors,
+  getFieldMessage,
+} from "@/lib/server-errors";
 import { cn, getErrorMessage } from "@/lib/utils";
 
+import { ConfirmPasswordDialog } from "./confirm-password-dialog";
 import { PreferencesCard } from "./preferences-card";
 import { ProfileCard, ProfileHeader } from "./profile-header";
 import { TwoFactorCard } from "./two-factor-card";
@@ -48,6 +53,10 @@ export function EditProfile({ profile }: { profile?: Profile }) {
   const model = discover?.models.find((m) => m.label === userModelLabel);
   const fields = profile?.fields ?? [];
   const editable = fields.filter((field) => !field.readonly);
+  // Values waiting for the current password: the server asks for it
+  // when the email address changes.
+  const [pending, setPending] = useState<Record<string, unknown> | null>(null);
+  const [passwordError, setPasswordError] = useState<string | null>(null);
 
   // The saved values are the form's baseline. A refetch (such as on
   // returning to the tab) keeps what the editor is typing.
@@ -57,20 +66,45 @@ export function EditProfile({ profile }: { profile?: Profile }) {
     }
   }, [profile, form]);
 
-  async function onSubmit(values: Record<string, unknown>) {
-    const changed = Object.fromEntries(
-      editable.map((field) => [field.name, values[field.name]]),
-    );
-
+  async function submit(
+    changed: Record<string, unknown>,
+    currentPassword?: string,
+  ) {
     try {
-      const saved = await save(changed);
+      const saved = await save(
+        currentPassword === undefined
+          ? changed
+          : { ...changed, current_password: currentPassword },
+      );
       form.reset(saved.values);
+      setPending(null);
       toast.success(t("profile.saved"));
     } catch (e: unknown) {
+      const passwordMessage = getFieldMessage(e, "current_password");
+
+      if (passwordMessage) {
+        // Asked for the first time: no error yet, just the dialog.
+        setPasswordError(
+          currentPassword === undefined ? null : passwordMessage,
+        );
+        setPending(changed);
+        return;
+      }
+
+      setPending(null);
+
       if (!applyFieldErrors(e, form.setError as never)) {
         toast.error(getErrorMessage(e));
       }
     }
+  }
+
+  function onSubmit(values: Record<string, unknown>) {
+    return submit(
+      Object.fromEntries(
+        editable.map((field) => [field.name, values[field.name]]),
+      ),
+    );
   }
 
   return (
@@ -121,7 +155,10 @@ export function EditProfile({ profile }: { profile?: Profile }) {
               <div className="grid gap-5">
                 {profile.password && <PasswordCard />}
                 {profile.two_factor && (
-                  <TwoFactorCard state={profile.two_factor} />
+                  <TwoFactorCard
+                    state={profile.two_factor}
+                    passwordRequired={profile.password}
+                  />
                 )}
                 {/* With the preferences app. */}
                 {profile.preferences && (
@@ -132,6 +169,19 @@ export function EditProfile({ profile }: { profile?: Profile }) {
           </div>
         )}
       </PageBody>
+      <ConfirmPasswordDialog
+        open={pending !== null}
+        onOpenChange={(open) => {
+          if (!open) {
+            setPending(null);
+            setPasswordError(null);
+          }
+        }}
+        description={t("profile.confirm_password.email_description")}
+        isPending={isPending}
+        error={passwordError}
+        onSubmit={(password) => pending && submit(pending, password)}
+      />
     </div>
   );
 }
