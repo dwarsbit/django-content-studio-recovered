@@ -50,6 +50,7 @@ from .form import (
     TableColumn,
 )
 from .settings import cs_settings
+from .throttling import parse_rate
 from .utils import as_instance, flatten, get_tenant_field_name
 
 LIST_VIEW_NAMES = {"table", "list"}
@@ -803,28 +804,30 @@ def reorder_errors(studio) -> list[tuple[str, str]]:
 
 def media_upload_errors() -> list[tuple[str, str]]:
     """
-    Malformed media library upload settings, as (check id, message)
-    pairs: the allowed extensions must be a list of strings without a
+    Malformed upload settings, as (check id, message) pairs: the allowed
+    extensions (media library and FileWidget) must be a list of strings without a
     leading dot, the maximum size a positive number of bytes.
     """
     errors = []
-    extensions = cs_settings.MEDIA_LIBRARY_ALLOWED_EXTENSIONS
     max_size = cs_settings.MEDIA_LIBRARY_MAX_UPLOAD_SIZE
 
-    if extensions is not None and (
-        isinstance(extensions, str)
-        or not isinstance(extensions, (list, tuple, set))
-        or not all(
-            isinstance(e, str) and e and not e.startswith(".") for e in extensions
-        )
-    ):
-        errors.append(
-            (
-                "content_studio.E014",
-                "MEDIA_LIBRARY_ALLOWED_EXTENSIONS must be None or a list of "
-                "file extensions without the leading dot, like ['jpg', 'pdf'].",
+    for setting in ("MEDIA_LIBRARY_ALLOWED_EXTENSIONS", "UPLOAD_ALLOWED_EXTENSIONS"):
+        extensions = getattr(cs_settings, setting)
+
+        if extensions is not None and (
+            isinstance(extensions, str)
+            or not isinstance(extensions, (list, tuple, set))
+            or not all(
+                isinstance(e, str) and e and not e.startswith(".") for e in extensions
             )
-        )
+        ):
+            errors.append(
+                (
+                    "content_studio.E014",
+                    f"{setting} must be None or a list of file extensions "
+                    "without the leading dot, like ['jpg', 'pdf'].",
+                )
+            )
 
     if max_size is not None and (
         isinstance(max_size, bool) or not isinstance(max_size, int) or max_size <= 0
@@ -834,6 +837,18 @@ def media_upload_errors() -> list[tuple[str, str]]:
                 "content_studio.E014",
                 "MEDIA_LIBRARY_MAX_UPLOAD_SIZE must be None or a positive "
                 "number of bytes.",
+            )
+        )
+
+    from django.core.files.storage import InvalidStorageError, storages
+
+    try:
+        storages[cs_settings.UPLOAD_STORAGE]
+    except (InvalidStorageError, TypeError):
+        errors.append(
+            (
+                "content_studio.E014",
+                f"UPLOAD_STORAGE {cs_settings.UPLOAD_STORAGE!r} is not in STORAGES.",
             )
         )
 
@@ -3301,10 +3316,8 @@ def two_factor_errors() -> list[tuple[str, str]]:
     rate = cs_settings.TWO_FACTOR_THROTTLE_RATE
 
     if rate is not None:
-        from .contrib.two_factor.challenges import _parse_rate
-
         try:
-            _parse_rate(rate)
+            parse_rate(rate)
         except Exception:
             errors.append(
                 (
@@ -3321,6 +3334,38 @@ def two_factor_errors() -> list[tuple[str, str]]:
 def check_two_factor(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
     return [
         checks.Error(message, id=check_id) for check_id, message in two_factor_errors()
+    ]
+
+
+def login_throttle_errors() -> list[str]:
+    """
+    Login rate limits that cannot be read, which would fail every login:
+    LOGIN_THROTTLE_RATE and LOGIN_ACCOUNT_THROTTLE_RATE are like
+    "10/min" or None.
+    """
+    errors = []
+
+    for name in ("LOGIN_THROTTLE_RATE", "LOGIN_ACCOUNT_THROTTLE_RATE"):
+        rate = getattr(cs_settings, name)
+
+        if rate is None:
+            continue
+
+        try:
+            parse_rate(rate)
+        except Exception:
+            errors.append(
+                f'{name} must be a rate such as "10/min" or None, not {rate!r}.'
+            )
+
+    return errors
+
+
+@checks.register(checks.Tags.security)
+def check_login_throttles(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
+    return [
+        checks.Error(message, id="content_studio.E053")
+        for message in login_throttle_errors()
     ]
 
 

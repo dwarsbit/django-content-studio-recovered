@@ -610,10 +610,59 @@ class LimitTests(ImportTestCase):
         self.assertIn("at most", response.json()["file"][0])
 
     def test_too_large_files(self):
-        with mock.patch.object(cs_settings, "UPLOAD_MAX_SIZE", 5):
+        with mock.patch.object(cs_settings, "IMPORT_MAX_SIZE", 5):
             response = self.run_import("title\nGig\n")
 
         self.assertEqual(response.status_code, 400)
+
+    def test_reading_stops_at_the_first_row_too_many(self):
+        for file_format, content in (
+            (importing.CSV, b"title\na\nb\nc\n"),
+            (importing.JSON, b'[{"title": "a"}, {"title": "b"}, {"title": "c"}]'),
+        ):
+            with self.assertRaises(importing.TooManyRows):
+                importing.read_rows(content, file_format, max_rows=2)
+
+            headers, rows = importing.read_rows(content, file_format, max_rows=3)
+            self.assertEqual(len(rows), 3)
+
+    def test_the_file_row_limit_applies_with_a_worker_too(self):
+        with (
+            mock.patch.object(importing, "runs_in_background", return_value=True),
+            mock.patch.object(cs_settings, "IMPORT_FILE_MAX_ROWS", 2),
+        ):
+            response = self.run_import("title\na\nb\nc\n")
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("at most 2", response.json()["file"][0])
+
+    def test_too_many_columns(self):
+        header = ",".join(f"c{i}" for i in range(importing.MAX_COLUMNS + 1))
+
+        response = self.run_import(header + "\n" + "x," * importing.MAX_COLUMNS)
+
+        self.assertEqual(response.status_code, 400)
+        self.assertIn("columns", response.json()["file"][0])
+
+    def test_deeply_nested_json_is_refused(self):
+        content = b"[" * 100_000 + b"]" * 100_000
+
+        with self.assertRaises(importing.ImportFileError):
+            importing.read_rows(content, importing.JSON)
+
+    def test_an_excel_file_that_unpacks_too_far_is_refused(self):
+        import io
+        import zipfile
+
+        buffer = io.BytesIO()
+        with zipfile.ZipFile(buffer, "w", zipfile.ZIP_DEFLATED) as archive:
+            archive.writestr("xl/sharedStrings.xml", b"a" * 2_000_000)
+
+        with mock.patch.object(cs_settings, "IMPORT_MAX_SIZE", 100_000):
+            with self.assertRaises(importing.ImportFileError) as raised:
+                importing.read_rows(buffer.getvalue(), importing.XLSX)
+
+        self.assertIn("too large", str(raised.exception))
 
 
 @skipIf(importing.run_import_task is None, "Django tasks is not installed")
@@ -642,6 +691,18 @@ class BackgroundTests(ImportTestCase):
 
     def status(self, job, client=None):
         return (client or self.client).get(f"{EVENTS}/import/{job['id']}")
+
+    def test_a_checked_file_that_is_not_imported_is_discarded(self):
+        job = self.start(preview=True)
+        self.assertEqual(self.status(job).json()["job"]["status"], "done")
+        storage = importing.get_upload_storage()
+        self.assertTrue(storage.exists(importing._file_path(job["id"], "csv")))
+
+        response = self.client.delete(f"{EVENTS}/import/{job['id']}")
+
+        self.assertEqual(response.status_code, 204)
+        self.assertFalse(storage.exists(importing._file_path(job["id"], "csv")))
+        self.assertEqual(self.status(job).status_code, 404)
 
     def test_preview_then_import(self):
         job = self.start(preview=True)

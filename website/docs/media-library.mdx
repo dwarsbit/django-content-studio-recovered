@@ -104,8 +104,9 @@ the model's delete permission, moving its change permission.
 The media library accepts the file types in
 [`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](/docs/settings#media_library_allowed_extensions),
 up to [`MEDIA_LIBRARY_MAX_UPLOAD_SIZE`](/docs/settings#media_library_max_upload_size)
-(50 MB by default). It rejects files whose content is markup, such as HTML or
-SVG: served from your own domain, such a file could run scripts in your
+(50 MB by default). It rejects files whose type or content is markup or
+script, such as HTML, SVG, XML or JavaScript, even when the setting is
+`None`: served from your own domain, such a file could run scripts in your
 editors' sessions.
 
 ## Thumbnails

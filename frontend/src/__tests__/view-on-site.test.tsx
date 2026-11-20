@@ -82,6 +82,18 @@ describe("View on site", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("is hidden for a URL that would run a script", () => {
+    renderHeader({
+      id: "7",
+      __str__: "Hello",
+      __view_on_site__: "javascript:alert(document.domain)",
+    } as Resource);
+
+    expect(
+      screen.queryByRole("link", { name: "editor.view_on_site" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("is hidden on the create form", () => {
     renderHeader(undefined);
 

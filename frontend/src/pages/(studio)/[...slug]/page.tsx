@@ -12,6 +12,7 @@ import {
 } from "@/types";
 
 import { DashboardGrid } from "../(dashboard)/_components/dashboard-grid";
+import { UIPage } from "../ui/page";
 
 /** A path without its leading and trailing slashes. */
 function trimSlashes(path: string) {
@@ -40,6 +41,16 @@ export function CatchAllPage() {
       extension.extension_type === ExtensionType.AnalyticsPage &&
       trimSlashes(extension.config.path) === trimSlashes(path ?? ""),
   );
+
+  // The UI showcase is a development tool: offered under the vite dev
+  // server and while DEBUG is on, which discover says (the public page
+  // does not). Production installs never see it.
+  if (
+    trimSlashes(path ?? "") === "ui" &&
+    (import.meta.env.DEV || discover?.debug === true)
+  ) {
+    return <UIPage />;
+  }
 
   if (analyticsPage) {
     return <AnalyticsPageView page={analyticsPage} />;

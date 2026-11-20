@@ -38,7 +38,6 @@ from typing import Any, Callable, Optional
 from django.core.exceptions import FieldDoesNotExist
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files.base import ContentFile
-from django.core.files.storage import default_storage
 from django.core.serializers.json import DjangoJSONEncoder
 from django.db import models, router, transaction
 from django.http import HttpResponse, StreamingHttpResponse
@@ -521,21 +520,73 @@ def detect_format(name: str, content_type: Optional[str] = None) -> str:
     raise ImportFileError(_("Choose a CSV, Excel (.xlsx) or JSON file."))
 
 
+# The most columns a file may have: more is not a sheet of objects.
+MAX_COLUMNS = 1000
+
+# How many times IMPORT_MAX_SIZE an Excel file may unpack to: a .xlsx is
+# a zip, so a small file can hold a huge sheet.
+XLSX_MAX_EXPANSION = 10
+
+
+def file_max_rows() -> Optional[int]:
+    """
+    The most rows any import reads: IMPORT_FILE_MAX_ROWS, and in the
+    request also IMPORT_MAX_ROWS when no background worker takes larger
+    files.
+    """
+    limits = [cs_settings.IMPORT_FILE_MAX_ROWS]
+
+    if not runs_in_background():
+        limits.append(cs_settings.IMPORT_MAX_ROWS)
+
+    limits = [limit for limit in limits if limit is not None]
+    return min(limits) if limits else None
+
+
+class TooManyRows(ImportFileError):
+    def __init__(self, max_rows: int):
+        self.max_rows = max_rows
+        super().__init__(
+            _(
+                "The file has more than %(max)s rows; at most %(max)s can be "
+                "imported at once. Split it into smaller files."
+            )
+            % {"max": f"{max_rows:,}"}
+        )
+
+
 def read_rows(
-    content: bytes, file_format: str
+    content: bytes, file_format: str, max_rows: Optional[int] = None
 ) -> tuple[list[str], list[tuple[int, dict]]]:
     """
     The headers and rows of a file: each row as its number (the line in
     a spreadsheet, the position in a JSON list) and its values by header.
-    Rows without any value are skipped.
+    Rows without any value are skipped. Reading stops, with TooManyRows,
+    at the first row beyond max_rows, so a huge file is never parsed
+    whole; more than MAX_COLUMNS headers is refused too.
     """
     if file_format == JSON:
-        return _read_json(content)
+        headers, rows = _read_json(content, max_rows)
+    elif file_format == XLSX:
+        headers, rows = _read_xlsx(content, max_rows)
+    else:
+        headers, rows = _read_csv(content, max_rows)
 
-    if file_format == XLSX:
-        return _read_xlsx(content)
+    return headers, rows
 
-    return _read_csv(content)
+
+def _check_columns(headers) -> None:
+    if len(headers) > MAX_COLUMNS:
+        raise ImportFileError(
+            _("The file has more than %(max)s columns.") % {"max": MAX_COLUMNS}
+        )
+
+
+def _add_row(rows: list, row, max_rows: Optional[int]) -> None:
+    if max_rows is not None and len(rows) >= max_rows:
+        raise TooManyRows(max_rows)
+
+    rows.append(row)
 
 
 def _decode(content: bytes) -> str:
@@ -551,7 +602,7 @@ def _is_blank(value) -> bool:
     return value is None or (isinstance(value, str) and not value.strip())
 
 
-def _read_csv(content: bytes):
+def _read_csv(content: bytes, max_rows: Optional[int] = None):
     text = _decode(content)
 
     try:
@@ -568,14 +619,15 @@ def _read_csv(content: bytes):
     except csv.Error:
         raise ImportFileError(_("The file is not a valid CSV file."))
 
-    rows = []
+    _check_columns(headers)
+    rows: list = []
 
     try:
         for index, values in enumerate(reader, start=2):
             if all(_is_blank(value) for value in values):
                 continue
 
-            rows.append((index, _row_dict(headers, values)))
+            _add_row(rows, (index, _row_dict(headers, values)), max_rows)
     except csv.Error:
         raise ImportFileError(_("The file is not a valid CSV file."))
 
@@ -590,8 +642,32 @@ def _row_dict(headers, values) -> dict:
     }
 
 
-def _read_xlsx(content: bytes):
+def _check_xlsx_size(content: bytes) -> None:
+    """
+    Refuse an Excel file that unpacks to more than XLSX_MAX_EXPANSION
+    times IMPORT_MAX_SIZE: openpyxl reads the shared strings whole.
+    """
+    import zipfile
+
+    max_size = cs_settings.IMPORT_MAX_SIZE
+
+    if max_size is None:
+        return
+
+    try:
+        with zipfile.ZipFile(io.BytesIO(content)) as archive:
+            unpacked = sum(info.file_size for info in archive.infolist())
+    except (zipfile.BadZipFile, ValueError):
+        raise ImportFileError(_("The file is not a valid Excel file."))
+
+    if unpacked > max_size * XLSX_MAX_EXPANSION:
+        raise ImportFileError(_("The Excel file is too large to import."))
+
+
+def _read_xlsx(content: bytes, max_rows: Optional[int] = None):
     from openpyxl import load_workbook
+
+    _check_xlsx_size(content)
 
     try:
         workbook = load_workbook(io.BytesIO(content), read_only=True, data_only=True)
@@ -609,36 +685,46 @@ def _read_xlsx(content: bytes):
         except StopIteration:
             raise ImportFileError(_("The file is empty."))
 
-        rows = []
+        _check_columns(headers)
+        rows: list = []
 
         for index, row in enumerate(values, start=2):
             if all(_is_blank(value) for value in row):
                 continue
 
-            rows.append((index, _row_dict(headers, list(row))))
+            _add_row(rows, (index, _row_dict(headers, list(row))), max_rows)
     finally:
         workbook.close()
 
     return headers, rows
 
 
-def _read_json(content: bytes):
+def _read_json(content: bytes, max_rows: Optional[int] = None):
     try:
         data = json.loads(_decode(content))
-    except ValueError:
+    except (ValueError, RecursionError):
         raise ImportFileError(_("The file is not valid JSON."))
 
     if not isinstance(data, list) or not all(isinstance(item, dict) for item in data):
         raise ImportFileError(_("A JSON file must hold a list of objects."))
 
-    headers = []
+    rows: list = []
 
-    for item in data:
+    for index, item in enumerate(data, start=1):
+        if item:
+            _add_row(rows, (index, item), max_rows)
+
+    headers: list[str] = []
+    seen: set[str] = set()
+
+    for _index, item in rows:
         for key in item:
-            if key not in headers:
+            if key not in seen:
+                seen.add(key)
                 headers.append(str(key))
 
-    rows = [(index, item) for index, item in enumerate(data, start=1) if item]
+                if len(headers) > MAX_COLUMNS:
+                    _check_columns(headers)
 
     return headers, rows
 
@@ -1297,6 +1383,12 @@ def runs_in_background() -> bool:
     return bool(name) and name not in ("ImmediateBackend", "DummyBackend")
 
 
+def get_upload_storage():
+    from . import uploads
+
+    return uploads.get_upload_storage()
+
+
 def job_folder() -> str:
     return posixpath.join(cs_settings.UPLOAD_FOLDER, "imports")
 
@@ -1312,10 +1404,10 @@ def _file_path(job_id: str, file_format: str) -> str:
 def save_state(state: dict) -> None:
     path = _state_path(state["id"])
 
-    if default_storage.exists(path):
-        default_storage.delete(path)
+    if get_upload_storage().exists(path):
+        get_upload_storage().delete(path)
 
-    default_storage.save(
+    get_upload_storage().save(
         path, ContentFile(json.dumps(state, cls=DjangoJSONEncoder).encode("utf-8"))
     )
 
@@ -1329,7 +1421,7 @@ def load_state(job_id: str) -> Optional[dict]:
     path = _state_path(job_id)
 
     try:
-        with default_storage.open(path, "rb") as file:
+        with get_upload_storage().open(path, "rb") as file:
             return json.loads(file.read().decode("utf-8"))
     except (FileNotFoundError, OSError, ValueError):
         return None
@@ -1356,7 +1448,7 @@ def create_job(
 ) -> dict:
     """Store the file and a job for it, and enqueue the task."""
     job_id = str(uuid.uuid4())
-    default_storage.save(_file_path(job_id, file_format), ContentFile(content))
+    get_upload_storage().save(_file_path(job_id, file_format), ContentFile(content))
     state = {
         "id": job_id,
         "user": str(request.user.pk),
@@ -1458,11 +1550,15 @@ def run_job(job_id: str) -> None:
         if view is None or not is_importable(view._admin_model):
             raise ImportFileError(_("This model cannot be imported."))
 
-        with default_storage.open(_file_path(job_id, state["format"]), "rb") as file:
+        with get_upload_storage().open(
+            _file_path(job_id, state["format"]), "rb"
+        ) as file:
             content = file.read()
 
         with translation.override(state.get("language")):
-            headers, rows = read_rows(content, state["format"])
+            headers, rows = read_rows(
+                content, state["format"], cs_settings.IMPORT_FILE_MAX_ROWS
+            )
             importer = Importer(view, headers, rows, state["format"])
 
             def progress(processed, total):
@@ -1496,11 +1592,24 @@ def run_job(job_id: str) -> None:
         delete_job_file(state)
 
 
+def discard_job(state: dict) -> None:
+    """
+    An import the editor left after its check: its file and state are
+    removed now, not when content_studio_clear_uploads runs.
+    """
+    delete_job_file(state)
+
+    try:
+        get_upload_storage().delete(_state_path(state["id"]))
+    except (FileNotFoundError, OSError):
+        pass
+
+
 def delete_job_file(state: dict) -> None:
     path = _file_path(state["id"], state["format"])
 
     try:
-        default_storage.delete(path)
+        get_upload_storage().delete(path)
     except (FileNotFoundError, OSError):
         pass
 

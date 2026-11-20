@@ -19,6 +19,10 @@ export function useDiscover() {
     async queryFn() {
       const { data } = await http.get<{
         version: string;
+        // DEBUG: the UI showcase is offered; absent from older servers.
+        debug?: boolean;
+        // The developer tools button; absent from older servers.
+        devtools?: boolean;
         dashboard: Dashboard;
         extensions: Extension[];
         model_groups: ModelGroup[];

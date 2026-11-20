@@ -41,12 +41,13 @@ content_studio/
 ├── blocks.py            # BlockField and Block: an ordered list of content blocks
 ├── managers.py          # Managers for the base models (SingletonManager, SoftDeletableManager)
 ├── sanitizers.py        # HTML sanitizer (allowlist based on nh3)
+├── file_types.py        # Upload types never accepted (HTML, SVG, XML, scripts), by every extension and the mimetypes table; used by the FileWidget uploads (uploads.py, UPLOAD_ALLOWED_EXTENSIONS) and the media library
 ├── uniqueness.py        # Duplicate check for unique_together and multi-field UniqueConstraints
 ├── validators.py        # Field validators (JSONSchemaValidator, ChoiceOptionsValidator, ColorValidator)
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E052, W001-W028)
+├── checks.py            # System checks (content_studio.E001-E053, W001-W028)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
@@ -57,7 +58,7 @@ content_studio/
 ├── thumbnails.py        # Thumbnails of media images (Pillow, "small"/"large" WebP under THUMBNAIL_FOLDER)
 ├── presence.py          # Presence: who has an object open, kept in Django's cache (PRESENCE, PRESENCE_CACHE)
 ├── profile.py           # The profile page of the signed-in user: profile_fields (get_profile_fields), the activity overview and recent content from LogEntry, the password change (api/profile)
-├── users.py             # Managing other users: Set password (api/content/<user model>/<id>/password) and the guard on is_superuser and superusers' email for staff who are not superusers
+├── users.py             # Managing other users: Set password (api/content/<user model>/<id>/password) and the guard for staff who are not superusers: is_superuser, and may_manage_account (password, link, two-factor reset, email only on accounts holding a subset of their permissions)
 ├── password_links.py    # Invite and password links: Django's default_token_generator, the emails (a Django task, templates in templates/content_studio/users) and the public set-password endpoints (api/set-password)
 ├── permission_matrix.py # The permission matrix's options (api/content/<model>/permissions/<field>) and the guard: staff who are not superusers only grant permissions (and groups) they have
 ├── user_studios.py      # The default UserStudio and GroupStudio, registered when a project registers none

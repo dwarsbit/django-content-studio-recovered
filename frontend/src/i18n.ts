@@ -20,11 +20,11 @@ i18n
     },
     backend: {
       loadPath(lng: string, ns: string) {
-        const version = window.DCS_VERSION
-          ? `?v=${encodeURIComponent(window.DCS_VERSION)}`
+        const token = window.DCS_ASSET_TOKEN
+          ? `?v=${encodeURIComponent(window.DCS_ASSET_TOKEN)}`
           : "";
 
-        return `${window.DCS_STATIC_PREFIX ?? "/"}locales/${lng}/${ns}.json${version}`;
+        return `${window.DCS_STATIC_PREFIX ?? "/"}locales/${lng}/${ns}.json${token}`;
       },
     },
   });

@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.17.1 (unreleased)
+## 1.18.0 (unreleased)
 
 ### Features
 
@@ -48,6 +48,112 @@
     refuses the backup folder. W027 is retired.
   - Password reset codes are left out of backups, so a backup never
     holds a code that still works.
+
+- **File fields accepted HTML files.** A `FileWidget` upload was only
+  refused when its content started with `<`, so an editor with add or
+  change permission on a model with a file field could upload
+  `page.html` with text before a `<script>`. Served from the admin's
+  domain, it ran in the session of whoever opened it, a superuser
+  included. Now:
+  - The new setting `UPLOAD_ALLOWED_EXTENSIONS` limits FileWidget uploads
+    to a list of types, by default the media library's list (images,
+    audio, video, PDF, office documents, CSV and text). **File fields
+    that take other types, such as `.zip`, need them added**, for
+    example `[*DEFAULT_ALLOWED_EXTENSIONS, "zip"]` from
+    `content_studio.settings`, or `None` for every type.
+    `content_studio.E014` checks it.
+  - HTML, SVG, XML (RSS and every `+xml` type), JavaScript, CSS and the
+    other types a browser runs are always refused, in file fields and in
+    the media library, even when the allowed extensions are `None`, and
+    under any of a name's extensions (`page.html.gz`).
+  - A picked file waits in `UPLOAD_FOLDER` under a name without an
+    extension, and gets its own name when the object is saved.
+  - The Deployment page advises `X-Content-Type-Options: nosniff` for
+    media files.
+
+- **Staff could take over accounts with more permissions.** An editor
+  with `change_user` could set the password, send a password link, reset
+  the two-factor login or change the email of any account that was not a
+  superuser's, such as a manager holding every permission, and then sign
+  in as them. These four now need the editor to outrank the account: a
+  superuser does, anyone else only when the account is not a superuser
+  and holds no permission they lack (their own or a group's, active or
+  not). Otherwise the email is read-only and the actions are not offered.
+
+- **Staff could lock out every superuser.** With `change_user` or
+  `delete_user`, a staff member could deactivate, revoke staff status from
+  or delete every superuser. On an account they do not outrank (see
+  above), `is_active` and `is_staff` are now read-only and deleting is
+  refused, one by one and in bulk. This is part of `ModelStudio`'s
+  `has_delete_permission`, so a user studio that overrides it should call
+  `super()`.
+
+- **A stolen session could take over the account.** The profile changed
+  the email address with no password, after which a password reset to
+  the new address set a new password, and turning on two-factor login
+  needed no password either, which locked the owner out. Both now ask for
+  the current password (users without a usable password are not asked),
+  and the old address gets an email when the email changes. Wrong
+  passwords count toward `LOGIN_THROTTLE_RATE`, like the password change.
+
+- **An import file could exhaust the server's memory.** Imports read and
+  parsed the whole file (up to `UPLOAD_MAX_SIZE`, 50 MB) before checking
+  `IMPORT_MAX_ROWS`, so a small, highly compressed Excel file or a huge
+  JSON list kept a web process busy for a long time. Reading now stops at
+  the first row too many, files with more than 1,000 columns or deep JSON
+  nesting are refused, and an Excel file may unpack to at most ten times
+  the size limit. Two new settings: **`IMPORT_MAX_SIZE`** (10 MB) replaces
+  `UPLOAD_MAX_SIZE` for imports, and **`IMPORT_FILE_MAX_ROWS`** (100,000)
+  caps imports that run as a task, which had no row limit.
+
+- **Uploads waiting to be saved sat in the public media storage.** Files
+  picked in a `FileWidget` and import files are now kept in the new
+  **`UPLOAD_STORAGE`** (an alias in `STORAGES`, by default `"default"`);
+  the Deployment page advises a private one. Closing the import dialog
+  after a background check now removes the checked file at once, instead
+  of leaving it until `content_studio_clear_uploads` runs.
+
+- **Rich text links could reveal the URL of any object.** The linked
+  model and id come from the editor's HTML, and rendering resolved them
+  on any installed model, without tenant scoping or a permission check:
+  an editor could link to an unpublished object, or another tenant's,
+  and the public page showed its URL. Rendering now only resolves models
+  with a linkable studio, and saving refuses new links to objects the
+  editor may not view.
+
+- **View on site linked any URL.** The button used the URL from
+  `get_absolute_url()` or `view_on_site` as it was, so a value built from
+  stored data could be a `javascript:` URL that ran in the admin when
+  another editor clicked it. The server and the browser now only link
+  `http`, `https`, `mailto` and relative URLs, and hide the button
+  otherwise.
+
+- **The public admin page named the version and DEBUG.** The page every
+  visitor gets, signed in or not, set `window.DCS_VERSION`, loaded its
+  files with `?v=<version>`, and set `DCS_DEBUG` and `DCS_DEVTOOLS` while
+  `DEBUG` was on. Its files are now cache-busted with a token made from
+  the version and the `SECRET_KEY` (`window.DCS_ASSET_TOKEN`), and the UI
+  showcase and the developer tools learn they are on from `discover`,
+  behind sign-in.
+
+- **Save and restore errors showed the database's text.** When a save or
+  a restore broke a database constraint, the editor saw the database's
+  message, with constraint names and sometimes values. Editors now see
+  a plain conflict message; the details go to the `content_studio.viewsets`
+  log (and the developer tools while `DEBUG` is on).
+
+- **Wrong passwords were only limited per IP address.** Guessing one
+  account's password from many addresses was not slowed down. Wrong
+  passwords are now also counted per username, under the new
+  **`LOGIN_ACCOUNT_THROTTLE_RATE`** (default `"20/hour"`, `None` turns it
+  off): once it is reached, that username cannot log in until the hour
+  has passed, not even with the right password. A malformed login rate is
+  the new check error `content_studio.E053`.
+
+- **Docs**: the Developer tools page warns that every staff user sees the
+  same tracebacks and SQL, and advises `DEVTOOLS = False` on staging sites
+  that run with `DEBUG`. The Authentication page says which secrets are
+  stored readable (two-factor app secrets and live password reset codes).
 
 ### Changes
 

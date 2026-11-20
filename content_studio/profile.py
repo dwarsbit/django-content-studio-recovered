@@ -127,6 +127,89 @@ def can_change_password(user, site=None) -> bool:
     return user.has_usable_password() and uses_password_login(site)
 
 
+def check_current_password(user, request) -> Optional[Response]:
+    """
+    A change that would hand over the account (the email, through a
+    password reset; turning on two-factor login, which locks the owner
+    out) needs the current password, when the user has one: a stolen
+    session alone is not enough. An error response when it is missing or
+    wrong, else None.
+    """
+    if not can_change_password(user):
+        return None
+
+    current = request.data.get("current_password") or ""
+
+    if not current:
+        return Response(
+            {"current_password": [_("Enter your current password to confirm.")]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    if not user.check_password(current):
+        return Response(
+            {"current_password": [_("Your current password is not correct.")]},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    return None
+
+
+def notify_email_changed(user, old_email: str, request) -> None:
+    """Tell the old address that the account's email changed."""
+    from django.db import transaction
+    from django.utils.translation import get_language
+
+    from .password_links import _display_name
+
+    if not old_email:
+        return
+
+    name, language = _display_name(user), get_language()
+    transaction.on_commit(
+        lambda: send_email_changed_mail_task.enqueue(old_email, name, language)
+    )
+
+
+def send_email_changed_mail(old_email, name, language=None):
+    import logging
+
+    from django.core.mail import send_mail
+    from django.template.loader import render_to_string
+    from django.utils import translation
+    from django.utils.translation import gettext
+
+    with translation.override(language):
+        site_title = str(getattr(cs_settings.ADMIN_SITE, "site_title", "") or "")
+
+        try:
+            send_mail(
+                from_email=None,
+                subject=gettext("Your email address for %(site)s was changed")
+                % {"site": site_title},
+                message=render_to_string(
+                    "content_studio/users/email_changed.txt",
+                    {"name": name, "site_title": site_title, "email": old_email},
+                ),
+                recipient_list=[old_email],
+            )
+        except Exception:
+            logging.getLogger("content_studio.users").exception(
+                "Could not send the email change notice to the old address."
+            )
+
+
+def _email_changed_task():
+    from .password_links import _as_task
+
+    return _as_task(send_email_changed_mail)
+
+
+# Workers import tasks by module and function name, so the task keeps the
+# name of the function it wraps.
+send_email_changed_mail_task = _email_changed_task()
+
+
 def get_profile_serializer(fields: list[Field]):
     from .serializers import ContentSerializer
 
@@ -253,7 +336,14 @@ class ProfileViewSet(ViewSet):
         ]
 
     def get_throttles(self):
-        if self.action == "password" and cs_settings.LOGIN_THROTTLE_RATE:
+        if not cs_settings.LOGIN_THROTTLE_RATE:
+            return []
+
+        if self.action == "password" or (
+            self.action == "partial_update"
+            and "current_password" in getattr(self.request, "data", {})
+        ):
+            # A current password sent with the email is a guess too.
             return [PasswordChangeRateThrottle()]
 
         return []
@@ -275,6 +365,8 @@ class ProfileViewSet(ViewSet):
                 for field in fields
             ],
             "values": {field.name: values.get(field.name) for field in fields},
+            # Whether the profile offers a password change; changing the
+            # email and turning on two-factor login then ask for it.
             "password": can_change_password(user),
             "two_factor": two_factor_state(user),
             "preferences": preferences_data(user),
@@ -292,10 +384,27 @@ class ProfileViewSet(ViewSet):
         )
         serializer.is_valid(raise_exception=True)
 
+        user = request.user
+        email_field = type(user).get_email_field_name()
+        old_email = getattr(user, email_field, "") or ""
+        new_email = serializer.validated_data.get(email_field, old_email) or ""
+        email_changed = new_email.strip().lower() != old_email.strip().lower()
+
+        if email_changed:
+            # With the new address, a password reset hands over the
+            # account: the current password confirms it is the owner.
+            error = check_current_password(user, request)
+
+            if error is not None:
+                return error
+
         if data:
             with collect_changes(request):
                 user = serializer.save()
                 record_change(request, user, "updated", "Changed the profile.")
+
+            if email_changed:
+                notify_email_changed(user, old_email, request)
 
         return Response(self.profile_data(request))
 

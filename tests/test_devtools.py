@@ -324,14 +324,27 @@ def test_running_the_checks_again(debug, staff, store):
     assert store.get_issues()[0]["code"] == "x.W1"
 
 
-def test_the_page_turns_the_button_on(debug, client):
-    assert b"window.DCS_DEVTOOLS = true" in client.get("/").content
+def test_discover_turns_the_button_on(debug, staff):
+    data = client_for(staff).get("/api/discover").json()
+
+    assert data["devtools"] is True
+    assert data["debug"] is True
 
 
-def test_the_page_leaves_the_button_off_without_debug(settings, client):
+def test_discover_leaves_the_button_off_without_debug(settings, staff):
     settings.DEBUG = False
+    data = client_for(staff).get("/api/discover").json()
 
-    assert b"DCS_DEVTOOLS" not in client.get("/").content
+    assert data["devtools"] is False
+    assert data["debug"] is False
+
+
+def test_the_public_page_does_not_say_debug_is_on(debug, client):
+    # Everyone gets the page, signed in or not (security finding 10).
+    html = client.get("/").content
+
+    assert b"DCS_DEVTOOLS" not in html
+    assert b"DCS_DEBUG" not in html
 
 
 @pytest.mark.parametrize(

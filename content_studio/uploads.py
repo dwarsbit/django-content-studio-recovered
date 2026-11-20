@@ -2,8 +2,9 @@
 Temporary uploads for the FileWidget.
 
 The content API takes JSON, so a file picked in a FileWidget is uploaded
-first, on its own: it waits in UPLOAD_FOLDER (in the default storage)
-and the editor gets a signed token for it. Saving the object sends the
+first, on its own: it waits in UPLOAD_FOLDER (in UPLOAD_STORAGE)
+and the editor gets a signed token for it. The waiting copy has no
+extension, so a web server never serves it as a page. Saving the object sends the
 token as the field's value, and the file is attached to the object then;
 an object that is never saved is never changed. Uploads that were not
 attached are removed by the content_studio_clear_uploads command.
@@ -16,13 +17,13 @@ from datetime import timedelta
 from django.core import signing
 from django.core.exceptions import ValidationError as DjangoValidationError
 from django.core.files import File
-from django.core.files.storage import default_storage
+from django.core.files.storage import storages
 from django.template.defaultfilters import filesizeformat
 from django.utils import timezone
-from django.utils.text import get_valid_filename
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+from .file_types import extension_of, is_active_file
 from .settings import cs_settings
 
 SALT = "content_studio.uploads"
@@ -40,6 +41,14 @@ class TemporaryUpload(File):
         self.temporary_name = temporary_name
 
 
+def get_upload_storage():
+    """
+    The storage uploads wait in until they are attached, and import files
+    until they are imported: UPLOAD_STORAGE in STORAGES.
+    """
+    return storages[cs_settings.UPLOAD_STORAGE]
+
+
 def upload_key(model, field_name) -> str:
     return f"{model._meta.label_lower}.{field_name}"
 
@@ -47,12 +56,21 @@ def upload_key(model, field_name) -> str:
 def validate_upload(model_field, file):
     """
     The upload policy: the field's own validators (an ImageField checks
-    that the file is an image), UPLOAD_MAX_SIZE, and never markup, which
-    a browser would run when the file is opened from MEDIA_URL.
+    that the file is an image), UPLOAD_ALLOWED_EXTENSIONS,
+    UPLOAD_MAX_SIZE, and never a type or content a browser would run when
+    the file is opened from MEDIA_URL (HTML, SVG, XML, scripts).
     """
     from .media_library.serializers import looks_like_markup
 
     max_size = cs_settings.UPLOAD_MAX_SIZE
+    allowed = cs_settings.UPLOAD_ALLOWED_EXTENSIONS
+    name = getattr(file, "name", "") or ""
+
+    if is_active_file(name) or (
+        allowed is not None
+        and extension_of(name) not in {extension.lower() for extension in allowed}
+    ):
+        raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
 
     if max_size is not None and file.size > max_size:
         raise serializers.ValidationError(
@@ -76,9 +94,10 @@ def save_upload(request, model, model_field, file) -> dict:
     validate_upload(model_field, file)
 
     original_name = posixpath.basename(file.name or "upload")
-    name = get_valid_filename(original_name) or "upload"
-    path = posixpath.join(cs_settings.UPLOAD_FOLDER, uuid.uuid4().hex, name)
-    path = default_storage.save(path, file)
+    # Without the original name or extension: until the object is saved,
+    # the copy is never served under a type a browser renders.
+    path = posixpath.join(cs_settings.UPLOAD_FOLDER, uuid.uuid4().hex, "upload")
+    path = get_upload_storage().save(path, file)
 
     token = signing.dumps(
         {
@@ -112,12 +131,12 @@ def open_upload(request, model, field_name, token) -> TemporaryUpload:
 
     path = data["path"]
 
-    if not default_storage.exists(path):
+    if not get_upload_storage().exists(path):
         raise serializers.ValidationError(
             _("The upload has expired. Choose the file again.")
         )
 
-    return TemporaryUpload(default_storage.open(path), data["name"], path)
+    return TemporaryUpload(get_upload_storage().open(path), data["name"], path)
 
 
 def discard_upload(upload: TemporaryUpload):
@@ -125,7 +144,7 @@ def discard_upload(upload: TemporaryUpload):
     try:
         upload.close()
     finally:
-        default_storage.delete(upload.temporary_name)
+        get_upload_storage().delete(upload.temporary_name)
 
 
 def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
@@ -138,18 +157,18 @@ def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
     removed = 0
 
     try:
-        directories, _files = default_storage.listdir(folder)
+        directories, _files = get_upload_storage().listdir(folder)
     except (FileNotFoundError, NotImplementedError):
         return 0
 
     for directory in directories:
         path = posixpath.join(folder, directory)
 
-        for name in default_storage.listdir(path)[1]:
+        for name in get_upload_storage().listdir(path)[1]:
             file_path = posixpath.join(path, name)
 
             try:
-                modified = default_storage.get_modified_time(file_path)
+                modified = get_upload_storage().get_modified_time(file_path)
             except (NotImplementedError, FileNotFoundError):
                 continue
 
@@ -157,7 +176,7 @@ def clear_expired_uploads(max_age: timedelta = MAX_AGE) -> int:
                 modified = timezone.make_aware(modified)
 
             if modified < cutoff:
-                default_storage.delete(file_path)
+                get_upload_storage().delete(file_path)
                 removed += 1
 
     return removed

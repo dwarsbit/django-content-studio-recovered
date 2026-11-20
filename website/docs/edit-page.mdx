@@ -781,7 +781,9 @@ When the model has `get_absolute_url()`, the header shows a **View on
 site** button that opens the object's public page in a new tab. It appears
 once the object is saved, and after a save it links to the new URL, such as
 one with a changed slug. A relative URL, such as `/blog/hello/`, opens on
-the domain Content Studio runs on.
+the domain Content Studio runs on. Only `http`, `https`, `mailto` and
+relative URLs are linked: any other scheme, such as a stored
+`javascript:` URL, hides the button, so it cannot run in the admin.
 
 Set `view_on_site = False` on the studio to hide the button, or give the
 studio a `view_on_site(obj)` method that returns the URL. Returning `None`

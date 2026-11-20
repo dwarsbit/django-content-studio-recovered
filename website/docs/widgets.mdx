@@ -309,7 +309,14 @@ The HTML keeps the image's media id and the linked object's model and id
 next to their URLs. Render it with the `rich_text` filter, which sanitizes
 the HTML and refreshes those URLs, so a moved image or a changed slug does
 not break the page. A link to a deleted or trashed object becomes plain
-text.
+text. Only links to models with a studio that can be linked to are
+refreshed; others are left as they are.
+
+Saving checks every new link: it must point to such a model, which the
+editor may view, and to an object they can see (in their tenant and in the
+studio's `get_queryset`). Otherwise the save fails with an error on the
+field, so a link cannot reveal the URL of an unpublished object or of
+another tenant's. Links already in the text are kept as they are.
 
 ```django
 {% load content_studio %}
@@ -360,11 +367,16 @@ The file is uploaded right away and attached when the editor saves. Until
 then, the object keeps its saved file, so **Cancel** leaves it unchanged.
 
 Uploads go through the same checks as the media library: the field's own
-validators (an `ImageField` checks that the file is an image), a maximum
-size ([`UPLOAD_MAX_SIZE`](/docs/settings#upload_max_size)), and no markup
-such as HTML and SVG. A picked file waits in
-[`UPLOAD_FOLDER`](/docs/settings#upload_folder) in the default storage. It
-is moved into the field's `upload_to` on save.
+validators (an `ImageField` checks that the file is an image), a list of
+file types ([`UPLOAD_ALLOWED_EXTENSIONS`](/docs/settings#upload_allowed_extensions),
+by default images, audio, video, PDF and office files), a maximum size
+([`UPLOAD_MAX_SIZE`](/docs/settings#upload_max_size)), and never a type a
+browser runs, such as HTML, SVG, XML or JavaScript, by extension or by
+content. A picked file waits in
+[`UPLOAD_FOLDER`](/docs/settings#upload_folder) in
+[`UPLOAD_STORAGE`](/docs/settings#upload_storage),
+under a name without an extension. It is moved into the field's
+`upload_to`, under its own name, on save.
 
 Files that were picked but never saved stay in the upload folder. Remove
 them once a day, for example with cron:

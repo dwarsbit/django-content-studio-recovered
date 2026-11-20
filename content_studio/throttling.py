@@ -17,3 +17,14 @@ class ClientIPMixin:
             return request.META.get("REMOTE_ADDR")
 
         return super().get_ident(request)
+
+
+def parse_rate(rate):
+    """
+    A rate such as "10/min" or "20/hour" as (count, seconds), the way
+    DRF reads its throttle rates: the period is its first letter.
+    """
+    count, period = rate.split("/")
+    seconds = {"s": 1, "m": 60, "h": 3600, "d": 86400}[period.strip()[0]]
+
+    return int(count), seconds

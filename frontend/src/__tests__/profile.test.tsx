@@ -281,6 +281,68 @@ describe("Profile page", () => {
     ).toBeInTheDocument();
   });
 
+  it("asks for the current password when the email changes", async () => {
+    const user = userEvent.setup();
+    httpMock.patch
+      .mockRejectedValueOnce(
+        badRequest({ current_password: ["Enter your current password."] }),
+      )
+      .mockRejectedValueOnce(
+        badRequest({ current_password: ["Your current password is wrong."] }),
+      )
+      .mockResolvedValueOnce({
+        data: {
+          ...profile,
+          values: { ...profile.values, email: "alex@example.org" },
+        },
+      });
+    renderPage("/profile/edit");
+
+    const input = await screen.findByDisplayValue("alex@example.com");
+    await user.clear(input);
+    await user.type(input, "alex@example.org");
+    await user.click(screen.getByRole("button", { name: "common.save" }));
+
+    // The first refusal only opens the dialog, without an error.
+    const dialog = await screen.findByRole("dialog");
+    expect(
+      within(dialog).queryByText("Enter your current password."),
+    ).not.toBeInTheDocument();
+    const password = within(dialog).getByLabelText("profile.password.current");
+    expect(password).toHaveAttribute("type", "password");
+
+    await user.type(password, "wrong");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "profile.confirm_password.submit",
+      }),
+    );
+    expect(
+      await within(dialog).findByText("Your current password is wrong."),
+    ).toBeInTheDocument();
+
+    await user.clear(password);
+    await user.type(password, "right");
+    await user.click(
+      within(dialog).getByRole("button", {
+        name: "profile.confirm_password.submit",
+      }),
+    );
+
+    await waitFor(() =>
+      expect(httpMock.patch).toHaveBeenLastCalledWith("/profile", {
+        first_name: "Alex",
+        last_name: "Morgan",
+        email: "alex@example.org",
+        current_password: "right",
+      }),
+    );
+    expect(toastMock.success).toHaveBeenCalledWith("profile.saved");
+    await waitFor(() =>
+      expect(screen.queryByRole("dialog")).not.toBeInTheDocument(),
+    );
+  });
+
   it("changes the password in a dialog and continues the session", async () => {
     const user = userEvent.setup();
     httpMock.post.mockResolvedValue({ data: { access: "new-token" } });

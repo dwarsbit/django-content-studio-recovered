@@ -199,6 +199,105 @@ def test_sanitizer_keeps_references():
     assert "<th>a</th>" in result
 
 
+@pytest.mark.django_db
+def test_link_to_a_model_without_a_studio_is_not_resolved(monkeypatch):
+    monkeypatch.setattr(
+        auth_models.Permission,
+        "get_absolute_url",
+        lambda self: "/secret/",
+        raising=False,
+    )
+    permission = auth_models.Permission.objects.first()
+    html = (
+        f'<a href="/x/" data-link-model="auth.permission" '
+        f'data-link-id="{permission.pk}">x</a>'
+    )
+
+    assert render_rich_text(html) == html
+
+
+def link_to(category):
+    return (
+        f'<p><a href="/c/" data-link-model="testapp.category" '
+        f'data-link-id="{category.pk}">c</a></p>'
+    )
+
+
+def editor_client(*codenames):
+    user = auth_models.User.objects.create_user(
+        username="editor", password="x", is_staff=True
+    )
+    user.user_permissions.set(
+        auth_models.Permission.objects.filter(codename__in=codenames)
+    )
+    client = APIClient()
+    client.credentials(HTTP_AUTHORIZATION=f"Bearer {create_access_token(user)}")
+    return client
+
+
+@pytest.mark.django_db
+def test_saving_a_link_to_an_object_the_editor_cannot_see_is_refused(category_urls):
+    category = Category.objects.create(name="Hidden")
+    client = editor_client("view_article", "add_article", "change_article")
+
+    response = client.post(
+        "/api/content/testapp.article",
+        {"title": "Linked", "body": link_to(category)},
+        format="json",
+    )
+
+    assert response.status_code == 400, response.content
+    assert "body" in response.json()
+    assert not Article.objects.exists()
+
+
+@pytest.mark.django_db
+def test_saving_a_link_the_editor_may_see(category_urls):
+    category = Category.objects.create(name="Open")
+    client = editor_client(
+        "view_article", "add_article", "change_article", "view_category"
+    )
+
+    response = client.post(
+        "/api/content/testapp.article",
+        {"title": "Linked", "body": link_to(category)},
+        format="json",
+    )
+
+    assert response.status_code == 201, response.content
+
+
+@pytest.mark.django_db
+def test_links_already_in_the_text_are_kept(category_urls):
+    category = Category.objects.create(name="Hidden")
+    article = Article.objects.create(title="Linked", body=link_to(category))
+    client = editor_client("view_article", "change_article")
+
+    response = client.patch(
+        f"/api/content/testapp.article/{article.pk}",
+        {"body": link_to(category) + "<p>More</p>"},
+        format="json",
+    )
+
+    assert response.status_code == 200, response.content
+
+
+@pytest.mark.django_db
+def test_links_to_unknown_models_are_refused_on_save():
+    client = editor_client("view_article", "add_article")
+
+    response = client.post(
+        "/api/content/testapp.article",
+        {
+            "title": "Linked",
+            "body": '<a href="/" data-link-model="auth.user" data-link-id="1">x</a>',
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+
 def client_for_superuser():
     user = auth_models.User.objects.create_superuser(username="admin", password="x")
     client = APIClient()

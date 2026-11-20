@@ -456,7 +456,11 @@ class ProfileTests(TwoFactorTestCase):
 
         response = self.client.post(
             "/api/profile/two-factor/confirm",
-            {"setup": setup["setup"], "code": code(setup["secret"])},
+            {
+                "setup": setup["setup"],
+                "code": code(setup["secret"]),
+                "current_password": PASSWORD,
+            },
             format="json",
         )
 
@@ -480,13 +484,44 @@ class ProfileTests(TwoFactorTestCase):
 
         response = self.client.post(
             "/api/profile/two-factor/confirm",
-            {"setup": setup["setup"], "code": "000000"},
+            {"setup": setup["setup"], "code": "000000", "current_password": PASSWORD},
             format="json",
         )
 
         self.assertEqual(response.status_code, 400)
         self.assertIn("code", response.json())
         self.assertFalse(Authenticator.objects.exists())
+
+    def test_turning_it_on_needs_the_current_password(self):
+        setup = self.client.post("/api/profile/two-factor/setup").json()
+
+        for password in (None, "wrong-password"):
+            data = {"setup": setup["setup"], "code": code(setup["secret"])}
+            if password:
+                data["current_password"] = password
+
+            response = self.client.post(
+                "/api/profile/two-factor/confirm", data, format="json"
+            )
+
+            self.assertEqual(response.status_code, 400)
+            self.assertIn("current_password", response.json())
+
+        self.assertFalse(Authenticator.objects.exists())
+
+    def test_without_a_password_it_turns_on_with_the_code_alone(self):
+        self.user.set_unusable_password()
+        self.user.save()
+        self.client = bearer(create_access_token(self.user))
+        setup = self.client.post("/api/profile/two-factor/setup").json()
+
+        response = self.client.post(
+            "/api/profile/two-factor/confirm",
+            {"setup": setup["setup"], "code": code(setup["secret"])},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
 
     def test_a_setup_token_of_another_user_is_refused(self):
         other = User.objects.create_user(
@@ -496,7 +531,11 @@ class ProfileTests(TwoFactorTestCase):
 
         response = self.client.post(
             "/api/profile/two-factor/confirm",
-            {"setup": setup.json()["setup"], "code": code(setup.json()["secret"])},
+            {
+                "setup": setup.json()["setup"],
+                "code": code(setup.json()["secret"]),
+                "current_password": PASSWORD,
+            },
             format="json",
         )
 
@@ -633,6 +672,25 @@ class ResetTests(TwoFactorTestCase):
         response = self.reset(self.admin, bearer(create_access_token(editor)))
 
         self.assertEqual(response.status_code, 403)
+
+    def test_not_for_an_account_with_more_permissions(self):
+        editor = User.objects.create_user(
+            username="sam", password=PASSWORD, is_staff=True
+        )
+        editor.user_permissions.set(
+            auth_models.Permission.objects.filter(
+                codename__in=["view_user", "change_user"]
+            )
+        )
+        self.user.user_permissions.set(
+            auth_models.Permission.objects.filter(codename="delete_user")
+        )
+        self.enable()
+
+        response = self.reset(self.user, bearer(create_access_token(editor)))
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(Authenticator.objects.filter(user=self.user).exists())
 
     def test_not_the_own(self):
         secret, _ = self.enable(self.admin)

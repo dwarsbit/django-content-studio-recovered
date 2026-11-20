@@ -837,6 +837,11 @@
       "mismatch": "The new passwords do not match.",
       "changed": "Password changed"
     },
+    "confirm_password": {
+      "title": "Confirm with your password",
+      "email_description": "Changing your email address needs your current password. Password links will go to the new address.",
+      "submit": "Confirm"
+    },
     "preferences": {
       "title": "Preferences",
       "save_action": "Default save action",
@@ -946,6 +951,7 @@
     "cannot_scan": "Can't scan it? Enter this key instead:",
     "qr_label": "QR code to add your account to an authenticator app",
     "copy_key": "Copy key",
+    "setup_password": "Current password",
     "setup_code": "Code from the app",
     "codes_title": "Save your recovery codes",
     "codes_description": "If you lose your phone, each of these codes logs you in once. Keep them somewhere safe, such as your password manager.",

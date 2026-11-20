@@ -20,6 +20,40 @@ from django.utils.module_loading import import_string
 
 SETTINGS_NAMESPACE = "CONTENT_STUDIO"
 
+# File extensions uploads accept by default, in the media library and in
+# a FileWidget (lowercase, without the dot).
+DEFAULT_ALLOWED_EXTENSIONS = [
+    # Images (SVG is left out: it can carry scripts).
+    "avif",
+    "gif",
+    "jpeg",
+    "jpg",
+    "png",
+    "webp",
+    # Video and audio.
+    "m4a",
+    "mov",
+    "mp3",
+    "mp4",
+    "ogg",
+    "wav",
+    "webm",
+    # Documents.
+    "csv",
+    "doc",
+    "docx",
+    "odp",
+    "ods",
+    "odt",
+    "pdf",
+    "ppt",
+    "pptx",
+    "txt",
+    "xls",
+    "xlsx",
+]
+
+
 DEFAULTS = {
     "ADMIN_SITE": "content_studio.admin.admin_site",
     "LOGIN_BACKENDS": [
@@ -46,36 +80,7 @@ DEFAULTS = {
     "MEDIA_METADATA_ATTR": "metadata",
     # File extensions the media library accepts (lowercase, without the
     # dot); None accepts every extension.
-    "MEDIA_LIBRARY_ALLOWED_EXTENSIONS": [
-        # Images (SVG is left out: it can carry scripts).
-        "avif",
-        "gif",
-        "jpeg",
-        "jpg",
-        "png",
-        "webp",
-        # Video and audio.
-        "m4a",
-        "mov",
-        "mp3",
-        "mp4",
-        "ogg",
-        "wav",
-        "webm",
-        # Documents.
-        "csv",
-        "doc",
-        "docx",
-        "odp",
-        "ods",
-        "odt",
-        "pdf",
-        "ppt",
-        "pptx",
-        "txt",
-        "xls",
-        "xlsx",
-    ],
+    "MEDIA_LIBRARY_ALLOWED_EXTENSIONS": list(DEFAULT_ALLOWED_EXTENSIONS),
     # Maximum upload size of a media library file in bytes; None for no
     # limit.
     "MEDIA_LIBRARY_MAX_UPLOAD_SIZE": 50 * 1024 * 1024,
@@ -98,9 +103,17 @@ DEFAULTS = {
     # wait in until the object is saved. Unsaved uploads are removed by
     # the content_studio_clear_uploads command.
     "UPLOAD_FOLDER": "content_studio/uploads",
+    # The alias in Django's STORAGES that uploads wait in until the
+    # object is saved, and import files until they are imported. Best a
+    # storage that is not served publicly.
+    "UPLOAD_STORAGE": "default",
     # Maximum size of a file picked in a FileWidget, in bytes; None for
     # no limit.
     "UPLOAD_MAX_SIZE": 50 * 1024 * 1024,
+    # File extensions a FileWidget accepts (lowercase, without the dot);
+    # None accepts every extension. HTML, SVG, XML, scripts and other
+    # types a browser runs are refused whatever this allows.
+    "UPLOAD_ALLOWED_EXTENSIONS": list(DEFAULT_ALLOWED_EXTENSIONS),
     # Import: the most rows a file can have to be imported in the
     # request. Larger files run as a task when the task backend runs
     # tasks in the background, and are refused otherwise. None: no limit.
@@ -109,6 +122,11 @@ DEFAULTS = {
     # task backend runs tasks in the background. None: always in the
     # request.
     "IMPORT_TASK_ROWS": 1_000,
+    # Import: the most rows any file can have, also as a task; reading
+    # stops at the first row beyond it. None: no limit.
+    "IMPORT_FILE_MAX_ROWS": 100_000,
+    # Import: the largest file accepted, in bytes; None for no limit.
+    "IMPORT_MAX_SIZE": 10 * 1024 * 1024,
     # The map tiles MapWidget shows: a tile URL template with {z}, {x}
     # and {y}, and the attribution shown on the map (HTML).
     "MAP_TILE_URL": "https://tile.openstreetmap.org/{z}/{x}/{y}.png",
@@ -179,6 +197,10 @@ DEFAULTS = {
     "PASSWORD_RESET_THROTTLE_RATE": "10/hour",
     # Rate limit for login attempts, per IP; None disables throttling.
     "LOGIN_THROTTLE_RATE": "10/min",
+    # Wrong passwords per account (per username, from any IP), such as
+    # "20/hour"; the account cannot log in once it is reached, until the
+    # period has passed. None turns the limit off.
+    "LOGIN_ACCOUNT_THROTTLE_RATE": "20/hour",
     # Who must log in with two-factor login (the two-factor app,
     # content_studio.contrib.two_factor): None (nobody, optional for
     # everyone), "superusers" or "all".

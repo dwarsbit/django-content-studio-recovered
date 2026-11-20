@@ -1,4 +1,5 @@
 import json
+import logging
 import operator
 import uuid
 from contextlib import nullcontext
@@ -72,6 +73,8 @@ from .utils import (
     get_tenant_scoped_queryset,
     validate_tenant_access,
 )
+
+logger = logging.getLogger("content_studio.viewsets")
 
 
 def _is_true(value) -> bool:
@@ -289,10 +292,20 @@ class BaseModelViewSet(ModelViewSet):
                 using=router.db_for_write(self.get_queryset().model)
             ):
                 return serializer.save(**attrs)
-        except IntegrityError as error:
+        except IntegrityError:
+            # The database's text names constraints and sometimes values,
+            # so it goes to the log (and the developer tools), not to the
+            # editor.
+            logger.warning(
+                "Saving %s hit a database constraint.",
+                self.get_queryset().model._meta.label,
+                exc_info=True,
+            )
             raise ValidationError(
-                "The object could not be saved: it conflicts with an existing "
-                f"object ({error})."
+                _(
+                    "The object could not be saved: it conflicts with an "
+                    "existing object."
+                )
             )
         except DjangoValidationError as error:
             raise ValidationError(get_error_detail(error))
@@ -449,6 +462,7 @@ class BaseModelViewSet(ModelViewSet):
             Importer,
             create_job,
             detect_format,
+            file_max_rows,
             is_importable,
             public_state,
             read_rows,
@@ -482,7 +496,7 @@ class BaseModelViewSet(ModelViewSet):
         if file is None:
             raise ValidationError({"file": ["No file was submitted."]})
 
-        max_size = cs_settings.UPLOAD_MAX_SIZE
+        max_size = cs_settings.IMPORT_MAX_SIZE
 
         if max_size is not None and file.size > max_size:
             from django.template.defaultfilters import filesizeformat
@@ -499,7 +513,8 @@ class BaseModelViewSet(ModelViewSet):
         try:
             file_format = detect_format(file.name)
             content = file.read()
-            headers, rows = read_rows(content, file_format)
+            # Stops at the first row too many, before parsing the rest.
+            headers, rows = read_rows(content, file_format, file_max_rows())
         except ImportFileError as error:
             raise ValidationError({"file": [str(error)]})
 
@@ -543,15 +558,28 @@ class BaseModelViewSet(ModelViewSet):
         )
 
     @action(
-        methods=["get"],
+        methods=["get", "delete"],
         detail=False,
         url_path="import/(?P<job_id>[^/]+)",
     )
     def import_status(self, request, job_id):
-        """An import job's progress and, once done, its result."""
-        from .importing import public_state
+        """
+        An import job's progress and, once done, its result. DELETE
+        discards a checked file that will not be imported.
+        """
+        from .importing import DONE, FAILED, discard_job, public_state
 
-        return Response({"job": public_state(self._get_import_job(job_id))})
+        state = self._get_import_job(job_id)
+
+        if request.method == "DELETE":
+            # Only a check that finished: a running job still needs its
+            # file, and an import that ran removed it already.
+            if state["status"] in (DONE, FAILED):
+                discard_job(state)
+
+            return Response(status=204)
+
+        return Response({"job": public_state(state)})
 
     def _get_import_job(self, job_id):
         """An import job of this model, started by the request's user."""
@@ -603,10 +631,17 @@ class BaseModelViewSet(ModelViewSet):
         try:
             with transaction.atomic(using=router.db_for_write(instance.__class__)):
                 instance.save(update_fields=[soft_delete_field])
-        except IntegrityError as error:
+        except IntegrityError:
+            logger.warning(
+                "Restoring %s hit a database constraint.",
+                instance._meta.label,
+                exc_info=True,
+            )
             raise ValidationError(
-                "The object could not be restored: it conflicts with an "
-                f"existing object ({error})."
+                _(
+                    "The object could not be restored: it conflicts with an "
+                    "existing object."
+                )
             )
 
         record_change(self.request, instance, RESTORED, "Restored from trash.")

@@ -11,7 +11,10 @@ it, what the URL points at:
 
 The HTML works as stored. render_rich_text() (and the rich_text template
 filter) replaces those URLs with the current ones, so a replaced file, a
-new crop or a changed slug never leaves a broken image or link.
+new crop or a changed slug never leaves a broken image or link. Only
+models with a studio that rich text can link to are resolved, and saving
+checks that the editor may see each object a new link points at
+(check_links), so a link never reveals the URL of an object they cannot.
 """
 
 import html
@@ -21,6 +24,7 @@ from html.parser import HTMLParser
 from typing import Optional
 
 from django.apps import apps
+from django.utils.translation import gettext as _
 
 from .settings import cs_settings
 
@@ -235,23 +239,39 @@ def _load_images(media_ids) -> dict:
     return {str(item.pk): item for item in media_model.objects.filter(pk__in=ids)}
 
 
+def _linkable_studio(label: str):
+    """The studio of a model rich text links may point to, else None."""
+    from .admin import is_linkable
+
+    site = cs_settings.ADMIN_SITE
+    registry = getattr(site, "_registry", {}) if site else {}
+
+    try:
+        model = apps.get_model(label)
+    except (LookupError, ValueError):
+        return None
+
+    studio = registry.get(model)
+
+    return studio if studio is not None and is_linkable(studio) else None
+
+
 def _load_links(links: dict) -> dict:
     """
     The current URL of every linked object, per model label and id; None
-    for an object that is gone, trashed or has no URL. Unknown models
-    are left out, so their links stay as they are.
+    for an object that is gone, trashed or has no URL. Models without a
+    studio that can be linked to are left out, so their links stay as
+    they are.
     """
-    site = cs_settings.ADMIN_SITE
-    registry = getattr(site, "_registry", {}) if site else {}
     urls = {}
 
     for label, object_ids in links.items():
-        try:
-            model = apps.get_model(label)
-        except (LookupError, ValueError):
+        studio = _linkable_studio(label)
+
+        if studio is None:
             continue
 
-        studio = registry.get(model)
+        model = studio.model
         pk_field = model._meta.pk
         ids = []
 
@@ -273,6 +293,87 @@ def _load_links(links: dict) -> dict:
         }
 
     return urls
+
+
+def collect_links(value) -> dict:
+    """The linked objects in rich text (or in a JSON value holding it)."""
+    links: dict = defaultdict(set)
+
+    def visit(item):
+        if isinstance(item, str):
+            if "data-link-model" in item:
+                collector = _ReferenceCollector()
+                collector.feed(item)
+                collector.close()
+
+                for label, ids in collector.links.items():
+                    links[label] |= ids
+        elif isinstance(item, dict):
+            for nested in item.values():
+                visit(nested)
+        elif isinstance(item, (list, tuple)):
+            for nested in item:
+                visit(nested)
+
+    visit(value)
+    return links
+
+
+def check_links(request, value, previous=None) -> list[str]:
+    """
+    The errors of the links rich text gains (those not already in
+    previous): each must point at a model rich text can link to, which
+    the editor may view, and at an object of it they can see (their
+    tenant, the studio's get_queryset). A link to an object that no
+    longer exists is left alone: rendering drops it.
+    """
+    from .utils import get_tenant_scoped_queryset
+
+    links = collect_links(value)
+    known = collect_links(previous) if previous is not None else {}
+    errors = []
+
+    for label, object_ids in links.items():
+        new_ids = object_ids - known.get(label, set())
+
+        if not new_ids:
+            continue
+
+        studio = _linkable_studio(label)
+
+        if studio is None or not studio.has_view_permission(request):
+            errors.append(_("A link points to something you cannot link to."))
+            continue
+
+        model = studio.model
+        pk_field = model._meta.pk
+        ids = []
+
+        for object_id in new_ids:
+            try:
+                ids.append(pk_field.to_python(object_id))
+            except Exception:
+                continue
+
+        visible = set(
+            str(pk)
+            for pk in get_tenant_scoped_queryset(
+                request, model, studio.get_queryset(request)
+            )
+            .filter(pk__in=ids)
+            .values_list("pk", flat=True)
+        )
+        existing = set(
+            str(pk)
+            for pk in model._default_manager.filter(pk__in=ids).values_list(
+                "pk", flat=True
+            )
+        )
+
+        if existing - visible:
+            errors.append(_("A link points to something you cannot link to."))
+
+    return errors
 
 
 def render_rich_text(value: Optional[str]) -> str:

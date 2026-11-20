@@ -35,6 +35,21 @@ such as `"10/min"`. Default: `"10/min"`. `None` removes the limit. Attempts
 are counted in the cache: with the default per-process cache, every worker
 counts separately, so configure a shared cache.
 
+### LOGIN_ACCOUNT_THROTTLE_RATE {#login_account_throttle_rate}
+
+The maximum number of wrong passwords per username, from any IP address, as
+a rate string such as `"20/hour"`. Default: `"20/hour"`. `None` removes the
+limit. Once it is reached, the username cannot log in, not even with the
+right password, until the period has passed since the first wrong password;
+the right password before that clears the count. Usernames without an
+account are counted the same, so the limit does not reveal which exist.
+The count is kept in the [`TOKEN_CACHE`](#token_cache).
+
+Someone who keeps guessing can keep an editor locked out this way, which is
+the price of slowing down guesses from many addresses. Raise the rate, or
+set it to `None` and use a tool such as django-axes, if that does not suit
+your site.
+
 ### TWO_FACTOR_REQUIRED {#two_factor_required}
 
 Who must use [two-factor login](/docs/authentication#two-factor-login):
@@ -128,9 +143,56 @@ takes precedence over this setting.
 ### UPLOAD_FOLDER {#upload_folder}
 
 Where files picked in a [`FileWidget`](/docs/widgets#files) wait until the
-editor saves, in the default storage. Default:
+editor saves, in [`UPLOAD_STORAGE`](#upload_storage). Default:
 `"content_studio/uploads"`. `content_studio_clear_uploads` removes the
 ones that were never saved.
+
+### UPLOAD_STORAGE {#upload_storage}
+
+The alias in Django's `STORAGES` that files picked in a
+[`FileWidget`](/docs/widgets#files) wait in until the object is saved, and
+[import](/docs/list-page#large-files) files until they are imported.
+Default: `"default"`, the media storage. Their names cannot be guessed, but
+a media storage serves them to anyone with the link until
+`content_studio_clear_uploads` removes them, so a private storage is
+better: one outside `MEDIA_ROOT`, or a bucket with signed URLs.
+`content_studio.E014` reports an alias that is not in `STORAGES`.
+
+```python
+STORAGES = {
+    # ...
+    "uploads": {
+        "BACKEND": "django.core.files.storage.FileSystemStorage",
+        "OPTIONS": {"location": "/srv/blog/uploads"},
+    },
+}
+
+CONTENT_STUDIO = {
+    # ...
+    "UPLOAD_STORAGE": "uploads",
+}
+```
+
+### UPLOAD_ALLOWED_EXTENSIONS {#upload_allowed_extensions}
+
+The file extensions a [`FileWidget`](/docs/widgets#files) accepts, in
+lowercase and without the dot. Default: the same list as
+[`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](#media_library_allowed_extensions).
+Add the types your file fields take, such as `"zip"`:
+
+```python
+from content_studio.settings import DEFAULT_ALLOWED_EXTENSIONS
+
+CONTENT_STUDIO = {
+    # ...
+    "UPLOAD_ALLOWED_EXTENSIONS": [*DEFAULT_ALLOWED_EXTENSIONS, "zip"],
+}
+```
+
+`None` accepts every extension. Either way, HTML, SVG, XML, JavaScript,
+CSS and the other types a browser runs are refused, as in the media
+library. A field's own validators, such as Django's
+`FileExtensionValidator`, apply on top.
 
 ### UPLOAD_MAX_SIZE {#upload_max_size}
 
@@ -144,6 +206,18 @@ The most rows a file can hold to be [imported](/docs/list-page#importing-from-a-
 in the request. Default: `10000`. Larger files run as a task when the task
 backend runs tasks in the background, and are refused otherwise. `None`
 removes the limit.
+
+### IMPORT_FILE_MAX_ROWS {#import_file_max_rows}
+
+The most rows any [import](/docs/list-page#large-files) file can hold, also
+when it runs as a task. Reading stops at the first row beyond it, so a huge
+file is not parsed whole. Default: `100000`. `None` removes the limit.
+
+### IMPORT_MAX_SIZE {#import_max_size}
+
+The largest file an import accepts, in bytes. Default: `10485760` (10 MB).
+An Excel file may unpack to at most ten times this size. `None` removes the
+limit; your web server's own request size limit still applies.
 
 ### IMPORT_TASK_ROWS {#import_task_rows}
 
@@ -212,8 +286,11 @@ dot. By default:
   `pptx`, `txt`, `xls`, `xlsx`.
 
 SVG is left out because it can contain scripts. `None` accepts every
-extension. Files whose content is markup (HTML, SVG, XML) are rejected
-whatever their extension.
+extension, except the types a browser runs or renders as a page: HTML,
+SVG, XML (including RSS and other `+xml` types), JavaScript, CSS and the
+like are always refused, under any of a file's extensions
+(`page.html.gz` too). Files whose content is markup (HTML, SVG, XML) are
+rejected whatever their extension.
 
 ### MEDIA_LIBRARY_MAX_UPLOAD_SIZE {#media_library_max_upload_size}
 

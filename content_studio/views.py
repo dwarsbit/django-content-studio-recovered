@@ -5,6 +5,7 @@ from django.conf import settings
 from django.contrib.auth.password_validation import password_validators_help_texts
 from django.urls import reverse, NoReverseMatch
 from django.utils import timezone
+from django.utils.crypto import salted_hmac
 from django.utils.decorators import method_decorator
 from django.utils.translation import get_language, gettext_lazy as _
 from django.views.decorators.cache import never_cache
@@ -38,6 +39,17 @@ from .signals import collect_changes
 from .utils import as_instance
 
 
+def asset_token():
+    """
+    Returns the cache key of the studio's static files: it changes with
+    the version, but without the SECRET_KEY it does not tell which one.
+    """
+
+    return salted_hmac(
+        "content_studio.assets", __version__, algorithm="sha256"
+    ).hexdigest()[:12]
+
+
 @method_decorator(never_cache, name="dispatch")
 class ContentStudioWebAppView(TemplateView):
     """
@@ -48,11 +60,11 @@ class ContentStudioWebAppView(TemplateView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["version"] = __version__
-        # Development tooling (the UI showcase) is enabled for Django debug
-        # setups only; production installs never see it.
-        context["debug"] = settings.DEBUG
-        context["devtools"] = devtools.is_enabled()
+        # The page is public, so it names neither the version nor DEBUG:
+        # the static files are cache-busted with a token that changes
+        # with the version but does not reveal it, and the debug tools
+        # learn they are on from discover, behind sign-in.
+        context["asset_token"] = asset_token()
         # The editor's language (content_studio.languages picked it) and
         # the ones the language picker offers.
         language = get_language()
@@ -182,6 +194,10 @@ class AdminApiViewSet(ViewSet):
         """
         data = {
             "version": __version__,
+            # Development tools: the UI showcase (DEBUG) and the
+            # developer tools button.
+            "debug": settings.DEBUG,
+            "devtools": devtools.is_enabled(),
             "models": get_models(request),
             "model_groups": get_model_groups(),
             "user_model": settings.AUTH_USER_MODEL,

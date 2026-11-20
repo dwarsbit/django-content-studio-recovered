@@ -28,6 +28,16 @@ of the box, and the system checks that catch configuration mistakes.
 - **Serve uploads from a separate domain** when you can, such as a CDN or an
   object storage bucket. Even with the upload checks, a file served from your
   own domain runs with your site's privileges if a browser renders it.
+- **Send `X-Content-Type-Options: nosniff` with media files**, so browsers
+  use the type the server names and never guess HTML from a file's
+  content. Django's `SecurityMiddleware` adds it to Django's own responses
+  (`SECURE_CONTENT_TYPE_NOSNIFF`), but media is usually served by the web
+  server or the storage: for nginx, `add_header X-Content-Type-Options
+  nosniff;` in the media `location`.
+- **Keep uploads waiting to be saved private.** Files picked in a
+  `FileWidget` and import files wait in
+  [`UPLOAD_STORAGE`](/docs/settings#upload_storage), by default the media
+  storage. Give them a storage of their own that is not served.
 - **Clear unsaved uploads daily.** Files picked in a
   [`FileWidget`](/docs/widgets#files) but never saved stay in the upload
   folder until `manage.py content_studio_clear_uploads` removes them. Run it
@@ -66,18 +76,22 @@ of the box, and the system checks that catch configuration mistakes.
   Content Studio ends that session.
 - **Limited login and password reset attempts**, per IP address
   ([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate),
-  [`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate)).
+  [`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate)),
+  and wrong passwords per account
+  ([`LOGIN_ACCOUNT_THROTTLE_RATE`](/docs/settings#login_account_throttle_rate)).
   The address is the one the connection comes from; an `X-Forwarded-For`
   header sent by the client is ignored unless you configure your proxies
   (see the checklist below). Five wrong reset codes lock an email address
   out, and new passwords must pass `AUTH_PASSWORD_VALIDATORS`.
 - **Sanitized rich text.** `HTMLField` cleans its value on save with an
   allowlist sanitizer ([`HTML_SANITIZER`](/docs/settings#html_sanitizer)).
-- **Checked uploads.** The media library accepts a list of file types up to
-  a maximum size, and rejects markup such as HTML and SVG
-  ([`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](/docs/settings#media_library_allowed_extensions)).
-  File fields reject markup too, and a file is only attached to an object
-  by the editor who uploaded it.
+- **Checked uploads.** The media library and file fields accept a list of
+  file types up to a maximum size
+  ([`MEDIA_LIBRARY_ALLOWED_EXTENSIONS`](/docs/settings#media_library_allowed_extensions),
+  [`UPLOAD_ALLOWED_EXTENSIONS`](/docs/settings#upload_allowed_extensions)),
+  and always refuse types a browser runs, such as HTML, SVG, XML and
+  JavaScript, by extension and by content. A file is only attached to an
+  object by the editor who uploaded it.
 - **Write-only secrets.** A field with
   [`PasswordWidget(write_only=True)`](/docs/widgets#secrets) never sends
   its value to the browser or to an export.
@@ -110,7 +124,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E011` | `search_fields`, `ordering` and `list_filter` entries that are not a field, and `list_item_display` values that are not a field or a model method. Inlines are checked too. |
 | `content_studio.E012` | An inline's `fk_name` that is not a field, or not a foreign key (or one-to-one field) to the parent model; or no `fk_name` on an inline whose model has no, or more than one, foreign key to the parent. The inline is not served. |
 | `content_studio.E013` | Values in the site's `default_widget_mapping` or `default_format_mapping` that are not widget or format classes or instances. |
-| `content_studio.E014` | A `MEDIA_LIBRARY_ALLOWED_EXTENSIONS` that is not a list of extensions without the dot, or a `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` that is not a positive number of bytes. |
+| `content_studio.E014` | An `UPLOAD_STORAGE` that is not in `STORAGES`, a `MEDIA_LIBRARY_ALLOWED_EXTENSIONS` or `UPLOAD_ALLOWED_EXTENSIONS` that is not a list of extensions without the dot, or a `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` that is not a positive number of bytes. |
 | `content_studio.E015` | `readonly_fields` entries that are not model fields or properties. Inlines are checked too. |
 | `content_studio.E016` | `prepopulated_fields` that is not a mapping, fields or source fields that are not model fields, fields that cannot be prepopulated (`DateTimeField`, `ForeignKey`, `OneToOneField`, `ManyToManyField`) and fields in `readonly_fields`. Inlines are checked too. |
 | `content_studio.E017` | A `reorder_field` that is not a model field or, unless the studio overrides `reorder`, not a number field, and `reorder_scope` entries that are not model fields. Inlines are checked too. |
@@ -148,7 +162,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E049` | A [`DEVTOOLS`](/docs/settings#devtools) that is not `True` or `False`, or a [`DEVTOOLS_LOGGERS`](/docs/settings#devtools_loggers) that is not a list of logger names. |
 | `content_studio.E050` | A [backup](/docs/backups#settings) setting that cannot work: `BACKUP_STORAGE` not in `STORAGES`, an alias in `BACKUP_DATABASES` not in `DATABASES`, a `BACKUP_SCHEDULE` that is not a cron expression, a `BACKUP_KEEP` below 1, or an unknown app or model in `BACKUP_EXCLUDE`. |
 | `content_studio.E051` | The [`fields`](/docs/list-page#asking-for-values-first) of a `@bulk_action` or `Button`: a name that is not a model field and has no `form_field`, a field that cannot be edited or is excluded, a `form_field` the dialog cannot show, a condition that reads another field or uses a `Condition`, or a method without the `data` argument. |
-| `content_studio.E052` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. Until 1.17.1 this was the warning `content_studio.W027`. See [Keep the backups private](/docs/backups#keep-the-backups-private); silence it only if your web server refuses the backup folder. |
+| `content_studio.E052` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. Before 1.18.0 this was the warning `content_studio.W027`. See [Keep the backups private](/docs/backups#keep-the-backups-private); silence it only if your web server refuses the backup folder. |
+| `content_studio.E053` | A [`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate) or [`LOGIN_ACCOUNT_THROTTLE_RATE`](/docs/settings#login_account_throttle_rate) that is not a rate such as `"10/min"` or `None`. |
 
 ### Warnings
 

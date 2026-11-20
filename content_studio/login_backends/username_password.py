@@ -1,11 +1,13 @@
 from django.contrib.auth import get_user_model, authenticate
 from django.contrib.auth.signals import user_login_failed
+from django.utils.translation import gettext as _
 from rest_framework import serializers
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, Throttled
 from rest_framework.permissions import AllowAny
 from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
 
+from .. import login_failures
 from ..utils import MAX_PASSWORD_LENGTH
 
 
@@ -50,6 +52,20 @@ class UsernamePasswordViewSet(ViewSet):
         # and signal receivers such as django-axes expect the former.
         django_request = request._request
 
+        # Too many wrong passwords for this username, from any address:
+        # refused before the password is checked, so guessing on cannot
+        # tell a right password either (see login_failures.py).
+        if login_failures.account_locked(username):
+            user_login_failed.send(
+                sender=__name__,
+                credentials={"username": username},
+                request=django_request,
+            )
+
+            raise Throttled(
+                detail=_("Too many failed logins for this account. Try again later.")
+            )
+
         user = UsernamePasswordBackend.login(
             username=username,
             password=serializer.validated_data["password"],
@@ -68,7 +84,11 @@ class UsernamePasswordViewSet(ViewSet):
                     request=django_request,
                 )
 
+            login_failures.count_failure(username)
+
             raise PermissionDenied(detail="Invalid username or password.")
+
+        login_failures.clear_failures(username)
 
         from ..login import complete_login
 

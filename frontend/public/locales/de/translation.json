@@ -837,6 +837,11 @@
       "mismatch": "Die neuen Passwörter stimmen nicht überein.",
       "changed": "Passwort geändert"
     },
+    "confirm_password": {
+      "title": "Mit deinem Passwort bestätigen",
+      "email_description": "Zum Ändern deiner E-Mail-Adresse brauchst du dein aktuelles Passwort. Passwort-Links gehen dann an die neue Adresse.",
+      "submit": "Bestätigen"
+    },
     "preferences": {
       "title": "Einstellungen",
       "save_action": "Standard-Speicheraktion",
@@ -946,6 +951,7 @@
     "cannot_scan": "Scannen klappt nicht? Geben Sie stattdessen diesen Schlüssel ein:",
     "qr_label": "QR-Code, um Ihr Konto einer Authenticator-App hinzuzufügen",
     "copy_key": "Schlüssel kopieren",
+    "setup_password": "Aktuelles Passwort",
     "setup_code": "Code aus der App",
     "codes_title": "Wiederherstellungscodes speichern",
     "codes_description": "Wenn Sie Ihr Handy verlieren, meldet Sie jeder dieser Codes einmal an. Bewahren Sie sie sicher auf, etwa in Ihrem Passwortmanager.",

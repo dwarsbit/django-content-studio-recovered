@@ -855,6 +855,11 @@
       "mismatch": "Les nouveaux mots de passe ne correspondent pas.",
       "changed": "Mot de passe modifié"
     },
+    "confirm_password": {
+      "title": "Confirmer avec votre mot de passe",
+      "email_description": "La modification de votre adresse e-mail nécessite votre mot de passe actuel. Les liens de mot de passe seront envoyés à la nouvelle adresse.",
+      "submit": "Confirmer"
+    },
     "preferences": {
       "title": "Préférences",
       "save_action": "Action d’enregistrement par défaut",
@@ -966,6 +971,7 @@
     "cannot_scan": "Impossible de le scanner ? Saisissez plutôt cette clé :",
     "qr_label": "Code QR pour ajouter votre compte à une application d’authentification",
     "copy_key": "Copier la clé",
+    "setup_password": "Mot de passe actuel",
     "setup_code": "Code de l’application",
     "codes_title": "Enregistrez vos codes de récupération",
     "codes_description": "Si vous perdez votre téléphone, chacun de ces codes vous connecte une fois. Conservez-les en lieu sûr, par exemple dans votre gestionnaire de mots de passe.",

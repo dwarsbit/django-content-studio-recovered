@@ -67,3 +67,14 @@ export function applyFieldErrors(
   }
   return true;
 }
+
+// The server's message for one field of a 400, such as current_password.
+export function getFieldMessage(error: unknown, name: string): string | null {
+  const messages = getFieldErrors(error)?.[name];
+
+  if (!messages) {
+    return null;
+  }
+
+  return Array.isArray(messages) ? messages.join(" ") : String(messages);
+}

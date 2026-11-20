@@ -2,6 +2,7 @@ from django.template.defaultfilters import filesizeformat
 from django.utils.translation import gettext as _
 from rest_framework import serializers
 
+from content_studio.file_types import extension_of, is_active_file
 from content_studio.settings import cs_settings
 
 from content_studio.thumbnails import get_thumbnail_url
@@ -37,16 +38,20 @@ def looks_like_markup(file) -> bool:
 def validate_media_upload(file):
     """
     The media library's upload policy: the extension must be in
-    MEDIA_LIBRARY_ALLOWED_EXTENSIONS, the size within
+    MEDIA_LIBRARY_ALLOWED_EXTENSIONS and never a type a browser runs
+    (content_studio.file_types), the size within
     MEDIA_LIBRARY_MAX_UPLOAD_SIZE, and the content must not be markup,
     whatever its extension claims.
     """
     allowed = cs_settings.MEDIA_LIBRARY_ALLOWED_EXTENSIONS
     max_size = cs_settings.MEDIA_LIBRARY_MAX_UPLOAD_SIZE
     name = getattr(file, "name", "") or ""
-    extension = name.rsplit(".", 1)[-1].lower() if "." in name else ""
+    extension = extension_of(name)
 
     if allowed is not None and extension not in {e.lower() for e in allowed}:
+        raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
+
+    if is_active_file(name):
         raise serializers.ValidationError(_("Files of this type cannot be uploaded."))
 
     if max_size is not None and file.size > max_size:

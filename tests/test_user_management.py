@@ -209,6 +209,179 @@ class SetPasswordTests(UserManagementTestCase):
         self.assertEqual(response.status_code, 403)
 
 
+class OutrankedAccountTests(UserManagementTestCase):
+    """
+    Staff who are not superusers only take over accounts holding no
+    permission they lack: a manager with more permissions is protected
+    like a superuser.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.manager = staff(
+            "manager", "view_user", "change_user", "add_user", "delete_user"
+        )
+        self.manager.email = "manager@example.com"
+        self.manager.save()
+
+    def test_staff_cannot_set_the_password_of_an_account_with_more_permissions(self):
+        response = client_for(self.editor).post(
+            self.url(self.manager), {"password": "New-Secret-42"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.manager.refresh_from_db()
+        self.assertTrue(self.manager.check_password("Staff-Secret-42"))
+
+    def test_staff_cannot_email_it_a_password_link(self):
+        response = client_for(self.editor).post(
+            f"/api/content/auth.user/{self.manager.pk}/password-link"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_cannot_change_its_email(self):
+        client_for(self.editor).patch(
+            f"/api/content/auth.user/{self.manager.pk}",
+            {"email": "editor@example.com"},
+            format="json",
+        )
+
+        self.manager.refresh_from_db()
+        self.assertEqual(self.manager.email, "manager@example.com")
+
+    def test_the_edit_page_offers_nothing_that_takes_it_over(self):
+        detail = (
+            client_for(self.editor)
+            .get(f"/api/content/auth.user/{self.manager.pk}")
+            .json()
+        )
+
+        self.assertIn("email", detail["__readonly_fields__"])
+        self.assertFalse(detail["__user__"]["can_set_password"])
+        self.assertFalse(detail["__user__"]["can_send_password_link"])
+
+    def test_group_permissions_count(self):
+        group = auth_models.Group.objects.create(name="Owners")
+        group.permissions.set(
+            auth_models.Permission.objects.filter(codename="delete_user")
+        )
+        self.target.groups.add(group)
+
+        response = client_for(self.editor).post(
+            self.url(self.target), {"password": "New-Secret-42"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_an_inactive_accounts_permissions_count(self):
+        self.manager.is_active = False
+        self.manager.save()
+
+        response = client_for(self.editor).post(
+            self.url(self.manager), {"password": "New-Secret-42"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 403)
+
+    def test_staff_manages_accounts_with_the_same_or_fewer_permissions(self):
+        self.target.user_permissions.set(
+            auth_models.Permission.objects.filter(codename="view_user")
+        )
+
+        response = client_for(self.editor).post(
+            self.url(self.target), {"password": "New-Secret-42"}, format="json"
+        )
+        self.assertEqual(response.status_code, 204)
+
+        # Setting the editor's password signs them out, so it comes last.
+        response = client_for(self.manager).post(
+            self.url(self.editor), {"password": "New-Secret-42"}, format="json"
+        )
+        self.assertEqual(response.status_code, 204)
+
+    def test_superusers_manage_every_account(self):
+        response = client_for(self.admin).post(
+            self.url(self.manager), {"password": "New-Secret-42"}, format="json"
+        )
+
+        self.assertEqual(response.status_code, 204)
+
+
+class LockoutTests(UserManagementTestCase):
+    """Staff who are not superusers cannot lock the superusers out."""
+
+    def setUp(self):
+        super().setUp()
+        self.editor.user_permissions.add(
+            auth_models.Permission.objects.get(codename="delete_user")
+        )
+
+    def test_staff_cannot_deactivate_a_superuser_or_revoke_staff(self):
+        response = client_for(self.editor).patch(
+            f"/api/content/auth.user/{self.admin.pk}",
+            {"is_active": False, "is_staff": False},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 200, response.content)
+        self.admin.refresh_from_db()
+        self.assertTrue(self.admin.is_active)
+        self.assertTrue(self.admin.is_staff)
+        readonly = (
+            client_for(self.editor)
+            .get(f"/api/content/auth.user/{self.admin.pk}")
+            .json()["__readonly_fields__"]
+        )
+        self.assertIn("is_active", readonly)
+        self.assertIn("is_staff", readonly)
+
+    def test_staff_still_deactivates_accounts_they_outrank(self):
+        client_for(self.editor).patch(
+            f"/api/content/auth.user/{self.target.pk}",
+            {"is_active": False},
+            format="json",
+        )
+
+        self.target.refresh_from_db()
+        self.assertFalse(self.target.is_active)
+
+    def test_staff_cannot_delete_a_superuser(self):
+        response = client_for(self.editor).delete(
+            f"/api/content/auth.user/{self.admin.pk}"
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+
+    def test_staff_cannot_bulk_delete_a_superuser(self):
+        response = client_for(self.editor).post(
+            "/api/content/auth.user/bulk",
+            {"action": "delete", "ids": [str(self.admin.pk), str(self.target.pk)]},
+            format="json",
+        )
+
+        self.assertEqual(response.status_code, 403)
+        self.assertTrue(User.objects.filter(pk=self.admin.pk).exists())
+        self.assertTrue(User.objects.filter(pk=self.target.pk).exists())
+
+    def test_staff_deletes_accounts_they_outrank(self):
+        response = client_for(self.editor).delete(
+            f"/api/content/auth.user/{self.target.pk}"
+        )
+
+        self.assertIn(response.status_code, (200, 204))
+        self.assertFalse(User.objects.filter(pk=self.target.pk).exists())
+
+    def test_superusers_delete_superusers(self):
+        other = User.objects.create_superuser(username="root", password="Root-42-x")
+
+        response = client_for(self.admin).delete(f"/api/content/auth.user/{other.pk}")
+
+        self.assertIn(response.status_code, (200, 204))
+        self.assertFalse(User.objects.filter(pk=other.pk).exists())
+
+
 class UserInfoTests(UserManagementTestCase):
     def info(self, viewer, user):
         response = client_for(viewer).get(f"/api/content/auth.user/{user.pk}")
