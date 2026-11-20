@@ -109,7 +109,10 @@ Common studio options: `table_display`, `list_filter`, `search_fields`,
 or `"none"` for large tables), `list_description`, `list_views`
 (`["table", "list"]`) with `list_item_display`, `soft_delete`,
 `reorder_field` and `reorder_scope`, `allow_duplication` and
-`duplicate_inlines`, `export_fields` or `allow_export`, `edit_width`
+`duplicate_inlines`, `export_fields` or `allow_export`, `import_fields`
+or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
+the primary key by default; relations by `import_lookups`, e.g.
+`{"author": "username"}`), `edit_width`
 (`"default"` or `"wide"`), `readonly_fields`, `prepopulated_fields`,
 `exclude`, `is_singleton`, `presence` and `icon`.
 

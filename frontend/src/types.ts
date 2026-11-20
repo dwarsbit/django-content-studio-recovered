@@ -161,6 +161,8 @@ export interface Model {
       reorderable?: boolean;
       // The formats the list can be exported in; null without export.
       export?: { formats: ExportFormat[] } | null;
+      // Import from a file; null when the studio offers none.
+      import?: ImportConfig | null;
       actions: BulkAction[];
     };
     edit: {
@@ -242,6 +244,61 @@ export interface BulkAction {
 }
 
 export type ExportFormat = "csv" | "xlsx";
+
+export type ImportFormat = "csv" | "xlsx" | "json";
+
+export interface ImportConfig {
+  // What an import reads and the "For import" export writes.
+  formats: ImportFormat[];
+  // The template (a header row) is offered in these.
+  template_formats: ExportFormat[];
+  // The fields rows are matched on.
+  key: string[];
+  // The template's columns: the key, then the fields a file may set.
+  columns: {
+    name: string;
+    label: string;
+    // The related model's field a relation column holds.
+    lookup: string | null;
+    required: boolean;
+  }[];
+  can_import: boolean;
+  can_create: boolean;
+  can_update: boolean;
+}
+
+export interface ImportError {
+  // The file's column, or null for the row as a whole.
+  column: string | null;
+  field: string | null;
+  messages: string[];
+}
+
+export interface ImportResult {
+  preview: boolean;
+  // Whether the rows were saved (never for a preview).
+  applied: boolean;
+  total: number;
+  created: number;
+  updated: number;
+  unchanged: number;
+  failed: number;
+  // The first failing rows; failed counts all of them.
+  failures: { row: number; errors: ImportError[] }[];
+  ignored_columns: string[];
+  // Why the file cannot be imported at all.
+  errors: string[];
+}
+
+export interface ImportJob {
+  id: string;
+  status: "queued" | "running" | "done" | "failed";
+  preview: boolean;
+  processed: number;
+  total: number;
+  result: ImportResult | null;
+  error: string | null;
+}
 
 export interface UniqueSet {
   id: string;

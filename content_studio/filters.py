@@ -342,6 +342,7 @@ class LookupFilter(BaseFilterBackend):
         "ordering",
         "export_format",
         "export_scope",
+        "export_mode",
     ]
 
     def get_allowed_fields(self, view):

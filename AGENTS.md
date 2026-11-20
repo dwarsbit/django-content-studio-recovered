@@ -49,6 +49,8 @@ content_studio/
 ├── checks.py            # System checks (content_studio.E001-E044, W001-W025)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution)
+├── export.py            # Export of a list as CSV/Excel (display values)
+├── importing.py         # Import from CSV/Excel/JSON (preview, matching, background jobs) and the "For import" export
 ├── reordering.py        # Built-in reordering (reorder_field moves, ManualOrderModel renumbering)
 ├── throttling.py        # ClientIPMixin: throttles identify clients by REMOTE_ADDR unless NUM_PROXIES is set
 ├── thumbnails.py        # Thumbnails of media images (Pillow, "small"/"large" WebP under THUMBNAIL_FOLDER)

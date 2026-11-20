@@ -72,6 +72,13 @@ class ModelStudioPermissions(BasePermission):
                 request
             ) or admin_model.has_add_permission(request)
 
+        if getattr(view, "action", None) == "import_rows":
+            # Importing creates and updates objects; each row is checked
+            # for the permission it needs.
+            return admin_model.has_add_permission(
+                request
+            ) or admin_model.has_change_permission(request)
+
         if getattr(view, "action", None) == "upload":
             # A file for a FileWidget, picked on the create or the edit
             # page; it changes nothing until the object is saved.

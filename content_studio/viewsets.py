@@ -13,6 +13,7 @@ from django.db import IntegrityError, models, router, transaction
 from django.db.models import Q
 from django.http import HttpResponseBase
 from django.utils import timezone
+from django.utils.translation import gettext as _
 from rest_framework.decorators import action
 from rest_framework.exceptions import NotFound, PermissionDenied, ValidationError
 from rest_framework.fields import get_error_detail
@@ -66,6 +67,15 @@ from .utils import (
     get_tenant_scoped_queryset,
     validate_tenant_access,
 )
+
+
+def _is_true(value) -> bool:
+    return str(value).strip().lower() in ("1", "true", "yes", "on")
+
+
+def request_user_pk(request):
+    user = getattr(request, "user", None)
+    return getattr(user, "pk", None)
 
 
 class BaseModelViewSet(ModelViewSet):
@@ -366,6 +376,11 @@ class BaseModelViewSet(ModelViewSet):
         exports the trash instead. Only exists when the studio offers
         export; gated by view permission like the list.
         """
+        mode = request.query_params.get("export_mode")
+
+        if mode in ("import", "template"):
+            return self._import_export(request, template=mode == "template")
+
         if not is_exportable(self._admin_model):
             raise NotFound("This model cannot be exported.")
 
@@ -379,6 +394,178 @@ class BaseModelViewSet(ModelViewSet):
         queryset = self.filter_queryset(self.get_queryset())
 
         return export_response(self._admin_model, request, queryset, export_format)
+
+    def _import_export(self, request, template: bool):
+        """
+        ?export_mode=import: the list (search, filters and ordering) as
+        an import reads it back; ?export_mode=template: its header row.
+        Only exists when the studio offers import.
+        """
+        from .importing import (
+            get_import_formats,
+            get_template_formats,
+            is_importable,
+            raw_export_response,
+        )
+
+        if not is_importable(self._admin_model):
+            raise NotFound("This model cannot be imported.")
+
+        formats = get_template_formats() if template else get_import_formats()
+        export_format = request.query_params.get("export_format") or "csv"
+
+        if export_format not in formats:
+            raise ValidationError(
+                f"Unknown or unavailable export format {export_format!r}."
+            )
+
+        queryset = None if template else self.filter_queryset(self.get_queryset())
+
+        return raw_export_response(self._admin_model, request, queryset, export_format)
+
+    @action(
+        methods=["post"],
+        detail=False,
+        url_path="import",
+        parser_classes=[MultiPartParser, ObjectJSONParser],
+    )
+    def import_rows(self, request):
+        """
+        Import a file: "file" (CSV, Excel or JSON), "preview" to check it
+        without saving, "skip_errors" to import the valid rows when some
+        fail. Files with many rows run as a task when the task backend
+        runs in the background: the response is the job (202), and
+        "job" instead of "file" imports a previewed job's file. Gated
+        by add or change permission; each row by the permission it needs.
+        """
+        from .importing import (
+            DONE,
+            ImportFileError,
+            Importer,
+            create_job,
+            detect_format,
+            is_importable,
+            public_state,
+            read_rows,
+            restart_job,
+            runs_in_background,
+        )
+
+        if not is_importable(self._admin_model):
+            raise NotFound("This model cannot be imported.")
+
+        preview = _is_true(request.data.get("preview"))
+        skip_errors = _is_true(request.data.get("skip_errors"))
+        job_id = request.data.get("job")
+
+        if job_id:
+            state = self._get_import_job(job_id)
+
+            if state["status"] != DONE or not state["preview"]:
+                raise ValidationError("This import was not previewed.")
+
+            if preview:
+                return Response({"job": public_state(state)})
+
+            return Response(
+                {"job": public_state(restart_job(state, skip_errors=skip_errors))},
+                status=202,
+            )
+
+        file = request.FILES.get("file")
+
+        if file is None:
+            raise ValidationError({"file": ["No file was submitted."]})
+
+        max_size = cs_settings.UPLOAD_MAX_SIZE
+
+        if max_size is not None and file.size > max_size:
+            from django.template.defaultfilters import filesizeformat
+
+            raise ValidationError(
+                {
+                    "file": [
+                        _("The file is too large; it can be %(size)s at most.")
+                        % {"size": filesizeformat(max_size)}
+                    ]
+                }
+            )
+
+        try:
+            file_format = detect_format(file.name)
+            content = file.read()
+            headers, rows = read_rows(content, file_format)
+        except ImportFileError as error:
+            raise ValidationError({"file": [str(error)]})
+
+        task_rows = cs_settings.IMPORT_TASK_ROWS
+        max_rows = cs_settings.IMPORT_MAX_ROWS
+        background = runs_in_background()
+
+        if background and (
+            (task_rows is not None and len(rows) >= task_rows)
+            or (max_rows is not None and len(rows) > max_rows)
+        ):
+            state = create_job(
+                request,
+                self._admin_model,
+                content,
+                file_format,
+                file.name,
+                len(rows),
+                preview=preview,
+                skip_errors=skip_errors,
+            )
+            return Response({"job": public_state(state)}, status=202)
+
+        if max_rows is not None and len(rows) > max_rows:
+            raise ValidationError(
+                {
+                    "file": [
+                        _(
+                            "The file has %(count)s rows; at most %(max)s can "
+                            "be imported at once. Split it into smaller files."
+                        )
+                        % {"count": f"{len(rows):,}", "max": f"{max_rows:,}"}
+                    ]
+                }
+            )
+
+        importer = Importer(self, headers, rows, file_format)
+
+        return Response(
+            {"result": importer.run(preview=preview, skip_errors=skip_errors)}
+        )
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="import/(?P<job_id>[^/]+)",
+    )
+    def import_status(self, request, job_id):
+        """An import job's progress and, once done, its result."""
+        from .importing import public_state
+
+        return Response({"job": public_state(self._get_import_job(job_id))})
+
+    def _get_import_job(self, job_id):
+        """An import job of this model, started by the request's user."""
+        from .importing import is_importable, load_state
+
+        if not is_importable(self._admin_model):
+            raise NotFound("This model cannot be imported.")
+
+        state = load_state(job_id)
+
+        if (
+            state is None
+            or state.get("user") != str(request_user_pk(self.request))
+            or state.get("model") != self._model._meta.label_lower
+            or state.get("tenant") != self.request.headers.get("x-dcs-tenant")
+        ):
+            raise NotFound("Unknown import.")
+
+        return state
 
     def _get_export_format(self, params):
         export_format = params.get("export_format") or "csv"

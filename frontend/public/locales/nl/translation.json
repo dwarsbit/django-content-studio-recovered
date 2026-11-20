@@ -144,7 +144,8 @@
     "previous_page": "Vorige pagina",
     "next_page": "Volgende pagina",
     "slow_count": "Het tellen van deze lijst duurde {{seconds, number}} s. Zet list_count = \"estimated\" op {{studio}} om bij grote tabellen een schatting te tonen. Zichtbaar zolang DEBUG aan staat.",
-    "view": "Weergave"
+    "view": "Weergave",
+    "more_actions": "Meer acties"
   },
   "reorder": {
     "drag": "Sleep om te herschikken",
@@ -172,7 +173,9 @@
   "export": {
     "button": "Exporteren",
     "csv": "CSV",
-    "xlsx": "Excel (.xlsx)"
+    "xlsx": "Excel (.xlsx)",
+    "for_import": "Exporteren voor import",
+    "json": "JSON"
   },
   "media_library": {
     "title": "Mediabibliotheek",
@@ -931,6 +934,57 @@
     "new_codes_saved": "Je oude herstelcodes werken niet meer. Bewaar deze op een veilige plek, zoals je wachtwoordmanager.",
     "turn_off_title": "Tweestapsverificatie uitzetten?",
     "turn_off_description": "Vul een code uit je authenticator-app in. Je logt daarna in met alleen je wachtwoord, en je andere apparaten worden uitgelogd."
+  },
+  "import": {
+    "button": "Importeren",
+    "title": "{{plural}} importeren",
+    "description_pk": "Maak en wijzig vanuit een CSV-, Excel- of JSON-bestand. Een rij met een id wijzigt die {{name}}; een rij zonder id maakt een nieuwe {{name}}.",
+    "description_key": "Maak en wijzig vanuit een CSV-, Excel- of JSON-bestand. Rijen worden gekoppeld op {{key}}: bij een match wordt die {{name}} gewijzigd, andere rijen maken een nieuwe {{name}}.",
+    "choose": "Kies een bestand",
+    "drop": "Laat het bestand los om het te controleren",
+    "formats": "of sleep hier een CSV-, Excel- (.xlsx) of JSON-bestand heen",
+    "wrong_type": "Kies een CSV-, Excel- (.xlsx) of JSON-bestand.",
+    "columns": "Kolommen:",
+    "by_lookup": "op {{lookup}}",
+    "template": "Download een sjabloon:",
+    "replace": "Kies een ander bestand",
+    "checking": "Rijen controleren…",
+    "checking_progress": "Rijen controleren… {{processed}} van {{total}}",
+    "queued": "{{total}} rijen importeren…",
+    "progress": "Importeren… {{processed}} van {{total}} rijen",
+    "cannot_import": "Dit bestand kan niet worden geïmporteerd",
+    "counts": {
+      "created": "Nieuw",
+      "updated": "Gewijzigd",
+      "unchanged": "Ongewijzigd",
+      "failed": "Met fouten"
+    },
+    "ignored_columns_one": "De kolom {{columns}} wordt overgeslagen: het is geen veld dat deze import vult.",
+    "ignored_columns_other": "De kolommen {{columns}} worden overgeslagen: het zijn geen velden die deze import vult.",
+    "failing_rows": "Rijen met fouten",
+    "row": "Rij {{row}}",
+    "more_rows_one": "en nog {{count}} rij",
+    "more_rows_other": "en nog {{count}} rijen",
+    "import_all_one": "{{number}} rij importeren",
+    "import_all_other": "{{number}} rijen importeren",
+    "import_valid_one": "{{number}} geldige rij importeren",
+    "import_valid_other": "{{number}} geldige rijen importeren",
+    "nothing_valid": "Geen geldige rijen",
+    "nothing_changes": "Niets te wijzigen",
+    "not_applied": "Sommige rijen hebben fouten, dus er is niets geïmporteerd. Los ze op, of importeer alleen de geldige rijen.",
+    "failed": "De import is mislukt.",
+    "done": "{{plural}} geïmporteerd",
+    "summary": {
+      "created_one": "{{count}} nieuw",
+      "created_other": "{{count}} nieuw",
+      "updated_one": "{{count}} gewijzigd",
+      "updated_other": "{{count}} gewijzigd",
+      "unchanged_one": "{{count}} ongewijzigd",
+      "unchanged_other": "{{count}} ongewijzigd",
+      "skipped_one": "{{count}} overgeslagen",
+      "skipped_other": "{{count}} overgeslagen"
+    },
+    "from_file": "Importeren uit bestand…"
   },
   "status": {
     "title": "Systeemstatus",

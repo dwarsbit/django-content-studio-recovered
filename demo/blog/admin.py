@@ -166,6 +166,23 @@ class ArticleStudio(ModelStudio):
     # Opt-in soft delete: deleting moves articles to the trash, where
     # they can be restored or permanently deleted.
     soft_delete = "removed_at"
+    # Export the table, and import articles from a file: rows with an id
+    # update that article, others create one. Authors are given by
+    # username and categories by name.
+    allow_export = True
+    import_fields = [
+        "title",
+        "slug",
+        "body",
+        "meta_description",
+        "status",
+        "author",
+        "categories",
+        "featured",
+        "views",
+        "published_at",
+    ]
+    import_lookups = {"author": "username", "categories": "name"}
     search_fields = ["title"]
     inlines = [ReviewInline]
     # The slug follows the title while an article is created.

@@ -11,8 +11,8 @@ import {
 import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
-import { ExportMenu } from "@/components/export-menu";
 import { HeaderTabs } from "@/components/header-tabs";
+import { ImportDialog } from "@/components/import-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { PageBody, PageHeader, Toolbar } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/pagination";
@@ -21,6 +21,7 @@ import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { useDiscover } from "@/hooks/use-discover";
 import { useExport } from "@/hooks/use-export";
 import { useHttp } from "@/hooks/use-http";
+import { useImportDownload } from "@/hooks/use-import";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
 import { getDownloadErrorMessage } from "@/lib/download";
@@ -30,6 +31,7 @@ import { isCounted } from "@/lib/list-pagination";
 import { safeStorage } from "@/lib/safe-storage";
 import type {
   ExportFormat,
+  ImportFormat,
   ListResponse,
   Model,
   PaginatedResponse,
@@ -38,6 +40,7 @@ import type {
 
 import { ContentBulkBar } from "./_components/bulk-bar";
 import { Filters } from "./_components/filters";
+import { ListActionsMenu } from "./_components/list-actions-menu";
 import { ListView } from "./_components/list-view";
 import { SortSelect } from "./_components/sort-select";
 import { type ReorderProps, TableView } from "./_components/table-view";
@@ -250,6 +253,26 @@ export function ModelListPage() {
     }
   };
 
+  // Import: the dialog, and the list "For import" in the export menu.
+  const importConfig = model?.admin.list.import ?? null;
+  const [importOpen, setImportOpen] = useState(false);
+  const { mutateAsync: runImportExport, isPending: isImportExporting } =
+    useImportDownload(appLabel ?? "");
+  const exportForImport = async (format: ImportFormat) => {
+    try {
+      await runImportExport({
+        format,
+        params: {
+          ...filters,
+          search: search || undefined,
+          ordering: effectiveOrdering,
+        },
+      });
+    } catch (e) {
+      toast.error(await getDownloadErrorMessage(e));
+    }
+  };
+
   const queryKey = [
     "resources",
     appLabel,
@@ -344,27 +367,32 @@ export function ModelListPage() {
         }
         description={model.admin.list.description}
         actions={
-          model.admin.permissions.add_permission && (
-            <Link
-              to={`/content/${model.label}/new`}
-              className={buttonVariants()}
-            >
-              {t("common.create")}
-            </Link>
-          )
+          <>
+            <ListActionsMenu
+              exportFormats={exportFormats}
+              onExport={exportList}
+              importFormats={importConfig?.formats}
+              onExportForImport={importConfig ? exportForImport : undefined}
+              onImport={
+                importConfig?.can_import ? () => setImportOpen(true) : undefined
+              }
+              disabled={isExporting || isImportExporting}
+            />
+            {model.admin.permissions.add_permission && (
+              <Link
+                to={`/content/${model.label}/new`}
+                className={buttonVariants()}
+              >
+                {t("common.create")}
+              </Link>
+            )}
+          </>
         }
       >
         {model.admin.list.trash && <ListTabs model={model} current="list" />}
         <Toolbar>
           <Filters model={model} values={filters} onValuesChange={setFilters} />
           <div className="ml-auto flex items-center gap-2">
-            {exportFormats.length > 0 && (
-              <ExportMenu
-                formats={exportFormats}
-                disabled={isExporting}
-                onExport={exportList}
-              />
-            )}
             {view === "list" && !R.isNil(sortableBy) && (
               <SortSelect
                 model={model}
@@ -406,6 +434,13 @@ export function ModelListPage() {
           </div>
         </Toolbar>
       </PageHeader>
+      {importConfig?.can_import && (
+        <ImportDialog
+          model={model}
+          open={importOpen}
+          onOpenChange={setImportOpen}
+        />
+      )}
 
       <PageBody className="space-y-3">
         {view === "list" ? (

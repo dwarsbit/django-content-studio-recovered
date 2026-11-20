@@ -331,3 +331,30 @@ class Coupon(models.Model):
 
     def __str__(self):
         return self.code
+
+
+class Venue(models.Model):
+    """Import: rows matched on a unique slug; see test_import."""
+
+    class Kind(models.TextChoices):
+        HALL = "hall", "Concert hall"
+        CLUB = "club", "Club"
+
+    name = models.CharField(max_length=100)
+    slug = models.SlugField(unique=True)
+    kind = models.CharField(max_length=20, choices=Kind.choices, default=Kind.HALL)
+    capacity = models.PositiveIntegerField(null=True, blank=True)
+    opened = models.DateField(null=True, blank=True)
+    host = models.ForeignKey(
+        "auth.User", null=True, blank=True, on_delete=models.SET_NULL
+    )
+    events = models.ManyToManyField(Event, blank=True, related_name="venues")
+
+    def clean(self):
+        from django.core.exceptions import ValidationError
+
+        if self.capacity == 13:
+            raise ValidationError({"capacity": "Unlucky capacity."})
+
+    def __str__(self):
+        return self.name
