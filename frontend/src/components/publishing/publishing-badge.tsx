@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { PiClockBold } from "react-icons/pi";
 
 import { Badge } from "@/components/ui/badge";
+import { listReviewState, ReviewBadge } from "@/components/review/review-mock";
 import type { PublishingInfo, PublishingState } from "@/types";
 
 dayjs.extend(localizedFormat);
@@ -56,5 +57,13 @@ export function PublishingFormat({ value }: { value: unknown }) {
     return null;
   }
 
-  return <PublishingBadge state={info.state} publishedAt={info.published_at} />;
+  // MOCK: a second badge for rows in review.
+  const review = listReviewState((info as { id?: string }).id);
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <PublishingBadge state={info.state} publishedAt={info.published_at} />
+      {review && <ReviewBadge kind={review} />}
+    </span>
+  );
 }
