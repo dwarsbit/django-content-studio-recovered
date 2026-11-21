@@ -663,7 +663,29 @@ export interface Resource {
   // The object's publishing, on studios with publishing (list rows and
   // detail responses of saved objects).
   __publishing__?: PublishingInfo | null;
+  // Previews, on studios with publishing (detail responses): whether
+  // the object is live, and whether the editor may share a draft link.
+  __preview__?: PreviewInfo | null;
   [key: string]: unknown;
+}
+
+export interface PreviewInfo {
+  live: boolean;
+  can_share: boolean;
+}
+
+// A shared draft link of an object; its URL is only in the answer that
+// created it.
+export interface SharedLink {
+  id: number;
+  note: string;
+  language: string | null;
+  created_by: string | null;
+  created_at: string;
+  expires_at: string | null;
+  opens: number;
+  last_opened_at: string | null;
+  url?: string;
 }
 
 // A publishable object's state, from its dates.

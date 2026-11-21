@@ -1,4 +1,4 @@
-<!doctype html>
+{% load content_studio %}<!doctype html>
 <html lang="en">
 <head>
 <meta charset="utf-8">
@@ -9,13 +9,6 @@
   @media (prefers-color-scheme: dark) { :root { --fg:#ecebe6; --muted:#a3a29b; --bg:#151513; --line:#2c2b27; --accent:#e08a5f; } }
   * { box-sizing: border-box; }
   body { margin:0; background:var(--bg); color:var(--fg); font: 17px/1.65 Georgia, "Times New Roman", serif; }
-  .preview-bar { position:sticky; top:0; z-index:10; display:flex; align-items:center; gap:12px; padding:8px 20px;
-    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; background:#fef3c7; color:#713f12; border-bottom:1px solid #fcd34d; }
-  @media (prefers-color-scheme: dark) { .preview-bar { background:#3a2a06; color:#fde68a; border-color:#78530f; } }
-  .preview-bar strong { font-weight:600; }
-  .preview-bar .dot { width:8px; height:8px; border-radius:50%; background:#d97706; flex:none; }
-  .preview-bar .spacer { flex:1; }
-  .preview-bar a { color:inherit; font-weight:600; text-decoration:none; border:1px solid currentColor; border-radius:6px; padding:3px 10px; opacity:.9; }
   header.site { max-width:1080px; margin:0 auto; padding:22px 24px; display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); }
   .brand { font-size:26px; letter-spacing:.02em; font-weight:700; }
   nav { font: 14px system-ui, sans-serif; color:var(--muted); display:flex; gap:22px; }
@@ -29,18 +22,7 @@
 </style>
 </head>
 <body>
-{% if preview %}
-<div class="preview-bar" role="status">
-  <span class="dot"></span>
-  {% if preview.kind == "shared" %}
-    <span><strong>Draft preview</strong> · Not public · Shared by {{ preview.shared_by }}{% if preview.expires_at %} · Link expires {{ preview.expires_at|date:"j M Y" }}{% endif %}</span>
-  {% else %}
-    <span><strong>Draft preview</strong> · Not public · Only you can see this page</span>
-  {% endif %}
-  <span class="spacer"></span>
-  {% if preview.kind == "staff" %}<a href="{{ admin_url }}">Edit</a>{% endif %}
-</div>
-{% endif %}
+{% preview_banner %}
 <header class="site">
   <div class="brand">Northbound</div>
   <nav><span>Travel</span><span>Design</span><span>Food</span><span>Journal</span></nav>

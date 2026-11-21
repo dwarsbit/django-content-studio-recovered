@@ -54,6 +54,7 @@ content_studio/
 ├── export.py            # Export of a list as CSV/Excel (display values)
 ├── importing.py         # Import from CSV/Excel/JSON (preview, matching, background jobs) and the "For import" export
 ├── publishing.py        # Draft, publish and scheduling: Publishing (ModelStudio.publishing), states from the dates, live(), the publishing endpoint's changes (apply), the Can publish permission (post_migrate), the built-in publishing:* actions' Status column/filter, and run_scheduled (Huey periodic task or content_studio_publish) recording what went live or came down
+├── previews/            # Previews and shared draft links: staff preview tokens (signed, PREVIEW_MAX_AGE), get_preview/previewable for the site, page URLs per content language; the optional app (content_studio.previews) stores PreviewLink rows (hashed keys, expiry), creates the Can share permission (post_migrate), PreviewMiddleware (no-store, noindex, no-referrer) and content_studio_prune_previews; the preview_banner tag lives in templatetags
 ├── reordering.py        # Built-in reordering (reorder_field moves, ManualOrderModel renumbering)
 ├── throttling.py        # ClientIPMixin: throttles identify clients by REMOTE_ADDR unless NUM_PROXIES is set
 ├── thumbnails.py        # Thumbnails of media images (Pillow, "small"/"large" WebP under THUMBNAIL_FOLDER)

@@ -57,7 +57,8 @@ class ModelStudioPermissions(BasePermission):
             "preview_links",
             "revoke_preview_link",
         ):
-            # MOCKUP SPIKE: previews (the real build checks Can share).
+            # Previewing is part of viewing; the shared link endpoints
+            # check the studio's has_share_permission on the object.
             return admin_model.has_view_permission(request)
 
         if getattr(view, "action", None) == "presence":

@@ -3,11 +3,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import {
-  PiArrowLeftBold,
-  PiArrowSquareOutBold,
-  PiDotsThreeBold,
-} from "react-icons/pi";
+import { PiArrowLeftBold, PiDotsThreeBold } from "react-icons/pi";
 import { toast } from "sonner";
 
 import {
@@ -146,7 +142,8 @@ export function Header({
     },
   });
   const showUserActions = showSetPassword || showSendLink || showResetTwoFactor;
-  // The object's public page (the studio's view_on_site), once saved.
+  // The object's page (the studio's view_on_site), once saved: View on
+  // site, or Preview while it is not live (see PreviewButton).
   // Only http(s) and relative URLs: a stored javascript: URL would run
   // in the admin (the server drops those too).
   const viewOnSiteUrl =
@@ -312,7 +309,15 @@ export function Header({
                       resourcePath={resourcePath}
                       viewOnSiteUrl={viewOnSiteUrl}
                       isDirty={isDirty}
-                      onSave={() => onSave()}
+                      onSave={async () => {
+                        try {
+                          await onSave();
+                          return true;
+                        } catch {
+                          // Errors are already surfaced by the save flow.
+                          return false;
+                        }
+                      }}
                     />
                   )}
                   {components.map((component) => (

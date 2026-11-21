@@ -359,6 +359,12 @@ class DjangoContentStudioConfig(AppConfig):
                         __publishing__ = serializers.SerializerMethodField(
                             method_name="get_publishing"
                         )
+                        # Whether the object is live and the editor
+                        # may share a draft link, for the Preview button;
+                        # None for a studio that does not preview.
+                        __preview__ = serializers.SerializerMethodField(
+                            method_name="get_preview"
+                        )
 
                         def _get_obj(self):
                             return (
@@ -510,14 +516,17 @@ class DjangoContentStudioConfig(AppConfig):
                                 return None
 
                             # Content that is not live has no public page,
-                            # unless the studio's view_on_site method
-                            # returns one (such as a preview).
+                            # unless the studio previews it (the button
+                            # becomes Preview, which adds a token) or its
+                            # view_on_site method returns one.
+                            from .previews import preview_enabled
+
                             config = get_publishing(admin_model)
 
                             if (
-                                False  # MOCKUP SPIKE: drafts get Preview
-                                and config is not None
+                                config is not None
                                 and get_state(config, obj) != PUBLISHED
+                                and not preview_enabled(admin_model)
                                 and not callable(
                                     getattr(admin_model, "view_on_site", None)
                                 )
@@ -527,6 +536,33 @@ class DjangoContentStudioConfig(AppConfig):
                             # A stored value could be a javascript: URL,
                             # which would run when an editor clicks it.
                             return safe_link_url(get_url(obj)) if get_url else None
+
+                        def get_preview(self, obj):
+                            from .previews import (
+                                is_live,
+                                links_installed,
+                                preview_enabled,
+                            )
+
+                            if (
+                                not isinstance(obj, models.Model)
+                                or not obj.pk
+                                or not preview_enabled(admin_model)
+                            ):
+                                return None
+
+                            live = is_live(admin_model, obj)
+
+                            return {
+                                "live": live,
+                                "can_share": bool(
+                                    not live
+                                    and links_installed()
+                                    and admin_model.has_share_permission(
+                                        self.context.get("request"), obj
+                                    )
+                                ),
+                            }
 
                         def get_object_permissions(self, obj):
                             request = self.context.get("request")

@@ -6,8 +6,8 @@ from demo.blog.site import article_detail
 
 urlpatterns = [
     path("admin/", include("content_studio.urls")),
-    # The demo's tiny public site (mockup spike for previews).
-    path("blog/<str:slug>/", article_detail, name="article"),
+    # A tiny public site: an article's page, with previews of drafts.
+    path("blog/<slug:slug>/", article_detail, name="article"),
 ]
 
 # serve uploaded media during development

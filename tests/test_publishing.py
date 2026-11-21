@@ -214,11 +214,15 @@ class AdminPayloadTests(PublishingTestCase):
         self.assertEqual(story.status, "draft")
         self.assertIn("published_at", response.json()["__readonly_fields__"])
 
-    def test_view_on_site_is_hidden_until_live(self):
+    def test_view_on_site_is_hidden_until_live_without_preview(self):
+        # With previews (the default) a draft keeps its page URL and the
+        # button becomes Preview; see test_previews.
         story = Story.objects.create(title="draft")
+        studio = admin_site._registry[Story]
 
-        with mock.patch.object(
-            admin_site._registry[Story], "get_link_url", return_value="/s/1/"
+        with (
+            mock.patch.object(studio, "get_link_url", return_value="/s/1/"),
+            mock.patch.object(studio, "preview", False),
         ):
             draft = self.client.get(f"/api/content/testapp.story/{story.pk}").json()
             Story.objects.filter(pk=story.pk).update(published_at=NOW - HOUR)

@@ -1861,3 +1861,66 @@ msgstr "Traducción pendiente"
 #: form.py
 msgid "Translations"
 msgstr "Traducciones"
+
+msgid "Previews"
+msgstr "Vistas previas"
+
+msgid "content type"
+msgstr "tipo de contenido"
+
+msgid "object id"
+msgstr "id del objeto"
+
+msgid "language"
+msgstr "idioma"
+
+msgid "key hash"
+msgstr "hash de la clave"
+
+msgid "note"
+msgstr "nota"
+
+msgid "expires at"
+msgstr "caduca el"
+
+msgid "opens"
+msgstr "aperturas"
+
+msgid "last opened at"
+msgstr "abierto por última vez el"
+
+msgid "shared draft link"
+msgstr "enlace de borrador compartido"
+
+msgid "shared draft links"
+msgstr "enlaces de borrador compartidos"
+
+msgid "Unknown language."
+msgstr "Idioma desconocido."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Esto está publicado: copia su enlace en lugar de compartir un enlace del borrador."
+
+msgid "Enter a valid date."
+msgstr "Introduce una fecha válida."
+
+msgid "Pick a date in the future."
+msgstr "Elige una fecha futura."
+
+msgid "Draft preview"
+msgstr "Vista previa del borrador"
+
+msgid "Not public"
+msgstr "No público"
+
+msgid "This link stops working at %(time)s"
+msgstr "Este enlace deja de funcionar a las %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Compartido por %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "El enlace caduca el %(date)s"
+
+msgid "Edit"
+msgstr "Editar"
