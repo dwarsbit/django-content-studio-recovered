@@ -393,10 +393,12 @@ function TableViewRow({
                   model={model}
                   name={name}
                   value={value}
-                  changed={changed}
+                  saving={!!edit?.saving.has(`${item.id}:${column}`)}
+                  saved={!!edit?.saved.has(`${item.id}:${column}`)}
                   error={edit?.errors[item.id]?.[column]}
                   placeholder={fallback}
                   onChange={(next) => edit?.set(item, column, next)}
+                  onRevert={() => edit?.revert(item.id, column)}
                 >
                   <FormatRenderer
                     value={value}

@@ -3,7 +3,7 @@ import * as R from "ramda";
 import { type ReactNode, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { FiChevronDown } from "react-icons/fi";
-import { PiWarningCircleBold } from "react-icons/pi";
+import { PiCheckBold, PiWarningCircleBold } from "react-icons/pi";
 
 import {
   Command,
@@ -38,26 +38,31 @@ const NUMERIC: FieldType[] = [
 /**
  * A table cell edited in place (WIP prototype of list_edit): a switch
  * for booleans, a relation picker for foreign keys and an input for
- * the rest. Changed cells are tinted until the list is saved; a save
- * error rings the cell and explains itself in a tooltip.
+ * the rest. A cell saves as soon as it is left: a spinner while it
+ * saves, a check once saved, and on an error a red ring with the reason
+ * in a tooltip, keeping the typed value (Esc puts the saved one back).
  */
 export function EditableCell({
   model,
   name,
   value,
-  changed,
+  saving,
+  saved,
   error,
   placeholder,
   onChange,
+  onRevert,
   children,
 }: {
   model: Model;
   name: string;
   value: unknown;
-  changed: boolean;
+  saving: boolean;
+  saved: boolean;
   error?: string[];
   placeholder?: string;
   onChange(value: unknown): void;
+  onRevert(): void;
   children: ReactNode;
 }) {
   const field = model.fields[name];
@@ -67,13 +72,21 @@ export function EditableCell({
     "ring-inset hover:ring-1 hover:ring-input hover:bg-background",
     {
       "justify-end": numeric,
-      "bg-warning/12 ring-1 ring-warning/50 hover:bg-warning/15 hover:ring-warning/60":
-        changed && !error,
+      "bg-success/10 transition-colors duration-700": saved && !error,
       "bg-destructive/8 ring-1 ring-destructive/70 hover:bg-destructive/10 hover:ring-destructive":
         !!error,
     },
   );
-  const marker = error ? (
+  const side = numeric ? "mr-auto pr-2" : "ml-auto pl-2";
+  const marker = saving ? (
+    <span className={cn("shrink-0 text-muted-foreground", side)}>
+      <Spinner className="size-3.5" />
+    </span>
+  ) : saved && !error ? (
+    <span className={cn("shrink-0 text-success", side)}>
+      <PiCheckBold />
+    </span>
+  ) : error ? (
     <Tooltip>
       <TooltipTrigger asChild>
         <span
@@ -131,6 +144,7 @@ export function EditableCell({
       numeric={numeric}
       placeholder={placeholder}
       onChange={onChange}
+      onRevert={error ? onRevert : undefined}
       className={frame}
       marker={marker}
       label={field?.verbose_name}
@@ -145,6 +159,7 @@ function TextCell({
   numeric,
   placeholder,
   onChange,
+  onRevert,
   className,
   marker,
   label,
@@ -154,6 +169,7 @@ function TextCell({
   numeric: boolean;
   placeholder?: string;
   onChange(value: unknown): void;
+  onRevert?(): void;
   className: string;
   marker: ReactNode;
   label?: string;
@@ -191,6 +207,7 @@ function TextCell({
               commit();
             } else if (event.key === "Escape") {
               setDraft(null);
+              onRevert?.();
             }
           }}
           className={cn(
@@ -217,6 +234,8 @@ function TextCell({
         if (event.key === "Enter") {
           event.preventDefault();
           setDraft(R.isNil(value) ? "" : String(value));
+        } else if (event.key === "Escape") {
+          onRevert?.();
         }
       }}
     >
