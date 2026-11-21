@@ -1,0 +1,195 @@
+# 🗓️ Draft, publish and scheduling
+
+Give a model a publish date and Content Studio turns it into a publishing
+workflow: new objects start as drafts, editors publish them with one click or
+schedule them for later, and content can come down again on a date. The state
+follows from the dates, so scheduled content goes live on time without a
+worker; a small scheduled run only records what happened.
+
+<Screenshot name="publishing" alt="An article's edit page: the Publishing card at the top of the sidebar shows Scheduled with its publish date, and the header has Save and Publish now" />
+
+## Set up publishing
+
+1. Give the model a nullable `DateTimeField` for the publish date, and
+   optionally one for the unpublish date. The `PublishableModel` base model
+   has both, and a queryset to match:
+
+   ```python
+   # blog/models.py
+   from content_studio.models import PublishableModel
+
+   class Article(PublishableModel):
+       title = models.CharField(max_length=200)
+   ```
+
+   Or add the fields yourself:
+
+   ```python
+   published_at = models.DateTimeField(null=True, blank=True)
+   unpublish_at = models.DateTimeField(null=True, blank=True)
+   ```
+
+2. Name the publish date in the studio's `publishing`:
+
+   ```python
+   # blog/admin.py
+   from content_studio import register
+   from content_studio.admin import ModelStudio
+
+   @register(Article)
+   class ArticleStudio(ModelStudio):
+       publishing = "published_at"
+   ```
+
+   For an unpublish date, or a status field to keep in step, use
+   `Publishing`:
+
+   ```python
+   from content_studio.publishing import Publishing
+
+   class ArticleStudio(ModelStudio):
+       publishing = Publishing(
+           "published_at",
+           unpublish_at="unpublish_at",
+           status="status",
+           status_values={"draft": "draft", "published": "published"},
+       )
+   ```
+
+3. Run `manage.py migrate`: it creates the **Can publish** permission of each
+   publishable model.
+4. Set up the [scheduled run](#the-scheduled-run).
+
+## States
+
+| State | When |
+| --- | --- |
+| **Draft** | No publish date. |
+| **Scheduled** | The publish date is in the future. |
+| **Published** | The publish date has passed, and the unpublish date has not. |
+| **Expired** | The unpublish date has passed. |
+
+Your site decides what it shows, so filter on the state wherever you list
+content. With `PublishableModel`:
+
+```python
+Article.objects.live()        # published right now
+Article.objects.drafts()
+Article.objects.scheduled()
+Article.objects.expired()
+article.is_live
+article.publishing_status     # "draft", "scheduled", "published" or "expired"
+```
+
+With fields of your own, `live` filters any queryset by the studio's
+publishing:
+
+```python
+from content_studio.publishing import live
+
+articles = live(Article.objects.all(), ArticleStudio.publishing)
+```
+
+`live` and the queryset methods compare with the current time, so a scheduled
+article shows up the minute it goes live.
+
+## What editors see
+
+- **The Publishing card** opens the edit page's sidebar. It shows the state,
+  when the object goes live and comes down, and offers **Schedule…**,
+  **Cancel schedule**, **Unpublish** and the unpublish date. Times are in the
+  editor's own time zone, which the card names.
+- **The header** keeps Save and adds one button while the object is not live:
+  **Publish** for drafts and expired content, **Publish now** for scheduled
+  content. Publishing saves unsaved changes first. Published content has the
+  plain Save button.
+- **The list** has a **Status** column with each object's state, a **Status**
+  filter, and the bulk actions **Publish now**, **Schedule…** and
+  **Unpublish**. On a studio with a status field, the Status column takes the
+  place of that field's column.
+- **The history** logs each change: "Published.", "Scheduled to publish
+  on …", "Unpublished on schedule." and so on.
+
+The dates are read-only on the edit form: the card, the bulk actions and your
+own code set them. Edits to published content go live when they are saved.
+
+To offer publishing in each row's menu, add `"publishing:publish"`,
+`"publishing:schedule"` or `"publishing:unpublish"` to
+[`row_actions`](/docs/list-page#row-actions).
+
+## Who can publish
+
+Publishing needs the model's **Can publish** permission (`publish_article`
+for `Article`) on top of change permission. Superusers always have it; give
+it to groups on the [permission matrix](/docs/users#permissions-and-groups). Editors without
+it can still edit and save, and see the state, but not publish, schedule or
+unpublish.
+
+Override `has_publish_permission` to decide per object:
+
+```python
+class ArticleStudio(ModelStudio):
+    publishing = "published_at"
+
+    def has_publish_permission(self, request, obj=None):
+        if obj is not None and obj.author == request.user:
+            return True
+        return super().has_publish_permission(request, obj)
+```
+
+## The scheduled run
+
+Content goes live by its date, but the records of it, a history entry, the
+`published` [change](/docs/webhooks) that webhooks and
+[notifications](/docs/notifications) react to and the status field, need a
+run once a minute. Pick one:
+
+- **With Huey** (`huey.contrib.djhuey` in `INSTALLED_APPS`), the run is a
+  periodic task of the consumer. Nothing to set up.
+- **With cron** or any scheduler, run the command every minute:
+
+  ```
+  * * * * * cd /srv/mysite && python manage.py content_studio_publish
+  ```
+
+The run is listed on the [status page](/docs/system-status) with its last
+run. It records each change once, for the editor who scheduled it, and only
+changes from the last day, so the first run after a long break does not flood
+anyone with notifications. Content that never changed in the admin goes live
+unrecorded.
+
+`run_scheduled()` does the same from your own code, and returns what it
+recorded:
+
+```python
+from content_studio.publishing import run_scheduled
+
+run_scheduled()  # {"published": 2, "unpublished": 0}
+```
+
+## Hooks
+
+`on_publish(request, obj)` and `on_unpublish(request, obj)` run after an
+object went live or came down: from the card or a bulk action with the
+request, and from the scheduled run with `None`. Use them to clear a cache or
+ping a search engine:
+
+```python
+class ArticleStudio(ModelStudio):
+    publishing = "published_at"
+
+    def on_publish(self, request, obj):
+        purge_cdn(obj.get_absolute_url())
+```
+
+## Options
+
+| Option | Description |
+| --- | --- |
+| `published_at` | The publish date field. A nullable `DateTimeField`. |
+| `unpublish_at` | The unpublish date field, or `None` (the default) for content that stays up. A nullable `DateTimeField`. |
+| `status` | A field to keep in step with the state, such as a `status` choice field, or `None`. |
+| `status_values` | The value of `status` for each state: `"draft"` and `"published"` are needed, `"scheduled"` and `"expired"` fall back to the draft value. |
+
+The [system checks](/docs/deployment#system-checks) report a configuration
+that cannot work as `content_studio.E054`.

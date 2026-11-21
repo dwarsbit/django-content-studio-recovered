@@ -3,9 +3,12 @@ from content_studio.actions import bulk_action
 from content_studio.admin import InlineModelStudio, ModelStudio
 from content_studio.form import FormSet, TableColumn
 
+from content_studio.publishing import Publishing
+
 from .models import (
     Attachment,
     Article,
+    Bulletin,
     Category,
     Coupon,
     Edition,
@@ -22,6 +25,7 @@ from .models import (
     Shelf,
     SiteSettings,
     Step,
+    Story,
     Track,
     Venue,
 )
@@ -208,3 +212,30 @@ class VenueAdmin(ModelStudio):
     import_fields = ["name", "slug", "kind", "capacity", "opened", "host", "events"]
     import_id_fields = ["slug"]
     import_lookups = {"host": "username", "events": "title"}
+
+
+@register(Story)
+class StoryAdmin(ModelStudio):
+    table_display = ["title", "status"]
+    soft_delete = "removed_at"
+    publishing = Publishing(
+        "published_at",
+        unpublish_at="unpublish_at",
+        status="status",
+        status_values={"draft": "draft", "published": "live", "expired": "gone"},
+    )
+
+    def on_publish(self, request, obj):
+        self.published.append((request is not None, obj.pk))
+
+    def on_unpublish(self, request, obj):
+        self.unpublished.append((request is not None, obj.pk))
+
+    published: list = []
+    unpublished: list = []
+
+
+@register(Bulletin)
+class BulletinAdmin(ModelStudio):
+    table_display = ["title"]
+    publishing = "published_at"

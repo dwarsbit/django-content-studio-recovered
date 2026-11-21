@@ -36,6 +36,8 @@ EVENT_OPTIONS = [
     ("deleted", _("Deleted")),
     ("restored", _("Restored")),
     ("reordered", _("Reordered")),
+    ("published", _("Published")),
+    ("unpublished", _("Unpublished")),
 ]
 
 

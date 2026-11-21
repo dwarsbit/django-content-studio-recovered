@@ -80,6 +80,23 @@ class DjangoContentStudioConfig(AppConfig):
         )
         self._create_crud_api()
 
+        # Publishing: the "Can publish" permissions after migrate, and the
+        # run every minute that records content going live (Huey), on
+        # the status page too.
+        from django.db.models.signals import post_migrate
+
+        from .publishing import (
+            create_permissions,
+            register_periodic_task,
+            register_status,
+        )
+
+        post_migrate.connect(
+            create_permissions, dispatch_uid="content_studio_publish_permissions"
+        )
+        register_status()
+        register_periodic_task()
+
         # Warnings and errors of Content Studio's loggers show in the
         # developer tools while they are on.
         install_log_handler()
@@ -222,6 +239,9 @@ class DjangoContentStudioConfig(AppConfig):
                     available_fields = ["id", "__str__"] + [
                         column.field for column in columns
                     ]
+                    # Rows of a studio with publishing carry their state.
+                    if getattr(self._admin_model, "publishing", None):
+                        available_fields.append("__publishing__")
                     # Trash rows also carry the removal timestamp.
                     if self.action == "trash" and self._admin_model.soft_delete:
                         available_fields.append(self._admin_model.soft_delete)
@@ -297,6 +317,12 @@ class DjangoContentStudioConfig(AppConfig):
                         # or None without one.
                         __view_on_site__ = serializers.SerializerMethodField(
                             method_name="get_view_on_site"
+                        )
+                        # The state and dates of a studio with
+                        # publishing, for the Publishing card; None
+                        # without it.
+                        __publishing__ = serializers.SerializerMethodField(
+                            method_name="get_publishing"
                         )
 
                         def _get_obj(self):
@@ -419,10 +445,47 @@ class DjangoContentStudioConfig(AppConfig):
                                 admin_model, self.context.get("request"), obj
                             )
 
+                        def get_publishing(self, obj):
+                            from .publishing import get_publishing, serialize_state
+
+                            config = get_publishing(admin_model)
+
+                            if (
+                                config is None
+                                or not isinstance(obj, models.Model)
+                                or not obj.pk
+                            ):
+                                return None
+
+                            return {
+                                **serialize_state(config, obj),
+                                "can_publish": bool(
+                                    admin_model.has_publish_permission(
+                                        self.context.get("request"), obj
+                                    )
+                                ),
+                            }
+
                         def get_view_on_site(self, obj):
+                            from .publishing import PUBLISHED, get_publishing, get_state
+
                             get_url = getattr(admin_model, "get_view_on_site_url", None)
 
                             if not isinstance(obj, models.Model) or not obj.pk:
+                                return None
+
+                            # Content that is not live has no public page,
+                            # unless the studio's view_on_site method
+                            # returns one (such as a preview).
+                            config = get_publishing(admin_model)
+
+                            if (
+                                config is not None
+                                and get_state(config, obj) != PUBLISHED
+                                and not callable(
+                                    getattr(admin_model, "view_on_site", None)
+                                )
+                            ):
                                 return None
 
                             # A stored value could be a javascript: URL,
@@ -488,6 +551,29 @@ class DjangoContentStudioConfig(AppConfig):
                             attrs[f"resolve_{column.field}"] = get_column_value
 
                         Serializer = type(str("Serializer"), (Serializer,), attrs)
+
+                # Rows of a studio with publishing carry their state for
+                # the Status column.
+                if self.action in ("list", "trash") and not self.is_singleton:
+                    from .publishing import get_publishing, serialize_state
+
+                    publishing_config = get_publishing(self._admin_model)
+
+                    if publishing_config is not None:
+
+                        def get_publishing_state(self, obj, config=publishing_config):
+                            return serialize_state(config, obj)
+
+                        Serializer = type(
+                            str("Serializer"),
+                            (Serializer,),
+                            {
+                                "__publishing__": serializers.SerializerMethodField(
+                                    method_name="resolve___publishing__"
+                                ),
+                                "resolve___publishing__": get_publishing_state,
+                            },
+                        )
 
                 # When the list view is enabled, every row carries its
                 # resolved list item display so the frontend renders fully

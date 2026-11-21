@@ -648,6 +648,44 @@ class BaseModelViewSet(ModelViewSet):
 
         return Response({"id": instance.pk, "__str__": str(instance)})
 
+    @action(methods=["post"], detail=True, url_path="publishing")
+    def publishing(self, request, id):
+        """
+        Change the object's publishing, for the Publishing card:
+        {"action": "publish" | "schedule" | "unpublish" |
+        "set_unpublish_at", "at": ..., "unpublish_at": ...}. Needs the
+        studio's has_publish_permission on the object. Answers with the
+        object's new state and dates.
+        """
+        from .publishing import apply, get_publishing, serialize_state
+
+        config = get_publishing(self._admin_model)
+
+        if config is None:
+            raise NotFound("This model has no publishing.")
+
+        instance = self.get_object()
+
+        if not self._admin_model.has_publish_permission(request, instance):
+            raise PermissionDenied()
+
+        data = request.data if hasattr(request.data, "get") else {}
+        action_name = data.get("action")
+
+        try:
+            result = apply(
+                self._admin_model, request, instance, str(action_name or ""), data
+            )
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+        return Response(
+            {
+                **serialize_state(config, instance),
+                "message": result.message,
+            }
+        )
+
     @action(methods=["post"], detail=True, url_path="password")
     def password(self, request, id):
         """

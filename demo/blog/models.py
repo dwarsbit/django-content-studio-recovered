@@ -125,7 +125,9 @@ class Article(models.Model):
     views = models.PositiveIntegerField(default=0)
     # The soft-delete timestamp; see ArticleStudio.soft_delete.
     removed_at = models.DateTimeField(null=True, blank=True, editable=False)
+    # Set from the Publishing card; see ArticleStudio.publishing.
     published_at = models.DateTimeField(null=True, blank=True)
+    unpublish_at = models.DateTimeField(null=True, blank=True)
     created_by = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

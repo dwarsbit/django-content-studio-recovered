@@ -658,7 +658,13 @@
       "restored_many_one": "{{actor}} heeft {{count}} {{models}} hersteld",
       "restored_many_other": "{{actor}} heeft {{count}} {{models}} hersteld",
       "reordered_many_one": "{{actor}} heeft {{count}} {{models}} herordend",
-      "reordered_many_other": "{{actor}} heeft {{count}} {{models}} herordend"
+      "reordered_many_other": "{{actor}} heeft {{count}} {{models}} herordend",
+      "published": "{{actor}} heeft {{object}} ({{model}}) gepubliceerd",
+      "published_many_one": "{{actor}} heeft {{count}} {{models}} gepubliceerd",
+      "published_many_other": "{{actor}} heeft {{count}} {{models}} gepubliceerd",
+      "unpublished": "{{actor}} heeft de publicatie van {{object}} ({{model}}) ingetrokken",
+      "unpublished_many_one": "{{actor}} heeft de publicatie van {{count}} {{models}} ingetrokken",
+      "unpublished_many_other": "{{actor}} heeft de publicatie van {{count}} {{models}} ingetrokken"
     },
     "follow": {
       "follow": "Volgen",
@@ -720,7 +726,9 @@
       "updated": "Bijgewerkt",
       "deleted": "Verwijderd",
       "restored": "Hersteld",
-      "reordered": "Verplaatst"
+      "reordered": "Verplaatst",
+      "published": "Gepubliceerd",
+      "unpublished": "Ingetrokken"
     }
   },
   "analytics": {
@@ -1221,5 +1229,57 @@
   "row_actions": {
     "menu": "Acties",
     "menu_for": "Acties voor {{name}}"
+  },
+  "publishing": {
+    "title": "Publicatie",
+    "states": {
+      "draft": "Concept",
+      "scheduled": "Ingepland",
+      "published": "Gepubliceerd",
+      "expired": "Verlopen"
+    },
+    "scheduled_for": "Ingepland · {{time}}",
+    "published": "Gepubliceerd",
+    "publish_on": "Publiceren op",
+    "unpublish_on": "Offline halen op",
+    "never": "Nooit",
+    "not_scheduled": "Niet ingepland",
+    "set": "Instellen",
+    "publish": "Publiceren",
+    "publish_now": "Nu publiceren",
+    "time_zone": "Tijden zijn in {{zone}}.",
+    "schedule": {
+      "open": "Inplannen…",
+      "title": "Publicatie inplannen",
+      "edit_title": "Planning wijzigen",
+      "description": "Kies wanneer “{{name}}” live gaat. Tot dan blijft het een concept.",
+      "unpublish_toggle": "Offline halen op een datum",
+      "summary": "Gaat live op {{at}}.",
+      "summary_until": "Gaat live op {{at}} en gaat offline op {{until}}.",
+      "submit": "Inplannen"
+    },
+    "unpublish_date": {
+      "title": "Datum offline halen",
+      "description": "Kies wanneer “{{name}}” offline gaat. Tot dan blijft het gepubliceerd.",
+      "remove": "Datum verwijderen"
+    },
+    "cancel_schedule": {
+      "title": "Planning annuleren?",
+      "description": "“{{name}}” blijft een concept en gaat niet live.",
+      "ok": "Planning annuleren"
+    },
+    "unpublish": {
+      "title": "Publicatie intrekken?",
+      "description": "“{{name}}” wordt weer een concept en is niet meer live.",
+      "ok": "Publicatie intrekken"
+    },
+    "toast": {
+      "published": "“{{name}}” is gepubliceerd",
+      "unscheduled": "“{{name}}” is niet meer ingepland",
+      "unpublished": "Publicatie van “{{name}}” is ingetrokken",
+      "scheduled": "“{{name}}” is ingepland",
+      "unpublish_date_set": "Datum offline halen ingesteld voor “{{name}}”",
+      "unpublish_date_removed": "Datum offline halen verwijderd van “{{name}}”"
+    }
   }
 }

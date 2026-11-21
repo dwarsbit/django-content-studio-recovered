@@ -164,6 +164,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E051` | The [`fields`](/docs/list-page#asking-for-values-first) of a `@bulk_action` or `Button`: a name that is not a model field and has no `form_field`, a field that cannot be edited or is excluded, a `form_field` the dialog cannot show, a condition that reads another field or uses a `Condition`, or a method without the `data` argument. |
 | `content_studio.E052` | Backups saved in a storage that may serve them publicly: a file system storage inside `MEDIA_ROOT`, or an object storage with a public ACL or unsigned URLs. Before 1.18.0 this was the warning `content_studio.W027`. See [Keep the backups private](/docs/backups#keep-the-backups-private); silence it only if your web server refuses the backup folder. |
 | `content_studio.E053` | A [`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate) or [`LOGIN_ACCOUNT_THROTTLE_RATE`](/docs/settings#login_account_throttle_rate) that is not a rate such as `"10/min"` or `None`. |
+| `content_studio.E054` | A studio's [`publishing`](/docs/publishing#options): not a field name or `Publishing`, on a singleton, a date field that is not a nullable `DateTimeField`, the same field for both dates, `status_values` without `status`, an unknown state, no value for draft or published, or a value that is not among the status field's choices. |
 
 ### Warnings
 

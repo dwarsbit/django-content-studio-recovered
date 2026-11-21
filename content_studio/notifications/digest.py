@@ -139,6 +139,8 @@ def content_sentence(action: str, single: bool, count: int, values: dict) -> str
             "deleted": _("%(actor)s deleted the %(model)s %(object)s"),
             "restored": _("%(actor)s restored the %(model)s %(object)s"),
             "reordered": _("%(actor)s moved the %(model)s %(object)s"),
+            "published": _("%(actor)s published the %(model)s %(object)s"),
+            "unpublished": _("%(actor)s unpublished the %(model)s %(object)s"),
         }
     else:
         templates = {
@@ -165,6 +167,16 @@ def content_sentence(action: str, single: bool, count: int, values: dict) -> str
             "reordered": ngettext(
                 "%(actor)s reordered %(count)s %(models)s",
                 "%(actor)s reordered %(count)s %(models)s",
+                count,
+            ),
+            "published": ngettext(
+                "%(actor)s published %(count)s %(models)s",
+                "%(actor)s published %(count)s %(models)s",
+                count,
+            ),
+            "unpublished": ngettext(
+                "%(actor)s unpublished %(count)s %(models)s",
+                "%(actor)s unpublished %(count)s %(models)s",
                 count,
             ),
         }

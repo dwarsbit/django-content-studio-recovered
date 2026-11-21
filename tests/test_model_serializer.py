@@ -57,4 +57,6 @@ def test_multiple_choice_options_are_the_choices():
         ("deleted", "Deleted"),
         ("restored", "Restored"),
         ("reordered", "Reordered"),
+        ("published", "Published"),
+        ("unpublished", "Unpublished"),
     ]
