@@ -1,5 +1,31 @@
 # Changelog
 
+## 1.20.0 (unreleased)
+
+### Features
+
+- **Translated content.** Name a studio's translated fields with
+  `translations = ["title", "body"]` and give the model a column per
+  language (`title_nl`, `title_de`); models registered with
+  django-modeltranslation or built on django-parler's `TranslatableModel`
+  are detected without it. The edit page gets a language menu in the
+  header with how complete each language is; translated fields switch to
+  the picked language, show the default language's text with **Copy**
+  under them, and shared fields are marked. Add `TranslationStatus()` to
+  the sidebar for each language's progress. The list page shows the
+  translated columns in the picked language, a Languages column, and a
+  **Missing translation** filter; search looks in every language. Set the
+  languages with `CONTENT_LANGUAGES` (default: `LANGUAGES`), and the
+  languages that must be complete with `Translations(required=...)` (the
+  default language). System checks `content_studio.E055` and
+  `content_studio.W030` report a configuration that cannot work. See
+  [Translated content](https://djangocontentstudio.org/docs/translations).
+
+### Changes
+
+- **Edit pages: a tidier header.** The header's items are grouped and in a fixed order. The publishing state and **Unsaved changes** (else when the object was last edited) sit next to the title. On the right come the editors who have the object open, the content language, and the quiet actions as icon buttons with a tooltip (Follow, View on site, `edit_header` components and the more actions menu), then Save and Publish, set apart. Every control has the same height. The title keeps its room in a narrow window: the status text gives way first and leaves its dot, and below 1024 pixels the model's name is hidden.
+- **Kept unsaved changes say so in words.** The header reads **Unsaved changes · kept** instead of showing a green check, which looked like "saved".
+
 ## 1.19.0 (2026-11-21)
 
 ### Features
@@ -44,22 +70,6 @@
   the `RECOVER_CHANGES` setting; `RECOVERY_MAX_AGE` (7 days) sets how long
   changes are kept. System check `content_studio.W029` reports a
   `recover_changes_exclude` naming a field the model does not have.
-- **Translated content.** Name a studio's translated fields with
-  `translations = ["title", "body"]` and give the model a column per
-  language (`title_nl`, `title_de`); models registered with
-  django-modeltranslation or built on django-parler's `TranslatableModel`
-  are detected without it. The edit page gets a language menu in the
-  header with how complete each language is; translated fields switch to
-  the picked language, show the default language's text with **Copy**
-  under them, and shared fields are marked. Add `TranslationStatus()` to
-  the sidebar for each language's progress. The list page shows the
-  translated columns in the picked language, a Languages column, and a
-  **Missing translation** filter; search looks in every language. Set the
-  languages with `CONTENT_LANGUAGES` (default: `LANGUAGES`), and the
-  languages that must be complete with `Translations(required=...)` (the
-  default language). System checks `content_studio.E055` and
-  `content_studio.W030` report a configuration that cannot work. See
-  [Translated content](https://djangocontentstudio.org/docs/translations).
 
 ### Fixes
 
