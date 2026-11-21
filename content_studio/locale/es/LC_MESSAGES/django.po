@@ -1861,3 +1861,15 @@ msgstr "Traducción pendiente"
 #: form.py
 msgid "Translations"
 msgstr "Traducciones"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Cambios sin publicar"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "No hay cambios sin publicar."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "cambios sin publicar"

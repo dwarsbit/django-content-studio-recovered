@@ -751,8 +751,9 @@ class BaseModelViewSet(ModelViewSet):
         state and dates.
 
         Unpublished changes (pending_changes) are published with
-        publish_changes, and saved to the object first when it stops
-        being live (unpublish, schedule), so the draft keeps them.
+        publish_changes, and saved to the object when it stops being
+        live (unpublish, schedule), so the draft keeps them, or when an
+        object that was not live with them is published again.
         """
         from . import pending as pending_changes
         from .publishing import PUBLISHED, apply, get_publishing, serialize_state
@@ -807,13 +808,17 @@ class BaseModelViewSet(ModelViewSet):
                 }
             )
 
+        was_live = pending_changes.holds_changes(self._admin_model, instance)
+
         try:
             with transaction.atomic(using=using):
                 result = apply(self._admin_model, request, instance, action_name, data)
 
                 # No longer live: the object takes its unpublished
-                # changes, as a draft or scheduled object would.
-                if uses_pending and result.state != PUBLISHED:
+                # changes, as a draft or scheduled object would. An
+                # object that was not live (it expired with them) goes
+                # live with the changes its edit page shows.
+                if uses_pending and (not was_live or result.state != PUBLISHED):
                     instance.refresh_from_db()
                     pending_changes.publish(self, instance)
         except DjangoValidationError as error:

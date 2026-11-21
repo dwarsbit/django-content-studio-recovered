@@ -148,7 +148,9 @@ def _store_file(model_field, instance, upload) -> str:
     name = model_field.generate_filename(instance, posixpath.basename(upload.name))
     upload.file.seek(0)
 
-    return model_field.storage.save(name, upload.file, max_length=model_field.max_length)
+    return model_field.storage.save(
+        name, upload.file, max_length=model_field.max_length
+    )
 
 
 def _is_stored(value) -> bool:

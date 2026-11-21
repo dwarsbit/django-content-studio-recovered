@@ -1601,6 +1601,7 @@ def serialize_prepopulated_fields(studio, request: HttpRequest) -> dict[str, lis
 
 def serialize_publishing(studio, request) -> Optional[dict[str, Any]]:
     """A studio's publishing for the admin, or None without it."""
+    from .pending import uses_pending_changes
     from .publishing import get_publishing
 
     config = get_publishing(studio)
@@ -1611,6 +1612,9 @@ def serialize_publishing(studio, request) -> Optional[dict[str, Any]]:
     return {
         # Whether objects can get an unpublish date.
         "unpublish": bool(config.unpublish_at),
+        # Whether edits to published objects stay unpublished until
+        # Publish changes.
+        "pending_changes": uses_pending_changes(studio),
         # Whether the request may publish (per object in __publishing__).
         "can_publish": bool(studio.has_publish_permission(request)),
     }

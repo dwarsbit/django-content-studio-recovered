@@ -674,6 +674,20 @@ export interface PublishingConfig {
   unpublish: boolean;
   // Whether the user may publish (per object in __publishing__).
   can_publish: boolean;
+  // Whether edits to published objects stay unpublished until Publish
+  // changes.
+  pending_changes?: boolean;
+}
+
+// The unpublished changes of a published object, on detail responses.
+export interface PendingChangesInfo {
+  // The changed fields, in form order.
+  fields: string[];
+  // Who saved them last, and when.
+  edited_by: string | null;
+  edited_at: DateTimeString;
+  // The published values of those fields, for Compare.
+  live: Record<string, unknown>;
 }
 
 export interface PublishingInfo {
@@ -682,6 +696,10 @@ export interface PublishingInfo {
   unpublish_at: DateTimeString | null;
   // On detail responses: whether the user may publish this object.
   can_publish?: boolean;
+  // On studios with pending_changes: whether the object has unpublished
+  // changes, and (on detail responses) what they are.
+  has_pending?: boolean;
+  pending?: PendingChangesInfo | null;
 }
 
 export interface UserInfo {

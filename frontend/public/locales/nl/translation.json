@@ -1284,6 +1284,7 @@
     "set": "Instellen",
     "publish": "Publiceren",
     "publish_now": "Nu publiceren",
+    "publish_changes": "Wijzigingen publiceren",
     "time_zone": "Tijden zijn in {{zone}}.",
     "schedule": {
       "open": "Inplannen…",
@@ -1316,7 +1317,21 @@
       "unpublished": "Publicatie van “{{name}}” is ingetrokken",
       "scheduled": "“{{name}}” is ingepland",
       "unpublish_date_set": "Datum offline halen ingesteld voor “{{name}}”",
-      "unpublish_date_removed": "Datum offline halen verwijderd van “{{name}}”"
+      "unpublish_date_removed": "Datum offline halen verwijderd van “{{name}}”",
+      "changes_published": "Wijzigingen aan “{{name}}” zijn gepubliceerd",
+      "changes_discarded": "Niet-gepubliceerde wijzigingen aan “{{name}}” zijn verworpen"
+    },
+    "changes": {
+      "title": "Niet-gepubliceerde wijzigingen",
+      "saved_by": "opgeslagen door {{name}} {{when}}",
+      "saved": "opgeslagen {{when}}",
+      "hint": "Lezers zien de gepubliceerde versie tot de wijzigingen gepubliceerd zijn.",
+      "compare": "Vergelijken",
+      "compare_title": "Niet-gepubliceerde wijzigingen",
+      "compare_description": "De gepubliceerde versie naast de wijzigingen.",
+      "discard": "Verwerpen",
+      "discard_title": "Niet-gepubliceerde wijzigingen verwerpen?",
+      "discard_description": "“{{name}}” houdt de gepubliceerde versie. De wijzigingen kunnen niet worden teruggehaald."
     }
   },
   "translations": {

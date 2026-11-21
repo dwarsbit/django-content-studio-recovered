@@ -1284,6 +1284,7 @@
     "set": "Set",
     "publish": "Publish",
     "publish_now": "Publish now",
+    "publish_changes": "Publish changes",
     "time_zone": "Times are in {{zone}}.",
     "schedule": {
       "open": "Schedule…",
@@ -1316,7 +1317,21 @@
       "unpublished": "“{{name}}” is unpublished",
       "scheduled": "“{{name}}” is scheduled",
       "unpublish_date_set": "Unpublish date set for “{{name}}”",
-      "unpublish_date_removed": "Unpublish date removed from “{{name}}”"
+      "unpublish_date_removed": "Unpublish date removed from “{{name}}”",
+      "changes_published": "Changes to “{{name}}” are published",
+      "changes_discarded": "Unpublished changes to “{{name}}” are discarded"
+    },
+    "changes": {
+      "title": "Unpublished changes",
+      "saved_by": "saved by {{name}} {{when}}",
+      "saved": "saved {{when}}",
+      "hint": "Readers see the published version until the changes are published.",
+      "compare": "Compare",
+      "compare_title": "Unpublished changes",
+      "compare_description": "The published version next to the changes.",
+      "discard": "Discard",
+      "discard_title": "Discard the unpublished changes?",
+      "discard_description": "“{{name}}” keeps its published version. The changes cannot be brought back."
     }
   },
   "translations": {

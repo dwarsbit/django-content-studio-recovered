@@ -140,7 +140,8 @@ class AdminPayloadTests(PublishingTestCase):
         self.assertEqual(names, ["title", "__publishing__"])
         self.assertEqual(data["list"]["filter"][0]["name"], "publishing_status")
         self.assertEqual(
-            data["list"]["publishing"], {"unpublish": True, "can_publish": True}
+            data["list"]["publishing"],
+            {"unpublish": True, "can_publish": True, "pending_changes": False},
         )
         action_ids = [action["id"] for action in data["list"]["actions"]]
         self.assertIn("publishing:publish", action_ids)

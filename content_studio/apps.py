@@ -595,7 +595,6 @@ class DjangoContentStudioConfig(AppConfig):
                     publishing_config = get_publishing(self._admin_model)
 
                     if publishing_config is not None:
-
                         from .pending import pending_object_ids, uses_pending_changes
 
                         with_pending = uses_pending_changes(self._admin_model)
@@ -614,8 +613,8 @@ class DjangoContentStudioConfig(AppConfig):
                             # ids are read once per request.
                             if with_pending:
                                 if "_pending_ids" not in self.context:
-                                    self.context["_pending_ids"] = (
-                                        pending_object_ids(model_class)
+                                    self.context["_pending_ids"] = pending_object_ids(
+                                        model_class
                                     )
 
                                 state["has_pending"] = (

@@ -1852,3 +1852,15 @@ msgstr "Fehlende Übersetzung"
 #: form.py
 msgid "Translations"
 msgstr "Übersetzungen"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Unveröffentlichte Änderungen"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Es gibt keine unveröffentlichten Änderungen."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "unveröffentlichte Änderungen"

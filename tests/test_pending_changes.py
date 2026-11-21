@@ -68,9 +68,7 @@ class PendingTestCase(TestCase):
         return user
 
     def detail(self, client=None, feature=None):
-        response = (client or self.client).get(
-            f"{URL}/{(feature or self.feature).pk}"
-        )
+        response = (client or self.client).get(f"{URL}/{(feature or self.feature).pk}")
         assert response.status_code == 200, response.content
         return response.json()
 
@@ -82,9 +80,7 @@ class PendingTestCase(TestCase):
             if not key.startswith("__")
         }
         data.update(changes)
-        return (client or self.client).put(
-            f"{URL}/{feature.pk}", data, format="json"
-        )
+        return (client or self.client).put(f"{URL}/{feature.pk}", data, format="json")
 
     def publishing(self, action, client=None, **data):
         return (client or self.client).post(
@@ -208,7 +204,9 @@ class SaveTests(PendingTestCase):
         story = Story.objects.create(title="Live", published_at=NOW - HOUR)
 
         response = self.client.patch(
-            f"/api/content/testapp.story/{story.pk}", {"title": "Changed"}, format="json"
+            f"/api/content/testapp.story/{story.pk}",
+            {"title": "Changed"},
+            format="json",
         )
 
         assert response.status_code == 200, response.content
@@ -356,14 +354,25 @@ class PublishTests(PendingTestCase):
     def test_scheduling_again_keeps_the_changes(self):
         self.save(summary="Later.")
 
-        response = self.publishing(
-            "schedule", at=(NOW + 2 * HOUR).isoformat()
-        )
+        response = self.publishing("schedule", at=(NOW + 2 * HOUR).isoformat())
 
         assert response.status_code == 200, response.content
         self.feature.refresh_from_db()
         assert self.feature.summary == "Later."
         assert not PendingChanges.objects.exists()
+
+    def test_publishing_again_takes_the_changes(self):
+        self.save(title="Slow journeys")
+        # It expired with the changes; publishing it again takes them.
+        Feature.objects.filter(pk=self.feature.pk).update(published_at=None)
+
+        response = self.publishing("publish")
+
+        assert response.status_code == 200, response.content
+        assert response.json()["has_pending"] is False
+        self.feature.refresh_from_db()
+        assert self.feature.published_at is not None
+        assert self.feature.title == "Slow journeys"
 
     def test_saving_an_object_that_is_not_live_takes_its_changes(self):
         self.save(title="Slow journeys")
@@ -402,9 +411,7 @@ class ListTests(PendingTestCase):
         response = self.client.get(f"{URL}?publishing_status=pending")
 
         assert response.status_code == 200, response.content
-        assert [row["id"] for row in response.json()["results"]] == [
-            self.feature.pk
-        ]
+        assert [row["id"] for row in response.json()["results"]] == [self.feature.pk]
 
 
 class CheckTests(TestCase):

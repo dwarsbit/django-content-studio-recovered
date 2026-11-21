@@ -56,5 +56,27 @@ export function PublishingFormat({ value }: { value: unknown }) {
     return null;
   }
 
-  return <PublishingBadge state={info.state} publishedAt={info.published_at} />;
+  if (!info.has_pending) {
+    return (
+      <PublishingBadge state={info.state} publishedAt={info.published_at} />
+    );
+  }
+
+  return (
+    <span className="inline-flex items-center gap-1.5">
+      <PublishingBadge state={info.state} publishedAt={info.published_at} />
+      <PendingChangesBadge />
+    </span>
+  );
+}
+
+/** Next to Published on a row with unpublished changes. */
+export function PendingChangesBadge({ className }: { className?: string }) {
+  const { t } = useTranslation();
+
+  return (
+    <Badge tone="yellow" className={className} data-testid="pending-badge">
+      {t("publishing.changes.title")}
+    </Badge>
+  );
 }

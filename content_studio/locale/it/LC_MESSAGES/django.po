@@ -1826,3 +1826,15 @@ msgstr "Traduzione mancante"
 #: form.py
 msgid "Translations"
 msgstr "Traduzioni"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Modifiche non pubblicate"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Non ci sono modifiche non pubblicate."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "modifiche non pubblicate"
