@@ -45,6 +45,12 @@
   changes are kept. System check `content_studio.W029` reports a
   `recover_changes_exclude` naming a field the model does not have.
 
+### Fixes
+
+- **The X on an active filter chip opened the filter** instead of
+  removing it, for choice, boolean and custom filters, on the list page
+  and in the media library.
+
 ## 1.18.1 (2026-11-20)
 
 ### Fixes
