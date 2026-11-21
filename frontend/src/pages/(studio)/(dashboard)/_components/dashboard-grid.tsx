@@ -1,9 +1,5 @@
-import { type ComponentType, Fragment } from "react";
+import { type ComponentType } from "react";
 
-import {
-  ReviewQueueWidget,
-  useReviewScene,
-} from "@/components/review/review-mock";
 import { cn } from "@/lib/utils";
 import { type DashboardWidget, DashboardWidgetType } from "@/types";
 
@@ -38,18 +34,15 @@ const COL_SPAN: Record<number, string> = {
  * dashboard pages. Widgets without a display take no space.
  */
 export function DashboardGrid({ widgets }: { widgets: DashboardWidget[] }) {
-  // MOCK: the review queue widget.
-  const scene = useReviewScene();
-
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4 items-start">
-      {widgets.map((widget, index) => {
+      {widgets.map((widget) => {
         const Comp = widget.widget_type
           ? WIDGET_COMPONENTS[widget.widget_type]
           : undefined;
         const span = Math.min(Math.max(widget.col_span, 1), 4);
 
-        const card = Comp ? (
+        return Comp ? (
           <div
             key={widget.widget_id}
             className={cn(
@@ -63,18 +56,6 @@ export function DashboardGrid({ widgets }: { widgets: DashboardWidget[] }) {
             <Comp widget={widget} />
           </div>
         ) : null;
-
-        // MOCK: the review queue under the statistics.
-        return scene === "dash" && index === 3 ? (
-          <Fragment key={widget.widget_id}>
-            {card}
-            <div className="min-w-0 md:col-span-2 xl:col-span-4">
-              <ReviewQueueWidget />
-            </div>
-          </Fragment>
-        ) : (
-          card
-        );
       })}
     </div>
   );

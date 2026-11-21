@@ -21,12 +21,6 @@ import {
   useShowPublishButton,
 } from "@/components/publishing/publishing";
 import { PublishingBadge } from "@/components/publishing/publishing-badge";
-import {
-  hasPrimary,
-  MockHeaderMeta,
-  MockPrimaryButton,
-  useReviewScene,
-} from "@/components/review/review-mock";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -176,8 +170,6 @@ export function Header({
   // Content that is not live: Save steps back for Publish.
   const showPublish = useShowPublishButton();
   const publishing = usePublishing();
-  // MOCK: the review workflow screens.
-  const scene = useReviewScene();
 
   // After an edit action the object may have changed: show its new
   // values, unless that would discard the editor's unsaved changes.
@@ -284,33 +276,20 @@ export function Header({
               </span>
             }
             meta={
-              scene ? (
-                <MockHeaderMeta
-                  scene={scene}
-                  status={
-                    <EditStatus
-                      dirty={isDirty && !readOnly}
-                      keptAt={keptAt}
-                      editedAt={editedAt}
-                    />
-                  }
-                />
-              ) : (
-                <>
-                  {resource && publishing && (
-                    <PublishingBadge
-                      state={publishing.info.state}
-                      short
-                      className="hidden sm:inline-flex shrink-0"
-                    />
-                  )}
-                  <EditStatus
-                    dirty={isDirty && !readOnly}
-                    keptAt={keptAt}
-                    editedAt={editedAt}
+              <>
+                {resource && publishing && (
+                  <PublishingBadge
+                    state={publishing.info.state}
+                    short
+                    className="hidden sm:inline-flex shrink-0"
                   />
-                </>
-              )
+                )}
+                <EditStatus
+                  dirty={isDirty && !readOnly}
+                  keptAt={keptAt}
+                  editedAt={editedAt}
+                />
+              </>
             }
             actions={
               <>
@@ -559,7 +538,7 @@ export function Header({
                     addAnother={saveOptions.addAnother}
                     close={saveOptions.close}
                     defaultMode={saveOptions.defaultMode}
-                    outline={scene ? hasPrimary(scene) : showPublish}
+                    outline={showPublish}
                     onSave={async (mode) => {
                       try {
                         await onSave(mode);
@@ -569,11 +548,7 @@ export function Header({
                     }}
                   />
                 )}
-                {scene ? (
-                  <MockPrimaryButton scene={scene} />
-                ) : (
-                  <PublishButton disabled={isSaving} />
-                )}
+                <PublishButton disabled={isSaving} />
               </>
             }
           />

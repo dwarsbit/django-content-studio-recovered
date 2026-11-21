@@ -2,11 +2,6 @@ import * as R from "ramda";
 
 import { usePublishing } from "@/components/publishing/publishing";
 import { PublishingCard } from "@/components/publishing/publishing-card";
-import {
-  MockCommentsCard,
-  MockPublishingCard,
-  useReviewScene,
-} from "@/components/review/review-mock";
 import { cn } from "@/lib/utils";
 import type { Model } from "@/types";
 
@@ -29,16 +24,13 @@ export function Aside({
   } = model;
   // Studios with publishing open the sidebar with the Publishing card.
   const publishing = usePublishing();
-  // MOCK: the review workflow screens.
-  const scene = useReviewScene();
   const hasSidebar = (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!publishing;
 
   return (
     hasSidebar && (
       <EditPlacementContext.Provider value="sidebar">
         <aside className="space-y-4">
-          {scene ? <MockPublishingCard scene={scene} /> : <PublishingCard />}
-          {scene === "comments" && <MockCommentsCard />}
+          <PublishingCard />
           {(sidebar ?? []).map((formSet, idx) => (
             <Conditional
               key={idx}

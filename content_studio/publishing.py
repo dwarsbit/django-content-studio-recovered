@@ -306,9 +306,6 @@ def serialize_state(config: Publishing, obj, now=None) -> dict[str, Any]:
             if config.unpublish_at
             else None
         ),
-        # MOCK (review workflow spike, not for merge): the row's id, so
-        # the frontend mock can give rows a review state.
-        "id": str(obj.pk),
     }
 
 
