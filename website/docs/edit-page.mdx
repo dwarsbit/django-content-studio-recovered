@@ -852,10 +852,14 @@ the domain Content Studio runs on. Only `http`, `https`, `mailto` and
 relative URLs are linked: any other scheme, such as a stored
 `javascript:` URL, hides the button, so it cannot run in the admin.
 
+On a studio with [publishing](/docs/publishing), the button becomes
+**Preview draft** while the object is not live, with a menu to copy the link
+and share a draft link: see [Previews and shared draft links](/docs/previews).
+
 Set `view_on_site = False` on the studio to hide the button, or give the
 studio a `view_on_site(obj)` method that returns the URL. Returning `None`
-from the method hides the button for that object, for example for drafts
-that have no public page yet:
+from the method hides the button for that object, for example for an object
+without a slug yet:
 
 ```python
 # blog/admin.py
@@ -868,7 +872,7 @@ from .models import Article
 @register(Article)
 class ArticleStudio(ModelStudio):
     def view_on_site(self, obj):
-        if obj.status != Article.Status.PUBLISHED:
+        if not obj.slug:
             return None
         return f"https://www.example.com/blog/{obj.slug}/"
 ```

@@ -388,6 +388,41 @@ class PublishTests(PendingTestCase):
         assert not PendingChanges.objects.exists()
 
 
+class TableEditTests(PendingTestCase):
+    def table_edit(self, feature, **values):
+        return self.client.post(
+            f"{URL}/{feature.pk}/table-edit", {"values": values}, format="json"
+        )
+
+    def test_a_table_edit_of_a_live_object_is_kept_unpublished(self):
+        response = self.table_edit(self.feature, summary="From the table.")
+
+        assert response.status_code == 200, response.content
+        assert response.json()["values"] == {"summary": "From the table."}
+        assert response.json()["has_pending"] is True
+        self.feature.refresh_from_db()
+        assert self.feature.summary == "Fast trains get you there."
+        assert PendingChanges.objects.get().fields == ["summary"]
+
+    def test_a_table_edit_keeps_the_other_changes(self):
+        self.save(title="Slow journeys")
+
+        self.table_edit(self.feature, summary="From the table.")
+
+        assert PendingChanges.objects.get().fields == ["title", "summary"]
+        self.feature.refresh_from_db()
+        assert self.feature.title == "Slow trains"
+
+    def test_a_table_edit_of_a_draft_saves_it(self):
+        draft = Feature.objects.create(title="Draft")
+
+        response = self.table_edit(draft, summary="Saved.")
+
+        assert response.status_code == 200, response.content
+        draft.refresh_from_db()
+        assert draft.summary == "Saved."
+
+
 class ListTests(PendingTestCase):
     def test_rows_say_which_have_changes(self):
         other = Feature.objects.create(title="Other", published_at=NOW - HOUR)

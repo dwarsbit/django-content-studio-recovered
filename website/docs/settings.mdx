@@ -518,6 +518,20 @@ emails, which are sent outside a request. Default: `None`. Invites and
 password links fall back to the address of the request that sends them;
 set `ADMIN_URL` when a proxy in front of Django changes it.
 
+## Previews
+
+### PREVIEW_PARAM {#preview_param}
+
+The query parameter that carries a [preview](/docs/previews) token on your
+site's pages. Default: `"preview"`. Change it when your site already uses
+`preview` for something else.
+
+### PREVIEW_MAX_AGE {#preview_max_age}
+
+How long a link from **Preview draft** or **Copy preview link** works, in
+seconds. Default: `3600` (an hour). Shared draft links have their own expiry,
+picked when sharing.
+
 ## History
 
 ### HISTORY_MAX_VERSIONS {#history_max_versions}

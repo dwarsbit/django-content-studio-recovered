@@ -386,7 +386,12 @@ class BaseModelViewSet(ModelViewSet):
         # The object's values before and after the save: the activity
         # log names the fields the save changed, and the history app
         # keeps them as a version.
-        from .pending import get_pending, split_data, uses_pending_changes
+        from .pending import (
+            get_pending,
+            holds_changes,
+            split_data,
+            uses_pending_changes,
+        )
 
         before = self._snapshot(serializer.to_representation(serializer.instance))
         # An object saved from its edit page (no longer live) saves the
@@ -395,7 +400,10 @@ class BaseModelViewSet(ModelViewSet):
         studio = getattr(self, "_admin_model", None)
         pending = (
             get_pending(serializer.instance)
-            if not keep_pending and studio and uses_pending_changes(studio)
+            if not keep_pending
+            and studio
+            and uses_pending_changes(studio)
+            and not holds_changes(studio, serializer.instance)
             else None
         )
 
@@ -833,6 +841,194 @@ class BaseModelViewSet(ModelViewSet):
                 "message": result.message,
             }
         )
+
+    @action(methods=["post"], detail=True, url_path="preview")
+    def preview(self, request, id):
+        """
+        The link of the edit page's Preview button (and View on site, per
+        content language): {"language": ...} gives {"url": ...}, the
+        object's page with a staff preview token while it is not live,
+        the plain page URL when it is. Needs view permission.
+        """
+        from .previews import preview_url
+
+        instance = self.get_object()
+        language = self._preview_language(request)
+        url = preview_url(self._admin_model, instance, request.user, language)
+
+        if url is None:
+            raise NotFound("This object has no page on the site.")
+
+        return Response({"url": url})
+
+    def _preview_language(self, request):
+        from .translations import get_translation_config
+
+        data = request.data if hasattr(request.data, "get") else {}
+        language = data.get("language") or None
+        config = get_translation_config(self._admin_model)
+
+        if language is None or config is None:
+            return None
+
+        if language not in config.codes:
+            raise ValidationError({"language": [_("Unknown language.")]})
+
+        return language
+
+    def _shared_link_studio(self, request, instance):
+        from .previews import is_live, links_installed, preview_enabled
+
+        if not links_installed() or not preview_enabled(self._admin_model):
+            raise NotFound("This model has no shared draft links.")
+
+        if not self._admin_model.has_share_permission(request, instance):
+            raise PermissionDenied()
+
+        return is_live(self._admin_model, instance)
+
+    @action(methods=["get", "post"], detail=True, url_path="preview-links")
+    def preview_links(self, request, id):
+        """
+        The object's shared draft links that still work (GET), or a new
+        one (POST {"expires_at": ISO date, null for none, a week when left
+        out; "language", "note"}),
+        which answers with its URL, shown once. Needs the studio's
+        has_share_permission; only content that is not live is shared.
+        """
+        from django.contrib.admin.models import CHANGE, LogEntry
+        from django.contrib.contenttypes.models import ContentType
+        from django.utils.dateparse import parse_datetime
+
+        from .previews import (
+            active_links,
+            default_expiry,
+            page_url,
+            share,
+            with_token,
+        )
+
+        instance = self.get_object()
+        live = self._shared_link_studio(request, instance)
+        created = None
+
+        if request.method == "POST":
+            if live:
+                raise ValidationError(
+                    _("This is live: copy its link instead of sharing a draft link.")
+                )
+
+            data = request.data if hasattr(request.data, "get") else {}
+            language = self._preview_language(request)
+            url = page_url(self._admin_model, instance, language)
+
+            if url is None:
+                raise NotFound("This object has no page on the site.")
+
+            # Left out: a week; null: no expiry.
+            expires_at = data.get("expires_at", "week")
+
+            if expires_at == "week":
+                expires_at = default_expiry(7)
+            elif expires_at:
+                expires_at = parse_datetime(str(expires_at))
+
+                if expires_at is None:
+                    raise ValidationError({"expires_at": [_("Enter a valid date.")]})
+
+                if timezone.is_naive(expires_at):
+                    expires_at = timezone.make_aware(expires_at)
+
+                if expires_at <= timezone.now():
+                    raise ValidationError(
+                        {"expires_at": [_("Pick a date in the future.")]}
+                    )
+            else:
+                expires_at = None
+
+            note = str(data.get("note") or "")[:200]
+            link, key = share(
+                self._admin_model,
+                instance,
+                request.user,
+                expires_at=expires_at,
+                language=language,
+                note=note,
+            )
+            LogEntry.objects.create(
+                user=request.user,
+                action_flag=CHANGE,
+                content_type=ContentType.objects.get_for_model(instance),
+                object_id=instance.pk,
+                object_repr=str(instance)[:200],
+                change_message="Shared a draft link.",
+            )
+            created = {**self._serialize_link(link), "url": with_token(url, key)}
+
+        links = [self._serialize_link(link) for link in active_links(instance)]
+
+        if created is not None:
+            return Response({"created": created, "links": links}, status=201)
+
+        return Response({"links": links})
+
+    @staticmethod
+    def _serialize_link(link):
+        def iso(value):
+            return value.isoformat() if value is not None else None
+
+        user = link.created_by
+
+        return {
+            "id": link.pk,
+            "note": link.note,
+            "language": link.language or None,
+            "created_by": (
+                (user.get_full_name() or user.get_username())
+                if user is not None
+                else None
+            ),
+            "created_at": iso(link.created_at),
+            "expires_at": iso(link.expires_at),
+            "opens": link.opens,
+            "last_opened_at": iso(link.last_opened_at),
+        }
+
+    @action(
+        methods=["delete"],
+        detail=True,
+        url_path=r"preview-links/(?P<link_id>\d+)",
+    )
+    def revoke_preview_link(self, request, id, link_id):
+        """Revoke one of the object's shared draft links: it stops at once."""
+        from django.contrib.admin.models import CHANGE, LogEntry
+        from django.contrib.contenttypes.models import ContentType
+
+        from .previews.models import PreviewLink
+
+        instance = self.get_object()
+        self._shared_link_studio(request, instance)
+        deleted, _rows = PreviewLink.objects.filter(
+            pk=link_id,
+            content_type=ContentType.objects.get_for_model(
+                instance, for_concrete_model=False
+            ),
+            object_id=str(instance.pk),
+        ).delete()
+
+        if not deleted:
+            raise NotFound()
+
+        LogEntry.objects.create(
+            user=request.user,
+            action_flag=CHANGE,
+            content_type=ContentType.objects.get_for_model(instance),
+            object_id=instance.pk,
+            object_repr=str(instance)[:200],
+            change_message="Revoked a draft link.",
+        )
+
+        return Response(status=204)
 
     @action(methods=["post"], detail=True, url_path="password")
     def password(self, request, id):
@@ -1361,6 +1557,103 @@ class BaseModelViewSet(ModelViewSet):
             self._admin_model
         ):
             raise NotFound()
+
+    @action(methods=["post"], detail=True, url_path="table-edit")
+    def table_edit(self, request, id):
+        """
+        Save table cells edited in place: {"values": {key: value},
+        "base": {key: value}}, the keys being table_edit names or a
+        translated name's language columns. base holds the values the
+        list showed; a cell whose value changed since is refused (409)
+        rather than overwriting someone else's change. The save goes
+        through the update path of the edit page: the studio's save
+        hooks, model validation, the activity log and history. Answers
+        with the saved values as the list shows them.
+        """
+        from .table_edit import comparable, get_cell_keys
+
+        data = request.data if hasattr(request.data, "get") else {}
+        values = data.get("values")
+        base = data.get("base") or {}
+
+        if not isinstance(values, dict) or not values or not isinstance(base, dict):
+            raise ValidationError("A table edit requires a non-empty values object.")
+
+        keys = get_cell_keys(self._admin_model, request)
+        unknown = sorted(key for key in values if key not in keys)
+
+        if unknown:
+            raise ValidationError(
+                {key: ["This column cannot be edited in the table."] for key in unknown}
+            )
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=values, partial=True)
+        writable = {field.field_name for field in serializer._writable_fields}
+        unwritable = sorted(key for key in values if key not in writable)
+
+        if unwritable:
+            raise ValidationError(
+                {
+                    key: ["This column cannot be edited in the table."]
+                    for key in unwritable
+                }
+            )
+
+        current = serializer.to_representation(instance)
+        conflicts = {
+            key: [_("Changed by someone else since you loaded the list.")]
+            for key in values
+            if key in base and comparable(current.get(key)) != comparable(base[key])
+        }
+
+        if conflicts:
+            return Response(
+                {
+                    "conflicts": conflicts,
+                    "current": {k: current.get(k) for k in conflicts},
+                },
+                status=409,
+            )
+
+        serializer.is_valid(raise_exception=True)
+
+        # A live object of a studio with pending_changes keeps the edit
+        # as its unpublished changes, as its edit page would: the list
+        # goes on showing the published values, marked as changed.
+        from .pending import holds_changes
+        from .pending import save as save_pending
+
+        if holds_changes(self._admin_model, instance):
+            try:
+                with transaction.atomic(using=router.db_for_write(self._model)):
+                    pending = save_pending(
+                        request, self._admin_model, serializer, instance
+                    )
+            except DjangoValidationError as error:
+                raise ValidationError(get_error_detail(error))
+
+            saved = self._with_pending(self.get_serializer(instance).data, instance)
+
+            return Response(
+                {
+                    "id": instance.pk,
+                    "__str__": str(instance),
+                    "values": {key: saved.get(key) for key in values},
+                    "has_pending": pending is not None,
+                }
+            )
+
+        self.perform_update(serializer)
+        saved = serializer.data
+
+        return Response(
+            {
+                "id": instance.pk,
+                "__str__": str(instance),
+                "values": {key: saved.get(key) for key in values},
+            }
+        )
 
     @action(methods=["post"], detail=False, url_path="bulk")
     def bulk(self, request):

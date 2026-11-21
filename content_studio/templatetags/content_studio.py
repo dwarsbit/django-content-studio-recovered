@@ -85,3 +85,53 @@ def rich_text(value):
         return ""
 
     return mark_safe(render_rich_text(get_default_sanitizer()(str(value))))
+
+
+@register.simple_tag(takes_context=True)
+def preview_banner(context):
+    """
+    A thin bar at the top of a page opened with a preview link, saying
+    it shows a draft that is not public (with an Edit link for a staff
+    preview). Renders nothing on other requests, and on the live page.
+    Needs the request in the context (the request context processor).
+
+        {% load content_studio %}
+        <body>{% preview_banner %} ...
+    """
+    from django.template.loader import render_to_string
+    from django.urls import NoReverseMatch, reverse
+
+    from ..previews import STAFF, get_preview, get_studio, is_live
+
+    request = context.get("request")
+
+    if request is None:
+        return ""
+
+    preview = get_preview(request)
+
+    if preview is None:
+        return ""
+
+    obj = preview.get_object()
+    studio = get_studio(preview.model)
+
+    if obj is None or studio is None or is_live(studio, obj):
+        return ""
+
+    edit_url = None
+
+    if preview.kind == STAFF:
+        try:
+            edit_url = (
+                f"{reverse('content_studio_web')}content/"
+                f"{preview.model._meta.label_lower}/{preview.pk}"
+            )
+        except NoReverseMatch:  # pragma: no cover - admin not mounted
+            edit_url = None
+
+    return render_to_string(
+        "content_studio/previews/banner.html",
+        {"preview": preview, "edit_url": edit_url, "staff": preview.kind == STAFF},
+        request=request,
+    )

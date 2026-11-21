@@ -16,13 +16,14 @@ The public API consists of:
   `get_tenants`,
   `get_thumbnail`, `get_media_serializer_fields`, `get_media_metadata`,
   `get_default_subscriptions`, `get_link_url`, `get_view_on_site_url`,
-  `has_publish_permission`, `on_publish`, `on_unpublish`, `translations`,
+  `has_publish_permission`, `on_publish`, `on_unpublish`, `preview`,
+  `has_share_permission`, `translations`,
   `crop_image` and `reset_crop`;
 - the documented options and methods of blocks: the `Meta` options of
   `Block`, `get_context` and `get_template_name`, and the
   [values of a block field](/docs/block-fields#render-blocks-in-templates)
   (`blocks`, and each block's `id`, `type`, `value` and `render`);
-- the `render_blocks`, `image_size` and `image_url` tags and the
+- the `render_blocks`, `image_size`, `image_url` and `preview_banner` tags and the
   `rich_text` filter of the `content_studio` template library;
 - every [setting](/docs/settings) in `CONTENT_STUDIO`;
 - the [system check](/docs/deployment#system-checks) IDs, but not their messages;
@@ -34,7 +35,8 @@ The public API consists of:
 - the `content_studio.webhooks` app's `content_studio_deliver_webhooks`
   command, and the requests its webhooks send: the payload with its
   `version`, and the `X-Content-Studio-*` headers;
-- the `content_studio_publish` command;
+- the `content_studio_publish` command, and the `content_studio.previews`
+  app's `content_studio_prune_previews` command;
 - the `content_studio.notifications` app's
   `content_studio_prune_notifications` command, and its
   `content_studio_send_notification_digest` command with its `--delay`
@@ -322,6 +324,20 @@ Managers of the base models.
 - `get_state`
 - `live`
 - `run_scheduled`
+
+## `content_studio.previews`
+
+[Previews and shared draft links](/docs/previews): what a request's preview token gives, and the site's queryset helper.
+
+- `Preview`
+- `get_preview`
+- `previewable`
+
+## `content_studio.previews.middleware`
+
+The middleware that keeps [preview pages private](/docs/previews#keep-preview-pages-private).
+
+- `PreviewMiddleware`
 
 ## `content_studio.translations`
 

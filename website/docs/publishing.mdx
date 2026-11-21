@@ -107,6 +107,9 @@ article shows up the minute it goes live.
   filter, and the bulk actions **Publish now**, **Schedule…** and
   **Unpublish**. On a studio with a status field, the Status column takes the
   place of that field's column.
+- **Preview draft** takes View on site's place while the object is not live,
+  and editors with the **Can share** permission can share a draft link: see
+  [Previews and shared draft links](/docs/previews).
 - **The history** logs each change: "Published.", "Scheduled to publish
   on …", "Unpublished on schedule." and so on.
 
@@ -151,8 +154,11 @@ changes.
   first, so the draft keeps them. So does publishing an object that expired
   with them.
 
-New files are stored right away, under the name a save would give them, and
-removed on Discard. Inline rows save on their own pages and go live as before.
+A cell edited in the list's table (`table_edit`) on a published row is kept
+as an unpublished change too; the list goes on showing the published value,
+marked **Unpublished changes**. New files are stored right away, under the
+name a save would give them, and removed on Discard. Inline rows save on their
+own pages and go live as before.
 
 ## Who can publish
 

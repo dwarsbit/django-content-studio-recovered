@@ -36,6 +36,8 @@ PUBLIC_MODULES = [
     "content_studio.models",
     "content_studio.managers",
     "content_studio.publishing",
+    "content_studio.previews",
+    "content_studio.previews.middleware",
     "content_studio.translations",
     "content_studio.signals",
     "content_studio.validators",

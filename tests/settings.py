@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "content_studio.notifications",
     "content_studio.history",
     "content_studio.preferences",
+    "content_studio.previews",
     "tests.testapp",
 ]
 
@@ -41,6 +42,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    "content_studio.previews.middleware.PreviewMiddleware",
 ]
 
 ROOT_URLCONF = "content_studio.urls"

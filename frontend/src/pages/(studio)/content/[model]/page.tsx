@@ -23,6 +23,7 @@ import { useHttp } from "@/hooks/use-http";
 import { useImportDownload } from "@/hooks/use-import";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
+import { useTableEdit } from "@/hooks/use-table-edit";
 import { getDownloadErrorMessage } from "@/lib/download";
 import { formatNumber } from "@/lib/format-number";
 import { getListFilters, matchFilter } from "@/lib/list-filters";
@@ -300,6 +301,9 @@ export function ModelListPage() {
     },
   });
 
+  // Inline editing of the table (table_edit): each cell saves when left.
+  const edit = useTableEdit(model);
+
   // Who else has the objects of this page open.
   const presence = usePresenceList(
     model,
@@ -485,6 +489,7 @@ export function ModelListPage() {
                 onClear={clearContext}
                 reorder={reorder}
                 presence={presence}
+                edit={edit.editable.length > 0 ? edit : undefined}
                 className="border-0 rounded-none"
               />
             )}

@@ -253,7 +253,8 @@ class GuideAdmin(ModelStudio):
 
 @register(Feature)
 class FeatureAdmin(ModelStudio):
-    table_display = ["title"]
+    table_display = ["title", "summary"]
+    table_edit = ["summary"]
     publishing = Publishing("published_at", pending_changes=True)
 
     def save_model(self, request, obj, data, change):

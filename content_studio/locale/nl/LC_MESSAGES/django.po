@@ -1844,6 +1844,72 @@ msgstr "Ontbrekende vertaling"
 msgid "Translations"
 msgstr "Vertalingen"
 
+msgid "Changed by someone else since you loaded the list."
+msgstr "Iemand anders heeft dit gewijzigd sinds je de lijst hebt geladen."
+
+msgid "Previews"
+msgstr "Voorbeelden"
+
+msgid "content type"
+msgstr "inhoudstype"
+
+msgid "object id"
+msgstr "object-id"
+
+msgid "language"
+msgstr "taal"
+
+msgid "key hash"
+msgstr "sleutelhash"
+
+msgid "note"
+msgstr "notitie"
+
+msgid "expires at"
+msgstr "verloopt op"
+
+msgid "opens"
+msgstr "keer geopend"
+
+msgid "last opened at"
+msgstr "laatst geopend op"
+
+msgid "shared draft link"
+msgstr "gedeelde conceptlink"
+
+msgid "shared draft links"
+msgstr "gedeelde conceptlinks"
+
+msgid "Unknown language."
+msgstr "Onbekende taal."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Dit is live: kopieer de link in plaats van een conceptlink te delen."
+
+msgid "Enter a valid date."
+msgstr "Voer een geldige datum in."
+
+msgid "Pick a date in the future."
+msgstr "Kies een datum in de toekomst."
+
+msgid "Draft preview"
+msgstr "Conceptvoorbeeld"
+
+msgid "Not public"
+msgstr "Niet openbaar"
+
+msgid "This link stops working at %(time)s"
+msgstr "Deze link werkt tot %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Gedeeld door %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "Link verloopt %(date)s"
+
+msgid "Edit"
+msgstr "Bewerken"
+
 #: content_studio/publishing.py
 msgid "Unpublished changes"
 msgstr "Niet-gepubliceerde wijzigingen"

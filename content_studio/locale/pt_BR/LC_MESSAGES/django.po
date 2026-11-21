@@ -1832,6 +1832,72 @@ msgstr "Tradução ausente"
 msgid "Translations"
 msgstr "Traduções"
 
+msgid "Changed by someone else since you loaded the list."
+msgstr "Alterado por outra pessoa depois que você carregou a lista."
+
+msgid "Previews"
+msgstr "Visualizações"
+
+msgid "content type"
+msgstr "tipo de conteúdo"
+
+msgid "object id"
+msgstr "id do objeto"
+
+msgid "language"
+msgstr "idioma"
+
+msgid "key hash"
+msgstr "hash da chave"
+
+msgid "note"
+msgstr "nota"
+
+msgid "expires at"
+msgstr "expira em"
+
+msgid "opens"
+msgstr "aberturas"
+
+msgid "last opened at"
+msgstr "aberto pela última vez em"
+
+msgid "shared draft link"
+msgstr "link de rascunho compartilhado"
+
+msgid "shared draft links"
+msgstr "links de rascunho compartilhados"
+
+msgid "Unknown language."
+msgstr "Idioma desconhecido."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Isto está publicado: copie o link em vez de compartilhar um link do rascunho."
+
+msgid "Enter a valid date."
+msgstr "Informe uma data válida."
+
+msgid "Pick a date in the future."
+msgstr "Escolha uma data no futuro."
+
+msgid "Draft preview"
+msgstr "Visualização do rascunho"
+
+msgid "Not public"
+msgstr "Não público"
+
+msgid "This link stops working at %(time)s"
+msgstr "Este link para de funcionar às %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Compartilhado por %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "O link expira em %(date)s"
+
+msgid "Edit"
+msgstr "Editar"
+
 #: content_studio/publishing.py
 msgid "Unpublished changes"
 msgstr "Alterações não publicadas"

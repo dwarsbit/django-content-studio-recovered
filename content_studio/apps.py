@@ -321,6 +321,32 @@ class DjangoContentStudioConfig(AppConfig):
                         def get_languages(self, obj):
                             return list_translations.missing_counts(obj)
 
+                # With inline editing, list rows say whether the editor
+                # may change them (has_change_permission with the
+                # object): rows they may not change stay read-only.
+                get_table_edit = getattr(self._admin_model, "get_table_edit", None)
+
+                if (
+                    self.action == "list"
+                    and not self.is_singleton
+                    and get_table_edit is not None
+                    and get_table_edit(self.request)
+                ):
+                    edit_studio = self._admin_model
+
+                    class Serializer(Serializer):  # noqa: F811
+                        __can_change__ = serializers.SerializerMethodField(
+                            method_name="get_can_change"
+                        )
+
+                        class Meta(Serializer.Meta):
+                            fields = list(Serializer.Meta.fields) + ["__can_change__"]
+
+                        def get_can_change(self, obj):
+                            return edit_studio.has_change_permission(
+                                self.context.get("request"), obj
+                            )
+
                 # Rows always carry an "id": models whose primary key has
                 # another name get it as an alias of the pk.
                 if self._model._meta.pk.name != "id":
@@ -358,6 +384,12 @@ class DjangoContentStudioConfig(AppConfig):
                         # without it.
                         __publishing__ = serializers.SerializerMethodField(
                             method_name="get_publishing"
+                        )
+                        # Whether the object is live and the editor
+                        # may share a draft link, for the Preview button;
+                        # None for a studio that does not preview.
+                        __preview__ = serializers.SerializerMethodField(
+                            method_name="get_preview"
                         )
 
                         def _get_obj(self):
@@ -510,13 +542,17 @@ class DjangoContentStudioConfig(AppConfig):
                                 return None
 
                             # Content that is not live has no public page,
-                            # unless the studio's view_on_site method
-                            # returns one (such as a preview).
+                            # unless the studio previews it (the button
+                            # becomes Preview, which adds a token) or its
+                            # view_on_site method returns one.
+                            from .previews import preview_enabled
+
                             config = get_publishing(admin_model)
 
                             if (
                                 config is not None
                                 and get_state(config, obj) != PUBLISHED
+                                and not preview_enabled(admin_model)
                                 and not callable(
                                     getattr(admin_model, "view_on_site", None)
                                 )
@@ -526,6 +562,33 @@ class DjangoContentStudioConfig(AppConfig):
                             # A stored value could be a javascript: URL,
                             # which would run when an editor clicks it.
                             return safe_link_url(get_url(obj)) if get_url else None
+
+                        def get_preview(self, obj):
+                            from .previews import (
+                                is_live,
+                                links_installed,
+                                preview_enabled,
+                            )
+
+                            if (
+                                not isinstance(obj, models.Model)
+                                or not obj.pk
+                                or not preview_enabled(admin_model)
+                            ):
+                                return None
+
+                            live = is_live(admin_model, obj)
+
+                            return {
+                                "live": live,
+                                "can_share": bool(
+                                    not live
+                                    and links_installed()
+                                    and admin_model.has_share_permission(
+                                        self.context.get("request"), obj
+                                    )
+                                ),
+                            }
 
                         def get_object_permissions(self, obj):
                             request = self.context.get("request")

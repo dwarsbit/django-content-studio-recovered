@@ -437,6 +437,16 @@ class ModelStudio(BaseStudio[T]):
     # run on the object being edited. None (the default) offers none.
     edit_actions: Optional[list[str]] = None
 
+    # Table columns edited in place: names from table_display that are
+    # model fields. A cell saves as soon as the editor leaves it, through
+    # the same save as the edit page. Empty, the default, keeps the table
+    # read-only. The Django admin's list_editable is accepted as an alias.
+    table_edit: list[str] = []
+
+    # The Django admin's name for table_edit (check W031 asks for
+    # table_edit).
+    list_editable: Optional[list[str]] = None
+
     # The columns that may be sorted on; None allows all.
     sortable_by: Optional[list[str]] = None
 
@@ -479,6 +489,13 @@ class ModelStudio(BaseStudio[T]):
     # there is one. False hides it. A method view_on_site(self, obj)
     # returns the URL itself; None hides the button for that object.
     view_on_site: Union[bool, Callable[[Any], Optional[str]]] = True
+
+    # Previews, for a studio with publishing: while an object is not
+    # live, the View on site button becomes Preview, which opens its page
+    # with a preview token, and editors with the Can share permission
+    # can share a draft link (see content_studio.previews). False keeps
+    # drafts without a page link.
+    preview: bool = True
 
     # Duplicate (save as new), as an opt-in: the edit page offers to
     # open a create form prefilled with a copy of the object. Never
@@ -639,6 +656,20 @@ class ModelStudio(BaseStudio[T]):
 
         return str(value)
 
+    def get_table_edit(self, request: HttpRequest) -> list[str]:
+        """
+        The table columns this request may edit in place. The default is
+        table_edit (or list_editable) without the fields the editor
+        cannot write: read-only fields, fields the edit page does not
+        write, and every field for editors without change permission.
+        Override it to offer inline editing to some editors only; rows
+        the editor may not change (has_change_permission with the
+        object) stay read-only either way.
+        """
+        from .table_edit import get_default_table_edit
+
+        return get_default_table_edit(self, request)
+
     def has_publish_permission(
         self, request: HttpRequest, obj: Optional[T] = None
     ) -> bool:
@@ -651,6 +682,25 @@ class ModelStudio(BaseStudio[T]):
         from .publishing import get_codename
 
         if not self.has_change_permission(request, obj):
+            return False
+
+        return request.user.has_perm(
+            f"{self.model._meta.app_label}.{get_codename(self.model)}"
+        )
+
+    def has_share_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        """
+        Whether the request may share draft links of obj (when given), and
+        see and revoke them: view permission plus the model's "Can share"
+        permission, share_<model_name>, which migrate creates for every
+        studio that previews (with the content_studio.previews app
+        installed). Superusers have it.
+        """
+        from .previews.permissions import get_codename
+
+        if not self.has_view_permission(request, obj):
             return False
 
         return request.user.has_perm(
@@ -1833,6 +1883,8 @@ class AdminSerializer:
                     action.serialize()
                     for action in get_row_actions(admin_class, request)
                 ],
+                # The columns edited in place (table_edit).
+                "edit": admin_class.get_table_edit(request),
             },
             "permissions": serialize_permissions(admin_class, request),
         }

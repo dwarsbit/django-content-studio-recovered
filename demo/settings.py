@@ -32,6 +32,7 @@ INSTALLED_APPS = [
     "content_studio.notifications",
     "content_studio.history",
     "content_studio.preferences",
+    "content_studio.previews",
     "demo.blog",
 ]
 
@@ -42,6 +43,7 @@ MIDDLEWARE = [
     "django.middleware.csrf.CsrfViewMiddleware",
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
+    "content_studio.previews.middleware.PreviewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
 ]
 

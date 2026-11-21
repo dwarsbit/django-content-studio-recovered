@@ -1,0 +1,201 @@
+# 👁️ Previews and shared draft links
+
+On a studio with [publishing](/docs/publishing), drafts get a page link too.
+The edit page's **View on site** button becomes **Preview** while an object is
+not live. It opens the object's page on your site with a preview token, so the
+page shows the draft to the editor. Editors with the **Can share** permission
+can also share a draft link with someone outside the admin, such as a client
+or a reviewer. That link works until it expires or is revoked.
+
+Live content never gets a token. Its links are the plain public URL.
+
+<Screenshot name="previews" alt="An article's edit page with the Share draft link dialog: the expiry, language and note of a new link, and the active links with Revoke" />
+
+Your site has to show the draft when the link carries a valid token. That
+takes one line in each view that shows a model with publishing; see
+[Show drafts on your site](#show-drafts-on-your-site).
+
+## What editors see
+
+The page button sits in the edit page's header, where View on site was. Its
+main part opens the page in a new tab, and its menu has the rest:
+
+| Object | Main part | Menu |
+| --- | --- | --- |
+| Live | **View on site** | **Copy link** |
+| Draft, scheduled or expired | **Preview draft** | **Copy preview link**, **Share draft link…** |
+| Not live, with unsaved changes | **Preview draft** | **Save and preview**, and the items above |
+
+- **Preview draft** and **Copy preview link** give a link that works for an
+  hour (`PREVIEW_MAX_AGE`). It stops sooner when the editor loses view
+  permission or is deactivated.
+- **Share draft link…** opens a dialog with an expiry (1 day, 7 days, 30
+  days, a date, or no expiry, 7 days by default), the content language and a
+  note that only editors see. **Create link** shows the link once, with
+  **Copy**. Only a hash of the link's key is stored, so it cannot be shown
+  again. The dialog lists the object's active links with who made them,
+  when they expire and how often they were opened, and **Revoke** ends one at
+  once.
+- A preview shows the last saved version. Unsaved changes are not on the
+  page; **Save and preview** saves them first. Saving a draft does not make
+  it public.
+- With [translated content](/docs/translations), the page opens in the
+  content language the header shows: the studio's `get_view_on_site_url` runs
+  with that language active, so `reverse()` with `i18n_patterns` gives that
+  language's URL. View on site of live content follows the language too.
+- Sharing and revoking a link are logged in the object's activity ("Shared a
+  draft link.", "Revoked a draft link.").
+
+A shared draft link keeps working once the object is published: it then shows
+the live page. It shows the draft again if the object is unpublished, until
+it expires.
+
+## Set up previews
+
+1. Give the studio [publishing](/docs/publishing) and a page URL: the model's
+   `get_absolute_url()`, or the studio's `get_link_url` or `view_on_site`
+   ([View on site](/docs/edit-page#view-on-site)). Previews are on by
+   default for such a studio. Set `preview = False` to keep drafts without a
+   page link.
+2. For shared draft links, add the app and the middleware:
+
+   ```python
+   # settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.previews",
+   ]
+
+   MIDDLEWARE = [
+       # ...
+       "content_studio.previews.middleware.PreviewMiddleware",
+   ]
+   ```
+
+3. Run `manage.py migrate`. It creates the shared links table and the **Can
+   share** permission of each previewed model (`share_article` for
+   `Article`).
+
+Without the app, Preview and Copy preview link work and Share draft link is
+not offered.
+
+## Show drafts on your site
+
+A token in the `preview` query parameter names one object. Content Studio
+cannot change what your site shows by itself, so each view that filters with
+[`live()`](/docs/publishing#states) uses `previewable()` instead: the live
+objects plus the previewed one.
+
+```python
+# blog/views.py
+from django.shortcuts import get_object_or_404, render
+
+from content_studio.previews import previewable
+
+from .models import Article
+
+
+def article_detail(request, slug):
+    article = get_object_or_404(
+        previewable(request, Article.objects.all()), slug=slug
+    )
+    return render(request, "blog/article.html", {"article": article})
+```
+
+`previewable` reads the model's publishing from its registered studio; pass it
+as the third argument for a model without one. A token for another object or
+another model adds nothing, so drafts stay hidden from lists and from other
+pages.
+
+Add the preview banner to your base template. It shows only on a preview
+and says that the page is a draft that is not public, who shared the link and
+when it expires. A staff preview has an **Edit** link back to the admin.
+
+```django
+{% load content_studio %}
+<body>
+  {% preview_banner %}
+  ...
+```
+
+The banner needs the request in the template context (the
+`django.template.context_processors.request` context processor).
+
+### Headless frontends
+
+When the site is a separate frontend, `get_view_on_site_url` (or
+`get_link_url`) already points at it, so the link carries the token there.
+Pass the `preview` parameter on to the API call that loads the object, and
+let the API view use the same functions:
+
+```python
+from content_studio.previews import get_preview, previewable
+
+
+def article_detail(request, slug):
+    article = get_object_or_404(
+        previewable(request, Article.objects.all()), slug=slug
+    )
+    preview = get_preview(request)  # None on a normal request
+    ...
+```
+
+`get_preview(request)` returns the `Preview` the token gives, or `None`: its
+`model`, `pk`, `language`, `kind` (`"staff"` or `"shared"`), `user` (who made
+the link), `shared_by` (that user's name) and `expires_at`. Render your own
+banner from it.
+
+## Keep preview pages private
+
+A preview link carries its key in the URL. `PreviewMiddleware` sets three
+headers on every response to a request with the `preview` parameter:
+
+- `Cache-Control: private, no-store`, so a CDN or the browser does not keep
+  the draft;
+- `X-Robots-Tag: noindex, nofollow`, so search engines leave it out;
+- `Referrer-Policy: no-referrer`, so links on the page do not pass the key on
+  to other sites.
+
+If a cache in front of your site ignores `Cache-Control`, exclude URLs with
+the `preview` parameter from it. System check `content_studio.W031` warns
+when the app is installed without the middleware.
+
+Revoking a link, its expiry and deleting the object end it at once. Delete
+expired links now and then:
+
+```bash
+python manage.py content_studio_prune_previews
+```
+
+## Who can share
+
+Sharing a draft link, and seeing and revoking the active ones, needs the
+model's **Can share** permission on top of view permission. Superusers
+always have it; give it to groups on the
+[permission matrix](/docs/users#permissions-and-groups). Editors without it
+can still preview and copy a preview link.
+
+Override `has_share_permission` to decide per object:
+
+```python
+class ArticleStudio(ModelStudio):
+    publishing = "published_at"
+
+    def has_share_permission(self, request, obj=None):
+        if obj is not None and obj.author == request.user:
+            return True
+        return super().has_share_permission(request, obj)
+```
+
+Only content that is not live can be shared. Published content that is not
+public for another reason, such as members-only pages, is not covered.
+
+## Options
+
+| Option | Where | Default | What it does |
+| --- | --- | --- | --- |
+| `preview` | `ModelStudio` | `True` | `False` keeps drafts without a page link: no Preview, no sharing. System check `content_studio.E056` reports a value that is not a boolean. |
+| `has_share_permission(request, obj=None)` | `ModelStudio` | Can share permission | Who may share draft links of an object. |
+| `PREVIEW_PARAM` | `CONTENT_STUDIO` | `"preview"` | The query parameter that carries the token. |
+| `PREVIEW_MAX_AGE` | `CONTENT_STUDIO` | `3600` | Seconds a link from Preview or Copy preview link works. |

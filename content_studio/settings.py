@@ -197,6 +197,11 @@ DEFAULTS = {
     # The admin's absolute URL, like "https://example.com/admin/", for
     # links in emails.
     "ADMIN_URL": None,
+    # Previews: the query parameter that carries a preview token on the
+    # site's pages, and how long the links of Preview and Copy preview
+    # link work, in seconds.
+    "PREVIEW_PARAM": "preview",
+    "PREVIEW_MAX_AGE": 60 * 60,
     "PASSWORD_RESET_EXPIRATION_TIME": 10,
     # Rate limit for the password reset endpoints, per IP; None disables
     # throttling.
