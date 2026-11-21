@@ -596,8 +596,33 @@ class DjangoContentStudioConfig(AppConfig):
 
                     if publishing_config is not None:
 
-                        def get_publishing_state(self, obj, config=publishing_config):
-                            return serialize_state(config, obj)
+                        from .pending import pending_object_ids, uses_pending_changes
+
+                        with_pending = uses_pending_changes(self._admin_model)
+                        model_class = self._model
+
+                        def get_publishing_state(
+                            self,
+                            obj,
+                            config=publishing_config,
+                            with_pending=with_pending,
+                            model_class=model_class,
+                        ):
+                            state = serialize_state(config, obj)
+
+                            # Rows with unpublished changes say so; the
+                            # ids are read once per request.
+                            if with_pending:
+                                if "_pending_ids" not in self.context:
+                                    self.context["_pending_ids"] = (
+                                        pending_object_ids(model_class)
+                                    )
+
+                                state["has_pending"] = (
+                                    str(obj.pk) in self.context["_pending_ids"]
+                                )
+
+                            return state
 
                         Serializer = type(
                             str("Serializer"),
@@ -827,14 +852,14 @@ class DjangoContentStudioConfig(AppConfig):
 
                 super().perform_create(serializer)
 
-            def perform_update(self, serializer):
+            def perform_update(self, serializer, **kwargs):
                 # ... and cannot be re-attached on update either.
                 if self.parent_fk and self.parent_fk in serializer.validated_data:
                     self._check_parent_instance(
                         serializer.validated_data[self.parent_fk]
                     )
 
-                super().perform_update(serializer)
+                super().perform_update(serializer, **kwargs)
 
         if parent:
             prefix = f"api/inlines/{parent._meta.label_lower}/{model._meta.label_lower}"

@@ -521,6 +521,37 @@ class ContentSerializer(serializers.ModelSerializer):
 
         return instance
 
+    def check_values(self, instance):
+        """
+        Validate the serializer's values against a copy of instance as
+        a save would (the values set on it, then the model's clean(),
+        unique checks and constraints), without saving anything: for
+        unpublished changes, which are validated when saved and stored
+        apart from the object (see content_studio.pending). Returns the
+        copy, with the values set.
+        """
+        from .validation import full_clean
+
+        model = self.Meta.model
+        many_to_many = {field.name for field in model._meta.many_to_many}
+        config = self._translation_config()
+        virtual = config.virtual_columns() if config else {}
+        candidate = copy.copy(instance)
+
+        for name, value in self.validated_data.items():
+            if name in many_to_many:
+                continue
+
+            if name in virtual:
+                field_name, code = virtual[name]
+                config.adapter.set_value(candidate, field_name, code, value)
+            else:
+                setattr(candidate, name, value)
+
+        full_clean(self, candidate)
+
+        return candidate
+
     def get_field_names(self, declared_fields, info):
         fields = list(super().get_field_names(declared_fields, info))
 
