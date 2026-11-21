@@ -112,7 +112,7 @@ probably not as you intended. Neither stops the server from starting, but
 | ID | Reports |
 |----|---------|
 | `content_studio.E001` | `list_display` set to a mapping. The list view's mapping belongs in `list_item_display`; `list_display` sets the table columns. |
-| `content_studio.E002` | `list_views` with an unknown view name, or an entry that is neither a name, a `CalendarView` nor a `BoardView`. |
+| `content_studio.E002` | `list_views` with an unknown view name (the names are `table`, `list`, `calendar` and `gallery`), or an entry that is neither a name, a `CalendarView` nor a `BoardView`. |
 | `content_studio.E003` | Two extensions with the same ID. Pass an `extension_id` to tell them apart. |
 | `content_studio.E004` | Two dashboard widgets with the same ID, on the start page and the [dashboard pages](/docs/extensions#dashboardpage) together. Pass a `widget_id` to tell them apart. |
 | `content_studio.E005` | Two components with the same ID on one studio, or on an inline and the inlined model's own studio. Pass a `component_id` to tell them apart; the same component class may serve several studios. |
@@ -208,6 +208,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W030` | A [translated field](/docs/translations) without a column for one of the content languages, so editors cannot translate it into that language. |
 | `content_studio.W031` | The [`content_studio.previews`](/docs/previews#keep-preview-pages-private) app is installed but `MIDDLEWARE` has no `PreviewMiddleware`, so pages opened with a shared draft link may be cached or indexed. |
 | `content_studio.W032` | A studio's `list_editable`, the Django admin's name for [`table_edit`](/docs/list-page#editing-in-the-table), or `table_edit` on a studio whose `list_views` has no table view. |
+| `content_studio.W033` | `"gallery"` in [`list_views`](/docs/list-page#gallery) while `list_item_display` has no `thumbnail`, so every tile shows a placeholder. |
 
 ## Reporting a vulnerability
 

@@ -413,7 +413,8 @@ class ModelStudio(BaseStudio[T]):
     # The views offered by the list page: "table", "list", "calendar"
     # (the publishing date's calendar), CalendarView objects
     # (content_studio.list_views) for a calendar by another date field
-    # and BoardView objects for a board by a choice field or foreign key.
+    # BoardView objects for a board by a choice field or foreign key, and
+    # "gallery" (tiles of the list item thumbnails).
     # More than one enables a switch in the interface.
     list_views: list[Union[str, CalendarView, BoardView]] = ["table"]
 

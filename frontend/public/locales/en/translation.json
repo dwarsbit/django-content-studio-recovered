@@ -156,6 +156,12 @@
       "add": "Add to {{column}}",
       "show_more": "Show more"
     },
+    "gallery_view": "Gallery view",
+    "gallery": {
+      "size": "Tile size",
+      "large": "Large tiles",
+      "small": "Small tiles"
+    },
     "empty_state": "No items yet",
     "no_results": "Nothing matches the current search or filters",
     "filter": "Filter",
