@@ -138,9 +138,7 @@ class Publishing:
     def field_names(self) -> list[str]:
         """The model fields publishing writes: never written by the form."""
         return [
-            name
-            for name in (self.published_at, self.unpublish_at, self.status)
-            if name
+            name for name in (self.published_at, self.unpublish_at, self.status) if name
         ]
 
     def status_value(self, state: str):
@@ -457,11 +455,7 @@ def apply(studio, request, obj, action: str, data: Mapping[str, Any]) -> Result:
 def _check_unpublish_at(value, published_at):
     if value is not None and value <= published_at:
         raise ValidationError(
-            {
-                "unpublish_at": [
-                    _("The unpublish date must be after the publish date.")
-                ]
-            }
+            {"unpublish_at": [_("The unpublish date must be after the publish date.")]}
         )
 
     return value
@@ -563,7 +557,13 @@ def _sweep_studio(studio, now) -> tuple[int, int]:
 
     for index, (objects, state, action, message, hook) in enumerate(
         (
-            (went_live, PUBLISHED, PUBLISHED, MESSAGE_PUBLISHED_ON_SCHEDULE, "on_publish"),
+            (
+                went_live,
+                PUBLISHED,
+                PUBLISHED,
+                MESSAGE_PUBLISHED_ON_SCHEDULE,
+                "on_publish",
+            ),
             (
                 came_down,
                 EXPIRED,

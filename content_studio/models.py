@@ -142,7 +142,7 @@ class PublishableModel(models.Model):
 
     @property
     def publishing_status(self) -> str:
-        """"draft", "scheduled", "published" or "expired"."""
+        """ "draft", "scheduled", "published" or "expired"."""
         from .publishing import get_state
 
         return get_state(type(self)._publishing(), self)

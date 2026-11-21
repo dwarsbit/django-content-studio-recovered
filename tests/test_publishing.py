@@ -212,9 +212,7 @@ class AdminPayloadTests(PublishingTestCase):
         self.assertEqual(story.title, "renamed")
         self.assertIsNone(story.published_at)
         self.assertEqual(story.status, "draft")
-        self.assertIn(
-            "published_at", response.json()["__readonly_fields__"]
-        )
+        self.assertIn("published_at", response.json()["__readonly_fields__"])
 
     def test_view_on_site_is_hidden_until_live(self):
         story = Story.objects.create(title="draft")
@@ -224,9 +222,7 @@ class AdminPayloadTests(PublishingTestCase):
         ):
             draft = self.client.get(f"/api/content/testapp.story/{story.pk}").json()
             Story.objects.filter(pk=story.pk).update(published_at=NOW - HOUR)
-            published = self.client.get(
-                f"/api/content/testapp.story/{story.pk}"
-            ).json()
+            published = self.client.get(f"/api/content/testapp.story/{story.pk}").json()
 
         self.assertIsNone(draft["__view_on_site__"])
         self.assertEqual(published["__view_on_site__"], "/s/1/")
@@ -245,7 +241,9 @@ class EndpointTests(PublishingTestCase):
         self.assertEqual(story.status, "live")
         entry = LogEntry.objects.get(object_id=str(story.pk))
         self.assertEqual(entry.change_message, "Published.")
-        self.assertEqual(type(admin_site._registry[Story]).published, [(True, story.pk)])
+        self.assertEqual(
+            type(admin_site._registry[Story]).published, [(True, story.pk)]
+        )
 
     def test_publish_sends_published_change(self):
         story = Story.objects.create(title="draft")
@@ -316,9 +314,7 @@ class EndpointTests(PublishingTestCase):
         self.assertIsNone(live_story.published_at)
         self.assertEqual(live_story.status, "draft")
         self.assertIsNone(soon.published_at)
-        messages = dict(
-            LogEntry.objects.values_list("object_id", "change_message")
-        )
+        messages = dict(LogEntry.objects.values_list("object_id", "change_message"))
         self.assertEqual(messages[str(live_story.pk)], "Unpublished.")
         self.assertEqual(messages[str(soon.pk)], "Unscheduled.")
         self.assertEqual(
@@ -329,7 +325,9 @@ class EndpointTests(PublishingTestCase):
         story = Story.objects.create(title="live", published_at=NOW - HOUR)
         until = NOW + datetime.timedelta(days=1)
 
-        response = self.publish(story, "set_unpublish_at", unpublish_at=until.isoformat())
+        response = self.publish(
+            story, "set_unpublish_at", unpublish_at=until.isoformat()
+        )
         cleared = self.publish(story, "set_unpublish_at", unpublish_at=None)
 
         self.assertEqual(response.status_code, 200, response.content)
@@ -530,7 +528,10 @@ class CheckTests(TestCase):
         return Studio(model, admin_site)
 
     def ids(self, publishing, model=Story):
-        return [message for _id, message in publishing_errors(self.studio(publishing, model))]
+        return [
+            message
+            for _id, message in publishing_errors(self.studio(publishing, model))
+        ]
 
     def test_valid_configurations(self):
         self.assertEqual(self.ids(None), [])

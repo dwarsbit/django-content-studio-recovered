@@ -421,9 +421,7 @@ def _action_list_errors(studio, declared) -> list[tuple[str, str]]:
         )
 
     # Studios with publishing offer its actions in the rows too.
-    publishing = (
-        PUBLISHING_ACTION_IDS if getattr(studio, "publishing", None) else ()
-    )
+    publishing = PUBLISHING_ACTION_IDS if getattr(studio, "publishing", None) else ()
 
     for attribute, builtins in (
         ("row_actions", (DELETE_ACTION_ID, DUPLICATE_ACTION_ID, *publishing)),
@@ -851,7 +849,9 @@ def publishing_errors(studio) -> list[tuple[str, str]]:
                 )
             )
 
-        missing = [key for key in ("draft", "published") if key not in config.status_values]
+        missing = [
+            key for key in ("draft", "published") if key not in config.status_values
+        ]
 
         if missing:
             errors.append(
