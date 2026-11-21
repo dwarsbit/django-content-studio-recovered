@@ -136,10 +136,24 @@ export function FormField({
               )}
             >
               {label}
-              {translation.translated && <LanguageBadge code={language} />}
-              {translation.shared && <SharedFieldMarker />}
             </span>
           );
+          // The language marks sit next to the label, outside it, so the
+          // label's text stays the field's name.
+          const languageMark = translation.translated ? (
+            <LanguageBadge code={language} />
+          ) : translation.shared ? (
+            <SharedFieldMarker />
+          ) : null;
+          const withLanguageMark = (labelElement: React.ReactNode) =>
+            languageMark ? (
+              <div className="flex items-center">
+                {labelElement}
+                {languageMark}
+              </div>
+            ) : (
+              labelElement
+            );
           const control =
             isReadonly &&
             modelField &&
@@ -196,14 +210,16 @@ export function FormField({
                 <div className="flex items-start gap-2.5 [&>[role=checkbox]]:mt-0.5">
                   {control}
                   <div className="min-w-0">
-                    <FormLabel
-                      className={cn(
-                        "text-foreground",
-                        isReadonly ? "cursor-default" : "cursor-pointer",
-                      )}
-                    >
-                      {labelText}
-                    </FormLabel>
+                    {withLanguageMark(
+                      <FormLabel
+                        className={cn(
+                          "text-foreground",
+                          isReadonly ? "cursor-default" : "cursor-pointer",
+                        )}
+                      >
+                        {labelText}
+                      </FormLabel>,
+                    )}
                     {modelField?.help_text && (
                       <FormDescription className="mt-0.5 text-xs">
                         {modelField.help_text}
@@ -213,14 +229,16 @@ export function FormField({
                 </div>
               ) : (
                 <>
-                  <FormLabel
-                    className={cn(
-                      "text-foreground",
-                      labelToggles && "cursor-pointer",
-                    )}
-                  >
-                    {labelText}
-                  </FormLabel>
+                  {withLanguageMark(
+                    <FormLabel
+                      className={cn(
+                        "text-foreground",
+                        labelToggles && "cursor-pointer",
+                      )}
+                    >
+                      {labelText}
+                    </FormLabel>,
+                  )}
                   {control}
                   {translation.translated && !isReadonly && (
                     <TranslationReference name={formField.name} />
