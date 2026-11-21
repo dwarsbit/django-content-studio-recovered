@@ -10,7 +10,6 @@ test("edits table cells in place, undoes and reports errors", async ({
   page,
 }) => {
   const title = `E2E inline ${uniqueSuffix()}`;
-  const renamed = `${title} renamed`;
 
   // An article of its own, so parallel tests keep theirs.
   await page.goto("/admin/content/demo_blog.article/new");
@@ -40,31 +39,27 @@ test("edits table cells in place, undoes and reports errors", async ({
   await expect(row.getByRole("switch", { name: "featured" })).toBeChecked();
 
   // An invalid value stays in the cell with the reason; Esc reverts it.
-  // (While the title is in an input the row has no title text, so the
-  // open input is found on the page.)
-  const titleInput = page.getByRole("textbox", { name: "title" });
-  await row.getByRole("button", { name: "title" }).click();
-  await titleInput.fill("");
-  await titleInput.press("Enter");
-  const failed = page.getByRole("button", { name: "title" }).filter({
-    has: page.getByRole("img", { name: "This field may not be blank." }),
-  });
-  await expect(failed).toBeVisible();
-  await failed.press("Escape");
-  await expect(row.getByText(title)).toBeVisible();
+  const views = row.getByRole("button", { name: "views" });
+  await views.click();
+  await row.getByRole("textbox", { name: "views" }).fill("many");
+  await row.getByRole("textbox", { name: "views" }).press("Enter");
+  await expect(
+    row.getByRole("img", { name: "A valid integer is required." }),
+  ).toBeVisible();
+  await views.press("Escape");
+  await expect(
+    row.getByRole("img", { name: "A valid integer is required." }),
+  ).toBeHidden();
 
   // Tab saves and moves on to the next editable cell.
-  await row.getByRole("button", { name: "title" }).click();
-  await titleInput.fill(renamed);
-  await titleInput.press("Tab");
-  const renamedRow = rowByText(page, renamed);
-  await expect(renamedRow).toBeVisible();
-  await expect(
-    renamedRow.getByRole("switch", { name: "featured" }),
-  ).toBeFocused();
+  await views.click();
+  await row.getByRole("textbox", { name: "views" }).fill("77");
+  await row.getByRole("textbox", { name: "views" }).press("Tab");
+  await expect(page.getByText("Views saved")).toBeVisible();
+  await expect(row.getByRole("button", { name: "author" })).toBeFocused();
 
-  // The other cells still open the article.
-  await renamedRow.getByText("Draft").click();
+  // The title, the first column, still opens the article.
+  await row.getByText(title).click();
   await expect(page).toHaveURL(/\/content\/demo_blog\.article\/\d+$/);
-  await expect(fieldByLabel(page, "title")).toHaveValue(renamed);
+  await expect(fieldByLabel(page, "title")).toHaveValue(title);
 });

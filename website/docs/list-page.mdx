@@ -148,8 +148,11 @@ from .models import Article
 @register(Article)
 class ArticleStudio(ModelStudio):
     table_display = ["title", "author", "featured", "views", "status"]
-    table_edit = ["title", "author", "featured", "views"]
+    table_edit = ["author", "featured", "views"]
 ```
+
+The first column opens the object, so it is never edited in place, as in
+the Django admin.
 
 A cell saves as soon as the editor leaves it: Enter or a click elsewhere
 saves a text or number cell, Tab saves it and moves on to the next editable
@@ -186,10 +189,10 @@ the list shows. Override `get_table_edit(request)` to choose the columns
 per request.
 
 `list_editable`, the classic Django admin's name, also works. System check
-`content_studio.W031` asks you to rename it to `table_edit`, and warns
+`content_studio.W032` asks you to rename it to `table_edit`, and warns
 when `table_edit` is set on a studio without the table view.
-`content_studio.E056` reports names that are not `table_display` columns
-or fields the edit page writes, read-only fields, many-to-many and reverse
+`content_studio.E057` reports names that are not `table_display` columns
+or fields the edit page writes, the first column, read-only fields, many-to-many and reverse
 relations, fields with their own widget (rich text, blocks, media) and the
 fields [publishing](/docs/publishing) sets, which the Status column and
 the Publish actions change.

@@ -1873,3 +1873,66 @@ msgstr "Traductions"
 
 msgid "Changed by someone else since you loaded the list."
 msgstr "Modifié par quelqu'un d'autre depuis le chargement de la liste."
+
+msgid "Previews"
+msgstr "Aperçus"
+
+msgid "content type"
+msgstr "type de contenu"
+
+msgid "object id"
+msgstr "identifiant de l’objet"
+
+msgid "language"
+msgstr "langue"
+
+msgid "key hash"
+msgstr "empreinte de la clé"
+
+msgid "note"
+msgstr "note"
+
+msgid "expires at"
+msgstr "expire le"
+
+msgid "opens"
+msgstr "ouvertures"
+
+msgid "last opened at"
+msgstr "dernière ouverture le"
+
+msgid "shared draft link"
+msgstr "lien vers un brouillon"
+
+msgid "shared draft links"
+msgstr "liens vers des brouillons"
+
+msgid "Unknown language."
+msgstr "Langue inconnue."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Ce contenu est en ligne : copiez son lien au lieu de partager un lien vers le brouillon."
+
+msgid "Enter a valid date."
+msgstr "Saisissez une date valide."
+
+msgid "Pick a date in the future."
+msgstr "Choisissez une date dans le futur."
+
+msgid "Draft preview"
+msgstr "Aperçu du brouillon"
+
+msgid "Not public"
+msgstr "Non public"
+
+msgid "This link stops working at %(time)s"
+msgstr "Ce lien cesse de fonctionner à %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Partagé par %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "Le lien expire le %(date)s"
+
+msgid "Edit"
+msgstr "Modifier"

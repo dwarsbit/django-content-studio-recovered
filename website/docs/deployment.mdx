@@ -166,6 +166,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E053` | A [`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate) or [`LOGIN_ACCOUNT_THROTTLE_RATE`](/docs/settings#login_account_throttle_rate) that is not a rate such as `"10/min"` or `None`. |
 | `content_studio.E054` | A studio's [`publishing`](/docs/publishing#options): not a field name or `Publishing`, on a singleton, a date field that is not a nullable `DateTimeField`, the same field for both dates, `status_values` without `status`, an unknown state, no value for draft or published, or a value that is not among the status field's choices. |
 | `content_studio.E055` | A studio's [`translations`](/docs/translations#languages-and-required-languages): not a list of field names or `Translations`, a field the model does not have, a language that is not a content language, a required language the studio does not have, or an unknown adapter. |
+| `content_studio.E056` | A studio's [`preview`](/docs/previews#options) that is not `True` or `False`. |
+| `content_studio.E057` | A studio's [`table_edit`](/docs/list-page#editing-in-the-table) (or `list_editable`) that is not a list of field names, or names a field a table cell cannot edit: not a `table_display` column, the first column, a field the edit page does not write, a read-only field, a many-to-many or reverse relation, a field with its own widget or a field publishing sets. |
 
 ### Warnings
 
@@ -200,6 +202,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W028` | `BACKUP_SCHEDULE` is set but Huey is not installed to run it. Run `content_studio_backup` [from cron](/docs/backups#with-cron) and silence the warning. |
 | `content_studio.W029` | A `recover_changes_exclude` that is not a list of field names, or names a field the model does not have, so its [unsaved changes](/docs/edit-page#unsaved-changes) are kept in the browser after all. |
 | `content_studio.W030` | A [translated field](/docs/translations) without a column for one of the content languages, so editors cannot translate it into that language. |
+| `content_studio.W031` | The [`content_studio.previews`](/docs/previews#keep-preview-pages-private) app is installed but `MIDDLEWARE` has no `PreviewMiddleware`, so pages opened with a shared draft link may be cached or indexed. |
+| `content_studio.W032` | A studio's `list_editable`, the Django admin's name for [`table_edit`](/docs/list-page#editing-in-the-table), or `table_edit` on a studio whose `list_views` has no table view. |
 
 ## Reporting a vulnerability
 

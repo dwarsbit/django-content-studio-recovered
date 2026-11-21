@@ -2,8 +2,8 @@
 Tests for inline editing of the table view (ModelStudio.table_edit, alias
 list_editable): the names a request may edit, the list's metadata and row
 flags, the table-edit endpoint (permissions, validation, conflicts,
-translated columns, the activity log, save hooks) and the checks (E056,
-W031).
+translated columns, the activity log, save hooks) and the checks (E057,
+W032).
 """
 
 from unittest import mock
@@ -307,10 +307,33 @@ def test_runs_model_validation(editable, client):
 GUIDES = "/api/content/testapp.guide"
 
 
+def test_the_first_column_is_never_edited(client):
+    guide = Guide.objects.create(title="Hello")
+
+    # The first column opens the object, like the Django admin's link.
+    with mock.patch.object(GuideAdmin, "table_edit", ["title", "views"], create=True):
+        guides = admin_site._registry[Guide]
+        response = edit(client, guide, {"title": "Hi"}, url=GUIDES)
+        errors = table_edit_errors(guides)
+
+    assert response.status_code == 400
+    assert errors == [
+        (
+            "content_studio.E057",
+            "GuideAdmin.table_edit has 'title', which is the first "
+            "table_display column, which opens the object; put another "
+            "column first.",
+        )
+    ]
+
+
 def test_edits_a_language_column(client):
     guide = Guide.objects.create(title="Hello")
 
-    with mock.patch.object(GuideAdmin, "table_edit", ["title"], create=True):
+    with (
+        mock.patch.object(GuideAdmin, "table_edit", ["title"], create=True),
+        mock.patch.object(GuideAdmin, "table_display", ["views", "title"]),
+    ):
         response = edit(
             client, guide, {"title_nl": "Hallo"}, {"title_nl": ""}, url=GUIDES
         )
@@ -323,7 +346,10 @@ def test_edits_a_language_column(client):
 def test_refuses_columns_of_other_fields(client):
     guide = Guide.objects.create(title="Hello")
 
-    with mock.patch.object(GuideAdmin, "table_edit", ["title"], create=True):
+    with (
+        mock.patch.object(GuideAdmin, "table_edit", ["title"], create=True),
+        mock.patch.object(GuideAdmin, "table_display", ["views", "title"]),
+    ):
         response = edit(client, guide, {"slug_nl": "hallo"}, url=GUIDES)
 
     assert response.status_code == 400
@@ -362,7 +388,7 @@ def test_check_e056():
         errors = table_edit_errors(studio())
 
     messages = [message for check_id, message in errors]
-    assert {check_id for check_id, _ in errors} == {"content_studio.E056"}
+    assert {check_id for check_id, _ in errors} == {"content_studio.E057"}
     assert any("'body', which is not a table_display column" in m for m in messages)
     assert any("'categories'" in m for m in messages)
     assert any(
@@ -384,7 +410,7 @@ def test_check_e056_not_a_list():
 
     assert errors == [
         (
-            "content_studio.E056",
+            "content_studio.E057",
             "ArticleAdmin.table_edit must be a list of field names.",
         )
     ]
@@ -404,7 +430,7 @@ def test_check_w031_alias():
 
     assert warnings == [
         (
-            "content_studio.W031",
+            "content_studio.W032",
             "ArticleAdmin.list_editable is the Django admin's name for the "
             "columns edited in place; rename it to table_edit.",
         )
@@ -418,5 +444,5 @@ def test_check_w031_without_table_view():
     ):
         warnings = table_edit_warnings(studio())
 
-    assert [check_id for check_id, _ in warnings] == ["content_studio.W031"]
+    assert [check_id for check_id, _ in warnings] == ["content_studio.W032"]
     assert "table view" in warnings[0][1]

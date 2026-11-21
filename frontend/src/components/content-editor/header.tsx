@@ -3,11 +3,7 @@ import dayjs from "dayjs";
 import { useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
-import {
-  PiArrowLeftBold,
-  PiArrowSquareOutBold,
-  PiDotsThreeBold,
-} from "react-icons/pi";
+import { PiArrowLeftBold, PiDotsThreeBold } from "react-icons/pi";
 import { toast } from "sonner";
 
 import {
@@ -54,6 +50,7 @@ import type {
 import { Conditional } from "./conditional";
 import { EditorLanguageMenu } from "./content-language";
 import { ComponentRenderer } from "./form-field";
+import { PreviewButton } from "./preview-button";
 import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
 
@@ -145,7 +142,8 @@ export function Header({
     },
   });
   const showUserActions = showSetPassword || showSendLink || showResetTwoFactor;
-  // The object's public page (the studio's view_on_site), once saved.
+  // The object's page (the studio's view_on_site), once saved: View on
+  // site, or Preview while it is not live (see PreviewButton).
   // Only http(s) and relative URLs: a stored javascript: URL would run
   // in the admin (the server drops those too).
   const viewOnSiteUrl =
@@ -305,24 +303,22 @@ export function Header({
                       className="hidden lg:inline-flex"
                     />
                   )}
-                  {viewOnSiteUrl && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button asChild size="icon" variant="ghost">
-                          <a
-                            href={viewOnSiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={t("editor.view_on_site")}
-                          >
-                            <PiArrowSquareOutBold />
-                          </a>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("editor.view_on_site")}
-                      </TooltipContent>
-                    </Tooltip>
+                  {viewOnSiteUrl && resource && (
+                    <PreviewButton
+                      resource={resource}
+                      resourcePath={resourcePath}
+                      viewOnSiteUrl={viewOnSiteUrl}
+                      isDirty={isDirty}
+                      onSave={async () => {
+                        try {
+                          await onSave();
+                          return true;
+                        } catch {
+                          // Errors are already surfaced by the save flow.
+                          return false;
+                        }
+                      }}
+                    />
                   )}
                   {components.map((component) => (
                     <Conditional

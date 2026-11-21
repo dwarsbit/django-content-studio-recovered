@@ -1841,6 +1841,48 @@ def view_on_site_errors(studio) -> list[tuple[str, str]]:
     ]
 
 
+def preview_errors(studio) -> list[tuple[str, str]]:
+    """
+    A preview that is not a boolean (E056): anything else would silently
+    turn previews of drafts on or off.
+    """
+    value = getattr(studio, "preview", True)
+
+    if isinstance(value, bool):
+        return []
+
+    return [
+        (
+            "content_studio.E056",
+            f"{config_name(studio)}.preview must be True or False.",
+        )
+    ]
+
+
+def preview_middleware_warnings() -> list[tuple[str, str]]:
+    """
+    Shared draft links without PreviewMiddleware (W031): the pages they
+    open could be cached by a CDN or indexed, with the link's key in the
+    URL.
+    """
+    if not apps.is_installed("content_studio.previews"):
+        return []
+
+    path = "content_studio.previews.middleware.PreviewMiddleware"
+
+    if path in (getattr(settings, "MIDDLEWARE", None) or []):
+        return []
+
+    return [
+        (
+            "content_studio.W031",
+            "content_studio.previews is installed, but MIDDLEWARE has no "
+            f"{path}: pages opened with a shared draft link may be cached "
+            "or indexed. Add it to MIDDLEWARE.",
+        )
+    ]
+
+
 def duplication_errors(studio) -> list[tuple[str, str]]:
     """
     A misconfigured duplicate_inlines, as (check id, message) pairs: it
@@ -2845,10 +2887,12 @@ def list_filter_errors(studio) -> list[tuple[str, str]]:
 def table_edit_errors(studio) -> list[tuple[str, str]]:
     """
     A misconfigured table_edit (or list_editable), as (check id, message)
-    pairs (E056): each name must be a table_display column, a model field
-    a table cell can edit, written by the edit page and not read-only.
+    pairs (E057): each name must be a table_display column, a model field
+    a table cell can edit, written by the edit page and not read-only,
+    and not the first column, which opens the object (like the Django
+    admin's list_editable).
     """
-    from .table_edit import cell_field_error, declared_table_edit
+    from .table_edit import cell_field_error, declared_table_edit, link_column
 
     names = declared_table_edit(studio)
     attribute = "table_edit" if declares(studio, "table_edit") else "list_editable"
@@ -2856,7 +2900,7 @@ def table_edit_errors(studio) -> list[tuple[str, str]]:
 
     if not isinstance(getattr(studio, attribute, None), (list, tuple)):
         if attribute == "table_edit":
-            return [("content_studio.E056", f"{owner} must be a list of field names.")]
+            return [("content_studio.E057", f"{owner} must be a list of field names.")]
 
         return []
 
@@ -2872,12 +2916,13 @@ def table_edit_errors(studio) -> list[tuple[str, str]]:
         form_names = None
 
     readonly = set(getattr(studio, "readonly_fields", None) or [])
+    link = link_column(studio)
 
     for name in names:
         if not isinstance(name, str):
             errors.append(
                 (
-                    "content_studio.E056",
+                    "content_studio.E057",
                     f"{owner} entries must be field names; got {name!r}.",
                 )
             )
@@ -2887,6 +2932,11 @@ def table_edit_errors(studio) -> list[tuple[str, str]]:
 
         if name not in columns:
             reason = "is not a table_display column"
+        elif name == link:
+            reason = (
+                "is the first table_display column, which opens the object; "
+                "put another column first"
+            )
         else:
             reason = cell_field_error(studio, name)
 
@@ -2898,7 +2948,7 @@ def table_edit_errors(studio) -> list[tuple[str, str]]:
 
         if reason:
             errors.append(
-                ("content_studio.E056", f"{owner} has {name!r}, which {reason}.")
+                ("content_studio.E057", f"{owner} has {name!r}, which {reason}.")
             )
 
     return errors
@@ -2907,7 +2957,7 @@ def table_edit_errors(studio) -> list[tuple[str, str]]:
 def table_edit_warnings(studio) -> list[tuple[str, str]]:
     """
     Inline editing that does not show, or the Django admin's name for it
-    (W031).
+    (W032).
     """
     from .table_edit import declared_table_edit
 
@@ -2926,14 +2976,14 @@ def table_edit_warnings(studio) -> list[tuple[str, str]]:
                 "columns edited in place; rename it to table_edit."
             )
 
-        warnings.append(("content_studio.W031", message))
+        warnings.append(("content_studio.W032", message))
 
     if declared_table_edit(studio) and "table" not in (
         getattr(studio, "list_views", None) or []
     ):
         warnings.append(
             (
-                "content_studio.W031",
+                "content_studio.W032",
                 f"{name} edits columns in place, but list_views does not "
                 "offer the table view, the only view that edits in place.",
             )
@@ -4397,6 +4447,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         for check_id, error in view_on_site_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
+        for check_id, error in preview_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
         for check_id, error in export_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
@@ -4501,6 +4554,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(
             checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
         )
+
+    for check_id, warning in preview_middleware_warnings():
+        messages.append(checks.Warning(warning, id=check_id))
 
     for check_id, error in presence_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))

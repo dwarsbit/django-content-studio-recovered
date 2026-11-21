@@ -4,17 +4,18 @@
 
 ### Features
 
-- **Editing in the table.** Name columns with `table_edit = ["title",
-  "featured", "views", "author"]` and editors change them in place on the
-  list page: inputs for text and numbers, switches, selects for choices,
-  date pickers and foreign key pickers. A cell saves as soon as the editor
-  leaves it, through the edit page's save path (hooks, `clean()`, history),
-  with a toast that offers Undo; Tab moves on to the next cell and Esc
-  puts the old value back. A value someone else changed since the list
-  loaded is refused instead of overwritten. Rows the editor may not change
-  show a lock. Override `get_table_edit(request)` per request; the Django
-  admin's `list_editable` also works (check `W031` asks for `table_edit`),
-  and check `E056` reports columns a cell cannot edit.
+- **Editing in the table.** Name columns with `table_edit = ["featured",
+  "views", "author"]` and editors change them in place on the list page:
+  inputs for text and numbers, switches, selects for choices, date pickers
+  and foreign key pickers. A cell saves as soon as the editor leaves it,
+  through the edit page's save path (hooks, `clean()`, history), with a
+  toast that offers Undo; Tab moves on to the next cell and Esc puts the
+  old value back. A value someone else changed since the list loaded is
+  refused instead of overwritten. Rows the editor may not change show a
+  lock, and the first column, which opens the object, is never edited in
+  place. Override `get_table_edit(request)` per request; the Django
+  admin's `list_editable` also works (check `W032` asks for `table_edit`),
+  and check `E057` reports columns a cell cannot edit.
 - **Translated content.** Name a studio's translated fields with
   `translations = ["title", "body"]` and give the model a column per
   language (`title_nl`, `title_de`); models registered with
@@ -31,6 +32,26 @@
   default language). System checks `content_studio.E055` and
   `content_studio.W030` report a configuration that cannot work. See
   [Translated content](https://djangocontentstudio.org/docs/translations).
+- **Previews and shared draft links.** On a studio with publishing, View
+  on site becomes **Preview draft** while an object is not live: it opens
+  the object's page with a preview token that works for an hour
+  (`PREVIEW_MAX_AGE`), and **Copy preview link** copies it. Its menu has
+  **Share draft link…**: a link anyone can open to see the draft, with an
+  expiry (1 day, 7 days by default, 30 days, a date or none), a content
+  language and a note, until it is revoked. The dialog lists the active
+  links with how often they were opened. Live content keeps its plain link
+  and gets **Copy link**. With translated content, the page opens in the
+  content language shown. The site shows drafts with one line in a view,
+  `previewable(request, queryset)` (or `get_preview(request)` in an API for
+  a headless frontend), and `{% preview_banner %}` marks a preview page.
+  Shared links need the `content_studio.previews` app and
+  `PreviewMiddleware`, which keeps preview pages out of caches and search
+  results; `content_studio_prune_previews` deletes expired links. Sharing
+  needs the new **Can share** permission (`share_<model>`, superusers
+  always have it); set `preview = False` on a studio to keep drafts without
+  a page link. System checks `content_studio.E056` and
+  `content_studio.W031` report a configuration that cannot work. See
+  [Previews and shared draft links](https://djangocontentstudio.org/docs/previews).
 
 ### Changes
 

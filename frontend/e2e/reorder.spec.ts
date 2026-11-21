@@ -1,6 +1,6 @@
 import { expect, type Locator, type Page, test } from "@playwright/test";
 
-import { login, rowByText } from "./helpers";
+import { login } from "./helpers";
 
 // The tests reorder shared seeded rows, so they run one after another.
 test.describe.configure({ mode: "serial" });
@@ -61,12 +61,7 @@ test("categories are dragged into order and keep it", async ({ page }) => {
 test("inline reviews are reordered with the keyboard", async ({ page }) => {
   await login(page);
   await page.goto("/admin/content/demo_blog.article");
-  // The title cell is edited in place (table_edit); the status cell
-  // opens the article.
-  await rowByText(page, "Reviews in order")
-    .first()
-    .getByText(/^(Draft|Published|Scheduled)$/)
-    .click();
+  await page.getByText("Reviews in order").first().click();
   await page.getByRole("tab", { name: "reviews" }).click();
 
   const inline = page.getByRole("table").filter({ hasText: "First review" });

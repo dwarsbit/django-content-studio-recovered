@@ -44,6 +44,18 @@ def declared_table_edit(studio) -> list[str]:
     return []
 
 
+def link_column(studio) -> Optional[str]:
+    """
+    The table's first column, which opens the object, so it is never
+    edited in place (like the Django admin's list_editable).
+    """
+    from .admin import get_table_display_columns
+
+    columns = get_table_display_columns(studio)
+
+    return columns[0].field if columns else None
+
+
 def cell_field_error(studio, name: str) -> Optional[str]:
     """Why a table cell cannot edit the named field, or None."""
     from .publishing import get_publishing
@@ -88,9 +100,9 @@ def cell_field_error(studio, name: str) -> Optional[str]:
 def get_default_table_edit(studio, request: HttpRequest) -> list[str]:
     """
     ModelStudio.get_table_edit's default: the declared names the editor
-    can write, which leaves out read-only fields, fields the edit page
-    does not write and everything for editors without change
-    permission.
+    can write, which leaves out the first column (it opens the object),
+    read-only fields, fields the edit page does not write and everything
+    for editors without change permission.
     """
     from .admin import get_form_field_names, get_readonly_field_names
 
@@ -101,11 +113,13 @@ def get_default_table_edit(studio, request: HttpRequest) -> list[str]:
 
     form_names = get_form_field_names(studio, request)
     readonly = get_readonly_field_names(studio, request)
+    link = link_column(studio)
 
     return [
         name
         for name in names
-        if name in form_names
+        if name != link
+        and name in form_names
         and name not in readonly
         and cell_field_error(studio, name) is None
     ]

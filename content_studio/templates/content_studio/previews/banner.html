@@ -1,0 +1,14 @@
+{% load i18n %}<div class="cs-preview-banner" role="status">
+<style>
+.cs-preview-banner{position:sticky;top:0;z-index:2147483000;display:flex;align-items:center;gap:12px;padding:8px 20px;margin:0;font:13px/1.4 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:#fef3c7;color:#713f12;border-bottom:1px solid #fcd34d;text-align:left}
+.cs-preview-banner strong{font-weight:600}
+.cs-preview-banner .cs-dot{width:8px;height:8px;border-radius:50%;background:#d97706;flex:none}
+.cs-preview-banner .cs-spacer{flex:1}
+.cs-preview-banner a{color:inherit;font-weight:600;text-decoration:none;border:1px solid currentColor;border-radius:6px;padding:3px 10px}
+@media (prefers-color-scheme:dark){.cs-preview-banner{background:#3a2a06;color:#fde68a;border-color:#78530f}}
+</style>
+<span class="cs-dot" aria-hidden="true"></span>
+<span><strong>{% translate "Draft preview" %}</strong> · {% translate "Not public" %}{% if staff %}{% if preview.expires_at %} · {% blocktranslate with time=preview.expires_at|time:"TIME_FORMAT" %}This link stops working at {{ time }}{% endblocktranslate %}{% endif %}{% else %}{% if preview.shared_by %} · {% blocktranslate with name=preview.shared_by %}Shared by {{ name }}{% endblocktranslate %}{% endif %}{% if preview.expires_at %} · {% blocktranslate with date=preview.expires_at|date:"DATE_FORMAT" %}Link expires {{ date }}{% endblocktranslate %}{% endif %}{% endif %}</span>
+<span class="cs-spacer"></span>
+{% if edit_url %}<a href="{{ edit_url }}">{% translate "Edit" %}</a>{% endif %}
+</div>
