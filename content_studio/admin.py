@@ -460,6 +460,17 @@ class ModelStudio(BaseStudio[T]):
     # offered for singletons.
     allow_duplication: bool = False
 
+    # Unsaved changes on the edit page are kept in the editor's browser
+    # while they are made, and offered back when the page opens again
+    # (after a crash, a reload or an expired session). False turns that
+    # off for this model; the RECOVER_CHANGES setting turns it off for
+    # every model.
+    recover_changes: bool = True
+
+    # Fields whose unsaved values are never kept in the browser, such as
+    # personal data. Write-only values (passwords) never are.
+    recover_changes_exclude: list[str] = []
+
     # The inlines (entries of `inlines`) whose rows are copied along
     # when the duplicate is saved. Inlines left out start empty.
     duplicate_inlines: list[Type["InlineModelStudio"]] = []
@@ -1578,6 +1589,17 @@ def is_duplicable(studio) -> bool:
     )
 
 
+def is_change_recovery_enabled(studio) -> bool:
+    """
+    Whether the edit page keeps unsaved changes in the browser for
+    recovery: the RECOVER_CHANGES setting and the studio's
+    recover_changes both allow it.
+    """
+    return bool(cs_settings.RECOVER_CHANGES) and bool(
+        getattr(studio, "recover_changes", True)
+    )
+
+
 def is_linkable(studio) -> bool:
     """
     Whether rich text can link to the studio's objects: the model has
@@ -1651,6 +1673,12 @@ class AdminSerializer:
                 # Whether the edit page offers Duplicate; it also needs
                 # add permission.
                 "duplicate": is_duplicable(admin_class),
+                # Whether unsaved changes are kept in the browser for
+                # recovery, and the fields that never are.
+                "recover_changes": is_change_recovery_enabled(admin_class),
+                "recover_changes_exclude": list(
+                    getattr(admin_class, "recover_changes_exclude", None) or []
+                ),
                 # The studio's edit_actions, in the more actions menu.
                 "actions": [
                     action.serialize()

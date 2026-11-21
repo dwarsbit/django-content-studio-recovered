@@ -1892,6 +1892,45 @@ def duplication_warnings(studio) -> list[tuple[str, str]]:
     return []
 
 
+def recover_changes_warnings(studio) -> list[tuple[str, str]]:
+    """
+    A recover_changes_exclude that keeps nothing out, as (check id,
+    message) pairs: not a list of field names, or names that are not
+    fields of the model, so their unsaved values are kept after all.
+    """
+    exclude = getattr(studio, "recover_changes_exclude", None)
+    name = config_name(studio)
+
+    if not exclude:
+        return []
+
+    if not isinstance(exclude, (list, tuple)) or not all(
+        isinstance(entry, str) for entry in exclude
+    ):
+        return [
+            (
+                "content_studio.W029",
+                f"{name}.recover_changes_exclude must be a list of field names.",
+            )
+        ]
+
+    fields = {field.name for field in studio.model._meta.get_fields()}
+    unknown = [entry for entry in exclude if entry not in fields]
+
+    if unknown:
+        return [
+            (
+                "content_studio.W029",
+                f"{name}.recover_changes_exclude names {unknown!r}, which "
+                f"{'is not a field' if len(unknown) == 1 else 'are not fields'} "
+                f"of {studio.model._meta.label}. Their unsaved values are kept "
+                "in the browser.",
+            )
+        ]
+
+    return []
+
+
 def export_errors(studio) -> list[tuple[str, str]]:
     """
     A misconfigured export_fields, as (check id, message) pairs: a list
@@ -4127,6 +4166,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in duplication_warnings(studio):
+            messages.append(checks.Warning(warning, obj=obj, id=check_id))
+
+        for check_id, warning in recover_changes_warnings(studio):
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in export_warnings(studio):

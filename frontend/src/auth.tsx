@@ -14,6 +14,7 @@ import { useEffectOnce } from "react-use";
 import { toast } from "sonner";
 
 import { http } from "@/hooks/use-http";
+import { clearKept } from "@/lib/recovery";
 import { storeTenant } from "@/lib/tenant-storage";
 import { type AuthState } from "@/types";
 
@@ -86,6 +87,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setToken(null);
     // The next user of this browser picks their own tenant.
     storeTenant(null);
+    // Unsaved changes kept for recovery stay on this browser only while
+    // their user is signed in.
+    clearKept();
     // Cached responses (discover, content) belong to the signed-out user;
     // the next user starts without them.
     queryClient.clear();
