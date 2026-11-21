@@ -1331,11 +1331,12 @@
     "languages_complete": "{{done}} of {{total}} languages complete",
     "languages_column": "Languages"
   },
-  "list_edit": {
-    "saved_cell": "{{field}} saved",
-    "undo": "Undo",
+  "table_edit": {
+    "saved": "{{field}} saved",
+    "saved_short": "Saved",
     "saving": "Saving…",
-    "locked": "You can't change this {{singular}}",
-    "revert_hint": "Esc puts the saved value back"
+    "undo": "Undo",
+    "failed": "Could not save this change.",
+    "locked": "You can't change this {{model}}"
   }
 }

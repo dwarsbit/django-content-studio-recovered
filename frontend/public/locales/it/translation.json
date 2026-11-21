@@ -1379,5 +1379,13 @@
     "shared": "Uguale in ogni lingua",
     "languages_complete": "{{done}} lingue complete su {{total}}",
     "languages_column": "Lingue"
+  },
+  "table_edit": {
+    "saved": "{{field}} salvato",
+    "saved_short": "Salvato",
+    "saving": "Salvataggio…",
+    "undo": "Annulla",
+    "failed": "Impossibile salvare questa modifica.",
+    "locked": "Non puoi modificare questo elemento ({{model}})"
   }
 }

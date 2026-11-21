@@ -1831,3 +1831,6 @@ msgstr "Tradução ausente"
 #: form.py
 msgid "Translations"
 msgstr "Traduções"
+
+msgid "Changed by someone else since you loaded the list."
+msgstr "Alterado por outra pessoa depois que você carregou a lista."

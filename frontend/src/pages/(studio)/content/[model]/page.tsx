@@ -21,9 +21,9 @@ import { useDiscover } from "@/hooks/use-discover";
 import { useExport } from "@/hooks/use-export";
 import { useHttp } from "@/hooks/use-http";
 import { useImportDownload } from "@/hooks/use-import";
-import { useListEdit } from "@/hooks/use-list-edit";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
+import { useTableEdit } from "@/hooks/use-table-edit";
 import { getDownloadErrorMessage } from "@/lib/download";
 import { formatNumber } from "@/lib/format-number";
 import { getListFilters, matchFilter } from "@/lib/list-filters";
@@ -301,8 +301,8 @@ export function ModelListPage() {
     },
   });
 
-  // In-place edits of the table (list_edit): each cell saves when left.
-  const edit = useListEdit(model);
+  // Inline editing of the table (table_edit): each cell saves when left.
+  const edit = useTableEdit(model);
 
   // Who else has the objects of this page open.
   const presence = usePresenceList(

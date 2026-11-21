@@ -5,9 +5,9 @@ import { TbCaretDownFilled, TbCaretUpFilled } from "react-icons/tb";
 import { useNavigate } from "react-router";
 
 import { FormatRenderer } from "@/components/formats/renderer";
-import { EditableCell } from "@/components/list-edit/editable-cell";
 import { PresenceIndicator } from "@/components/presence";
 import { Reorderable, RowDragHandle } from "@/components/reorderable";
+import { EditableCell } from "@/components/table-edit/editable-cell";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Table,
@@ -22,9 +22,9 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import type { ListEdit } from "@/hooks/use-list-edit";
 import { useReorderableRow } from "@/hooks/use-reorderable-row";
 import { useRunAction } from "@/hooks/use-run-action";
+import { cellId, type TableEdit } from "@/hooks/use-table-edit";
 import { useContentLanguage } from "@/lib/content-language";
 import { getEdges, type Move } from "@/lib/reorder";
 import { cn } from "@/lib/utils";
@@ -79,8 +79,8 @@ export function TableView({
   className,
 }: {
   items: Row[];
-  // In-place editing (list_edit), when the studio offers it.
-  edit?: ListEdit;
+  // Inline editing (table_edit), when the studio offers it.
+  edit?: TableEdit;
   model: Model;
   // The selected ids, when the model offers bulk actions.
   selected?: Set<string>;
@@ -313,7 +313,7 @@ function TableViewRow({
   onRunAction,
   edit,
 }: {
-  edit?: ListEdit;
+  edit?: TableEdit;
   item: Row;
   model: Model;
   hasActions: boolean;
@@ -366,8 +366,8 @@ function TableViewRow({
           !!edit?.editable.includes(name) && item.__can_change__ !== false;
         const column = translations?.fields[name]?.[language] ?? name;
         const rowPending = edit?.pending[item.id] ?? {};
-        const changed = column in rowPending;
-        const value = changed ? rowPending[column] : item[column];
+        const isPending = column in rowPending;
+        const value = isPending ? rowPending[column] : item[column];
         const fallback =
           column !== name && (item[column] === "" || item[column] == null)
             ? String(item[name] ?? "")
@@ -393,8 +393,8 @@ function TableViewRow({
                   model={model}
                   name={name}
                   value={value}
-                  saving={!!edit?.saving.has(`${item.id}:${column}`)}
-                  saved={!!edit?.saved.has(`${item.id}:${column}`)}
+                  saving={!!edit?.saving.has(cellId(item.id, column))}
+                  saved={!!edit?.saved.has(cellId(item.id, column))}
                   error={edit?.errors[item.id]?.[column]}
                   placeholder={fallback}
                   onChange={(next) => edit?.set(item, column, next)}
@@ -435,7 +435,7 @@ function TableViewRow({
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="top">
-                      {t("list_edit.locked", { singular: model.verbose_name })}
+                      {t("table_edit.locked", { model: model.verbose_name })}
                     </TooltipContent>
                   </Tooltip>
                 )}

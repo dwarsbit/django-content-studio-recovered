@@ -1852,3 +1852,6 @@ msgstr "Fehlende Übersetzung"
 #: form.py
 msgid "Translations"
 msgstr "Übersetzungen"
+
+msgid "Changed by someone else since you loaded the list."
+msgstr "Seit dem Laden der Liste von jemand anderem geändert."

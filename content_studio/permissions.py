@@ -57,8 +57,8 @@ class ModelStudioPermissions(BasePermission):
             # is part of viewing it.
             return admin_model.has_view_permission(request)
 
-        if getattr(view, "action", None) == "list_edit":
-            # Each row is checked for change permission (WIP prototype).
+        if getattr(view, "action", None) == "table_edit":
+            # Saving a table cell is a change of that object.
             return admin_model.has_change_permission(request)
 
         if getattr(view, "action", None) == "bulk":
@@ -139,6 +139,9 @@ class ModelStudioPermissions(BasePermission):
 
         if getattr(view, "action", None) in ("run_component", "presence"):
             return admin_model.has_view_permission(request, obj)
+
+        if getattr(view, "action", None) == "table_edit":
+            return admin_model.has_change_permission(request, obj)
 
         if getattr(view, "action", None) == "publishing":
             has_publish = getattr(admin_model, "has_publish_permission", None)

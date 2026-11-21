@@ -1330,5 +1330,13 @@
     "shared": "Hetzelfde in elke taal",
     "languages_complete": "{{done}} van {{total}} talen compleet",
     "languages_column": "Talen"
+  },
+  "table_edit": {
+    "saved": "{{field}} opgeslagen",
+    "saved_short": "Opgeslagen",
+    "saving": "Opslaan…",
+    "undo": "Ongedaan maken",
+    "failed": "Deze wijziging kon niet worden opgeslagen.",
+    "locked": "Je mag dit niet wijzigen ({{model}})"
   }
 }

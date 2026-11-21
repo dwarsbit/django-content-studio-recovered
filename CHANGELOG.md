@@ -4,6 +4,17 @@
 
 ### Features
 
+- **Editing in the table.** Name columns with `table_edit = ["title",
+  "featured", "views", "author"]` and editors change them in place on the
+  list page: inputs for text and numbers, switches, selects for choices,
+  date pickers and foreign key pickers. A cell saves as soon as the editor
+  leaves it, through the edit page's save path (hooks, `clean()`, history),
+  with a toast that offers Undo; Tab moves on to the next cell and Esc
+  puts the old value back. A value someone else changed since the list
+  loaded is refused instead of overwritten. Rows the editor may not change
+  show a lock. Override `get_table_edit(request)` per request; the Django
+  admin's `list_editable` also works (check `W031` asks for `table_edit`),
+  and check `E056` reports columns a cell cannot edit.
 - **Translated content.** Name a studio's translated fields with
   `translations = ["title", "body"]` and give the model a column per
   language (`title_nl`, `title_de`); models registered with

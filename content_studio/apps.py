@@ -321,6 +321,32 @@ class DjangoContentStudioConfig(AppConfig):
                         def get_languages(self, obj):
                             return list_translations.missing_counts(obj)
 
+                # With inline editing, list rows say whether the editor
+                # may change them (has_change_permission with the
+                # object): rows they may not change stay read-only.
+                get_table_edit = getattr(self._admin_model, "get_table_edit", None)
+
+                if (
+                    self.action == "list"
+                    and not self.is_singleton
+                    and get_table_edit is not None
+                    and get_table_edit(self.request)
+                ):
+                    edit_studio = self._admin_model
+
+                    class Serializer(Serializer):  # noqa: F811
+                        __can_change__ = serializers.SerializerMethodField(
+                            method_name="get_can_change"
+                        )
+
+                        class Meta(Serializer.Meta):
+                            fields = list(Serializer.Meta.fields) + ["__can_change__"]
+
+                        def get_can_change(self, obj):
+                            return edit_studio.has_change_permission(
+                                self.context.get("request"), obj
+                            )
+
                 # Rows always carry an "id": models whose primary key has
                 # another name get it as an alias of the pk.
                 if self._model._meta.pk.name != "id":
