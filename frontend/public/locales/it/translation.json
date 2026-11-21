@@ -153,6 +153,13 @@
       "undated": "Data rimossa",
       "empty_month": "Niente questo mese."
     },
+    "board_view": "Bacheca: {{label}}",
+    "board": {
+      "none": "Senza {{label}}",
+      "moved": "{{label}} salvato",
+      "add": "Aggiungi a {{column}}",
+      "show_more": "Mostra altro"
+    },
     "empty_state": "Ancora nessun elemento",
     "no_results": "Nessun risultato per la ricerca o i filtri attuali",
     "filter": "Filtra",

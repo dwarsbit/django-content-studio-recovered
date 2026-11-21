@@ -25,6 +25,7 @@ from content_studio.form import (
 from content_studio.actions import bulk_action
 from content_studio.filters import ListFilter
 from content_studio.publishing import Publishing
+from content_studio.list_views import BoardView
 
 from . import models
 
@@ -146,8 +147,9 @@ class ArticleStudio(ModelStudio):
     # Edited in place in the table: each cell saves when the editor
     # leaves it. The title, the first column, opens the article.
     table_edit = ["featured", "views", "author"]
-    # The list view's rows; both views are offered, with a toggle.
-    list_views = ["table", "list", "calendar"]
+    # The views of the list page, with a toggle: the table, the list,
+    # the calendar of the publishing date and a board by stage.
+    list_views = ["table", "list", "calendar", BoardView("stage")]
     list_item_display = {
         "title": "title",
         "description": "body",
@@ -260,6 +262,7 @@ class ArticleStudio(ModelStudio):
     edit_sidebar = [
         TranslationStatus(),
         ReadingTime(),
+        "stage",
         "author",
         "featured",
         Callout(

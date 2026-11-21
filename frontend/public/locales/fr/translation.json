@@ -153,6 +153,13 @@
       "undated": "Date retirée",
       "empty_month": "Rien ce mois-ci."
     },
+    "board_view": "Tableau : {{label}}",
+    "board": {
+      "none": "Sans {{label}}",
+      "moved": "{{label}} enregistré",
+      "add": "Ajouter à {{column}}",
+      "show_more": "Afficher plus"
+    },
     "empty_state": "Aucun élément pour l’instant",
     "no_results": "Rien ne correspond à la recherche ou aux filtres actuels",
     "filter": "Filtrer",

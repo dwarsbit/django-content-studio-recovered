@@ -30,7 +30,7 @@ from .form import (
     FormSetGroup,
     TableColumn,
 )
-from .list_views import CalendarView, serialize_views
+from .list_views import BoardView, CalendarView, serialize_views
 from .login_backends import LoginBackendManager
 from .media_library import fields as ml_fields
 from .presence import is_presence_enabled
@@ -411,10 +411,11 @@ class ModelStudio(BaseStudio[T]):
     list_item_display: Optional[dict[str, str]] = None
 
     # The views offered by the list page: "table", "list", "calendar"
-    # (the publishing date's calendar) and CalendarView objects
-    # (content_studio.list_views) for a calendar by another date field.
+    # (the publishing date's calendar), CalendarView objects
+    # (content_studio.list_views) for a calendar by another date field
+    # and BoardView objects for a board by a choice field or foreign key.
     # More than one enables a switch in the interface.
-    list_views: list[Union[str, CalendarView]] = ["table"]
+    list_views: list[Union[str, CalendarView, BoardView]] = ["table"]
 
     # Fields the list search searches through.
     search_fields: list[str] = []

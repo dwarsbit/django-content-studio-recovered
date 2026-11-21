@@ -1,6 +1,11 @@
-import type { CalendarViewConfig, ListViewConfig } from "@/types";
+import type {
+  BoardViewConfig,
+  CalendarViewConfig,
+  ListViewConfig,
+} from "@/types";
 
-/** A view's key in the view switch: its name, or a calendar's key. */
+/** A view's key in the view switch: its name, or a calendar's or
+ * board's key. */
 export const viewKey = (view: ListViewConfig) =>
   typeof view === "string" ? view : view.key;
 
@@ -12,5 +17,16 @@ export function findCalendar(
   return views.find(
     (view): view is CalendarViewConfig =>
       typeof view !== "string" && view.type === "calendar" && view.key === key,
+  );
+}
+
+/** The board with the given key, if the view is one. */
+export function findBoard(
+  views: ListViewConfig[],
+  key: string,
+): BoardViewConfig | undefined {
+  return views.find(
+    (view): view is BoardViewConfig =>
+      typeof view !== "string" && view.type === "board" && view.key === key,
   );
 }

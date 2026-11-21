@@ -311,6 +311,8 @@ ARTICLES = [
         "categories": ["Travel", "Outdoors"],
         "author": "sam",
         "days": None,
+        # Where the draft is on the board (ArticleStudio.list_views).
+        "stage": "writing",
         "views": 0,
         "body": [
             "Draft. Forecasts, the best viewing spots and what to wear when it is minus twenty at midnight.",
@@ -323,6 +325,8 @@ ARTICLES = [
         "author": "priya",
         # Scheduled: goes live in three days.
         "days": -3,
+        # Where the draft is on the board (ArticleStudio.list_views).
+        "stage": "ready",
         "views": 0,
         "body": [
             "Draft. Twelve objects that made our desks, kitchens and bags better this year, and the small studios behind them.",
@@ -334,6 +338,8 @@ ARTICLES = [
         "categories": ["Design", "Culture"],
         "author": "admin",
         "days": None,
+        # Where the draft is on the board (ArticleStudio.list_views).
+        "stage": "editing",
         "views": 0,
         "body": [
             "Draft. Fewer features, better defaults, and why every interface should feel calm.",

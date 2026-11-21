@@ -149,6 +149,13 @@
       "undated": "Datum verwijderd",
       "empty_month": "Niets deze maand."
     },
+    "board_view": "Bord: {{label}}",
+    "board": {
+      "none": "Geen {{label}}",
+      "moved": "{{label}} opgeslagen",
+      "add": "Toevoegen aan {{column}}",
+      "show_more": "Meer tonen"
+    },
     "empty_state": "Nog geen items",
     "no_results": "Niets komt overeen met de huidige zoekopdracht of filters",
     "filter": "Filteren",

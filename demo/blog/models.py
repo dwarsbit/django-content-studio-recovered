@@ -94,6 +94,15 @@ class Article(models.Model):
         DRAFT = "draft", "Draft"
         PUBLISHED = "published", "Published"
 
+    # Where an article is in the editorial process: the columns of the
+    # list page's board (ArticleStudio.list_views).
+    class Stage(models.TextChoices):
+        IDEA = "idea", "Idea"
+        WRITING = "writing", "Writing"
+        EDITING = "editing", "Editing"
+        READY = "ready", "Ready"
+        DONE = "done", "Done"
+
     title = models.CharField(max_length=200)
     # Filled from the title while an article is created; the SEO
     # preview shows the page's URL with it.
@@ -116,6 +125,7 @@ class Article(models.Model):
     status = models.CharField(
         max_length=20, choices=Status.choices, default=Status.DRAFT
     )
+    stage = models.CharField(max_length=20, choices=Stage.choices, default=Stage.IDEA)
     author = models.ForeignKey(
         settings.AUTH_USER_MODEL,
         null=True,

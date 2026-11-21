@@ -405,18 +405,28 @@ class LookupFilter(BaseFilterBackend):
         Build the queryset based on the query params and the view's model.
         Only apply filters in list endpoints (and moves, whose up and
         down steps follow the filtered list, exports, which write the
-        filtered list, and the calendar, which shows it), and only on what the model studio declared
+        filtered list, and the calendar and board, which show it), and only on what the model studio declared
         in list_filter.
         """
-        if getattr(view, "action", None) in ("list", "move", "export", "calendar"):
+        if getattr(view, "action", None) in (
+            "list",
+            "move",
+            "export",
+            "calendar",
+            "board",
+        ):
             # An inline list filters on its parent itself.
             query_params = request.query_params.copy()
             if hasattr(view, "get_parent_filter_keys"):
                 for key in view.get_parent_filter_keys():
                     query_params.pop(key, None)
-            # The calendar's own parameters pick its range, not filters.
+            # The calendar's and board's own parameters pick what they
+            # show, not filters.
             if getattr(view, "action", None) == "calendar":
                 for key in ("view", "from", "to", "unscheduled"):
+                    query_params.pop(key, None)
+            elif getattr(view, "action", None) == "board":
+                for key in ("view", "column", "offset", "show"):
                     query_params.pop(key, None)
 
             custom_filters = self.get_custom_filters(view)

@@ -184,6 +184,7 @@ class DjangoContentStudioConfig(AppConfig):
         from .form import TableColumn
         from .list_views import (
             ROW_ACTIONS,
+            get_boards,
             get_calendars,
             get_drag_fields,
             uses_item_display,
@@ -256,7 +257,8 @@ class DjangoContentStudioConfig(AppConfig):
                     # the list view is enabled.
                     if uses_item_display(self._admin_model):
                         available_fields.append("list_item_display")
-                    # A calendar's rows carry its date (and end) fields.
+                    # A calendar's rows carry its date (and end) fields,
+                    # a board's its field.
                     for calendar in get_calendars(self._admin_model):
                         for name in (
                             calendar.resolve_field(self._admin_model),
@@ -264,6 +266,9 @@ class DjangoContentStudioConfig(AppConfig):
                         ):
                             if name and name not in available_fields:
                                 available_fields.append(name)
+                    for board in get_boards(self._admin_model):
+                        if board.field and board.field not in available_fields:
+                            available_fields.append(board.field)
                     # A translated column carries every language's value
                     # (the serializer adds those kept outside the
                     # model's columns).
@@ -335,14 +340,14 @@ class DjangoContentStudioConfig(AppConfig):
                         def get_languages(self, obj):
                             return list_translations.missing_counts(obj)
 
-                # With inline editing (or a calendar that saves dragged
-                # dates), list rows say whether the editor may change
+                # With inline editing (or a calendar or board that saves
+                # dragged items), list rows say whether the editor may change
                 # them (has_change_permission with the object): rows
                 # they may not change stay read-only.
                 get_table_edit = getattr(self._admin_model, "get_table_edit", None)
 
                 if (
-                    self.action in ("list", "calendar")
+                    self.action in ("list", "calendar", "board")
                     and not self.is_singleton
                     and (
                         (get_table_edit is not None and get_table_edit(self.request))

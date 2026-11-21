@@ -149,6 +149,13 @@
       "undated": "Datum entfernt",
       "empty_month": "Nichts in diesem Monat."
     },
+    "board_view": "Board: {{label}}",
+    "board": {
+      "none": "Ohne {{label}}",
+      "moved": "{{label}} gespeichert",
+      "add": "Zu {{column}} hinzufügen",
+      "show_more": "Mehr anzeigen"
+    },
     "empty_state": "Noch keine Elemente",
     "no_results": "Nichts entspricht der aktuellen Suche oder den Filtern",
     "filter": "Filter",

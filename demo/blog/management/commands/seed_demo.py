@@ -122,11 +122,18 @@ class Command(BaseCommand):
                     [],
                 ),
             ]
+            # Drafts at different stages, for the board.
+            draft_stages = iter([Article.Stage.WRITING, Article.Stage.READY])
             for title, status, author, featured, views, published_at, slugs in samples:
                 article = Article.objects.create(
                     title=title,
                     body=f"Seeded sample article: {title}.",
                     status=status,
+                    stage=(
+                        Article.Stage.DONE
+                        if status == Article.Status.PUBLISHED
+                        else next(draft_stages)
+                    ),
                     author=author,
                     created_by=user,
                     featured=featured,
@@ -146,6 +153,7 @@ class Command(BaseCommand):
                 meta_description="A first look at editing content in Content Studio.",
                 video_url="https://www.youtube.com/watch?v=dQw4w9WgXcQ",
                 status=Article.Status.PUBLISHED,
+                stage=Article.Stage.DONE,
                 author=user,
                 created_by=user,
                 featured=True,

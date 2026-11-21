@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import {
   PiCalendarBlankBold,
   PiFileTextBold,
+  PiKanbanBold,
   PiRowsBold,
   PiTableBold,
 } from "react-icons/pi";
@@ -43,6 +44,7 @@ import type {
   Resource,
 } from "@/types";
 
+import { BoardView } from "./_components/board-view";
 import { ContentBulkBar } from "./_components/bulk-bar";
 import { CalendarView } from "./_components/calendar-view";
 import { Filters } from "./_components/filters";
@@ -50,7 +52,7 @@ import { ListActionsMenu } from "./_components/list-actions-menu";
 import { ListView } from "./_components/list-view";
 import { SortSelect } from "./_components/sort-select";
 import { type ReorderProps, TableView } from "./_components/table-view";
-import { findCalendar, viewKey } from "./_components/view-config";
+import { findBoard, findCalendar, viewKey } from "./_components/view-config";
 import { ContentEditorPage } from "./[id]/page";
 
 export function ModelListPage() {
@@ -123,8 +125,9 @@ export function ModelListPage() {
   const [view, setViewState] = useState<string>(() =>
     model?.label ? storedView(model.label) : views[0],
   );
-  // The calendar the view switch shows, if it shows one.
+  // The calendar or board the view switch shows, if it shows one.
   const calendar = findCalendar(viewConfigs, view);
+  const board = findBoard(viewConfigs, view);
   const [ordering, setOrderingState] = useState<string | null>(() =>
     model?.label ? storedOrdering(model.label) : null,
   );
@@ -146,7 +149,7 @@ export function ModelListPage() {
   // ordering; the stored ordering is kept for the table to pick
   // back up.
   const effectiveOrdering =
-    view === "list" && R.isNil(sortableBy) ? null : ordering;
+    (view === "list" || board) && R.isNil(sortableBy) ? null : ordering;
 
   // Selection is current-page: any URL change (page, search) or
   // change of the remembered ordering or filters resets it — during
@@ -431,7 +434,7 @@ export function ModelListPage() {
                         })}
                   </span>
                 )}
-                {view === "list" && !R.isNil(sortableBy) && (
+                {(view === "list" || board) && !R.isNil(sortableBy) && (
                   <SortSelect
                     model={model}
                     ordering={ordering}
@@ -488,6 +491,25 @@ export function ModelListPage() {
                             </ToggleGroupItem>
                           ),
                       )}
+                      {viewConfigs.map(
+                        (config) =>
+                          typeof config !== "string" &&
+                          config.type === "board" && (
+                            <ToggleGroupItem
+                              key={config.key}
+                              value={config.key}
+                              title={t("list_view.board_view", {
+                                label: config.label,
+                              })}
+                              aria-label={t("list_view.board_view", {
+                                label: config.label,
+                              })}
+                              className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                            >
+                              <PiKanbanBold />
+                            </ToggleGroupItem>
+                          ),
+                      )}
                     </ToggleGroup>
                   </>
                 )}
@@ -499,6 +521,19 @@ export function ModelListPage() {
                 model={model}
                 config={calendar}
                 params={{ ...filters, search: search || undefined }}
+              />
+            ) : board ? (
+              <BoardView
+                key={board.key}
+                model={model}
+                config={board}
+                params={{
+                  ...filters,
+                  search: search || undefined,
+                  ordering: effectiveOrdering ?? undefined,
+                }}
+                selected={actions.length > 0 ? selected : undefined}
+                onToggle={actions.length > 0 ? toggle : undefined}
               />
             ) : view === "list" ? (
               <ListView
@@ -530,7 +565,7 @@ export function ModelListPage() {
               />
             )}
           </div>
-          {data.results.length > 0 && !calendar && (
+          {data.results.length > 0 && !calendar && !board && (
             <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
               <span className="tabular-nums select-none">
                 <ListCount model={model} pagination={data.pagination} />

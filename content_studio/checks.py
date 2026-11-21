@@ -52,8 +52,12 @@ from .form import (
 )
 from .list_views import (
     VIEW_NAMES as LIST_VIEW_NAMES,
+    BoardView,
     CalendarView,
+    board_columns_error,
+    board_field_error,
     calendar_field_error,
+    get_boards,
     get_calendars,
 )
 from .settings import cs_settings
@@ -660,6 +664,49 @@ def calendar_errors(studio) -> list[tuple[str, str]]:
     return errors
 
 
+def board_errors(studio) -> list[tuple[str, str]]:
+    """
+    Boards that cannot be drawn, as (check id, message) pairs (E061): a
+    field that has no choices and is not a ForeignKey, columns that are
+    not choices of the field, and two boards of the same field.
+    """
+    errors = []
+    name = studio.__class__.__name__
+    fields = set()
+
+    for view in get_boards(studio):
+        field_reason = board_field_error(studio, view.field)
+        columns_reason = None if field_reason else board_columns_error(studio, view)
+
+        if field_reason:
+            errors.append(
+                (
+                    "content_studio.E061",
+                    f"{name}.list_views has a board whose field {field_reason}.",
+                )
+            )
+
+        if columns_reason:
+            errors.append(
+                (
+                    "content_studio.E061",
+                    f"{name}.list_views has a board whose {columns_reason}.",
+                )
+            )
+
+        if view.field in fields:
+            errors.append(
+                (
+                    "content_studio.E061",
+                    f"{name}.list_views has two boards of '{view.field}'.",
+                )
+            )
+
+        fields.add(view.field)
+
+    return errors
+
+
 def list_config_errors(studio) -> list[tuple[str, str]]:
     """
     Misconfigured list pages, as (check id, message) pairs. list_display
@@ -684,7 +731,7 @@ def list_config_errors(studio) -> list[tuple[str, str]]:
     unknown_views = [
         repr(view)
         for view in studio.list_views
-        if not isinstance(view, CalendarView)
+        if not isinstance(view, (CalendarView, BoardView))
         and not (isinstance(view, str) and view in LIST_VIEW_NAMES)
     ]
 
@@ -694,12 +741,13 @@ def list_config_errors(studio) -> list[tuple[str, str]]:
                 "content_studio.E002",
                 f"{name}.list_views contains unknown "
                 f"view(s) {', '.join(unknown_views)}. Available views: "
-                f"{', '.join(sorted(LIST_VIEW_NAMES))} and CalendarView "
-                "objects (content_studio.list_views).",
+                f"{', '.join(sorted(LIST_VIEW_NAMES))}, and CalendarView "
+                "and BoardView objects (content_studio.list_views).",
             )
         )
     else:
         errors.extend(calendar_errors(studio))
+        errors.extend(board_errors(studio))
 
     list_count = getattr(studio, "list_count", "exact")
 
