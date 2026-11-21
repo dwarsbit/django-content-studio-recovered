@@ -114,7 +114,7 @@ or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
 the primary key by default; relations by `import_lookups`, e.g.
 `{"author": "username"}`), `edit_width`
 (`"default"` or `"wide"`), `readonly_fields`, `prepopulated_fields`,
-`exclude`, `is_singleton`, `presence`, `recover_changes` and
+`exclude`, `is_singleton`, `presence`, `comments`, `recover_changes` and
 `recover_changes_exclude` (unsaved edits are kept in the editor's browser
 and offered back; `False` or excluded fields for sensitive data) and `icon`.
 
@@ -572,6 +572,9 @@ Each is optional and has its own page:
   https://djangocontentstudio.org/docs/webhooks.md
 - Notifications (`"content_studio.notifications"` app, `register_event`,
   `notify`): https://djangocontentstudio.org/docs/notifications.md
+- Internal comments and @mentions on the edit page (`"content_studio.comments"`
+  app, `comments = False`, `has_comment_permission`, `add_comment`,
+  `comment_added`): https://djangocontentstudio.org/docs/comments.md
 - History with field-level diffs and restore (`"content_studio.history"`
   app, `HISTORY_MAX_VERSIONS`, shown by the `ActivityLog` component):
   https://djangocontentstudio.org/docs/history.md

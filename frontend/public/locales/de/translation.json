@@ -1395,5 +1395,29 @@
     "not_opened": "noch nicht geöffnet",
     "revoke": "Widerrufen",
     "revoked": "Link widerrufen"
+  },
+  "comments": {
+    "title": "Kommentare",
+    "placeholder": "Kommentar schreiben. Mit @ erwähnen Sie jemanden.",
+    "reply_placeholder": "Antwort schreiben",
+    "footnote": "Nur Personen mit Zugriff auf dieses {{object}} sehen Kommentare.",
+    "submit": "Kommentieren",
+    "reply": "Antworten",
+    "resolve": "Erledigen",
+    "reopen": "Wieder öffnen",
+    "resolved": "Erledigt",
+    "resolved_by": "Erledigt von {{name}}",
+    "show_resolved": "{{count}} erledigt",
+    "hide_resolved": "Erledigte ausblenden",
+    "empty": "Noch keine Kommentare.",
+    "all_resolved": "Alle Kommentare sind erledigt.",
+    "edited": "bearbeitet",
+    "deleted": "Kommentar gelöscht",
+    "system": "Content Studio",
+    "options": "Kommentaroptionen",
+    "delete_title": "Diesen Kommentar löschen?",
+    "delete_description": "Der Kommentar wird für alle entfernt. Antworten bleiben erhalten.",
+    "error": "Der Kommentar konnte nicht gespeichert werden. Bitte erneut versuchen.",
+    "mention": "Personen zum Erwähnen"
   }
 }

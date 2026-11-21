@@ -24,6 +24,7 @@ const sidebars: SidebarsConfig = {
     "multi-tenancy",
     "webhooks",
     "notifications",
+    "comments",
     "history",
     "presence",
     "system-status",

@@ -1939,3 +1939,62 @@ msgstr "No hay cambios sin publicar."
 #: content_studio/history/models.py
 msgid "unpublished changes"
 msgstr "cambios sin publicar"
+
+#: content_studio/comments/apps.py
+msgid "Comments"
+msgstr "Comentarios"
+
+#: content_studio/comments/models.py
+msgid "comment"
+msgstr "comentario"
+
+#: content_studio/comments/models.py
+msgid "comments"
+msgstr "comentarios"
+
+#: content_studio/comments/models.py
+msgid "Author"
+msgstr "Autor"
+
+#: content_studio/comments/models.py
+msgid "Comment"
+msgstr "Comentario"
+
+#: content_studio/comments/notifying.py
+msgid "Mentions in comments"
+msgstr "Menciones en comentarios"
+
+#: content_studio/comments/notifying.py
+msgid "Someone mentions you in a comment."
+msgstr "Alguien te menciona en un comentario."
+
+#: content_studio/comments/notifying.py
+msgid "Replies to comments"
+msgstr "Respuestas a comentarios"
+
+#: content_studio/comments/notifying.py
+msgid "Someone replies in a comment thread you are in."
+msgstr "Alguien responde en un hilo de comentarios en el que participas."
+
+#: content_studio/comments/notifying.py
+msgid "Comments on content you follow"
+msgstr "Comentarios en contenido que sigues"
+
+#: content_studio/comments/notifying.py
+msgid "Someone comments on an object you follow."
+msgstr "Alguien comenta un objeto que sigues."
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s mentioned you on %(object)s"
+msgstr "%(actor)s te mencionó en %(object)s"
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s replied to a comment on %(object)s"
+msgstr "%(actor)s respondió a un comentario en %(object)s"
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s commented on %(object)s"
+msgstr "%(actor)s comentó en %(object)s"

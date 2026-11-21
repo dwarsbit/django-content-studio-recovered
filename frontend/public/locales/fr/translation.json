@@ -1445,5 +1445,29 @@
     "not_opened": "pas encore ouvert",
     "revoke": "Révoquer",
     "revoked": "Lien révoqué"
+  },
+  "comments": {
+    "title": "Commentaires",
+    "placeholder": "Écrivez un commentaire. Utilisez @ pour mentionner quelqu'un.",
+    "reply_placeholder": "Écrivez une réponse",
+    "footnote": "Seules les personnes ayant accès à cet objet ({{object}}) voient les commentaires.",
+    "submit": "Commenter",
+    "reply": "Répondre",
+    "resolve": "Résoudre",
+    "reopen": "Rouvrir",
+    "resolved": "Résolu",
+    "resolved_by": "Résolu par {{name}}",
+    "show_resolved": "{{count}} résolu(s)",
+    "hide_resolved": "Masquer les résolus",
+    "empty": "Aucun commentaire pour l'instant.",
+    "all_resolved": "Tous les commentaires sont résolus.",
+    "edited": "modifié",
+    "deleted": "Commentaire supprimé",
+    "system": "Content Studio",
+    "options": "Options du commentaire",
+    "delete_title": "Supprimer ce commentaire ?",
+    "delete_description": "Le commentaire est supprimé pour tout le monde. Les réponses restent.",
+    "error": "Le commentaire n'a pas pu être enregistré. Réessayez.",
+    "mention": "Personnes à mentionner"
   }
 }

@@ -694,7 +694,15 @@ function EditorForm({
                       <Main model={model} id={id} hiddenFields={hiddenFields} />
                     </div>
                     <div className="shrink-0 w-full @3xl:w-[320px] empty:hidden">
-                      <Aside model={model} hiddenFields={hiddenFields} />
+                      <Aside
+                        model={model}
+                        hiddenFields={hiddenFields}
+                        commentsOn={
+                          isPage && resource?.id != null
+                            ? String(resource.id)
+                            : null
+                        }
+                      />
                     </div>
                   </div>
                 </div>

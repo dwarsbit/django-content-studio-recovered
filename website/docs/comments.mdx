@@ -1,0 +1,150 @@
+# 💬 Comments
+
+Comments let the people who work on an object leave notes on it: a question
+about a headline, a link that needs fixing, a "ready when you are". They sit
+in a **Comments** card in the sidebar of the edit page, with replies,
+@mentions and a way to mark a thread as resolved.
+
+Comments are internal. Only people with access to the admin see them, and
+they never appear on your site: they are not a public comment feature for
+your visitors.
+
+Comments are an optional app.
+
+<Screenshot name="comments" alt="An article's edit page with the Comments card in the sidebar: two threads, a reply, a highlighted mention and the box to write a comment" />
+
+## Set up comments
+
+1. Add the comments app to your project:
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.comments",
+   ]
+   ```
+
+2. Run `manage.py migrate` to create its table.
+
+Every edit page then has a Comments card, below the
+[Publishing](/docs/publishing) card when the model has one. New objects get
+the card once they are saved. Singletons and inlines have no comments.
+
+## What editors see
+
+- **Threads.** A comment starts a thread, and others reply to it. Replies
+  are one level deep: replying to a reply adds to the same thread.
+- **Mentions.** Type `@` and a few letters of a name to mention someone.
+  The list shows the people who may see the object's comments. Mentions are
+  highlighted in the comment, and the people mentioned are notified.
+- **Resolving.** When a thread is done, **Resolve** folds it away. The card
+  header counts the open threads and shows how many are resolved; click it
+  to show the resolved threads again, and **Reopen** one if needed.
+- **Editing and deleting.** Editors edit and delete their own comments. An
+  edited comment says so. Deleting a comment that has replies leaves a
+  "Comment deleted" placeholder, so the replies keep their context.
+  Superusers may delete anyone's comment.
+
+<kbd>Ctrl</kbd>/<kbd>⌘</kbd> + <kbd>Enter</kbd> posts a comment. The card
+refreshes every minute while the page is open.
+
+## Who may do what
+
+| Who                              | May                                    |
+| -------------------------------- | -------------------------------------- |
+| Anyone who may view the object   | Read comments, comment, reply, mention |
+| The author of a comment          | Edit and delete it                     |
+| The author of a thread           | Resolve and reopen it                  |
+| Anyone who may change the object | Resolve and reopen every thread        |
+| Superusers                       | Delete any comment                     |
+
+Only people who may view an object can be mentioned on it, and a mention of
+anyone else is dropped. With [multi-tenancy](/docs/multi-tenancy), comments
+belong to the object's tenant.
+
+To decide differently, override `has_comment_permission` on the studio. It
+defaults to `has_view_permission`, and it decides who reads and writes
+comments, and who can be mentioned and notified.
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    def has_comment_permission(self, request, obj=None):
+        # Only the editors group discusses articles.
+        return request.user.groups.filter(name="Editors").exists()
+```
+
+## Turn comments off for a model
+
+Every studio gets comments. Set `comments = False` to leave a model out:
+
+```python
+@register(Tag)
+class TagStudio(ModelStudio):
+    comments = False
+```
+
+## Notifications
+
+With the [notifications app](/docs/notifications) installed, comments add
+three events. Editors turn each of them off on their notification settings
+page.
+
+| Event                          | Who is notified                                         |
+| ------------------------------ | ------------------------------------------------------- |
+| Mentions in comments           | The people mentioned                                    |
+| Replies to comments            | Everyone else who wrote in the thread                   |
+| Comments on content you follow | The people who [follow](/docs/notifications) the object |
+
+Each person gets one notification per comment, from the first event that
+applies to them in that order, and nobody is notified of their own comment.
+Editing a comment notifies only the people newly mentioned in it. A
+notification quotes the start of the comment and links to the object.
+
+## Comments from code
+
+`add_comment` posts a comment, for example from a review step or an import.
+Pass `None` as the author for a comment from the system.
+
+```python
+from content_studio.comments import add_comment, get_comments
+
+comment = add_comment(article, request.user, "Sent to the copy desk.")
+add_comment(article, None, "Imported from the old CMS.", notify=False)
+
+# A reply, mentioning a user.
+add_comment(article, editor, "Can you check the intro?", parent=comment, mentions=[chief])
+
+for comment in get_comments(article):
+    print(comment.author, comment.body)
+```
+
+The `comment_added` signal is sent after each new comment is saved, from the
+edit page or from code:
+
+```python
+from django.dispatch import receiver
+
+from content_studio.comments import comment_added
+
+
+@receiver(comment_added)
+def on_comment(sender, comment, target, author, **kwargs):
+    ...
+```
+
+## Deleted objects
+
+Moving an object to the
+[trash](/docs/list-page#soft-delete-and-the-trash) keeps its comments, so
+they are back when it is restored. Deleting an object for good deletes its
+comments too.
