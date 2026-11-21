@@ -17,6 +17,7 @@ import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { usePresence } from "@/hooks/use-presence";
 import { usePreferences } from "@/hooks/use-profile";
+import { useRecovery } from "@/hooks/use-recovery";
 import { useShowResult } from "@/hooks/use-show-result";
 import { contentFormSchema } from "@/lib/invalid-input";
 import { applyFieldErrors, getNonFieldErrors } from "@/lib/server-errors";
@@ -36,6 +37,7 @@ import { EditorReadOnlyContext } from "./editor-read-only";
 import { Header } from "./header";
 import { Main } from "./main";
 import { Prepopulate } from "./prepopulate";
+import { RecoveryBanner } from "./recovery-banner";
 import { ResourcePathContext } from "./resource-path";
 import type { SaveMode } from "./save-button";
 import { saveFromKeyboard, useSaveShortcut } from "./save-shortcut";
@@ -318,6 +320,24 @@ function EditorForm({
     return () => window.removeEventListener("beforeunload", handler);
   }, [dialog, isDirty]);
 
+  // Unsaved changes are kept in this browser while they are made, and
+  // offered back when the page opens again. Only full pages: dialogs
+  // and inline rows confirm on close, and duplicates or prefilled create
+  // forms start from other values.
+  const recovery = useRecovery({
+    form,
+    model,
+    id: isSingleton ? "singleton" : id,
+    enabled:
+      !dialog &&
+      !inlineOf &&
+      !isDuplicate &&
+      R.isEmpty(prefill) &&
+      R.isEmpty(initialValues) &&
+      model.admin.edit.recover_changes !== false,
+    ready: initialized && (R.isNil(id) && !isSingleton ? true : !!resource),
+  });
+
   // Who else has the object open; routed editors of saved objects
   // announce the user too. Inline rows live on their parent's page.
   const presence = usePresence({
@@ -386,6 +406,7 @@ function EditorForm({
       const savedResource = { ...values, ...saved, id: savedId } as Resource;
 
       form.reset(savedResource);
+      recovery.clear();
 
       if (!values.id && savedId != null && !leaving) {
         // The navigation this triggers must pass the guard despite the
@@ -530,6 +551,7 @@ function EditorForm({
               readOnly={isReadOnly}
               canDelete={mayDelete}
               presence={presence}
+              keptAt={recovery.keptAt}
               onDuplicate={
                 canDuplicate && resource?.id != null
                   ? () => onDuplicate?.(String(resource.id))
@@ -541,6 +563,7 @@ function EditorForm({
                 // The changes died with the object; leaving must not
                 // trigger the navigation guard.
                 form.reset();
+                recovery.clear();
                 allowNextNavigation.current = true;
                 onDelete?.();
               }}
@@ -556,6 +579,18 @@ function EditorForm({
                     getMainColumnWidth(width ?? model.admin.edit.width),
                   )}
                 >
+                  {recovery.offer && (
+                    <RecoveryBanner
+                      model={model}
+                      resourcePath={resourcePath}
+                      objectId={
+                        resource?.id != null ? String(resource.id) : null
+                      }
+                      offer={recovery.offer}
+                      onRestore={recovery.restore}
+                      onDiscard={recovery.discard}
+                    />
+                  )}
                   {nonFieldErrors.length > 0 && (
                     <Alert
                       ref={nonFieldErrorsRef}

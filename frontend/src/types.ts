@@ -181,6 +181,11 @@ export interface Model {
       // Whether the edit page offers Duplicate (allow_duplication);
       // it also needs add permission.
       duplicate?: boolean;
+      // Whether unsaved changes are kept in the browser for recovery
+      // (recover_changes and the RECOVER_CHANGES setting; on when absent),
+      // and the fields never kept (recover_changes_exclude).
+      recover_changes?: boolean;
+      recover_changes_exclude?: string[];
       // The width of the edit page and its dialogs (edit_width).
       width?: EditWidth;
       inlines: {
