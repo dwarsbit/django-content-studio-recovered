@@ -2,12 +2,21 @@ import { createContext, type ReactNode, useContext, useState } from "react";
 import { useFormContext, useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import {
+  PiCaretDownBold,
+  PiCheckBold,
   PiCopyBold,
   PiGlobeSimpleXBold,
   PiTranslateBold,
 } from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   Tooltip,
   TooltipContent,
@@ -381,4 +390,181 @@ export function TranslationsCard() {
       </ul>
     </section>
   );
+}
+
+/** Option A: one compact button in the header, the languages in a menu. */
+export function LanguageMenu({
+  states,
+}: {
+  states?: Record<string, { missing: number; total: number }>;
+}) {
+  const { t } = useTranslation();
+  const { config, language, setLanguage } = useContentLanguage();
+
+  if (!config) {
+    return null;
+  }
+
+  const current = states?.[language];
+
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button
+          variant="outline"
+          className="gap-1.5 px-2.5"
+          aria-label={t("translations.content_language")}
+        >
+          <PiTranslateBold className="text-muted-foreground" />
+          <span className="text-xs font-semibold uppercase tracking-wide">
+            {language}
+          </span>
+          {current && (
+            <span
+              className={cn(
+                "size-1.5 rounded-full",
+                dotClass(current.missing, config.required.includes(language)),
+              )}
+            />
+          )}
+          <PiCaretDownBold className="size-3 text-muted-foreground" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-72">
+        <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+          {t("translations.content_language")}
+        </DropdownMenuLabel>
+        {config.languages.map(({ code, name }) => {
+          const state = states?.[code];
+          const required = config.required.includes(code);
+
+          return (
+            <DropdownMenuItem
+              key={code}
+              onSelect={() => setLanguage(code)}
+              className="gap-2.5"
+            >
+              <span className="w-5 text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">
+                {code}
+              </span>
+              <span className="flex-1 truncate">
+                {name}
+                {code === config.default && (
+                  <span className="ml-1.5 text-xs text-muted-foreground">
+                    {t("translations.language_default_short")}
+                  </span>
+                )}
+              </span>
+              {state && (
+                <span
+                  className={cn(
+                    "flex items-center gap-1.5 text-xs",
+                    state.missing === 0
+                      ? "text-muted-foreground"
+                      : required
+                        ? "text-destructive"
+                        : "text-warning",
+                  )}
+                >
+                  {state.missing === 0
+                    ? t("translations.language_complete")
+                    : t("translations.missing_short", {
+                        count: state.missing,
+                      })}
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      dotClass(state.missing, required),
+                    )}
+                  />
+                </span>
+              )}
+              <PiCheckBold
+                className={cn("size-3.5", code !== language && "invisible")}
+              />
+            </DropdownMenuItem>
+          );
+        })}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+}
+
+/** Option B: a language bar under the header, one tab per language. */
+export function LanguageBar({
+  states,
+}: {
+  states?: Record<string, { missing: number; total: number }>;
+}) {
+  const { t } = useTranslation();
+  const { config, language, setLanguage } = useContentLanguage();
+
+  if (!config) {
+    return null;
+  }
+
+  const done = config.languages.filter(
+    (l) => states?.[l.code]?.missing === 0,
+  ).length;
+
+  return (
+    <div className="border-b bg-muted/30">
+      <div className="px-6 h-10 flex items-center gap-4 max-w-[1280px] mx-auto w-full">
+        <span className="flex items-center gap-1.5 text-xs text-muted-foreground shrink-0">
+          <PiTranslateBold className="size-3.5" />
+          {t("translations.content_language")}
+        </span>
+        <div
+          role="radiogroup"
+          aria-label={t("translations.content_language")}
+          className="flex items-center gap-1 h-full min-w-0 overflow-x-auto scrollbar-none"
+        >
+          {config.languages.map(({ code, name }) => {
+            const state = states?.[code];
+            const required = config.required.includes(code);
+            const active = code === language;
+
+            return (
+              <button
+                key={code}
+                type="button"
+                role="radio"
+                aria-checked={active}
+                onClick={() => setLanguage(code)}
+                className={cn(
+                  "relative h-full px-2.5 flex items-center gap-1.5 text-sm shrink-0 transition-colors",
+                  active
+                    ? "text-foreground font-medium after:absolute after:inset-x-2 after:bottom-0 after:h-0.5 after:rounded-full after:bg-foreground"
+                    : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                {name}
+                {state && (
+                  <span
+                    className={cn(
+                      "size-1.5 rounded-full",
+                      dotClass(state.missing, required),
+                    )}
+                  />
+                )}
+              </button>
+            );
+          })}
+        </div>
+        <span className="ml-auto text-xs text-muted-foreground shrink-0">
+          {t("translations.card_description", {
+            done,
+            total: config.languages.length,
+          })}
+        </span>
+      </div>
+    </div>
+  );
+}
+
+/** Which switcher the mockups show: ?langui=pills|menu|bar. */
+export function languageUi() {
+  const value = new URLSearchParams(window.location.search).get("langui");
+
+  return value === "menu" || value === "bar" ? value : "pills";
 }

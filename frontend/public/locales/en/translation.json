@@ -1236,6 +1236,9 @@
     "copied": "Copied from {{language}}",
     "shared": "Same in every language",
     "languages_column": "Languages",
-    "empty_in_language": "Not translated yet"
+    "empty_in_language": "Not translated yet",
+    "missing_short_one": "{{count}} missing",
+    "missing_short_other": "{{count}} missing",
+    "language_default_short": "Default"
   }
 }

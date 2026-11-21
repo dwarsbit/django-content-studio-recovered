@@ -101,7 +101,7 @@ class Article(models.Model):
     body = models.TextField(blank=True)
     # The search-result description, shown in the SEO preview.
     meta_description = models.CharField(max_length=200, blank=True)
-    # The Dutch and German translations (ArticleStudio.translations).
+    # The Dutch, German, French and Spanish translations (ArticleStudio.translations).
     title_nl = models.CharField(max_length=200, blank=True)
     title_de = models.CharField(max_length=200, blank=True)
     slug_nl = models.SlugField(max_length=200, blank=True)
@@ -110,6 +110,14 @@ class Article(models.Model):
     body_de = models.TextField(blank=True)
     meta_description_nl = models.CharField(max_length=200, blank=True)
     meta_description_de = models.CharField(max_length=200, blank=True)
+    title_fr = models.CharField(max_length=200, blank=True)
+    title_es = models.CharField(max_length=200, blank=True)
+    slug_fr = models.SlugField(max_length=200, blank=True)
+    slug_es = models.SlugField(max_length=200, blank=True)
+    body_fr = models.TextField(blank=True)
+    body_es = models.TextField(blank=True)
+    meta_description_fr = models.CharField(max_length=200, blank=True)
+    meta_description_es = models.CharField(max_length=200, blank=True)
     # A video on YouTube or Vimeo, edited with an EmbedWidget.
     video_url = models.URLField(blank=True)
     status = models.CharField(
