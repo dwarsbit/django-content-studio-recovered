@@ -136,6 +136,7 @@ def seed_articles(users, media, categories, now):
             meta_description=spec["body"][0].split(". ")[0].rstrip(".") + ".",
             **translated_values(spec["title"]),
             status=Article.Status.PUBLISHED if live else Article.Status.DRAFT,
+            stage=Article.Stage.DONE if live else spec.get("stage", Article.Stage.IDEA),
             author=author,
             cover=media[spec["cover"]],
             featured=spec.get("featured", spec["views"] > 6000),

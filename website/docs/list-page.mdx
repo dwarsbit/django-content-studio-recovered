@@ -5,7 +5,8 @@ and act on its objects. You configure it on the model's studio, next to the
 options on [Registering models](/docs/registering-models).
 
 The list page shows objects as a **table**, the default, as a **list** of
-readable items, or on a [**calendar**](#calendar) by a date. Set the views
+readable items, on a [**calendar**](#calendar) by a date, or on a
+[**board**](#board) in columns by a choice or a relation. Set the views
 to offer with `list_views`; with more than one, editors switch with a
 toggle and the admin remembers their choice per model.
 
@@ -273,6 +274,54 @@ of a studio needs its own field; offer two calendars by naming two
 fields. `content_studio.E059` reports `"calendar"` on a studio without
 publishing, and `content_studio.E060` a calendar field that is not a date
 field or one that two calendars share.
+
+## Board
+
+The board view shows the objects as cards in columns, one per value of a
+field with choices or a foreign key, with the list's search, filters and
+ordering. Dragging a card to another column changes the value:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+from content_studio.list_views import BoardView
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    list_views = ["table", "list", BoardView("stage")]
+    edit_sidebar = ["stage", "author"]
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `field` | | A field with `choices`, or a `ForeignKey`. |
+| `columns` | every choice | The values to show as columns, in order. For a foreign key, primary keys; by default its first 12 objects. |
+| `label` | the field's name | The view's name in the view switch. |
+| `editable` | `True` | Whether editors may drag cards to another column. |
+
+A card shows the [list item](#list-items) thumbnail, title, description
+and meta, or the publishing state. Each column shows its count and first
+20 cards, with **Show more** below. Items without a value get a leading
+"No <field>" column when the field may be empty. A foreign key's columns
+are the objects its picker offers the editor. With bulk actions, cards
+get a checkbox for the bulk bar; with row actions, a menu. The **+** of a
+column creates an object with that value, for editors who may add.
+
+Dragging a card saves the new value at once through the same path as
+[editing in the table](#editing-in-the-table): change permission, the
+studio's save hooks, the model's `clean()`, the history, and a refusal
+when someone else changed the value since the board loaded. A toast
+offers Undo. The field must be on the edit page and not read-only; rows
+the editor may not change stay put. Set `editable=False` to show the board
+without dragging.
+
+`content_studio.E061` reports a board field without choices that is not a
+foreign key, columns that are not choices of the field, and two boards of
+one field.
 
 ## Filters
 

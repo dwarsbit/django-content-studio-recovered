@@ -153,6 +153,13 @@
       "undated": "Data removida",
       "empty_month": "Nada neste mês."
     },
+    "board_view": "Quadro: {{label}}",
+    "board": {
+      "none": "Sem {{label}}",
+      "moved": "{{label}} salvo",
+      "add": "Adicionar a {{column}}",
+      "show_more": "Mostrar mais"
+    },
     "empty_state": "Ainda não há itens",
     "no_results": "Nada corresponde à pesquisa ou aos filtros atuais",
     "filter": "Filtrar",

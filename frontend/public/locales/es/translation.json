@@ -153,6 +153,13 @@
       "undated": "Fecha eliminada",
       "empty_month": "Nada este mes."
     },
+    "board_view": "Tablero: {{label}}",
+    "board": {
+      "none": "Sin {{label}}",
+      "moved": "{{label}} guardado",
+      "add": "Añadir a {{column}}",
+      "show_more": "Mostrar más"
+    },
     "empty_state": "Aún no hay elementos",
     "no_results": "Nada coincide con la búsqueda o los filtros actuales",
     "filter": "Filtrar",

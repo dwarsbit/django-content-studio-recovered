@@ -545,6 +545,75 @@ class BaseModelViewSet(ModelViewSet):
             }
         )
 
+    @action(methods=["get"], detail=False, url_path="board")
+    def board(self, request):
+        """
+        The cards of a board view, as list rows, with the list's search,
+        filters and ordering. ?view=<key> answers {"columns": [{"value",
+        "label", "count", "results"}]}: each column's count and first
+        cards (?show=<value>:<n>, repeated, shows more of a column).
+        ?column=<value> (__none__ for the items without a value) with
+        ?offset= answers one column's {"results", "count"}.
+        """
+        from .list_views import (
+            BOARD_MAX_PER_COLUMN,
+            BOARD_PAGE_SIZE,
+            _board_field,
+            _column_filter,
+            _column_value,
+            board_data,
+            find_board,
+            parse_board_limits,
+        )
+
+        view = find_board(self._admin_model, request.query_params.get("view"))
+
+        if view is None or self.is_singleton:
+            raise NotFound("This model has no such board.")
+
+        field = _board_field(self._model, view.field)
+
+        if field is None:
+            raise NotFound("This model has no such board.")
+
+        queryset = self.filter_queryset(self.get_queryset())
+        column = request.query_params.get("column")
+
+        if column is not None:
+            try:
+                value = _column_value(field, column)
+                offset = max(int(request.query_params.get("offset") or 0), 0)
+            except ValueError as error:
+                raise ValidationError({"column": [str(error)]})
+
+            queryset = queryset.filter(_column_filter(field, value))
+            rows = list(queryset[offset : offset + BOARD_PAGE_SIZE])
+
+            return Response(
+                {
+                    "results": self.get_serializer(rows, many=True).data,
+                    "count": queryset.count(),
+                }
+            )
+
+        limits = parse_board_limits(request.query_params.getlist("show"))
+        columns = board_data(queryset, self._admin_model, request, view, limits)
+
+        return Response(
+            {
+                "columns": [
+                    {
+                        "value": column["value"],
+                        "label": column["label"],
+                        "count": column["count"],
+                        "results": self.get_serializer(column["rows"], many=True).data,
+                    }
+                    for column in columns
+                ],
+                "max_per_column": BOARD_MAX_PER_COLUMN,
+            }
+        )
+
     @action(methods=["get"], detail=False, url_path="export")
     def export(self, request):
         """
@@ -1919,7 +1988,8 @@ class BaseModelViewSet(ModelViewSet):
         through the update path of the edit page: the studio's save
         hooks, model validation, the activity log and history. Answers
         with the saved values as the list shows them. A calendar view's
-        drag saves its date (and end) fields through here too.
+        drag saves its date (and end) fields through here too, and a
+        board's drag its field.
         """
         from .table_edit import comparable, get_cell_keys
 
@@ -1932,7 +2002,8 @@ class BaseModelViewSet(ModelViewSet):
 
         from .list_views import get_drag_fields
 
-        # The cells of table_edit, and the dates a calendar drag saves.
+        # The cells of table_edit, and the fields a calendar or board
+        # drag saves.
         keys = {
             **get_cell_keys(self._admin_model, request),
             **{name: name for name in get_drag_fields(self._admin_model, request)},

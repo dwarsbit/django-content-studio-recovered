@@ -109,7 +109,9 @@ Common studio options: `table_display`, `list_filter`, `search_fields`,
 or `"none"` for large tables), `list_description`, `list_views`
 (`["table", "list", "calendar"]`, `"calendar"` being the publishing
 date's calendar, or `CalendarView("field", end=None)` from
-`content_studio.list_views` for another date) with `list_item_display`, `soft_delete`,
+`content_studio.list_views` for another date, and `BoardView("field")`
+for a board by a choice field or foreign key, whose field must be on the
+edit page for dragging) with `list_item_display`, `soft_delete`,
 `reorder_field` and `reorder_scope`, `allow_duplication` and
 `duplicate_inlines`, `export_fields` or `allow_export`, `import_fields`
 or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
@@ -642,6 +644,9 @@ Each is optional and has its own page:
   `table_display`) or a dict in it (`E001`: that is `list_item_display`).
 - `"calendar"` in `list_views` without `publishing` (`E059`): use
   `CalendarView("<date field>")` instead.
+- `BoardView` on a field without choices that is not a foreign key
+  (`E061`), or on a field missing from the edit page: the board shows
+  but cards cannot be dragged.
 - A required field missing from `edit_main`/`edit_sidebar` (`W001`), or
   read-only (`W002`): saving fails.
 - Writing a custom `BaseWidget`, `BaseFormat`, `Component` or

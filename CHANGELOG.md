@@ -46,6 +46,17 @@
   `"calendar"` without publishing) and `content_studio.E060` (a calendar
   field that is not a date). See
   [Calendar](https://djangocontentstudio.org/docs/list-page#calendar).
+- **Board view.** `BoardView("stage")` from `content_studio.list_views` in
+  `list_views` shows the objects as cards in columns, one per choice of a
+  field (or object of a foreign key), with the list's search, filters and
+  ordering. Each column shows its count and first 20 cards with **Show
+  more**, items without a value get a "No <field>" column, cards have the
+  bulk checkbox and row menu, and a column's **+** creates an object with
+  its value. Drag a card to another column to change the value, saved
+  like a table edit, with Undo. Options: `columns=` picks and orders the
+  columns, `label=`, `editable=False`. New endpoint
+  `GET content/<model>/board`. Check `content_studio.E061`. See
+  [Board](https://djangocontentstudio.org/docs/list-page#board).
 
 ## 1.20.0 (2026-11-21)
 

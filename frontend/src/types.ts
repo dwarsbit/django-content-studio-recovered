@@ -693,7 +693,29 @@ export interface CalendarViewConfig {
   editable: boolean;
 }
 
-export type ListViewConfig = string | CalendarViewConfig;
+export interface BoardColumn {
+  // The field's value; null for the items without one.
+  value: string | number | null;
+  // Empty for the column of items without a value.
+  label: string;
+}
+
+export interface BoardViewConfig {
+  type: "board";
+  // Unique among the views: "board:<field>".
+  key: string;
+  field: string;
+  label: string;
+  // A foreign key: rows hold {"id", ...} and saves send {"id": value}.
+  relation: boolean;
+  // What a card dropped on the column without a value saves.
+  empty_value: "" | null;
+  columns: BoardColumn[];
+  // Whether this editor may drag cards to another column.
+  editable: boolean;
+}
+
+export type ListViewConfig = string | CalendarViewConfig | BoardViewConfig;
 
 export interface Resource {
   id: Id;
