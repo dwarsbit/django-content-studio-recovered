@@ -107,7 +107,9 @@ class ArticleStudio(ModelStudio):
 Common studio options: `table_display`, `list_filter`, `search_fields`,
 `sortable_by`, `ordering`, `list_per_page`, `list_count` (`"estimated"`
 or `"none"` for large tables), `list_description`, `list_views`
-(`["table", "list"]`) with `list_item_display`, `soft_delete`,
+(`["table", "list", "calendar"]`, `"calendar"` being the publishing
+date's calendar, or `CalendarView("field", end=None)` from
+`content_studio.list_views` for another date) with `list_item_display`, `soft_delete`,
 `reorder_field` and `reorder_scope`, `allow_duplication` and
 `duplicate_inlines`, `export_fields` or `allow_export`, `import_fields`
 or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
@@ -631,6 +633,8 @@ Each is optional and has its own page:
   `INSTALLED_APPS`.
 - Using `list_display` for columns (works, but `W010`: rename it to
   `table_display`) or a dict in it (`E001`: that is `list_item_display`).
+- `"calendar"` in `list_views` without `publishing` (`E058`): use
+  `CalendarView("<date field>")` instead.
 - A required field missing from `edit_main`/`edit_sidebar` (`W001`), or
   read-only (`W002`): saving fails.
 - Writing a custom `BaseWidget`, `BaseFormat`, `Component` or

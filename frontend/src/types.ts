@@ -155,7 +155,8 @@ export interface Model {
         header: string | null;
         format: FormatConfig | null;
       }[];
-      views?: string[];
+      // The views the list page offers: "table", "list" and calendars.
+      views?: ListViewConfig[];
       search: boolean;
       // The field a relation picker fills with the typed search text when
       // it creates an object: the first search field, if a text field.
@@ -670,6 +671,27 @@ export interface WidgetProps<T, O = Record<string, unknown>> {
   options?: O;
 }
 
+// A calendar list view (content_studio.list_views.CalendarView).
+export interface CalendarViewConfig {
+  type: "calendar";
+  // Unique among the views: "calendar:<field>".
+  key: string;
+  field: string;
+  // An end date field: items span every day through it.
+  end: string | null;
+  label: string;
+  // A DateField: days without times.
+  date_only: boolean;
+  // Items may have no date: the calendar lists them in its tray.
+  nullable: boolean;
+  // The publishing date: drags schedule through the publishing endpoint.
+  publishing: boolean;
+  // Whether this editor may drag items to another day.
+  editable: boolean;
+}
+
+export type ListViewConfig = string | CalendarViewConfig;
+
 export interface Resource {
   id: Id;
   __str__: string;
@@ -702,6 +724,9 @@ export interface Resource {
   // The object's publishing, on studios with publishing (list rows and
   // detail responses of saved objects).
   __publishing__?: PublishingInfo | null;
+  // Whether the editor may change this row (lists with table_edit or a
+  // calendar that saves dragged dates).
+  __can_change__?: boolean;
   // Previews, on studios with publishing (detail responses): whether
   // the object is live, and whether the editor may share a draft link.
   __preview__?: PreviewInfo | null;

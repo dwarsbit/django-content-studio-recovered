@@ -15,6 +15,19 @@
   `comments = False` to leave a studio out. From code: `add_comment()`,
   `get_comments()` and the `comment_added` signal. See
   [Comments](https://djangocontentstudio.org/docs/comments).
+- **Calendar view.** Add `"calendar"` to `list_views` and the list page
+  offers the objects on a month grid by their publishing date, with the
+  list's search and filters. Scheduled content shows on the day it goes
+  live, a dot gives each item's state, and items without a date wait in a
+  **No date** tray. Drag an item to another day to reschedule it (Can
+  publish), or a draft onto a day to schedule it, with Undo. For another
+  date field use `CalendarView("starts_on", end=None, label=None,
+  editable=True)` from `content_studio.list_views`: a drag saves the date
+  through the same save as table editing. New endpoint
+  `GET content/<model>/calendar`. Checks `content_studio.E058` (a bare
+  `"calendar"` without publishing) and `content_studio.E059` (a calendar
+  field that is not a date). See
+  [Calendar](https://djangocontentstudio.org/docs/list-page#calendar).
 
 ## 1.20.0 (2026-11-21)
 

@@ -4,9 +4,10 @@ Every registered model gets a list page, where editors search, filter, sort
 and act on its objects. You configure it on the model's studio, next to the
 options on [Registering models](/docs/registering-models).
 
-The list page shows objects as a **table**, the default, or as a **list** of
-readable items. Set the views to offer with `list_views`; with more than one,
-editors switch with a toggle and the admin remembers their choice per model.
+The list page shows objects as a **table**, the default, as a **list** of
+readable items, or on a [**calendar**](#calendar) by a date. Set the views
+to offer with `list_views`; with more than one, editors switch with a
+toggle and the admin remembers their choice per model.
 
 <Screenshot name="articles" alt="The list page of articles, with search, filters and a table of titles, status, views, authors and dates" />
 
@@ -196,6 +197,82 @@ or fields the edit page writes, the first column, read-only fields, many-to-many
 relations, fields with their own widget (rich text, blocks, media) and the
 fields [publishing](/docs/publishing) sets, which the Status column and
 the Publish actions change.
+
+
+## Calendar
+
+The calendar view shows the objects on a month grid by a date field, with
+the list's search and filters. Add `"calendar"` to `list_views` for the
+[publishing](/docs/publishing) date, so scheduled content shows on the day
+it goes live:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    publishing = "published_at"
+    list_views = ["table", "list", "calendar"]
+```
+
+For another date, name the field with `CalendarView`:
+
+```python
+# events/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+from content_studio.list_views import CalendarView
+
+from .models import Event
+
+
+@register(Event)
+class EventStudio(ModelStudio):
+    list_views = [
+        "table",
+        CalendarView("starts_on", end="ends_on", label="Programme"),
+    ]
+```
+
+| Option | Default | Description |
+| --- | --- | --- |
+| `field` | the publishing date | A `DateField` or `DateTimeField` of the model. |
+| `end` | `None` | An end date field: the object shows on every day from its date through its end. |
+| `label` | the field's name | The view's name in the view switch. |
+| `editable` | `True` | Whether editors may drag items to another day. |
+
+Each item shows its time and its [list item](#list-items) title; with
+publishing, a dot gives its state (draft, scheduled, published, expired).
+A day with more than three items shows "+N more", which opens the whole
+day. One range shows up to 500 items and says so when there are more;
+search and filters narrow it. Items without a date wait in the **No date**
+tray beside the grid, when the field may be empty. On a phone the month
+becomes a list of the days that have items.
+
+Dragging an item to another day saves its new date at once, keeps its
+time, and offers Undo in a toast:
+
+- On the publishing date it **reschedules**: scheduled and draft items
+  move to a future day (a draft dropped on a day is scheduled), and
+  dropping one on the tray makes it a draft again. Published and expired
+  items stay where they are. Editors need the model's Can publish
+  permission.
+- On another date it saves the field (and moves the end along) through
+  the same path as [editing in the table](#editing-in-the-table): change
+  permission, the studio's save hooks, the model's `clean()`, the
+  history, and a refusal when someone else changed the date since the
+  calendar loaded. Rows the editor may not change stay put.
+
+Set `editable=False` to show the calendar without dragging. Each calendar
+of a studio needs its own field; offer two calendars by naming two
+fields. `content_studio.E058` reports `"calendar"` on a studio without
+publishing, and `content_studio.E059` a calendar field that is not a date
+field or one that two calendars share.
 
 ## Filters
 

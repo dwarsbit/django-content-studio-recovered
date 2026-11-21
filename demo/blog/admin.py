@@ -147,7 +147,7 @@ class ArticleStudio(ModelStudio):
     # leaves it. The title, the first column, opens the article.
     table_edit = ["featured", "views", "author"]
     # The list view's rows; both views are offered, with a toggle.
-    list_views = ["table", "list"]
+    list_views = ["table", "list", "calendar"]
     list_item_display = {
         "title": "title",
         "description": "body",
