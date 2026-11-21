@@ -51,6 +51,9 @@ export function FilterTrigger({
               tabIndex={0}
               aria-label={t("list_view.filters.clear", { field: label })}
               className="-mr-1.5 size-5 shrink-0 rounded-full inline-flex items-center justify-center hover:bg-foreground/10"
+              // A dropdown menu trigger opens on pointerdown, before the
+              // click: the clear button must keep that from the trigger.
+              onPointerDown={(event) => event.stopPropagation()}
               onClick={(event) => {
                 event.stopPropagation();
                 onClear();
