@@ -253,9 +253,7 @@ class DjangoContentStudioConfig(AppConfig):
                     # A translated column carries every language's value
                     # (the serializer adds those kept outside the
                     # model's columns).
-                    translation_config = build_translation_config(
-                        self._admin_model
-                    )
+                    translation_config = build_translation_config(self._admin_model)
 
                     if translation_config and not translation_config.adapter.virtual:
                         for name, per_language in translation_config.columns().items():

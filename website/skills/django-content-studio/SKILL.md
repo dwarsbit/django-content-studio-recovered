@@ -555,6 +555,12 @@ Each is optional and has its own page:
   `live()`; a Can publish permission; `content_studio_publish` from cron
   or Huey records what went live; E054):
   https://djangocontentstudio.org/docs/publishing.md
+- Translated content (`translations = ["title", "body"]` on a studio with
+  `title_nl`-style columns, or `Translations(fields, languages=, required=,
+  adapter=)`; django-modeltranslation and django-parler models are
+  detected; `CONTENT_LANGUAGES`; a language menu on the edit and list
+  pages, `TranslationStatus()` for the sidebar, `MissingTranslationFilter`;
+  E055, W030): https://djangocontentstudio.org/docs/translations.md
 - Webhooks (`"content_studio.webhooks"` app, `DeployButton`):
   https://djangocontentstudio.org/docs/webhooks.md
 - Notifications (`"content_studio.notifications"` app, `register_event`,

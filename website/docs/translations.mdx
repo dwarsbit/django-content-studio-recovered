@@ -1,0 +1,195 @@
+# 🌐 Translated content
+
+Write the same object in more than one language. A studio names its
+translated fields, and the edit page gets a language menu in the header:
+pick a language and the translated fields switch to it, while the other
+fields stay the same in every language. The list page shows each object's
+languages and can find the ones still missing a translation.
+
+<Screenshot name="translations" alt="An article's edit page in German: the header's language menu shows DE, each translated field has a DE badge with the English text and Copy under it, and the sidebar's Translations card shows how complete each language is" />
+
+Content Studio stores nothing itself: the values live in your model's
+columns, or wherever django-modeltranslation or django-parler keep them.
+These are the languages of your content, not the admin's
+[interface languages](/docs/languages): an editor working in Dutch can
+write German.
+
+## Set up translations
+
+1. List the content languages in your settings, the default language first:
+
+   ```python
+   CONTENT_STUDIO = {
+       "CONTENT_LANGUAGES": [("en", "English"), ("nl", "Dutch"), ("de", "German")],
+   }
+   ```
+
+   Without it, Content Studio uses `LANGUAGES`, with `LANGUAGE_CODE`'s
+   language first.
+
+2. Give each translated field a column for every other language, named
+   `<field>_<code>`. The default language stays in the field itself:
+
+   ```python
+   # blog/models.py
+   class Article(models.Model):
+       title = models.CharField(max_length=200)
+       title_nl = models.CharField(max_length=200, blank=True)
+       title_de = models.CharField(max_length=200, blank=True)
+       body = HTMLField(blank=True)
+       body_nl = HTMLField(blank=True)
+       body_de = HTMLField(blank=True)
+   ```
+
+   A language code with a dash, such as `pt-BR`, becomes `title_pt_br`.
+   [django-translated-fields](https://github.com/matthiask/django-translated-fields)
+   uses this layout too, so its models work as they are.
+
+3. Name the translated fields in the studio's `translations`:
+
+   ```python
+   # blog/admin.py
+   @register(Article)
+   class ArticleStudio(ModelStudio):
+       translations = ["title", "body"]
+   ```
+
+Put the translated fields in your edit layout as usual, by their own name
+(`title`, not `title_nl`): the edit page shows the column of the language
+the editor picked. The default layout leaves the other languages' columns
+out.
+
+### django-modeltranslation and django-parler
+
+Models registered with
+[django-modeltranslation](https://django-modeltranslation.readthedocs.io/)
+or built on [django-parler](https://django-parler.readthedocs.io/)'s
+`TranslatableModel` are detected, so they need no `translations`: every
+translated field they declare is translated in the editor, in the languages
+of `CONTENT_LANGUAGES`. Set `translations` to translate fewer of them, or to
+`False` to edit their columns as plain fields.
+
+With modeltranslation, every language, the default one too, has its own
+column (`title_en`, `title_nl`), and the field itself is shown read-only in
+the API. With parler, the values travel to the editor as `title__nl`, and
+`table_display`, `search_fields` and the edit layout may name the
+translated fields.
+
+## Languages and required languages
+
+`Translations` sets more than the fields:
+
+```python
+from content_studio.translations import Translations
+
+class ArticleStudio(ModelStudio):
+    translations = Translations(
+        ["title", "slug", "body"],
+        languages=["en", "nl"],
+        required=["en", "nl"],
+    )
+```
+
+| Option | Description |
+| --- | --- |
+| `fields` | The translated fields. `None` takes every field django-modeltranslation or django-parler declares. |
+| `languages` | The studio's languages, a subset of `CONTENT_LANGUAGES`. Default: all of them. |
+| `required` | The languages that must be complete to save. Default: the default language. A required field may stay empty in the other languages. |
+| `adapter` | Where the values live: `"columns"`, `"modeltranslation"`, `"parler"` or a `TranslationAdapter` subclass. Default: detected. |
+
+When a save fails on a field in another language, the edit page switches to
+that language so the message is in view.
+
+## The edit page
+
+- **The language menu** in the header shows the language being edited and
+  a dot for its state. It lists every language with how many translated
+  fields it still misses, and remembers the last picked language, also for
+  the list page.
+- **Translated fields** get a badge with the language code. In another
+  language than the default, the default language's text shows under the
+  field, with **Copy** to start from it.
+- **Shared fields**, the ones that are not translated, get a mark while
+  another language is shown: changing them changes them in every language.
+- **Prepopulated fields** follow their source in its own language: with
+  `prepopulated_fields = {"slug": ["title"]}` and both translated,
+  `slug_nl` follows `title_nl`.
+
+### Translation status
+
+Add `TranslationStatus` to the sidebar for each language's progress, with a
+click to switch to it:
+
+```python
+from content_studio.form import ActivityLog, TranslationStatus
+
+class ArticleStudio(ModelStudio):
+    translations = ["title", "slug", "body"]
+    edit_sidebar = [TranslationStatus(), "author", ActivityLog()]
+```
+
+It shows under the title "Translations", or the `title` you pass.
+
+## The list page
+
+The list page gets the same language menu next to the search. The table
+shows the translated columns in the picked language, with the default
+language's value in grey where a translation is missing, and a
+**Languages** column with a badge for each language: filled when the object
+is complete in it.
+
+The **Missing translation** filter finds the objects with an empty
+translated field in the picked languages. Studios with translations get it
+without listing it; add `MissingTranslationFilter` to `list_filter` to
+place it yourself:
+
+```python
+from content_studio.translations import MissingTranslationFilter
+
+class ArticleStudio(ModelStudio):
+    list_filter = ["status", MissingTranslationFilter]
+```
+
+Search looks in every language: with `search_fields = ["title"]`, a search
+also finds a Dutch or German title.
+
+## Permissions
+
+Translating is editing: the change permission covers every language.
+
+## Your own storage
+
+Subclass `TranslationAdapter` when the values live elsewhere, such as a
+JSON field per language. `column(field, code, default)` names where a
+language's value travels in the API; set `virtual = True` when that is not
+a model field, and implement `get_value(obj, field, code)` and
+`set_value(obj, field, code, value)`. `missing_q(field, code, default)`
+and `search_lookups(field, codes, default)` give the filter and search
+their queries.
+
+```python
+from content_studio.translations import ColumnsAdapter, Translations
+
+class PrefixedColumns(ColumnsAdapter):
+    """title for the default language, nl_title for the others."""
+
+    def column(self, field, code, default):
+        return field if code == default else f"{code}_{field}"
+
+class ArticleStudio(ModelStudio):
+    translations = Translations(["title"], adapter=PrefixedColumns)
+```
+
+## Checks
+
+- `content_studio.E055`: `translations` names a field that does not exist,
+  a language that is not a content language, a required language the studio
+  does not have, or an unknown adapter.
+- `content_studio.W030`: a translated field has no column for one of the
+  languages, so editors cannot translate it into that language.
+
+## Not yet supported
+
+View on site per language, webhooks and notifications per language,
+django-parler's translations in the object history, and per-language
+columns in import and export.

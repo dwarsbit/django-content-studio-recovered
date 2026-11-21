@@ -33,6 +33,15 @@ from django.utils.translation import gettext_lazy as _
 from .filters import ListFilter
 from .settings import cs_settings
 
+__all__ = [
+    "ColumnsAdapter",
+    "MissingTranslationFilter",
+    "ModelTranslationAdapter",
+    "ParlerAdapter",
+    "TranslationAdapter",
+    "Translations",
+]
+
 Language = tuple[str, str]
 
 
@@ -570,11 +579,11 @@ def get_search_fields(studio, search_fields=None) -> list[str]:
         name = entry[len(prefix) :]
 
         if name in config.fields:
-            lookups = config.adapter.search_lookups(
-                name, config.codes, config.default
-            )
+            lookups = config.adapter.search_lookups(name, config.codes, config.default)
             expanded.extend(
-                f"{prefix}{lookup}" for lookup in lookups if f"{prefix}{lookup}" not in expanded
+                f"{prefix}{lookup}"
+                for lookup in lookups
+                if f"{prefix}{lookup}" not in expanded
             )
         elif entry not in expanded:
             expanded.append(entry)

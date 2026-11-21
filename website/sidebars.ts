@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
     "list-page",
     "edit-page",
     "publishing",
+    "translations",
     "widgets",
     "block-fields",
     "media-library",

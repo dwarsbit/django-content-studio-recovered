@@ -255,7 +255,7 @@ def test_model_info_labels_columns_with_their_language(request_):
     fields = ModelSerializer(Guide).serialize()["fields"]
 
     assert fields["title_nl"]["verbose_name"] == "title (Dutch)"
-    assert fields["title"]["verbose_name"] == "title (English)"
+    assert fields["title"]["verbose_name"] == "title"
     assert fields["title"]["required"] is True
     assert fields["title_nl"]["required"] is False
 
@@ -274,12 +274,8 @@ def test_plain_models_use_the_columns_adapter():
 
 def test_modeltranslation_is_detected_by_its_fields():
     proxy = SimpleNamespace(name="title")
-    column = SimpleNamespace(
-        name="title_en", translated_field=proxy, language="en"
-    )
-    model = SimpleNamespace(
-        _meta=SimpleNamespace(get_fields=lambda: [proxy, column])
-    )
+    column = SimpleNamespace(name="title_en", translated_field=proxy, language="en")
+    model = SimpleNamespace(_meta=SimpleNamespace(get_fields=lambda: [proxy, column]))
 
     assert detect_adapter(model) is ModelTranslationAdapter
 

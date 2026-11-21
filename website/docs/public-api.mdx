@@ -16,7 +16,7 @@ The public API consists of:
   `get_tenants`,
   `get_thumbnail`, `get_media_serializer_fields`, `get_media_metadata`,
   `get_default_subscriptions`, `get_link_url`, `get_view_on_site_url`,
-  `has_publish_permission`, `on_publish`, `on_unpublish`,
+  `has_publish_permission`, `on_publish`, `on_unpublish`, `translations`,
   `crop_image` and `reset_crop`;
 - the documented options and methods of blocks: the `Meta` options of
   `Block`, `get_context` and `get_template_name`, and the
@@ -95,6 +95,7 @@ Edit page layouts, components and table columns. `Component` is the base type of
 - `TableColumn`
 - `Text`
 - `Title`
+- `TranslationStatus`
 
 ## `content_studio.actions`
 
@@ -321,6 +322,17 @@ Managers of the base models.
 - `get_state`
 - `live`
 - `run_scheduled`
+
+## `content_studio.translations`
+
+[Translated content](/docs/translations): the configuration, the adapters and the Missing translation filter. Subclass `TranslationAdapter` for another storage.
+
+- `ColumnsAdapter`
+- `MissingTranslationFilter`
+- `ModelTranslationAdapter`
+- `ParlerAdapter`
+- `TranslationAdapter`
+- `Translations`
 
 ## `content_studio.signals`
 

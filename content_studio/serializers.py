@@ -397,14 +397,12 @@ class ContentSerializer(serializers.ModelSerializer):
                 if column is None or (column not in attrs and instance is not None):
                     continue
 
-                value = (
-                    attrs[column]
-                    if column in attrs
-                    else None
-                )
+                value = attrs[column] if column in attrs else None
 
                 if is_empty(value):
-                    errors[column] = [serializers.Field.default_error_messages["required"]]
+                    errors[column] = [
+                        serializers.Field.default_error_messages["required"]
+                    ]
 
         if errors:
             raise serializers.ValidationError(errors)
@@ -477,7 +475,8 @@ class ContentSerializer(serializers.ModelSerializer):
         # Translations kept outside the model's columns (parler) are set
         # through the adapter; the model's save stores them.
         translated = {
-            name: validated_data.pop(name) for name in list(validated_data)
+            name: validated_data.pop(name)
+            for name in list(validated_data)
             if name in virtual
         }
         values = {
@@ -758,9 +757,12 @@ class ModelSerializer:
                 for key in ("type", "widget_class"):
                     if key in fields[name]:
                         data[key] = fields[name][key]
-                data["verbose_name"] = (
-                    f"{model_field.verbose_name} ({config.language_name(code)})"
-                )
+                # The field itself keeps its own label: the editor shows
+                # it with a language badge.
+                if column != name:
+                    data["verbose_name"] = (
+                        f"{model_field.verbose_name} ({config.language_name(code)})"
+                    )
                 # Only the required languages must be complete.
                 data["required"] = code in config.required and not model_field.blank
 
