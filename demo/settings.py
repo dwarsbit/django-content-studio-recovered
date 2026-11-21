@@ -101,6 +101,8 @@ SILENCED_SYSTEM_CHECKS = ["content_studio.W028"]
 EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 CONTENT_STUDIO = {
+    # Articles are written in English, Dutch and German.
+    "CONTENT_LANGUAGES": [("en", "English"), ("nl", "Dutch"), ("de", "German")],
     "ADMIN_SITE": "demo.blog.studio.admin_site",
     "MEDIA_LIBRARY_MODEL": "demo.blog.models.MediaItem",
     "MEDIA_LIBRARY_FOLDER_MODEL": "demo.blog.models.MediaFolder",

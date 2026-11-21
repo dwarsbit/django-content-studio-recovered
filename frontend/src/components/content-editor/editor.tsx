@@ -31,6 +31,7 @@ import type {
 } from "@/types";
 
 import { Aside } from "./aside";
+import { ContentLanguageProvider } from "./content-language";
 import { getMainColumnWidth } from "./edit-width";
 import { EditorReadOnlyContext } from "./editor-read-only";
 import { Header } from "./header";
@@ -501,100 +502,102 @@ function EditorForm({
 
   return model && initialized ? (
     <Form {...form}>
-      <ResourcePathContext value={resourcePath}>
-        <EditorReadOnlyContext value={isReadOnly}>
-          {/* A duplicate's slugs are copied with a free suffix, not
+      <ContentLanguageProvider model={model}>
+        <ResourcePathContext value={resourcePath}>
+          <EditorReadOnlyContext value={isReadOnly}>
+            {/* A duplicate's slugs are copied with a free suffix, not
               made from the copied sources again. */}
-          <Prepopulate
-            model={model}
-            fields={
-              isDuplicate
-                ? {}
-                : (prepopulatedFields ??
-                  model.admin?.edit.prepopulated_fields ??
-                  {})
-            }
-          />
-          <div
-            ref={rootRef}
-            className="flex-1 flex flex-col overflow-hidden w-full"
-          >
-            <TenantInfo label={model.label} />
-            <Header
+            <Prepopulate
               model={model}
-              resource={resource}
-              resourcePath={resourcePath}
-              isSaving={isPending}
-              dialog={dialog}
-              components={headerComponents}
-              readOnly={isReadOnly}
-              canDelete={mayDelete}
-              presence={presence}
-              onDuplicate={
-                canDuplicate && resource?.id != null
-                  ? () => onDuplicate?.(String(resource.id))
-                  : undefined
+              fields={
+                isDuplicate
+                  ? {}
+                  : (prepopulatedFields ??
+                    model.admin?.edit.prepopulated_fields ??
+                    {})
               }
-              saveOptions={saveOptions}
-              onSave={saveWith}
-              onDelete={() => {
-                // The changes died with the object; leaving must not
-                // trigger the navigation guard.
-                form.reset();
-                allowNextNavigation.current = true;
-                onDelete?.();
-              }}
-              onClose={onClose}
             />
-            <div className="@container flex flex-col items-center overflow-y-auto scrollbar">
-              {/* The sidebar sits next to the main column, and under it
+            <div
+              ref={rootRef}
+              className="flex-1 flex flex-col overflow-hidden w-full"
+            >
+              <TenantInfo label={model.label} />
+              <Header
+                model={model}
+                resource={resource}
+                resourcePath={resourcePath}
+                isSaving={isPending}
+                dialog={dialog}
+                components={headerComponents}
+                readOnly={isReadOnly}
+                canDelete={mayDelete}
+                presence={presence}
+                onDuplicate={
+                  canDuplicate && resource?.id != null
+                    ? () => onDuplicate?.(String(resource.id))
+                    : undefined
+                }
+                saveOptions={saveOptions}
+                onSave={saveWith}
+                onDelete={() => {
+                  // The changes died with the object; leaving must not
+                  // trigger the navigation guard.
+                  form.reset();
+                  allowNextNavigation.current = true;
+                  onDelete?.();
+                }}
+                onClose={onClose}
+              />
+              <div className="@container flex flex-col items-center overflow-y-auto scrollbar">
+                {/* The sidebar sits next to the main column, and under it
                   where the editor is too narrow for both (a phone). */}
-              <div className="flex flex-col @3xl:flex-row p-6 w-full max-w-[1280px] gap-6 justify-center">
-                <div
-                  className={cn(
-                    "w-full @3xl:flex-1 min-w-0",
-                    getMainColumnWidth(width ?? model.admin.edit.width),
-                  )}
-                >
-                  {nonFieldErrors.length > 0 && (
-                    <Alert
-                      ref={nonFieldErrorsRef}
-                      variant="destructive"
-                      className="mb-6 scroll-mt-6"
-                      data-testid="non-field-errors"
-                    >
-                      <AlertDescription>
-                        {nonFieldErrors.length === 1 ? (
-                          nonFieldErrors[0]
-                        ) : (
-                          <ul className="list-disc pl-4 space-y-1">
-                            {nonFieldErrors.map((message, index) => (
-                              <li key={index}>{message}</li>
-                            ))}
-                          </ul>
-                        )}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  {isDuplicate && duplicate && !form.getValues("id") && (
-                    <Alert className="mb-6">
-                      <AlertDescription>
-                        {t("editor.duplicate_notice", {
-                          object: duplicate.source.__str__,
-                        })}
-                      </AlertDescription>
-                    </Alert>
-                  )}
-                  <Main model={model} id={id} hiddenFields={hiddenFields} />
-                </div>
-                <div className="shrink-0 w-full @3xl:w-[320px] empty:hidden">
-                  <Aside model={model} hiddenFields={hiddenFields} />
+                <div className="flex flex-col @3xl:flex-row p-6 w-full max-w-[1280px] gap-6 justify-center">
+                  <div
+                    className={cn(
+                      "w-full @3xl:flex-1 min-w-0",
+                      getMainColumnWidth(width ?? model.admin.edit.width),
+                    )}
+                  >
+                    {nonFieldErrors.length > 0 && (
+                      <Alert
+                        ref={nonFieldErrorsRef}
+                        variant="destructive"
+                        className="mb-6 scroll-mt-6"
+                        data-testid="non-field-errors"
+                      >
+                        <AlertDescription>
+                          {nonFieldErrors.length === 1 ? (
+                            nonFieldErrors[0]
+                          ) : (
+                            <ul className="list-disc pl-4 space-y-1">
+                              {nonFieldErrors.map((message, index) => (
+                                <li key={index}>{message}</li>
+                              ))}
+                            </ul>
+                          )}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    {isDuplicate && duplicate && !form.getValues("id") && (
+                      <Alert className="mb-6">
+                        <AlertDescription>
+                          {t("editor.duplicate_notice", {
+                            object: duplicate.source.__str__,
+                          })}
+                        </AlertDescription>
+                      </Alert>
+                    )}
+                    <Main model={model} id={id} hiddenFields={hiddenFields} />
+                  </div>
+                  <div className="shrink-0 w-full @3xl:w-[320px] empty:hidden">
+                    <Aside model={model} hiddenFields={hiddenFields} />
+                  </div>
                 </div>
               </div>
             </div>
-          </div>
-        </EditorReadOnlyContext>
-      </ResourcePathContext>
+          </EditorReadOnlyContext>
+        </ResourcePathContext>
+      </ContentLanguageProvider>
     </Form>
   ) : (
     <div className="py-12 sm:py-24 md:py-48 flex items-center justify-center">

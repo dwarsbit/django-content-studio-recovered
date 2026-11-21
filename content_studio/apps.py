@@ -229,6 +229,16 @@ class DjangoContentStudioConfig(AppConfig):
                     # the list view is enabled.
                     if "list" in self._admin_model.list_views:
                         available_fields.append("list_item_display")
+                    # Translated columns carry every language's value.
+                    from .translations import get_translation_columns
+
+                    for name, per_language in get_translation_columns(
+                        self._admin_model
+                    ).items():
+                        if name in available_fields:
+                            available_fields.extend(
+                                c for c in per_language.values() if c != name
+                            )
                 # For the user model we exclude the password and the username field.
                 elif model is user_model:
                     available_fields = None
@@ -265,6 +275,30 @@ class DjangoContentStudioConfig(AppConfig):
                         model = self._model
                         fields = available_fields
                         exclude = excluded_fields
+
+                # List rows say which languages have empty translated
+                # fields.
+                if self.action in ("list", "trash") and getattr(
+                    self._admin_model, "translations", None
+                ):
+                    from .translations import get_language_states
+
+                    studio = self._admin_model
+
+                    class Serializer(Serializer):  # noqa: F811
+                        __languages__ = serializers.SerializerMethodField(
+                            method_name="get_languages"
+                        )
+
+                        class Meta(Serializer.Meta):
+                            fields = (
+                                list(available_fields) + ["__languages__"]
+                                if isinstance(available_fields, list)
+                                else available_fields
+                            )
+
+                        def get_languages(self, obj):
+                            return get_language_states(studio, obj)
 
                 # Rows always carry an "id": models whose primary key has
                 # another name get it as an alias of the pk.

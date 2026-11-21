@@ -5,6 +5,7 @@ import type { Model } from "@/types";
 
 import { Conditional } from "./conditional";
 import { fieldNames } from "./conditional-fields";
+import { TranslationsCard } from "./content-language";
 import { EditPlacementContext } from "./edit-placement";
 import { FormSet, HIDE_EMPTY_FORM_SET } from "./form-set";
 
@@ -20,12 +21,14 @@ export function Aside({
       edit: { sidebar },
     },
   } = model;
-  const hasSidebar = !R.isEmpty(sidebar) && !R.isNil(sidebar);
+  const hasSidebar =
+    (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!model.admin.translations;
 
   return (
     hasSidebar && (
       <EditPlacementContext.Provider value="sidebar">
         <aside className="space-y-4">
+          <TranslationsCard />
           {sidebar.map((formSet, idx) => (
             <Conditional
               key={idx}

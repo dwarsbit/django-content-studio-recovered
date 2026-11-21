@@ -40,6 +40,7 @@ import type {
 } from "@/types";
 
 import { Conditional } from "./conditional";
+import { LanguageSwitcher, useLanguageStates } from "./content-language";
 import { ComponentRenderer } from "./form-field";
 import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
@@ -248,6 +249,7 @@ export function Header({
             }
             actions={
               <>
+                <HeaderLanguageSwitcher />
                 <PresenceAvatars users={presence} />
                 {canFollow && (
                   <FollowButton
@@ -518,4 +520,10 @@ export function Header({
       </>
     )
   );
+}
+
+function HeaderLanguageSwitcher() {
+  const states = useLanguageStates();
+
+  return <LanguageSwitcher states={states} className="mr-1" />;
 }
