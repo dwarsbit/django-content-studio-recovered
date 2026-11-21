@@ -3,7 +3,7 @@ import * as R from "ramda";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { PiFileTextBold, PiRowsBold, PiTableBold } from "react-icons/pi";
-import { Link, useParams, useSearchParams } from "react-router";
+import { Link, useBlocker, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import {
@@ -21,6 +21,7 @@ import { useDiscover } from "@/hooks/use-discover";
 import { useExport } from "@/hooks/use-export";
 import { useHttp } from "@/hooks/use-http";
 import { useImportDownload } from "@/hooks/use-import";
+import { useListEdit } from "@/hooks/use-list-edit";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
 import { getDownloadErrorMessage } from "@/lib/download";
@@ -40,7 +41,9 @@ import type {
 import { ContentBulkBar } from "./_components/bulk-bar";
 import { Filters } from "./_components/filters";
 import { ListActionsMenu } from "./_components/list-actions-menu";
+import { ListEditGuard } from "./_components/list-edit-guard";
 import { ListView } from "./_components/list-view";
+import { SaveBar } from "./_components/save-bar";
 import { SortSelect } from "./_components/sort-select";
 import { type ReorderProps, TableView } from "./_components/table-view";
 import { ContentEditorPage } from "./[id]/page";
@@ -300,6 +303,35 @@ export function ModelListPage() {
     },
   });
 
+  // In-place edits of the table (list_edit), saved from the Save bar.
+  const edit = useListEdit(
+    model,
+    (data?.results ?? []) as { id: string; [p: string]: unknown }[],
+  );
+  const saveEdits = async () => {
+    if (!model || edit.count === 0) {
+      return;
+    }
+
+    const { saved } = await edit.save();
+
+    if (saved > 0) {
+      toast.success(
+        t("list_edit.saved", {
+          count: saved,
+          singular: model.verbose_name,
+          plural: model.verbose_name_plural,
+        }),
+      );
+    }
+  };
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      edit.count > 0 &&
+      (currentLocation.pathname !== nextLocation.pathname ||
+        currentLocation.search !== nextLocation.search),
+  );
+
   // Who else has the objects of this page open.
   const presence = usePresenceList(
     model,
@@ -485,6 +517,7 @@ export function ModelListPage() {
                 onClear={clearContext}
                 reorder={reorder}
                 presence={presence}
+                edit={edit.editable.length > 0 ? edit : undefined}
                 className="border-0 rounded-none"
               />
             )}
@@ -507,7 +540,16 @@ export function ModelListPage() {
           )}
         </PageBody>
 
-        {selected.size > 0 && actions.length > 0 && (
+        <ListEditGuard
+          blocker={blocker}
+          count={edit.count}
+          onSave={saveEdits}
+          onDiscard={edit.discard}
+        />
+        {edit.count > 0 && (
+          <SaveBar model={model} edit={edit} onSave={saveEdits} />
+        )}
+        {edit.count === 0 && selected.size > 0 && actions.length > 0 && (
           <ContentBulkBar
             model={model}
             actions={actions}

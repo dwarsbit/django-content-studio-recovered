@@ -1,9 +1,11 @@
 import * as R from "ramda";
 import { useTranslation } from "react-i18next";
+import { PiLockSimpleBold } from "react-icons/pi";
 import { TbCaretDownFilled, TbCaretUpFilled } from "react-icons/tb";
 import { useNavigate } from "react-router";
 
 import { FormatRenderer } from "@/components/formats/renderer";
+import { EditableCell } from "@/components/list-edit/editable-cell";
 import { PresenceIndicator } from "@/components/presence";
 import { Reorderable, RowDragHandle } from "@/components/reorderable";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -15,6 +17,12 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import type { ListEdit } from "@/hooks/use-list-edit";
 import { useReorderableRow } from "@/hooks/use-reorderable-row";
 import { useRunAction } from "@/hooks/use-run-action";
 import { useContentLanguage } from "@/lib/content-language";
@@ -67,9 +75,12 @@ export function TableView({
   onClear,
   reorder,
   presence,
+  edit,
   className,
 }: {
   items: Row[];
+  // In-place editing (list_edit), when the studio offers it.
+  edit?: ListEdit;
   model: Model;
   // The selected ids, when the model offers bulk actions.
   selected?: Set<string>;
@@ -248,6 +259,7 @@ export function TableView({
                   rowActions={rowActions}
                   onRunAction={onRunAction}
                   presence={presence?.[String(item.id)]}
+                  edit={edit}
                 />
               ))}
             </Reorderable>
@@ -263,6 +275,7 @@ export function TableView({
                 rowActions={rowActions}
                 onRunAction={onRunAction}
                 presence={presence?.[String(item.id)]}
+                edit={edit}
               />
             ))
           )}
@@ -298,7 +311,9 @@ function TableViewRow({
   presence,
   rowActions,
   onRunAction,
+  edit,
 }: {
+  edit?: ListEdit;
   item: Row;
   model: Model;
   hasActions: boolean;
@@ -346,39 +361,86 @@ function TableViewRow({
           />
         </TableCell>
       )}
-      {fields.map(({ name, format }, index) => (
-        <TableCell
-          key={name}
-          className={cn({
-            "font-medium": index === 0,
-            "text-right tabular-nums": isNumeric(model.fields[name]?.type),
-          })}
-        >
-          <div
-            className={cn("truncate min-h-8 items-center flex", {
-              "justify-end": isNumeric(model.fields[name]?.type),
+      {fields.map(({ name, format }, index) => {
+        const editable =
+          !!edit?.editable.includes(name) && item.__can_change__ !== false;
+        const column = translations?.fields[name]?.[language] ?? name;
+        const rowPending = edit?.pending[item.id] ?? {};
+        const changed = column in rowPending;
+        const value = changed ? rowPending[column] : item[column];
+        const fallback =
+          column !== name && (item[column] === "" || item[column] == null)
+            ? String(item[name] ?? "")
+            : undefined;
+
+        return (
+          <TableCell
+            key={name}
+            className={cn({
+              "font-medium": index === 0,
+              "text-right tabular-nums": isNumeric(model.fields[name]?.type),
             })}
           >
-            <TranslatedCell
-              item={item}
-              name={name}
-              column={translations?.fields[name]?.[language]}
-              defaultLanguage={translations?.default}
+            <div
+              className={cn("min-h-8 items-center flex", {
+                truncate: !editable,
+                "min-w-0": editable,
+                "justify-end": isNumeric(model.fields[name]?.type),
+              })}
             >
-              {(value) => (
-                <FormatRenderer
+              {editable ? (
+                <EditableCell
+                  model={model}
+                  name={name}
                   value={value}
-                  field={model.fields[name]}
-                  format={format}
-                />
+                  changed={changed}
+                  error={edit?.errors[item.id]?.[column]}
+                  placeholder={fallback}
+                  onChange={(next) => edit?.set(item, column, next)}
+                >
+                  <FormatRenderer
+                    value={value}
+                    field={model.fields[name]}
+                    format={format}
+                  />
+                </EditableCell>
+              ) : (
+                <TranslatedCell
+                  item={item}
+                  name={name}
+                  column={translations?.fields[name]?.[language]}
+                  defaultLanguage={translations?.default}
+                >
+                  {(value) => (
+                    <FormatRenderer
+                      value={value}
+                      field={model.fields[name]}
+                      format={format}
+                    />
+                  )}
+                </TranslatedCell>
               )}
-            </TranslatedCell>
-            {index === 0 && (
-              <PresenceIndicator users={presence} className="ml-2" />
-            )}
-          </div>
-        </TableCell>
-      ))}
+              {index === 0 && (
+                <PresenceIndicator users={presence} className="ml-2" />
+              )}
+              {index === 0 &&
+                !!edit?.editable.length &&
+                item.__can_change__ === false && (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="ml-2 text-muted-foreground shrink-0">
+                        <PiLockSimpleBold />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="top">
+                      {t("list_edit.locked", { singular: model.verbose_name })}
+                    </TooltipContent>
+                  </Tooltip>
+                )}
+            </div>
+          </TableCell>
+        );
+      })}
       {translations && (
         <TableCell>
           <LanguageBadges

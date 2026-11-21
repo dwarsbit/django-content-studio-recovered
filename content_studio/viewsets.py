@@ -1215,6 +1215,67 @@ class BaseModelViewSet(ModelViewSet):
         ):
             raise NotFound()
 
+    @action(methods=["post"], detail=False, url_path="list-edit")
+    def list_edit(self, request):
+        """
+        WIP prototype of the list's Save bar: {"rows": [{"id", "values",
+        "base"}]}. Each row saves through the update path on its own;
+        a value that changed since the list loaded is a conflict.
+        """
+        rows = request.data.get("rows")
+
+        if not isinstance(rows, list) or not rows:
+            raise ValidationError("A list edit requires a non-empty rows list.")
+
+        saved, errors = [], {}
+
+        for row in rows:
+            pk = row.get("id")
+            values = row.get("values") or {}
+            base = row.get("base") or {}
+
+            try:
+                instance = self.get_queryset().get(pk=pk)
+            except Exception:
+                errors[str(pk)] = {"__all__": [_("This object no longer exists.")]}
+                continue
+
+            if not self._admin_model.has_change_permission(request, instance):
+                errors[str(pk)] = {"__all__": [_("You may not change this object.")]}
+                continue
+
+            serializer = self.get_serializer(instance, data=values, partial=True)
+            current = serializer.to_representation(instance)
+            clashes = {}
+
+            for name, value in base.items():
+                now = current.get(name)
+                now = now.get("id") if isinstance(now, dict) else now
+                value = value.get("id") if isinstance(value, dict) else value
+
+                if str(now) != str(value):
+                    clashes[name] = [
+                        _("Changed by someone else since you loaded the list.")
+                    ]
+
+            if clashes:
+                errors[str(pk)] = clashes
+                continue
+
+            if not serializer.is_valid():
+                errors[str(pk)] = serializer.errors
+                continue
+
+            try:
+                self.perform_update(serializer)
+            except ValidationError as error:
+                errors[str(pk)] = error.detail
+                continue
+
+            saved.append(pk)
+
+        return Response({"saved": saved, "errors": errors})
+
     @action(methods=["post"], detail=False, url_path="bulk")
     def bulk(self, request):
         """

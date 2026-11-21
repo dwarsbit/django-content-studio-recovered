@@ -57,6 +57,10 @@ class ModelStudioPermissions(BasePermission):
             # is part of viewing it.
             return admin_model.has_view_permission(request)
 
+        if getattr(view, "action", None) == "list_edit":
+            # Each row is checked for change permission (WIP prototype).
+            return admin_model.has_change_permission(request)
+
         if getattr(view, "action", None) == "bulk":
             # The bulk endpoint enforces its own per-action permissions
             # (see actions.get_bulk_actions); seeing the list is the

@@ -173,6 +173,8 @@ export interface Model {
       row_actions?: BulkAction[];
       // Draft, publish and scheduling; null when the studio has none.
       publishing?: PublishingConfig | null;
+      // The columns edited in place (list_edit).
+      edit?: string[];
     };
     edit: {
       // The studio's edit_actions, in the more actions menu.

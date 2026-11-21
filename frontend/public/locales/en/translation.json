@@ -1330,5 +1330,21 @@
     "shared": "Same in every language",
     "languages_complete": "{{done}} of {{total}} languages complete",
     "languages_column": "Languages"
+  },
+  "list_edit": {
+    "pending_one": "{{count}} change in {{rows}} {{noun}}",
+    "pending_other": "{{count}} changes in {{rows}} {{noun}}",
+    "failed_one": "{{count}} {{singular}} could not be saved",
+    "failed_other": "{{count}} {{plural}} could not be saved",
+    "discard": "Discard",
+    "save": "Save changes",
+    "saved_one": "Saved {{count}} {{singular}}",
+    "saved_other": "Saved {{count}} {{plural}}",
+    "locked": "You can't change this {{singular}}",
+    "guard_title": "Save your changes first?",
+    "guard_body_one": "You have {{count}} unsaved change in this list.",
+    "guard_body_other": "You have {{count}} unsaved changes in this list.",
+    "guard_discard": "Discard and continue",
+    "guard_keep": "Keep editing"
   }
 }

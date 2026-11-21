@@ -437,6 +437,11 @@ class ModelStudio(BaseStudio[T]):
     # run on the object being edited. None (the default) offers none.
     edit_actions: Optional[list[str]] = None
 
+    # Table columns edited in place on the list page, saved together
+    # from the list's Save bar. Empty, the default, keeps the table
+    # read-only.
+    list_edit: list[str] = []
+
     # The columns that may be sorted on; None allows all.
     sortable_by: Optional[list[str]] = None
 
@@ -1829,6 +1834,12 @@ class AdminSerializer:
                     action.serialize()
                     for action in get_row_actions(admin_class, request)
                 ],
+                # The columns edited in place (WIP prototype).
+                "edit": (
+                    list(getattr(admin_class, "list_edit", []) or [])
+                    if admin_class.has_change_permission(request)
+                    else []
+                ),
             },
             "permissions": serialize_permissions(admin_class, request),
         }
