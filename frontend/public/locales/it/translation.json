@@ -1445,5 +1445,29 @@
     "not_opened": "non ancora aperto",
     "revoke": "Revoca",
     "revoked": "Link revocato"
+  },
+  "comments": {
+    "title": "Commenti",
+    "placeholder": "Scrivi un commento. Usa @ per menzionare qualcuno.",
+    "reply_placeholder": "Scrivi una risposta",
+    "footnote": "Solo chi ha accesso a questo oggetto ({{object}}) vede i commenti.",
+    "submit": "Commenta",
+    "reply": "Rispondi",
+    "resolve": "Risolvi",
+    "reopen": "Riapri",
+    "resolved": "Risolto",
+    "resolved_by": "Risolto da {{name}}",
+    "show_resolved": "{{count}} risolti",
+    "hide_resolved": "Nascondi risolti",
+    "empty": "Ancora nessun commento.",
+    "all_resolved": "Tutti i commenti sono risolti.",
+    "edited": "modificato",
+    "deleted": "Commento eliminato",
+    "system": "Content Studio",
+    "options": "Opzioni del commento",
+    "delete_title": "Eliminare questo commento?",
+    "delete_description": "Il commento viene rimosso per tutti. Le risposte restano.",
+    "error": "Impossibile salvare il commento. Riprova.",
+    "mention": "Persone da menzionare"
   }
 }

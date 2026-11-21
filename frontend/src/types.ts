@@ -140,6 +140,8 @@ export interface Model {
     presence?: boolean;
     // Whether the edit page offers Follow (the notifications app).
     notifications?: boolean;
+    // Whether the edit page has a Comments card (the comments app).
+    comments?: boolean;
     // Whether rich text can link to the model's objects.
     linkable?: boolean;
     // The translated fields and their column per language; null
@@ -228,6 +230,41 @@ export type PresenceState = "viewing" | "editing";
 
 // Another user who has an object open: viewing it, or editing it (their
 // form has unsaved changes).
+// A person as comments show them.
+export interface CommentPerson {
+  id: Id;
+  name: string;
+  initials: string;
+  avatar: string | null;
+}
+
+export interface CommentInfo {
+  id: number;
+  // None for a comment from code without an author.
+  author: CommentPerson | null;
+  body: string;
+  mentions: CommentPerson[];
+  created_at: DateTimeString;
+  edited_at: DateTimeString | null;
+  // Deleted with replies: shown as "Comment deleted".
+  deleted: boolean;
+  can_edit: boolean;
+  can_delete: boolean;
+}
+
+export interface CommentThread extends CommentInfo {
+  resolved_at: DateTimeString | null;
+  resolved_by: CommentPerson | null;
+  can_resolve: boolean;
+  replies: CommentInfo[];
+}
+
+export interface CommentThreads {
+  threads: CommentThread[];
+  open: number;
+  resolved: number;
+}
+
 export interface PresenceUser {
   id: Id;
   name: string;

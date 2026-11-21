@@ -64,6 +64,17 @@
   keeps the changes in the draft. Needs `content_studio.history`
   (system check `content_studio.E054`); run `migrate` for its new table. See
   [Unpublished changes](https://djangocontentstudio.org/docs/publishing#unpublished-changes).
+- **Internal comments and mentions.** Add `content_studio.comments` to
+  `INSTALLED_APPS` and run `migrate`: every edit page gets a **Comments**
+  card in the sidebar, for notes between the people who work on an object
+  (not public comments). Threads with replies, **Resolve** and **Reopen**,
+  editing and deleting your own comments, and `@` to mention someone who
+  may view the object. With the notifications app, mentions, replies and
+  comments on followed objects notify. Anyone who may view an object may
+  comment; override `has_comment_permission` to decide otherwise, or set
+  `comments = False` to leave a studio out. From code: `add_comment()`,
+  `get_comments()` and the `comment_added` signal. See
+  [Comments](https://djangocontentstudio.org/docs/comments).
 
 ### Changes
 

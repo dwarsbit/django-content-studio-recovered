@@ -33,6 +33,7 @@ INSTALLED_APPS = [
     "content_studio.history",
     "content_studio.preferences",
     "content_studio.previews",
+    "content_studio.comments",
     "demo.blog",
 ]
 

@@ -545,6 +545,10 @@ class ModelStudio(BaseStudio[T]):
     # app installed).
     notifications: bool = True
 
+    # Whether the edit page has a Comments card (with the comments app
+    # installed; singletons have none).
+    comments: bool = True
+
     # The fields written in more than one content language: a list of
     # field names, or Translations(fields, languages=, required=,
     # adapter=). None detects django-modeltranslation and django-parler
@@ -669,6 +673,14 @@ class ModelStudio(BaseStudio[T]):
         from .table_edit import get_default_table_edit
 
         return get_default_table_edit(self, request)
+
+    def has_comment_permission(self, request: HttpRequest, obj: T) -> bool:
+        """
+        Whether the request may read obj's comments and comment on it
+        (with the comments app installed): view permission on the
+        object, unless overridden.
+        """
+        return self.has_view_permission(request, obj)
 
     def has_publish_permission(
         self, request: HttpRequest, obj: Optional[T] = None
@@ -1030,6 +1042,14 @@ class ContentStudioSite:
             from .contrib.backups.views import set_up_router as set_up_backup_router
 
             set_up_backup_router()
+
+        # Comments on objects, with the optional app installed.
+        if apps.is_installed("content_studio.comments"):
+            from .comments.viewsets import CommentViewSet
+
+            content_studio_router.register(
+                "api/comments", CommentViewSet, basename="content_studio_comments"
+            )
 
         # The notification endpoints, with the optional app installed.
         if apps.is_installed("content_studio.notifications"):
@@ -1683,6 +1703,17 @@ def is_notifications_enabled(admin_class) -> bool:
     )
 
 
+def is_comments_enabled(admin_class) -> bool:
+    """
+    Whether a studio's edit page has a Comments card: the comments app
+    is installed, the studio is not a singleton and does not opt out
+    with comments = False.
+    """
+    from .comments import comments_enabled
+
+    return comments_enabled(admin_class) and not get_is_singleton(admin_class)
+
+
 def get_is_singleton(admin_class) -> bool:
     """
     Return the effective singleton state of a model studio.
@@ -1785,6 +1816,8 @@ class AdminSerializer:
             # Whether the edit page offers Follow: the notifications app
             # is installed and the studio does not opt out.
             "notifications": is_notifications_enabled(admin_class),
+            # Whether the edit page has a Comments card.
+            "comments": is_comments_enabled(admin_class),
             # Whether rich text can link to the model's objects.
             "linkable": is_linkable(admin_class),
             # The translated fields and the columns per language, or

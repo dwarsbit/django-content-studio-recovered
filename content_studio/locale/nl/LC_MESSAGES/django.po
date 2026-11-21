@@ -1921,3 +1921,62 @@ msgstr "Er zijn geen niet-gepubliceerde wijzigingen."
 #: content_studio/history/models.py
 msgid "unpublished changes"
 msgstr "niet-gepubliceerde wijzigingen"
+
+#: content_studio/comments/apps.py
+msgid "Comments"
+msgstr "Opmerkingen"
+
+#: content_studio/comments/models.py
+msgid "comment"
+msgstr "opmerking"
+
+#: content_studio/comments/models.py
+msgid "comments"
+msgstr "opmerkingen"
+
+#: content_studio/comments/models.py
+msgid "Author"
+msgstr "Auteur"
+
+#: content_studio/comments/models.py
+msgid "Comment"
+msgstr "Opmerking"
+
+#: content_studio/comments/notifying.py
+msgid "Mentions in comments"
+msgstr "Vermeldingen in opmerkingen"
+
+#: content_studio/comments/notifying.py
+msgid "Someone mentions you in a comment."
+msgstr "Iemand noemt je in een opmerking."
+
+#: content_studio/comments/notifying.py
+msgid "Replies to comments"
+msgstr "Antwoorden op opmerkingen"
+
+#: content_studio/comments/notifying.py
+msgid "Someone replies in a comment thread you are in."
+msgstr "Iemand antwoordt in een opmerkingenthread waarin jij schreef."
+
+#: content_studio/comments/notifying.py
+msgid "Comments on content you follow"
+msgstr "Opmerkingen op content die je volgt"
+
+#: content_studio/comments/notifying.py
+msgid "Someone comments on an object you follow."
+msgstr "Iemand plaatst een opmerking bij een object dat je volgt."
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s mentioned you on %(object)s"
+msgstr "%(actor)s noemde je bij %(object)s"
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s replied to a comment on %(object)s"
+msgstr "%(actor)s antwoordde op een opmerking bij %(object)s"
+
+#: content_studio/comments/notifying.py
+#, python-format
+msgid "%(actor)s commented on %(object)s"
+msgstr "%(actor)s plaatste een opmerking bij %(object)s"

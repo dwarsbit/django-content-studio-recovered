@@ -1,9 +1,10 @@
 import * as R from "ramda";
 
+import { CommentsCard } from "@/components/comments/comments-card";
 import { usePublishing } from "@/components/publishing/publishing";
 import { PublishingCard } from "@/components/publishing/publishing-card";
 import { cn } from "@/lib/utils";
-import type { Model } from "@/types";
+import type { Id, Model } from "@/types";
 
 import { Conditional } from "./conditional";
 import { fieldNames } from "./conditional-fields";
@@ -13,9 +14,13 @@ import { FormSet, HIDE_EMPTY_FORM_SET } from "./form-set";
 export function Aside({
   model,
   hiddenFields,
+  commentsOn,
 }: {
   model: Model;
   hiddenFields: string[];
+  // The saved object the Comments card is for: not on new objects,
+  // inline rows or dialogs.
+  commentsOn?: Id | null;
 }) {
   const {
     admin: {
@@ -24,13 +29,16 @@ export function Aside({
   } = model;
   // Studios with publishing open the sidebar with the Publishing card.
   const publishing = usePublishing();
-  const hasSidebar = (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!publishing;
+  const comments = !!model.admin.comments && !R.isNil(commentsOn);
+  const hasSidebar =
+    (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!publishing || comments;
 
   return (
     hasSidebar && (
       <EditPlacementContext.Provider value="sidebar">
         <aside className="space-y-4">
           <PublishingCard />
+          {comments && <CommentsCard model={model} id={commentsOn!} />}
           {(sidebar ?? []).map((formSet, idx) => (
             <Conditional
               key={idx}

@@ -1395,5 +1395,29 @@
     "not_opened": "not opened yet",
     "revoke": "Revoke",
     "revoked": "Link revoked"
+  },
+  "comments": {
+    "title": "Comments",
+    "placeholder": "Write a comment. Use @ to mention someone.",
+    "reply_placeholder": "Write a reply",
+    "footnote": "Only people with access to this {{object}} see comments.",
+    "submit": "Comment",
+    "reply": "Reply",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "resolved": "Resolved",
+    "resolved_by": "Resolved by {{name}}",
+    "show_resolved": "{{count}} resolved",
+    "hide_resolved": "Hide resolved",
+    "empty": "No comments yet.",
+    "all_resolved": "All comments are resolved.",
+    "edited": "edited",
+    "deleted": "Comment deleted",
+    "system": "Content Studio",
+    "options": "Comment options",
+    "delete_title": "Delete this comment?",
+    "delete_description": "The comment is removed for everyone. Replies stay.",
+    "error": "The comment could not be saved. Try again.",
+    "mention": "People to mention"
   }
 }

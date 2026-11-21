@@ -1395,5 +1395,29 @@
     "not_opened": "nog niet geopend",
     "revoke": "Intrekken",
     "revoked": "Link ingetrokken"
+  },
+  "comments": {
+    "title": "Opmerkingen",
+    "placeholder": "Schrijf een opmerking. Gebruik @ om iemand te noemen.",
+    "reply_placeholder": "Schrijf een antwoord",
+    "footnote": "Alleen mensen met toegang tot dit {{object}} zien opmerkingen.",
+    "submit": "Plaatsen",
+    "reply": "Antwoorden",
+    "resolve": "Afhandelen",
+    "reopen": "Heropenen",
+    "resolved": "Afgehandeld",
+    "resolved_by": "Afgehandeld door {{name}}",
+    "show_resolved": "{{count}} afgehandeld",
+    "hide_resolved": "Afgehandelde verbergen",
+    "empty": "Nog geen opmerkingen.",
+    "all_resolved": "Alle opmerkingen zijn afgehandeld.",
+    "edited": "bewerkt",
+    "deleted": "Opmerking verwijderd",
+    "system": "Content Studio",
+    "options": "Opties voor opmerking",
+    "delete_title": "Deze opmerking verwijderen?",
+    "delete_description": "De opmerking verdwijnt voor iedereen. Antwoorden blijven staan.",
+    "error": "De opmerking kon niet worden opgeslagen. Probeer het opnieuw.",
+    "mention": "Mensen om te noemen"
   }
 }

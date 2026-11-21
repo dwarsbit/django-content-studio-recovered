@@ -80,6 +80,7 @@ content_studio/
 ├── snapshots.py         # Snapshots of an object's values around an admin save: the changed fields in the activity log (LogEntry change_message) and the history app's versions
 ├── history/             # Optional history app: Version (an object's values after a change, kept with its LogEntry), save_version/trim_versions (HISTORY_MAX_VERSIONS), the prune command; the activity/<entry_id> endpoint and the frontend's VersionDialog show and restore versions
 ├── notifications/       # Optional notifications app: models, the content_changed fan-out, register_event/notify, read filter, prune command, the admin endpoints (viewsets.py, with the page's filters and search), site defaults (defaults.py), the dashboard widget, the email digest (digest.py, templates in templates/content_studio/notifications)
+├── comments/            # Optional comments app: Comment (threads one level deep, mentions, resolve, placeholder deletes), add_comment/get_comments and the comment_added signal (api.py), the notification events (notifying.py), the api/comments endpoints (viewsets.py) for the edit page's Comments card
 ├── media_library/       # Optional built-in media library app (models, migrations)
 │   ├── sizes.py         # Image sizes (IMAGE_SIZES): made by tasks.py, recorded in metadata["sizes"], get_image_sizes
 │   └── viewsets.py      # Media library API endpoints
