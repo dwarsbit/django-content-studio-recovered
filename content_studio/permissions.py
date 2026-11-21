@@ -52,6 +52,14 @@ class ModelStudioPermissions(BasePermission):
             # object (see form.Button); seeing it is the only gate here.
             return admin_model.has_view_permission(request)
 
+        if getattr(view, "action", None) in (
+            "preview",
+            "preview_links",
+            "revoke_preview_link",
+        ):
+            # MOCKUP SPIKE: previews (the real build checks Can share).
+            return admin_model.has_view_permission(request)
+
         if getattr(view, "action", None) == "presence":
             # Announcing that the user has an object open, or left it,
             # is part of viewing it.
@@ -133,7 +141,13 @@ class ModelStudioPermissions(BasePermission):
         ) in ("restore", "move", "password", "password_link", "reset_two_factor"):
             return admin_model.has_change_permission(request, obj)
 
-        if getattr(view, "action", None) in ("run_component", "presence"):
+        if getattr(view, "action", None) in (
+            "run_component",
+            "presence",
+            "preview",
+            "preview_links",
+            "revoke_preview_link",
+        ):
             return admin_model.has_view_permission(request, obj)
 
         if getattr(view, "action", None) == "publishing":

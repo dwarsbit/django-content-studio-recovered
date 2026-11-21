@@ -54,6 +54,7 @@ import type {
 import { Conditional } from "./conditional";
 import { EditorLanguageMenu } from "./content-language";
 import { ComponentRenderer } from "./form-field";
+import { PreviewButton } from "./preview-button";
 import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
 
@@ -305,24 +306,14 @@ export function Header({
                       className="hidden lg:inline-flex"
                     />
                   )}
-                  {viewOnSiteUrl && (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Button asChild size="icon" variant="ghost">
-                          <a
-                            href={viewOnSiteUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            aria-label={t("editor.view_on_site")}
-                          >
-                            <PiArrowSquareOutBold />
-                          </a>
-                        </Button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        {t("editor.view_on_site")}
-                      </TooltipContent>
-                    </Tooltip>
+                  {viewOnSiteUrl && resource && (
+                    <PreviewButton
+                      resource={resource}
+                      resourcePath={resourcePath}
+                      viewOnSiteUrl={viewOnSiteUrl}
+                      isDirty={isDirty}
+                      onSave={() => onSave()}
+                    />
                   )}
                   {components.map((component) => (
                     <Conditional

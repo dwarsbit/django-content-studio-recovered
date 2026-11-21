@@ -515,7 +515,8 @@ class DjangoContentStudioConfig(AppConfig):
                             config = get_publishing(admin_model)
 
                             if (
-                                config is not None
+                                False  # MOCKUP SPIKE: drafts get Preview
+                                and config is not None
                                 and get_state(config, obj) != PUBLISHED
                                 and not callable(
                                     getattr(admin_model, "view_on_site", None)

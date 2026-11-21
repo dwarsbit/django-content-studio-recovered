@@ -687,6 +687,65 @@ class BaseModelViewSet(ModelViewSet):
             }
         )
 
+    # MOCKUP SPIKE: previews and shared draft links.
+    @action(methods=["post"], detail=True, url_path="preview")
+    def preview(self, request, id):
+        from . import previews
+
+        instance = self.get_object()
+        url = self._admin_model.get_view_on_site_url(instance)
+
+        if not url:
+            raise NotFound()
+
+        language = (request.data or {}).get("language")
+        token = previews.staff_token(request.user, instance, language)
+        return Response({"url": previews.with_token(url, token)})
+
+    @action(methods=["get", "post"], detail=True, url_path="preview-links")
+    def preview_links(self, request, id):
+        from . import previews
+
+        instance = self.get_object()
+        url = self._admin_model.get_view_on_site_url(instance)
+
+        if request.method == "POST":
+            data = request.data or {}
+            days = data.get("days", 7)
+            previews.share(
+                request.user,
+                instance,
+                language=data.get("language"),
+                days=int(days) if days else None,
+                note=data.get("note") or "",
+            )
+
+        def serialize(link):
+            return {
+                "id": link.id,
+                "url": previews.with_token(url, link.key) if url else None,
+                "note": link.note,
+                "language": link.language,
+                "created_by": link.created_by,
+                "created_at": link.created_at,
+                "expires_at": link.expires_at,
+                "opens": link.opens,
+                "last_opened_at": link.last_opened_at,
+            }
+
+        return Response([serialize(link) for link in previews.links_for(instance)])
+
+    @action(
+        methods=["delete"],
+        detail=True,
+        url_path="preview-links/(?P<link_id>[^/]+)",
+    )
+    def revoke_preview_link(self, request, id, link_id):
+        from . import previews
+
+        previews.revoke(self.get_object(), link_id)
+        return Response(status=204)
+
     @action(methods=["post"], detail=True, url_path="password")
     def password(self, request, id):
         """
