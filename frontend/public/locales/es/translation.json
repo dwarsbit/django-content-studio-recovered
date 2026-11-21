@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} ha restaurado {{count}} {{models}}",
       "reordered_many_one": "{{actor}} ha reordenado {{count}} {{models}}",
       "reordered_many_other": "{{actor}} ha reordenado {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} ha reordenado {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} ha reordenado {{count}} {{models}}",
+      "published": "{{actor}} ha publicado {{object}} ({{model}})",
+      "published_many_one": "{{actor}} ha publicado {{count}} {{models}}",
+      "published_many_other": "{{actor}} ha publicado {{count}} {{models}}",
+      "published_many_many": "{{actor}} ha publicado {{count}} {{models}}",
+      "unpublished": "{{actor}} ha despublicado {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} ha despublicado {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} ha despublicado {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} ha despublicado {{count}} {{models}}"
     },
     "follow": {
       "follow": "Seguir",
@@ -738,7 +746,9 @@
       "updated": "Actualizado",
       "deleted": "Eliminado",
       "restored": "Restaurado",
-      "reordered": "Movido"
+      "reordered": "Movido",
+      "published": "Publicado",
+      "unpublished": "Despublicado"
     }
   },
   "analytics": {
@@ -892,6 +902,49 @@
     "restored_other": "Se han restaurado {{count}} campos. Guarde para conservarlos.",
     "restored_many": "Se han restaurado {{count}} campos. Guarde para conservarlos.",
     "nothing_to_restore": "El formulario ya tiene los valores de esta versión."
+  },
+  "recovery": {
+    "list": "{{items}} y {{last}}",
+    "title": "Cambios sin guardar de las {{when}}",
+    "description_one": "Cambiaste {{fields}} aquí sin guardar.",
+    "description_other": "Cambiaste {{count}} campos aquí sin guardar: {{fields}}.",
+    "description_many": "Cambiaste {{count}} campos aquí sin guardar: {{fields}}.",
+    "changed_since": "El objeto ({{object}}) se guardó desde entonces, pero no en estos campos.",
+    "create_title": "Nuevo objeto ({{object}}) sin terminar de las {{when}}",
+    "create_description": "Lo empezaste aquí sin guardar: {{fields}}.",
+    "clash_title_by": "{{name}} guardó este objeto ({{object}}) después de tus cambios sin guardar",
+    "clash_title": "Este objeto ({{object}}) se guardó después de tus cambios sin guardar",
+    "clash_fields_one": "{{fields}} también se cambió allí, así que conserva el valor guardado a menos que elijas el tuyo en Comparar.",
+    "clash_fields_other": "{{fields}} también se cambiaron allí, así que conservan los valores guardados a menos que elijas los tuyos en Comparar.",
+    "clash_fields_many": "{{fields}} también se cambiaron allí, así que conservan los valores guardados a menos que elijas los tuyos en Comparar.",
+    "clash_clean_one": "Tu otro cambio de las {{when}} se puede restaurar.",
+    "clash_clean_other": "Tus {{count}} otros cambios de las {{when}} se pueden restaurar.",
+    "clash_clean_many": "Tus {{count}} otros cambios de las {{when}} se pueden restaurar.",
+    "clash_none": "Tus cambios de las {{when}} están todos en esos campos.",
+    "restored_title_one": "{{count}} campo restaurado. Guarda para conservarlo.",
+    "restored_title_other": "{{count}} campos restaurados. Guarda para conservarlos.",
+    "restored_title_many": "{{count}} campos restaurados. Guarda para conservarlos.",
+    "restored_clash_by_one": "{{fields}} conserva el valor que guardó {{name}}. Compara para usar el tuyo.",
+    "restored_clash_by_other": "{{fields}} conservan los valores que guardó {{name}}. Compara para usar los tuyos.",
+    "restored_clash_by_many": "{{fields}} conservan los valores que guardó {{name}}. Compara para usar los tuyos.",
+    "restored_clash_one": "{{fields}} conserva el valor guardado. Compara para usar el tuyo.",
+    "restored_clash_other": "{{fields}} conservan los valores guardados. Compara para usar los tuyos.",
+    "restored_clash_many": "{{fields}} conservan los valores guardados. Compara para usar los tuyos.",
+    "restore": "Restaurar cambios sin guardar",
+    "compare": "Comparar",
+    "discard": "Descartar",
+    "dismiss": "Cerrar",
+    "dialog_title": "Tus cambios sin guardar",
+    "dialog_description": "Conservados a las {{when}}, comparados con el objeto ({{object}}) tal como está ahora.",
+    "also_changed_by": "También cambiado por {{name}}",
+    "also_changed": "También cambiado desde entonces",
+    "keep_saved": "Conservar lo guardado",
+    "use_mine": "Usar el mío",
+    "close": "Cerrar",
+    "restore_count_one": "Restaurar {{count}} campo",
+    "restore_count_other": "Restaurar {{count}} campos",
+    "restore_count_many": "Restaurar {{count}} campos",
+    "kept": "Conservado en este navegador a las {{when}} hasta que guardes"
   },
   "users": {
     "set_password": {
@@ -1260,6 +1313,58 @@
   "row_actions": {
     "menu": "Acciones",
     "menu_for": "Acciones para {{name}}"
+  },
+  "publishing": {
+    "title": "Publicación",
+    "states": {
+      "draft": "Borrador",
+      "scheduled": "Programado",
+      "published": "Publicado",
+      "expired": "Caducado"
+    },
+    "scheduled_for": "Programado · {{time}}",
+    "published": "Publicado",
+    "publish_on": "Publicar el",
+    "unpublish_on": "Despublicar el",
+    "never": "Nunca",
+    "not_scheduled": "Sin programar",
+    "set": "Definir",
+    "publish": "Publicar",
+    "publish_now": "Publicar ahora",
+    "time_zone": "Horas en {{zone}}.",
+    "schedule": {
+      "open": "Programar…",
+      "title": "Programar publicación",
+      "edit_title": "Cambiar la programación",
+      "description": "Elige cuándo se publica «{{name}}». Hasta entonces sigue siendo un borrador.",
+      "unpublish_toggle": "Despublicar en una fecha",
+      "summary": "Se publica el {{at}}.",
+      "summary_until": "Se publica el {{at}} y se retira el {{until}}.",
+      "submit": "Programar"
+    },
+    "unpublish_date": {
+      "title": "Fecha de despublicación",
+      "description": "Elige cuándo se retira «{{name}}». Hasta entonces sigue publicado.",
+      "remove": "Quitar fecha"
+    },
+    "cancel_schedule": {
+      "title": "¿Cancelar la programación?",
+      "description": "«{{name}}» sigue siendo un borrador y no se publica.",
+      "ok": "Cancelar programación"
+    },
+    "unpublish": {
+      "title": "¿Despublicar?",
+      "description": "«{{name}}» vuelve a ser un borrador y deja de estar publicado.",
+      "ok": "Despublicar"
+    },
+    "toast": {
+      "published": "«{{name}}» está publicado",
+      "unscheduled": "«{{name}}» ya no está programado",
+      "unpublished": "«{{name}}» está despublicado",
+      "scheduled": "«{{name}}» está programado",
+      "unpublish_date_set": "Fecha de despublicación definida para «{{name}}»",
+      "unpublish_date_removed": "Fecha de despublicación quitada de «{{name}}»"
+    }
   },
   "translations": {
     "content_language": "Idioma del contenido",

@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} a restauré {{count}} {{models}}",
       "reordered_many_one": "{{actor}} a réordonné {{count}} {{models}}",
       "reordered_many_other": "{{actor}} a réordonné {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} a réordonné {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} a réordonné {{count}} {{models}}",
+      "published": "{{actor}} a publié {{object}} ({{model}})",
+      "published_many_one": "{{actor}} a publié {{count}} {{models}}",
+      "published_many_other": "{{actor}} a publié {{count}} {{models}}",
+      "published_many_many": "{{actor}} a publié {{count}} {{models}}",
+      "unpublished": "{{actor}} a dépublié {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} a dépublié {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} a dépublié {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} a dépublié {{count}} {{models}}"
     },
     "follow": {
       "follow": "Suivre",
@@ -738,7 +746,9 @@
       "updated": "Modifié",
       "deleted": "Supprimé",
       "restored": "Restauré",
-      "reordered": "Déplacé"
+      "reordered": "Déplacé",
+      "published": "Publié",
+      "unpublished": "Dépublié"
     }
   },
   "analytics": {
@@ -892,6 +902,49 @@
     "restored_other": "{{count}} champs restaurés. Enregistrez pour les conserver.",
     "restored_many": "{{count}} champs restaurés. Enregistrez pour les conserver.",
     "nothing_to_restore": "Le formulaire contient déjà les valeurs de cette version."
+  },
+  "recovery": {
+    "list": "{{items}} et {{last}}",
+    "title": "Modifications non enregistrées de {{when}}",
+    "description_one": "Vous avez modifié {{fields}} ici sans enregistrer.",
+    "description_other": "Vous avez modifié {{count}} champs ici sans enregistrer : {{fields}}.",
+    "description_many": "Vous avez modifié {{count}} champs ici sans enregistrer : {{fields}}.",
+    "changed_since": "L'objet ({{object}}) a été enregistré depuis, mais pas dans ces champs.",
+    "create_title": "Nouvel objet ({{object}}) inachevé de {{when}}",
+    "create_description": "Vous l'avez commencé ici sans enregistrer : {{fields}}.",
+    "clash_title_by": "{{name}} a enregistré cet objet ({{object}}) après vos modifications non enregistrées",
+    "clash_title": "Cet objet ({{object}}) a été enregistré après vos modifications non enregistrées",
+    "clash_fields_one": "{{fields}} a aussi été modifié, il garde donc la valeur enregistrée, sauf si vous choisissez la vôtre dans Comparer.",
+    "clash_fields_other": "{{fields}} ont aussi été modifiés, ils gardent donc les valeurs enregistrées, sauf si vous choisissez les vôtres dans Comparer.",
+    "clash_fields_many": "{{fields}} ont aussi été modifiés, ils gardent donc les valeurs enregistrées, sauf si vous choisissez les vôtres dans Comparer.",
+    "clash_clean_one": "Votre autre modification de {{when}} peut être restaurée.",
+    "clash_clean_other": "Vos {{count}} autres modifications de {{when}} peuvent être restaurées.",
+    "clash_clean_many": "Vos {{count}} autres modifications de {{when}} peuvent être restaurées.",
+    "clash_none": "Vos modifications de {{when}} portent toutes sur ces champs.",
+    "restored_title_one": "{{count}} champ restauré. Enregistrez pour le conserver.",
+    "restored_title_other": "{{count}} champs restaurés. Enregistrez pour les conserver.",
+    "restored_title_many": "{{count}} champs restaurés. Enregistrez pour les conserver.",
+    "restored_clash_by_one": "{{fields}} garde la valeur enregistrée par {{name}}. Comparez pour utiliser la vôtre.",
+    "restored_clash_by_other": "{{fields}} gardent les valeurs enregistrées par {{name}}. Comparez pour utiliser les vôtres.",
+    "restored_clash_by_many": "{{fields}} gardent les valeurs enregistrées par {{name}}. Comparez pour utiliser les vôtres.",
+    "restored_clash_one": "{{fields}} garde la valeur enregistrée. Comparez pour utiliser la vôtre.",
+    "restored_clash_other": "{{fields}} gardent les valeurs enregistrées. Comparez pour utiliser les vôtres.",
+    "restored_clash_many": "{{fields}} gardent les valeurs enregistrées. Comparez pour utiliser les vôtres.",
+    "restore": "Restaurer les modifications non enregistrées",
+    "compare": "Comparer",
+    "discard": "Abandonner",
+    "dismiss": "Fermer",
+    "dialog_title": "Vos modifications non enregistrées",
+    "dialog_description": "Conservées à {{when}}, comparées à l'objet ({{object}}) tel qu'il est maintenant.",
+    "also_changed_by": "Aussi modifié par {{name}}",
+    "also_changed": "Aussi modifié depuis",
+    "keep_saved": "Garder l'enregistré",
+    "use_mine": "Utiliser le mien",
+    "close": "Fermer",
+    "restore_count_one": "Restaurer {{count}} champ",
+    "restore_count_other": "Restaurer {{count}} champs",
+    "restore_count_many": "Restaurer {{count}} champs",
+    "kept": "Conservé dans ce navigateur à {{when}} jusqu'à l'enregistrement"
   },
   "users": {
     "set_password": {
@@ -1260,6 +1313,58 @@
   "row_actions": {
     "menu": "Actions",
     "menu_for": "Actions pour {{name}}"
+  },
+  "publishing": {
+    "title": "Publication",
+    "states": {
+      "draft": "Brouillon",
+      "scheduled": "Planifié",
+      "published": "Publié",
+      "expired": "Expiré"
+    },
+    "scheduled_for": "Planifié · {{time}}",
+    "published": "Publié",
+    "publish_on": "Publier le",
+    "unpublish_on": "Dépublier le",
+    "never": "Jamais",
+    "not_scheduled": "Non planifié",
+    "set": "Définir",
+    "publish": "Publier",
+    "publish_now": "Publier maintenant",
+    "time_zone": "Heures en {{zone}}.",
+    "schedule": {
+      "open": "Planifier…",
+      "title": "Planifier la publication",
+      "edit_title": "Modifier la planification",
+      "description": "Choisissez quand « {{name}} » sera en ligne. Il reste un brouillon jusque-là.",
+      "unpublish_toggle": "Dépublier à une date",
+      "summary": "En ligne le {{at}}.",
+      "summary_until": "En ligne le {{at}} et retiré le {{until}}.",
+      "submit": "Planifier"
+    },
+    "unpublish_date": {
+      "title": "Date de dépublication",
+      "description": "Choisissez quand « {{name}} » sera retiré. Il reste publié jusque-là.",
+      "remove": "Supprimer la date"
+    },
+    "cancel_schedule": {
+      "title": "Annuler la planification ?",
+      "description": "« {{name}} » reste un brouillon et ne sera pas mis en ligne.",
+      "ok": "Annuler la planification"
+    },
+    "unpublish": {
+      "title": "Dépublier ?",
+      "description": "« {{name}} » redevient un brouillon et n’est plus en ligne.",
+      "ok": "Dépublier"
+    },
+    "toast": {
+      "published": "« {{name}} » est publié",
+      "unscheduled": "« {{name}} » n’est plus planifié",
+      "unpublished": "« {{name}} » est dépublié",
+      "scheduled": "« {{name}} » est planifié",
+      "unpublish_date_set": "Date de dépublication définie pour « {{name}} »",
+      "unpublish_date_removed": "Date de dépublication supprimée de « {{name}} »"
+    }
   },
   "translations": {
     "content_language": "Langue du contenu",

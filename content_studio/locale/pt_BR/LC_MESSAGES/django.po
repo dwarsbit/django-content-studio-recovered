@@ -1696,6 +1696,134 @@ msgstr "Status da resposta"
 msgid "Response"
 msgstr "Resposta"
 
+#: publishing.py
+msgid "Draft"
+msgstr "Rascunho"
+
+#: webhooks/models.py
+msgid "Published"
+msgstr "Publicado"
+
+#: webhooks/models.py
+msgid "Unpublished"
+msgstr "Despublicado"
+
+#: publishing.py
+msgid "Scheduled publishing"
+msgstr "Publicação agendada"
+
+#: publishing.py
+msgid "Every minute"
+msgstr "A cada minuto"
+
+#: publishing.py
+msgid "Enter a valid date and time."
+msgstr "Informe uma data e hora válidas."
+
+#: publishing.py
+msgid "The unpublish date must be after the publish date."
+msgstr "A data de despublicação deve ser posterior à de publicação."
+
+#: publishing.py
+msgid "Pick when to publish."
+msgstr "Escolha quando publicar."
+
+#: publishing.py
+msgid "Pick a time in the future."
+msgstr "Escolha um horário no futuro."
+
+#: publishing.py
+msgid "This model has no unpublish date."
+msgstr "Este modelo não tem data de despublicação."
+
+#: publishing.py
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr ""
+"Publique ou agende o objeto antes de definir uma data de despublicação."
+
+#: publishing.py
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Ação de publicação desconhecida %(action)s."
+
+#: actions.py
+msgid "Publish now"
+msgstr "Publicar agora"
+
+#: actions.py
+msgid "Publish the selected items now?"
+msgstr "Publicar agora os itens selecionados?"
+
+#: actions.py
+msgid "Unpublish"
+msgstr "Despublicar"
+
+#: actions.py
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Os itens selecionados voltam a ser rascunhos e saem do site. Despublicá-los?"
+
+#: actions.py
+msgid "Schedule…"
+msgstr "Agendar…"
+
+#: actions.py
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s itens publicados."
+
+#: actions.py
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "%(count)s itens despublicados."
+
+#: actions.py
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s itens agendados."
+
+#: actions.py
+msgid "Publish on"
+msgstr "Publicar em"
+
+#: actions.py
+msgid "Unpublish on"
+msgstr "Despublicar em"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s publicou %(object)s (%(model)s)"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s despublicou %(object)s (%(model)s)"
+
+#: models.py
+msgid "Published at"
+msgstr "Publicado em"
+
+#: models.py
+msgid "Unpublish at"
+msgstr "Despublicar em"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s publicou %(count)s %(models)s"
+msgstr[1] "%(actor)s publicou %(count)s %(models)s"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s despublicou %(count)s %(models)s"
+msgstr[1] "%(actor)s despublicou %(count)s %(models)s"
+
 #: translations.py
 msgid "Missing translation"
 msgstr "Tradução ausente"

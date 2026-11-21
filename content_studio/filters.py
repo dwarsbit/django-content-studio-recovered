@@ -243,8 +243,14 @@ def get_filter_specs(
     and custom filters. Anything else is skipped here and reported by
     the system checks.
     """
+    from .publishing import get_publishing, get_status_filter_class
+
     model = model or getattr(studio, "model", None)
     specs = []
+
+    # A studio with publishing filters on the state first.
+    if get_publishing(studio) is not None:
+        specs.append(CustomFilterSpec(get_status_filter_class()(studio)))
 
     for entry in getattr(studio, "list_filter", None) or []:
         if isinstance(entry, (tuple, list)) and entry and isinstance(entry[0], str):

@@ -40,6 +40,8 @@ UPDATED = "updated"
 DELETED = "deleted"
 RESTORED = "restored"
 REORDERED = "reordered"
+PUBLISHED = "published"
+UNPUBLISHED = "unpublished"
 
 # The LogEntry action flag each change is recorded with.
 ACTION_FLAGS = {
@@ -48,6 +50,8 @@ ACTION_FLAGS = {
     DELETED: DELETION,
     RESTORED: CHANGE,
     REORDERED: CHANGE,
+    PUBLISHED: CHANGE,
+    UNPUBLISHED: CHANGE,
 }
 
 
@@ -55,7 +59,8 @@ ACTION_FLAGS = {
 class Change:
     """
     One change made in the admin. action is one of "created",
-    "updated", "deleted", "restored" or "reordered"; object_id is the
+    "updated", "deleted", "restored", "reordered", "published" or
+    "unpublished"; object_id is the
     primary key as a string, like LogEntry's. tenant_id is the pk of
     the object's tenant, or None when the model is not tenant-scoped.
     """
@@ -106,7 +111,8 @@ def record_change(
     add it to the request's batch once its transaction commits. Outside
     a batch, the change is sent on its own. Custom bulk actions call it
     for each object they change; action is one of "created",
-    "updated", "deleted", "restored" or "reordered", and a deleted
+    "updated", "deleted", "restored", "reordered", "published" or
+    "unpublished" (publishing, see publishing.py), and a deleted
     object is recorded before it is deleted (deleting clears its pk).
 
     before and after are snapshots of the object's values around the

@@ -8,6 +8,7 @@ const sidebars: SidebarsConfig = {
     "registering-models",
     "list-page",
     "edit-page",
+    "publishing",
     "widgets",
     "block-fields",
     "media-library",

@@ -1706,6 +1706,136 @@ msgstr "Antwoordstatus"
 msgid "Response"
 msgstr "Antwoord"
 
+#: publishing.py
+msgid "Draft"
+msgstr "Concept"
+
+#: webhooks/models.py
+msgid "Published"
+msgstr "Gepubliceerd"
+
+#: webhooks/models.py
+msgid "Unpublished"
+msgstr "Ingetrokken"
+
+#: publishing.py
+msgid "Scheduled publishing"
+msgstr "Geplande publicatie"
+
+#: publishing.py
+msgid "Every minute"
+msgstr "Elke minuut"
+
+#: publishing.py
+msgid "Enter a valid date and time."
+msgstr "Vul een geldige datum en tijd in."
+
+#: publishing.py
+msgid "The unpublish date must be after the publish date."
+msgstr "De datum voor offline halen moet na de publicatiedatum liggen."
+
+#: publishing.py
+msgid "Pick when to publish."
+msgstr "Kies wanneer je wilt publiceren."
+
+#: publishing.py
+msgid "Pick a time in the future."
+msgstr "Kies een tijd in de toekomst."
+
+#: publishing.py
+msgid "This model has no unpublish date."
+msgstr "Dit model heeft geen datum voor offline halen."
+
+#: publishing.py
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr ""
+"Publiceer of plan het object voordat je een datum voor offline halen "
+"instelt."
+
+#: publishing.py
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Onbekende publicatieactie %(action)s."
+
+#: actions.py
+msgid "Publish now"
+msgstr "Nu publiceren"
+
+#: actions.py
+msgid "Publish the selected items now?"
+msgstr "De geselecteerde items nu publiceren?"
+
+#: actions.py
+msgid "Unpublish"
+msgstr "Publicatie intrekken"
+
+#: actions.py
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"De geselecteerde items worden weer concepten en verdwijnen van de site. "
+"Publicatie intrekken?"
+
+#: actions.py
+msgid "Schedule…"
+msgstr "Inplannen…"
+
+#: actions.py
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s items gepubliceerd."
+
+#: actions.py
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "Publicatie van %(count)s items ingetrokken."
+
+#: actions.py
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s items ingepland."
+
+#: actions.py
+msgid "Publish on"
+msgstr "Publiceren op"
+
+#: actions.py
+msgid "Unpublish on"
+msgstr "Offline halen op"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s heeft %(object)s (%(model)s) gepubliceerd"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s heeft de publicatie van %(object)s (%(model)s) ingetrokken"
+
+#: models.py
+msgid "Published at"
+msgstr "Gepubliceerd op"
+
+#: models.py
+msgid "Unpublish at"
+msgstr "Offline halen op"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s heeft %(count)s %(models)s gepubliceerd"
+msgstr[1] "%(actor)s heeft %(count)s %(models)s gepubliceerd"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s heeft de publicatie van %(count)s %(models)s ingetrokken"
+msgstr[1] "%(actor)s heeft de publicatie van %(count)s %(models)s ingetrokken"
+
 #: translations.py
 msgid "Missing translation"
 msgstr "Ontbrekende vertaling"

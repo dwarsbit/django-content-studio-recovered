@@ -28,6 +28,8 @@ const CONTENT_ACTIONS = [
   "deleted",
   "restored",
   "reordered",
+  "published",
+  "unpublished",
 ];
 
 function FilterSelect({

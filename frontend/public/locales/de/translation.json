@@ -658,7 +658,13 @@
       "restored_many_one": "{{actor}} hat {{count}} {{models}} wiederhergestellt",
       "restored_many_other": "{{actor}} hat {{count}} {{models}} wiederhergestellt",
       "reordered_many_one": "{{actor}} hat {{count}} {{models}} neu sortiert",
-      "reordered_many_other": "{{actor}} hat {{count}} {{models}} neu sortiert"
+      "reordered_many_other": "{{actor}} hat {{count}} {{models}} neu sortiert",
+      "published": "{{actor}} hat {{object}} ({{model}}) veröffentlicht",
+      "published_many_one": "{{actor}} hat {{count}} {{models}} veröffentlicht",
+      "published_many_other": "{{actor}} hat {{count}} {{models}} veröffentlicht",
+      "unpublished": "{{actor}} hat {{object}} ({{model}}) zurückgezogen",
+      "unpublished_many_one": "{{actor}} hat {{count}} {{models}} zurückgezogen",
+      "unpublished_many_other": "{{actor}} hat {{count}} {{models}} zurückgezogen"
     },
     "follow": {
       "follow": "Folgen",
@@ -720,7 +726,9 @@
       "updated": "Aktualisiert",
       "deleted": "Gelöscht",
       "restored": "Wiederhergestellt",
-      "reordered": "Verschoben"
+      "reordered": "Verschoben",
+      "published": "Veröffentlicht",
+      "unpublished": "Zurückgezogen"
     }
   },
   "analytics": {
@@ -873,6 +881,42 @@
     "restored_one": "{{count}} Feld wiederhergestellt. Speichern Sie, um es zu behalten.",
     "restored_other": "{{count}} Felder wiederhergestellt. Speichern Sie, um sie zu behalten.",
     "nothing_to_restore": "Das Formular enthält bereits die Werte dieser Version."
+  },
+  "recovery": {
+    "list": "{{items}} und {{last}}",
+    "title": "Ungespeicherte Änderungen von {{when}}",
+    "description_one": "Sie haben {{fields}} hier geändert, ohne zu speichern.",
+    "description_other": "Sie haben hier {{count}} Felder geändert, ohne zu speichern: {{fields}}.",
+    "changed_since": "{{object}} wurde inzwischen gespeichert, aber nicht in diesen Feldern.",
+    "create_title": "Unfertiges neues Objekt ({{object}}) von {{when}}",
+    "create_description": "Sie haben hier begonnen, ohne zu speichern: {{fields}}.",
+    "clash_title_by": "{{name}} hat {{object}} nach Ihren ungespeicherten Änderungen gespeichert",
+    "clash_title": "{{object}} wurde nach Ihren ungespeicherten Änderungen gespeichert",
+    "clash_fields_one": "{{fields}} wurde dort ebenfalls geändert und behält daher den gespeicherten Wert, es sei denn, Sie wählen unter Vergleichen Ihren.",
+    "clash_fields_other": "{{fields}} wurden dort ebenfalls geändert und behalten daher die gespeicherten Werte, es sei denn, Sie wählen unter Vergleichen Ihre.",
+    "clash_clean_one": "Ihre andere Änderung von {{when}} kann wiederhergestellt werden.",
+    "clash_clean_other": "Ihre {{count}} anderen Änderungen von {{when}} können wiederhergestellt werden.",
+    "clash_none": "Ihre Änderungen von {{when}} liegen alle in diesen Feldern.",
+    "restored_title_one": "{{count}} Feld wiederhergestellt. Speichern Sie, um es zu behalten.",
+    "restored_title_other": "{{count}} Felder wiederhergestellt. Speichern Sie, um sie zu behalten.",
+    "restored_clash_by_one": "{{fields}} behält den Wert, den {{name}} gespeichert hat. Vergleichen Sie, um Ihren zu verwenden.",
+    "restored_clash_by_other": "{{fields}} behalten die Werte, die {{name}} gespeichert hat. Vergleichen Sie, um Ihre zu verwenden.",
+    "restored_clash_one": "{{fields}} behält den gespeicherten Wert. Vergleichen Sie, um Ihren zu verwenden.",
+    "restored_clash_other": "{{fields}} behalten die gespeicherten Werte. Vergleichen Sie, um Ihre zu verwenden.",
+    "restore": "Ungespeicherte Änderungen wiederherstellen",
+    "compare": "Vergleichen",
+    "discard": "Verwerfen",
+    "dismiss": "Schließen",
+    "dialog_title": "Ihre ungespeicherten Änderungen",
+    "dialog_description": "Behalten um {{when}}, verglichen mit dem aktuellen Stand ({{object}}).",
+    "also_changed_by": "Auch geändert von {{name}}",
+    "also_changed": "Inzwischen auch geändert",
+    "keep_saved": "Gespeichertes behalten",
+    "use_mine": "Meins verwenden",
+    "close": "Schließen",
+    "restore_count_one": "{{count}} Feld wiederherstellen",
+    "restore_count_other": "{{count}} Felder wiederherstellen",
+    "kept": "In diesem Browser behalten um {{when}}, bis Sie speichern"
   },
   "users": {
     "set_password": {
@@ -1221,6 +1265,58 @@
   "row_actions": {
     "menu": "Aktionen",
     "menu_for": "Aktionen für {{name}}"
+  },
+  "publishing": {
+    "title": "Veröffentlichung",
+    "states": {
+      "draft": "Entwurf",
+      "scheduled": "Geplant",
+      "published": "Veröffentlicht",
+      "expired": "Abgelaufen"
+    },
+    "scheduled_for": "Geplant · {{time}}",
+    "published": "Veröffentlicht",
+    "publish_on": "Veröffentlichen am",
+    "unpublish_on": "Zurückziehen am",
+    "never": "Nie",
+    "not_scheduled": "Nicht geplant",
+    "set": "Festlegen",
+    "publish": "Veröffentlichen",
+    "publish_now": "Jetzt veröffentlichen",
+    "time_zone": "Zeiten in {{zone}}.",
+    "schedule": {
+      "open": "Planen…",
+      "title": "Veröffentlichung planen",
+      "edit_title": "Planung ändern",
+      "description": "Wählen Sie, wann „{{name}}“ online geht. Bis dahin bleibt es ein Entwurf.",
+      "unpublish_toggle": "An einem Datum zurückziehen",
+      "summary": "Geht am {{at}} online.",
+      "summary_until": "Geht am {{at}} online und am {{until}} offline.",
+      "submit": "Planen"
+    },
+    "unpublish_date": {
+      "title": "Datum zum Zurückziehen",
+      "description": "Wählen Sie, wann „{{name}}“ offline geht. Bis dahin bleibt es veröffentlicht.",
+      "remove": "Datum entfernen"
+    },
+    "cancel_schedule": {
+      "title": "Planung abbrechen?",
+      "description": "„{{name}}“ bleibt ein Entwurf und geht nicht online.",
+      "ok": "Planung abbrechen"
+    },
+    "unpublish": {
+      "title": "Veröffentlichung zurückziehen?",
+      "description": "„{{name}}“ wird wieder ein Entwurf und ist nicht mehr online.",
+      "ok": "Zurückziehen"
+    },
+    "toast": {
+      "published": "„{{name}}“ ist veröffentlicht",
+      "unscheduled": "„{{name}}“ ist nicht mehr geplant",
+      "unpublished": "„{{name}}“ wurde zurückgezogen",
+      "scheduled": "„{{name}}“ ist geplant",
+      "unpublish_date_set": "Datum zum Zurückziehen für „{{name}}“ festgelegt",
+      "unpublish_date_removed": "Datum zum Zurückziehen von „{{name}}“ entfernt"
+    }
   },
   "translations": {
     "content_language": "Inhaltssprache",

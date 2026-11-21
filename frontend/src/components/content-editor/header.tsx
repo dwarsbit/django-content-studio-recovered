@@ -6,6 +6,7 @@ import { useTranslation } from "react-i18next";
 import {
   PiArrowLeftBold,
   PiArrowSquareOutBold,
+  PiCheckBold,
   PiDotsThreeBold,
 } from "react-icons/pi";
 import { toast } from "sonner";
@@ -15,6 +16,12 @@ import {
   FollowMenuItem,
 } from "@/components/notifications/follow-button";
 import { PresenceAvatars } from "@/components/presence";
+import { PublishButton } from "@/components/publishing/publish-button";
+import {
+  usePublishing,
+  useShowPublishButton,
+} from "@/components/publishing/publishing";
+import { PublishingBadge } from "@/components/publishing/publishing-badge";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -25,11 +32,17 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { PageHeader } from "@/components/ui/page-header";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { useAdminInfo } from "@/hooks/use-admin-info";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useHttp } from "@/hooks/use-http";
 import { useRunAction } from "@/hooks/use-run-action";
 import { isSafeHref } from "@/lib/html";
+import { formatKeptAt } from "@/lib/recovery";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type {
   DateTimeString,
@@ -55,6 +68,7 @@ export function Header({
   readOnly = false,
   canDelete = true,
   presence = [],
+  keptAt = null,
   saveOptions = {},
   onDuplicate,
   onSave,
@@ -73,6 +87,8 @@ export function Header({
   canDelete?: boolean;
   // The other users who have the object open.
   presence?: PresenceUser[];
+  // When the unsaved changes were last kept in this browser.
+  keptAt?: number | null;
   // The Save menu's options: save and add another, save and close.
   // The button does the editor's default save action.
   saveOptions?: {
@@ -152,6 +168,9 @@ export function Header({
       ? (resource[info.settings.edited_at_attr] as DateTimeString)
       : null;
   const queryClient = useQueryClient();
+  // Content that is not live: Save steps back for Publish.
+  const showPublish = useShowPublishButton();
+  const publishing = usePublishing();
 
   // After an edit action the object may have changed: show its new
   // values, unless that would discard the editor's unsaved changes.
@@ -243,6 +262,13 @@ export function Header({
                   <>
                     <span className="text-muted-foreground/50 shrink-0">/</span>
                     <span className="truncate">{resource.__str__}</span>
+                    {publishing && (
+                      <PublishingBadge
+                        state={publishing.info.state}
+                        short
+                        className="hidden sm:inline-flex ml-1"
+                      />
+                    )}
                   </>
                 )}
               </span>
@@ -263,6 +289,24 @@ export function Header({
                   <div className="hidden lg:flex items-center gap-1.5 text-muted-foreground text-sm mr-2 select-none">
                     <span className="size-1.5 rounded-full bg-warning" />
                     {t("editor.unsaved_changes")}
+                    {keptAt && (
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <span
+                            className="inline-flex text-success"
+                            aria-label={t("recovery.kept", {
+                              when: formatKeptAt(keptAt),
+                            })}
+                            data-testid="changes-kept"
+                          >
+                            <PiCheckBold className="size-3.5" />
+                          </span>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {t("recovery.kept", { when: formatKeptAt(keptAt) })}
+                        </TooltipContent>
+                      </Tooltip>
+                    )}
                   </div>
                 ) : editedAt ? (
                   <div className="hidden lg:block text-muted-foreground text-sm mr-2 select-none">
@@ -494,6 +538,7 @@ export function Header({
                     addAnother={saveOptions.addAnother}
                     close={saveOptions.close}
                     defaultMode={saveOptions.defaultMode}
+                    outline={showPublish}
                     onSave={async (mode) => {
                       try {
                         await onSave(mode);
@@ -503,6 +548,7 @@ export function Header({
                     }}
                   />
                 )}
+                <PublishButton disabled={isSaving} />
               </>
             }
           />

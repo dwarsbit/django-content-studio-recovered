@@ -39,7 +39,7 @@ content_studio/
 ├── conditions.py        # when= conditions: Q/Condition serialization and the evaluator mirrored by frontend/src/lib/conditions.ts (tests/conditions_cases.json keeps them in step)
 ├── fields.py            # Optional content fields (HTMLField, TagField, FlexField, ...)
 ├── blocks.py            # BlockField and Block: an ordered list of content blocks
-├── managers.py          # Managers for the base models (SingletonManager, SoftDeletableManager)
+├── managers.py          # Managers for the base models (SingletonManager, SoftDeletableManager, PublishableQuerySet)
 ├── sanitizers.py        # HTML sanitizer (allowlist based on nh3)
 ├── file_types.py        # Upload types never accepted (HTML, SVG, XML, scripts), by every extension and the mimetypes table; used by the FileWidget uploads (uploads.py, UPLOAD_ALLOWED_EXTENSIONS) and the media library
 ├── uniqueness.py        # Duplicate check for unique_together and multi-field UniqueConstraints
@@ -53,6 +53,7 @@ content_studio/
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
 ├── export.py            # Export of a list as CSV/Excel (display values)
 ├── importing.py         # Import from CSV/Excel/JSON (preview, matching, background jobs) and the "For import" export
+├── publishing.py        # Draft, publish and scheduling: Publishing (ModelStudio.publishing), states from the dates, live(), the publishing endpoint's changes (apply), the Can publish permission (post_migrate), the built-in publishing:* actions' Status column/filter, and run_scheduled (Huey periodic task or content_studio_publish) recording what went live or came down
 ├── reordering.py        # Built-in reordering (reorder_field moves, ManualOrderModel renumbering)
 ├── throttling.py        # ClientIPMixin: throttles identify clients by REMOTE_ADDR unless NUM_PROXIES is set
 ├── thumbnails.py        # Thumbnails of media images (Pillow, "small"/"large" WebP under THUMBNAIL_FOLDER)

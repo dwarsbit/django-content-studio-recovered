@@ -1714,6 +1714,137 @@ msgstr "Antwortstatus"
 msgid "Response"
 msgstr "Antwort"
 
+#: publishing.py
+msgid "Draft"
+msgstr "Entwurf"
+
+#: webhooks/models.py
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: webhooks/models.py
+msgid "Unpublished"
+msgstr "Zurückgezogen"
+
+#: publishing.py
+msgid "Scheduled publishing"
+msgstr "Geplante Veröffentlichung"
+
+#: publishing.py
+msgid "Every minute"
+msgstr "Jede Minute"
+
+#: publishing.py
+msgid "Enter a valid date and time."
+msgstr "Geben Sie ein gültiges Datum mit Uhrzeit ein."
+
+#: publishing.py
+msgid "The unpublish date must be after the publish date."
+msgstr ""
+"Das Datum zum Zurückziehen muss nach dem Veröffentlichungsdatum liegen."
+
+#: publishing.py
+msgid "Pick when to publish."
+msgstr "Wählen Sie, wann veröffentlicht wird."
+
+#: publishing.py
+msgid "Pick a time in the future."
+msgstr "Wählen Sie eine Zeit in der Zukunft."
+
+#: publishing.py
+msgid "This model has no unpublish date."
+msgstr "Dieses Modell hat kein Datum zum Zurückziehen."
+
+#: publishing.py
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr ""
+"Veröffentlichen oder planen Sie das Objekt, bevor Sie ein Datum zum "
+"Zurückziehen festlegen."
+
+#: publishing.py
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Unbekannte Veröffentlichungsaktion %(action)s."
+
+#: actions.py
+msgid "Publish now"
+msgstr "Jetzt veröffentlichen"
+
+#: actions.py
+msgid "Publish the selected items now?"
+msgstr "Die ausgewählten Einträge jetzt veröffentlichen?"
+
+#: actions.py
+msgid "Unpublish"
+msgstr "Zurückziehen"
+
+#: actions.py
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Die ausgewählten Einträge werden wieder zu Entwürfen und verschwinden von "
+"der Website. Zurückziehen?"
+
+#: actions.py
+msgid "Schedule…"
+msgstr "Planen…"
+
+#: actions.py
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s Einträge veröffentlicht."
+
+#: actions.py
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "%(count)s Einträge zurückgezogen."
+
+#: actions.py
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s Einträge geplant."
+
+#: actions.py
+msgid "Publish on"
+msgstr "Veröffentlichen am"
+
+#: actions.py
+msgid "Unpublish on"
+msgstr "Zurückziehen am"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s hat %(object)s (%(model)s) veröffentlicht"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s hat %(object)s (%(model)s) zurückgezogen"
+
+#: models.py
+msgid "Published at"
+msgstr "Veröffentlicht am"
+
+#: models.py
+msgid "Unpublish at"
+msgstr "Zurückziehen am"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s hat %(count)s %(models)s veröffentlicht"
+msgstr[1] "%(actor)s hat %(count)s %(models)s veröffentlicht"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s hat %(count)s %(models)s zurückgezogen"
+msgstr[1] "%(actor)s hat %(count)s %(models)s zurückgezogen"
+
 #: translations.py
 msgid "Missing translation"
 msgstr "Fehlende Übersetzung"

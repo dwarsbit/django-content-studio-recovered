@@ -122,6 +122,59 @@ Press **⌘S** on macOS or **Ctrl S** on Windows and Linux to save from
 anywhere in the form, also while typing in a field. In a dialog over the
 edit page, the shortcut saves the dialog.
 
+## Unsaved changes
+
+While an editor changes an object, the edit page keeps the changes in their
+browser, a few seconds after each change and when the tab closes. A check
+next to **Unsaved changes** in the header says they are kept. When the page
+crashes, is reloaded or closed, or the session ends before Save, nothing is
+lost: opening the object again shows a banner with the changes and when they
+were made, and three choices:
+
+- **Restore unsaved changes** puts them back in the form as unsaved changes.
+  Review them and press Save, as after any other edit.
+- **Compare** shows each change, word by word, against the object as it is
+  now.
+- **Discard** forgets them.
+
+If someone else saved the object in the meantime, the banner says who. A
+field that only you changed is restored. A field you both changed keeps the
+saved value, and Compare lets you take yours instead (**Use mine**). A create
+form that was never saved is offered the same way the next time you create
+an object of that model.
+
+Nothing reaches the server until Save. The changes stay in that browser
+only, for the signed-in user: logging out clears them, and they are dropped
+after [`RECOVERY_MAX_AGE`](/docs/settings#recovery_max_age) days (7 by
+default). Passwords and other write-only values, files and read-only fields
+are never kept, and neither are the dialogs of inlines and related objects,
+which ask before they close.
+
+To keep a model's unsaved changes out of the browser, or only some fields,
+set it on the studio:
+
+```python
+# people/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Patient, Volunteer
+
+
+@register(Patient)
+class PatientStudio(ModelStudio):
+    recover_changes = False
+
+
+@register(Volunteer)
+class VolunteerStudio(ModelStudio):
+    recover_changes_exclude = ["medical_notes", "phone"]
+```
+
+[`RECOVER_CHANGES`](/docs/settings#recover_changes) turns it off for every
+model. System check `content_studio.W029` reports a
+`recover_changes_exclude` that names a field the model does not have.
+
 ## Read-only fields
 
 Like the classic Django admin, a studio can list fields in

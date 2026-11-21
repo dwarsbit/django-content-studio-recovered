@@ -42,10 +42,13 @@ change how they look, or subclass the defaults (see
 | `list_count` | How the list page counts its objects: `"exact"`, `"estimated"` or `"none"` (default `"exact"`, see [List page](/docs/list-page#large-tables)) |
 | `list_description` | A description below the model's name on the list page |
 | `soft_delete` | The field that marks objects as trashed (see [List page](/docs/list-page#soft-delete-and-the-trash)) |
+| `publishing` | The publish date field, or a `Publishing`, for drafts, publishing and scheduling (see [Draft, publish and scheduling](/docs/publishing)) |
 | `reorder_field` | The field editors reorder objects by (see [List page](/docs/list-page#reordering)) |
 | `allow_duplication` | Whether editors can duplicate objects (see [below](#duplicating-objects)) |
 | `edit_width` | The width of the edit page: `"default"` or `"wide"` (see [Page width](/docs/edit-page#page-width)) |
 | `presence` | Whether the edit and list pages show who else has an object open (default `True`, see [Presence](/docs/presence)) |
+| `recover_changes` | Whether the edit page keeps unsaved changes in the editor's browser and offers them back (default `True`, see [Unsaved changes](/docs/edit-page#unsaved-changes)) |
+| `recover_changes_exclude` | Fields whose unsaved values are never kept in the browser |
 | `icon` | The model's icon in the main menu, such as `"ph-bold ph-article"` |
 
 When `ordering` is not set, objects are sorted by primary key, so pages stay

@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} ha ripristinato {{count}} {{models}}",
       "reordered_many_one": "{{actor}} ha riordinato {{count}} {{models}}",
       "reordered_many_other": "{{actor}} ha riordinato {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} ha riordinato {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} ha riordinato {{count}} {{models}}",
+      "published": "{{actor}} ha pubblicato {{object}} ({{model}})",
+      "published_many_one": "{{actor}} ha pubblicato {{count}} {{models}}",
+      "published_many_other": "{{actor}} ha pubblicato {{count}} {{models}}",
+      "published_many_many": "{{actor}} ha pubblicato {{count}} {{models}}",
+      "unpublished": "{{actor}} ha ritirato {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} ha ritirato {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} ha ritirato {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} ha ritirato {{count}} {{models}}"
     },
     "follow": {
       "follow": "Segui",
@@ -738,7 +746,9 @@
       "updated": "Aggiornato",
       "deleted": "Eliminato",
       "restored": "Ripristinato",
-      "reordered": "Spostato"
+      "reordered": "Spostato",
+      "published": "Pubblicato",
+      "unpublished": "Ritirato"
     }
   },
   "analytics": {
@@ -892,6 +902,49 @@
     "restored_other": "{{count}} campi ripristinati. Salva per mantenerli.",
     "restored_many": "{{count}} campi ripristinati. Salva per mantenerli.",
     "nothing_to_restore": "Il modulo contiene già i valori di questa versione."
+  },
+  "recovery": {
+    "list": "{{items}} e {{last}}",
+    "title": "Modifiche non salvate delle {{when}}",
+    "description_one": "Hai modificato {{fields}} qui senza salvare.",
+    "description_other": "Hai modificato {{count}} campi qui senza salvare: {{fields}}.",
+    "description_many": "Hai modificato {{count}} campi qui senza salvare: {{fields}}.",
+    "changed_since": "L'oggetto ({{object}}) è stato salvato nel frattempo, ma non in questi campi.",
+    "create_title": "Nuovo oggetto ({{object}}) non finito delle {{when}}",
+    "create_description": "L'hai iniziato qui senza salvare: {{fields}}.",
+    "clash_title_by": "{{name}} ha salvato questo oggetto ({{object}}) dopo le tue modifiche non salvate",
+    "clash_title": "Questo oggetto ({{object}}) è stato salvato dopo le tue modifiche non salvate",
+    "clash_fields_one": "Anche {{fields}} è stato modificato, quindi mantiene il valore salvato a meno che tu scelga il tuo in Confronta.",
+    "clash_fields_other": "Anche {{fields}} sono stati modificati, quindi mantengono i valori salvati a meno che tu scelga i tuoi in Confronta.",
+    "clash_fields_many": "Anche {{fields}} sono stati modificati, quindi mantengono i valori salvati a meno che tu scelga i tuoi in Confronta.",
+    "clash_clean_one": "L'altra tua modifica delle {{when}} può essere ripristinata.",
+    "clash_clean_other": "Le altre tue {{count}} modifiche delle {{when}} possono essere ripristinate.",
+    "clash_clean_many": "Le altre tue {{count}} modifiche delle {{when}} possono essere ripristinate.",
+    "clash_none": "Le tue modifiche delle {{when}} sono tutte in quei campi.",
+    "restored_title_one": "{{count}} campo ripristinato. Salva per mantenerlo.",
+    "restored_title_other": "{{count}} campi ripristinati. Salva per mantenerli.",
+    "restored_title_many": "{{count}} campi ripristinati. Salva per mantenerli.",
+    "restored_clash_by_one": "{{fields}} mantiene il valore salvato da {{name}}. Confronta per usare il tuo.",
+    "restored_clash_by_other": "{{fields}} mantengono i valori salvati da {{name}}. Confronta per usare i tuoi.",
+    "restored_clash_by_many": "{{fields}} mantengono i valori salvati da {{name}}. Confronta per usare i tuoi.",
+    "restored_clash_one": "{{fields}} mantiene il valore salvato. Confronta per usare il tuo.",
+    "restored_clash_other": "{{fields}} mantengono i valori salvati. Confronta per usare i tuoi.",
+    "restored_clash_many": "{{fields}} mantengono i valori salvati. Confronta per usare i tuoi.",
+    "restore": "Ripristina le modifiche non salvate",
+    "compare": "Confronta",
+    "discard": "Scarta",
+    "dismiss": "Chiudi",
+    "dialog_title": "Le tue modifiche non salvate",
+    "dialog_description": "Conservate alle {{when}}, confrontate con l'oggetto ({{object}}) com'è ora.",
+    "also_changed_by": "Modificato anche da {{name}}",
+    "also_changed": "Modificato anche nel frattempo",
+    "keep_saved": "Mantieni il salvato",
+    "use_mine": "Usa il mio",
+    "close": "Chiudi",
+    "restore_count_one": "Ripristina {{count}} campo",
+    "restore_count_other": "Ripristina {{count}} campi",
+    "restore_count_many": "Ripristina {{count}} campi",
+    "kept": "Conservato in questo browser alle {{when}} finché non salvi"
   },
   "users": {
     "set_password": {
@@ -1260,6 +1313,58 @@
   "row_actions": {
     "menu": "Azioni",
     "menu_for": "Azioni per {{name}}"
+  },
+  "publishing": {
+    "title": "Pubblicazione",
+    "states": {
+      "draft": "Bozza",
+      "scheduled": "Programmato",
+      "published": "Pubblicato",
+      "expired": "Scaduto"
+    },
+    "scheduled_for": "Programmato · {{time}}",
+    "published": "Pubblicato",
+    "publish_on": "Pubblica il",
+    "unpublish_on": "Ritira il",
+    "never": "Mai",
+    "not_scheduled": "Non programmato",
+    "set": "Imposta",
+    "publish": "Pubblica",
+    "publish_now": "Pubblica ora",
+    "time_zone": "Orari in {{zone}}.",
+    "schedule": {
+      "open": "Programma…",
+      "title": "Programma la pubblicazione",
+      "edit_title": "Modifica la programmazione",
+      "description": "Scegli quando «{{name}}» va online. Fino ad allora resta una bozza.",
+      "unpublish_toggle": "Ritira in una data",
+      "summary": "Va online il {{at}}.",
+      "summary_until": "Va online il {{at}} e viene ritirato il {{until}}.",
+      "submit": "Programma"
+    },
+    "unpublish_date": {
+      "title": "Data di ritiro",
+      "description": "Scegli quando «{{name}}» viene ritirato. Fino ad allora resta pubblicato.",
+      "remove": "Rimuovi data"
+    },
+    "cancel_schedule": {
+      "title": "Annullare la programmazione?",
+      "description": "«{{name}}» resta una bozza e non va online.",
+      "ok": "Annulla programmazione"
+    },
+    "unpublish": {
+      "title": "Ritirare la pubblicazione?",
+      "description": "«{{name}}» torna una bozza e non è più online.",
+      "ok": "Ritira"
+    },
+    "toast": {
+      "published": "«{{name}}» è pubblicato",
+      "unscheduled": "«{{name}}» non è più programmato",
+      "unpublished": "«{{name}}» è stato ritirato",
+      "scheduled": "«{{name}}» è programmato",
+      "unpublish_date_set": "Data di ritiro impostata per «{{name}}»",
+      "unpublish_date_removed": "Data di ritiro rimossa da «{{name}}»"
+    }
   },
   "translations": {
     "content_language": "Lingua del contenuto",

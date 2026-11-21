@@ -1,5 +1,56 @@
 # Changelog
 
+## 1.19.0 (unreleased)
+
+### Features
+
+- **Draft, publish and scheduling.** Set `publishing = "published_at"` on
+  a studio, or `Publishing(...)` for an unpublish date and a status field
+  kept in step, and new objects start as drafts. A **Publishing** card at
+  the top of the edit page's sidebar shows the state (Draft, Scheduled,
+  Published or Expired) and schedules, cancels, unpublishes and sets the
+  unpublish date; the header adds **Publish** next to Save while the
+  object is not live, saving unsaved changes first. The list gets a
+  Status column and filter, and the bulk actions Publish now, Schedule…
+  and Unpublish (also for `row_actions`). The state follows from the
+  dates, so content goes live on time without a worker.
+- **A Can publish permission** for each publishable model, created by
+  `migrate` and on the permission matrix. Override
+  `has_publish_permission(request, obj=None)` to decide per object.
+- **The scheduled run** records what went live or came down: a history
+  entry, the new `published` and `unpublished` changes for webhooks and
+  notifications, the status field, and the studio's
+  `on_publish`/`on_unpublish` hooks. It is a periodic task with Huey, or
+  `manage.py content_studio_publish` from cron, and is listed on the
+  status page.
+- `PublishableModel`, an abstract base model with `published_at` and
+  `unpublish_at`, and `Article.objects.live()`, `drafts()`, `scheduled()`
+  and `expired()`; `content_studio.publishing.live()` filters any
+  queryset. The system check `content_studio.E054` reports a publishing
+  configuration that cannot work. See
+  [Draft, publish and scheduling](https://djangocontentstudio.org/docs/publishing).
+- **Unsaved changes survive a crash, a reload or an expired session.** The
+  edit page keeps an editor's changes in their browser while they work (a
+  check next to *Unsaved changes* in the header says so) and, when the
+  object opens again, offers them back on a banner: **Restore unsaved
+  changes**, **Compare** (word by word against the object as it is now) or
+  **Discard**. If someone saved the object in the meantime, the banner says
+  who; fields only you changed are restored, and fields you both changed
+  keep the saved value unless you pick yours in Compare. Unfinished create
+  forms are offered too. Nothing reaches the server until Save; logging out
+  clears the browser's copy, and passwords, files and read-only fields are
+  never kept. Turn it off per model with `recover_changes = False`, keep
+  fields out with `recover_changes_exclude`, or turn it off everywhere with
+  the `RECOVER_CHANGES` setting; `RECOVERY_MAX_AGE` (7 days) sets how long
+  changes are kept. System check `content_studio.W029` reports a
+  `recover_changes_exclude` naming a field the model does not have.
+
+### Fixes
+
+- **The X on an active filter chip opened the filter** instead of
+  removing it, for choice, boolean and custom filters, on the list page
+  and in the media library.
+
 ## 1.18.1 (2026-11-20)
 
 ### Fixes

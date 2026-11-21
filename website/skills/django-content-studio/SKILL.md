@@ -114,7 +114,9 @@ or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
 the primary key by default; relations by `import_lookups`, e.g.
 `{"author": "username"}`), `edit_width`
 (`"default"` or `"wide"`), `readonly_fields`, `prepopulated_fields`,
-`exclude`, `is_singleton`, `presence` and `icon`.
+`exclude`, `is_singleton`, `presence`, `recover_changes` and
+`recover_changes_exclude` (unsaved edits are kept in the editor's browser
+and offered back; `False` or excluded fields for sensitive data) and `icon`.
 
 `list_filter` takes field names, paths across relations
 (`"author__country"`) and filter classes: subclass
@@ -547,6 +549,12 @@ https://djangocontentstudio.org/docs/analytics.md.
 
 Each is optional and has its own page:
 
+- Draft, publish and scheduling (`publishing = "published_at"` or
+  `Publishing(published_at, unpublish_at=, status=, status_values=)` on a
+  studio, `PublishableModel` with `.live()`; the site filters with
+  `live()`; a Can publish permission; `content_studio_publish` from cron
+  or Huey records what went live; E054):
+  https://djangocontentstudio.org/docs/publishing.md
 - Webhooks (`"content_studio.webhooks"` app, `DeployButton`):
   https://djangocontentstudio.org/docs/webhooks.md
 - Notifications (`"content_studio.notifications"` app, `register_event`,
@@ -620,6 +628,9 @@ Each is optional and has its own page:
   have or the form excludes (`E040`).
 - Studio method columns and `get_*_display` hooks take `(obj, request)`;
   permission hooks take `(request, obj=None)`.
+- On a studio with `publishing`: the publish date or status field in
+  `import_fields` (`E048`: the form never writes them, the Publishing card
+  does), or a site that lists content without `live()`, which shows drafts.
 - Bulk actions and buttons that change objects without `record_change`: the
   change is missing from the object's history.
 - A local-memory cache in production: presence, login throttling and ended

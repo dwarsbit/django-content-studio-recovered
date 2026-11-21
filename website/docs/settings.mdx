@@ -371,6 +371,20 @@ The alias of the cache in `CACHES` that presence is kept in. Default:
 cache, such as Redis, Memcached or the database cache. System check
 `content_studio.E023` reports an alias that is not in `CACHES`.
 
+## Unsaved changes
+
+### RECOVER_CHANGES {#recover_changes}
+
+Whether edit pages keep an editor's unsaved changes in their browser and
+offer them back when the object opens again; see
+[Unsaved changes](/docs/edit-page#unsaved-changes). Default: `True`. A studio
+turns it off for its model with `recover_changes = False`.
+
+### RECOVERY_MAX_AGE {#recovery_max_age}
+
+The number of days unsaved changes stay in the browser before they are
+dropped. Default: `7`.
+
 ## Developer tools
 
 ### DEVTOOLS {#devtools}

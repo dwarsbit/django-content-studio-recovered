@@ -228,7 +228,7 @@ export function VersionDialog({
   );
 }
 
-function Value({ field, value }: { field: ModelField; value: unknown }) {
+export function Value({ field, value }: { field: ModelField; value: unknown }) {
   const { t } = useTranslation();
 
   if (isSecret(value)) {
@@ -251,7 +251,7 @@ function Value({ field, value }: { field: ModelField; value: unknown }) {
   );
 }
 
-function Change({
+export function Change({
   field,
   before,
   after,

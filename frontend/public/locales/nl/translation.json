@@ -658,7 +658,13 @@
       "restored_many_one": "{{actor}} heeft {{count}} {{models}} hersteld",
       "restored_many_other": "{{actor}} heeft {{count}} {{models}} hersteld",
       "reordered_many_one": "{{actor}} heeft {{count}} {{models}} herordend",
-      "reordered_many_other": "{{actor}} heeft {{count}} {{models}} herordend"
+      "reordered_many_other": "{{actor}} heeft {{count}} {{models}} herordend",
+      "published": "{{actor}} heeft {{object}} ({{model}}) gepubliceerd",
+      "published_many_one": "{{actor}} heeft {{count}} {{models}} gepubliceerd",
+      "published_many_other": "{{actor}} heeft {{count}} {{models}} gepubliceerd",
+      "unpublished": "{{actor}} heeft de publicatie van {{object}} ({{model}}) ingetrokken",
+      "unpublished_many_one": "{{actor}} heeft de publicatie van {{count}} {{models}} ingetrokken",
+      "unpublished_many_other": "{{actor}} heeft de publicatie van {{count}} {{models}} ingetrokken"
     },
     "follow": {
       "follow": "Volgen",
@@ -720,7 +726,9 @@
       "updated": "Bijgewerkt",
       "deleted": "Verwijderd",
       "restored": "Hersteld",
-      "reordered": "Verplaatst"
+      "reordered": "Verplaatst",
+      "published": "Gepubliceerd",
+      "unpublished": "Ingetrokken"
     }
   },
   "analytics": {
@@ -873,6 +881,42 @@
     "restored_one": "{{count}} veld hersteld. Sla op om het te bewaren.",
     "restored_other": "{{count}} velden hersteld. Sla op om ze te bewaren.",
     "nothing_to_restore": "Het formulier heeft de waarden van deze versie al."
+  },
+  "recovery": {
+    "list": "{{items}} en {{last}}",
+    "title": "Niet-opgeslagen wijzigingen van {{when}}",
+    "description_one": "Je hebt {{fields}} hier gewijzigd zonder op te slaan.",
+    "description_other": "Je hebt hier {{count}} velden gewijzigd zonder op te slaan: {{fields}}.",
+    "changed_since": "De {{object}} is sindsdien opgeslagen, maar niet in deze velden.",
+    "create_title": "Onafgemaakte nieuwe {{object}} van {{when}}",
+    "create_description": "Je bent hier begonnen zonder op te slaan: {{fields}}.",
+    "clash_title_by": "{{name}} heeft deze {{object}} opgeslagen na je niet-opgeslagen wijzigingen",
+    "clash_title": "Deze {{object}} is opgeslagen na je niet-opgeslagen wijzigingen",
+    "clash_fields_one": "{{fields}} is daar ook gewijzigd en houdt dus de opgeslagen waarde, tenzij je bij Vergelijken de jouwe kiest.",
+    "clash_fields_other": "{{fields}} zijn daar ook gewijzigd en houden dus de opgeslagen waarden, tenzij je bij Vergelijken de jouwe kiest.",
+    "clash_clean_one": "Je andere wijziging van {{when}} kan worden hersteld.",
+    "clash_clean_other": "Je {{count}} andere wijzigingen van {{when}} kunnen worden hersteld.",
+    "clash_none": "Je wijzigingen van {{when}} zitten allemaal in die velden.",
+    "restored_title_one": "{{count}} veld hersteld. Sla op om het te bewaren.",
+    "restored_title_other": "{{count}} velden hersteld. Sla op om ze te bewaren.",
+    "restored_clash_by_one": "{{fields}} houdt de waarde die {{name}} heeft opgeslagen. Vergelijk om de jouwe te gebruiken.",
+    "restored_clash_by_other": "{{fields}} houden de waarden die {{name}} heeft opgeslagen. Vergelijk om de jouwe te gebruiken.",
+    "restored_clash_one": "{{fields}} houdt de opgeslagen waarde. Vergelijk om de jouwe te gebruiken.",
+    "restored_clash_other": "{{fields}} houden de opgeslagen waarden. Vergelijk om de jouwe te gebruiken.",
+    "restore": "Niet-opgeslagen wijzigingen herstellen",
+    "compare": "Vergelijken",
+    "discard": "Weggooien",
+    "dismiss": "Sluiten",
+    "dialog_title": "Je niet-opgeslagen wijzigingen",
+    "dialog_description": "Bewaard om {{when}}, vergeleken met de {{object}} zoals die nu is.",
+    "also_changed_by": "Ook gewijzigd door {{name}}",
+    "also_changed": "Sindsdien ook gewijzigd",
+    "keep_saved": "Opgeslagen houden",
+    "use_mine": "Mijne gebruiken",
+    "close": "Sluiten",
+    "restore_count_one": "{{count}} veld herstellen",
+    "restore_count_other": "{{count}} velden herstellen",
+    "kept": "Bewaard in deze browser om {{when}} tot je opslaat"
   },
   "users": {
     "set_password": {
@@ -1221,6 +1265,58 @@
   "row_actions": {
     "menu": "Acties",
     "menu_for": "Acties voor {{name}}"
+  },
+  "publishing": {
+    "title": "Publicatie",
+    "states": {
+      "draft": "Concept",
+      "scheduled": "Ingepland",
+      "published": "Gepubliceerd",
+      "expired": "Verlopen"
+    },
+    "scheduled_for": "Ingepland · {{time}}",
+    "published": "Gepubliceerd",
+    "publish_on": "Publiceren op",
+    "unpublish_on": "Offline halen op",
+    "never": "Nooit",
+    "not_scheduled": "Niet ingepland",
+    "set": "Instellen",
+    "publish": "Publiceren",
+    "publish_now": "Nu publiceren",
+    "time_zone": "Tijden zijn in {{zone}}.",
+    "schedule": {
+      "open": "Inplannen…",
+      "title": "Publicatie inplannen",
+      "edit_title": "Planning wijzigen",
+      "description": "Kies wanneer “{{name}}” live gaat. Tot dan blijft het een concept.",
+      "unpublish_toggle": "Offline halen op een datum",
+      "summary": "Gaat live op {{at}}.",
+      "summary_until": "Gaat live op {{at}} en gaat offline op {{until}}.",
+      "submit": "Inplannen"
+    },
+    "unpublish_date": {
+      "title": "Datum offline halen",
+      "description": "Kies wanneer “{{name}}” offline gaat. Tot dan blijft het gepubliceerd.",
+      "remove": "Datum verwijderen"
+    },
+    "cancel_schedule": {
+      "title": "Planning annuleren?",
+      "description": "“{{name}}” blijft een concept en gaat niet live.",
+      "ok": "Planning annuleren"
+    },
+    "unpublish": {
+      "title": "Publicatie intrekken?",
+      "description": "“{{name}}” wordt weer een concept en is niet meer live.",
+      "ok": "Publicatie intrekken"
+    },
+    "toast": {
+      "published": "“{{name}}” is gepubliceerd",
+      "unscheduled": "“{{name}}” is niet meer ingepland",
+      "unpublished": "Publicatie van “{{name}}” is ingetrokken",
+      "scheduled": "“{{name}}” is ingepland",
+      "unpublish_date_set": "Datum offline halen ingesteld voor “{{name}}”",
+      "unpublish_date_removed": "Datum offline halen verwijderd van “{{name}}”"
+    }
   },
   "translations": {
     "content_language": "Inhoudstaal",

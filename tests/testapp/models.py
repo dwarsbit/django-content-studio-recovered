@@ -3,7 +3,7 @@ from django.db.models.functions import Lower
 
 from content_studio.blocks import Block, BlockField
 from content_studio.fields import HTMLField, TagField, URLPathField
-from content_studio.models import ManualOrderModel
+from content_studio.models import ManualOrderModel, PublishableModel
 
 
 class Category(models.Model):
@@ -358,6 +358,36 @@ class Venue(models.Model):
 
     def __str__(self):
         return self.name
+
+
+class Story(models.Model):
+    """Publishing on a plain model, with a status field kept in step;
+    see test_publishing."""
+
+    class Status(models.TextChoices):
+        DRAFT = "draft", "Draft"
+        LIVE = "live", "Live"
+        GONE = "gone", "Gone"
+
+    title = models.CharField(max_length=100)
+    status = models.CharField(
+        max_length=10, choices=Status.choices, default=Status.DRAFT
+    )
+    published_at = models.DateTimeField(null=True, blank=True)
+    unpublish_at = models.DateTimeField(null=True, blank=True)
+    removed_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title
+
+
+class Bulletin(PublishableModel):
+    """Publishing with the built-in base model; see test_publishing."""
+
+    title = models.CharField(max_length=100)
+
+    def __str__(self):
+        return self.title
 
 
 class Guide(models.Model):

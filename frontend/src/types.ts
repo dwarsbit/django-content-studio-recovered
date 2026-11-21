@@ -67,6 +67,9 @@ export interface AdminInfo {
     created_by_attr: string;
     edited_at_attr: string;
     edited_by_attr: string;
+    // Days unsaved changes stay in the browser for recovery
+    // (RECOVERY_MAX_AGE).
+    recovery_max_age?: number;
   };
 }
 
@@ -168,6 +171,8 @@ export interface Model {
       actions: BulkAction[];
       // The actions in each row's menu, run on that one object.
       row_actions?: BulkAction[];
+      // Draft, publish and scheduling; null when the studio has none.
+      publishing?: PublishingConfig | null;
     };
     edit: {
       // The studio's edit_actions, in the more actions menu.
@@ -184,6 +189,11 @@ export interface Model {
       // Whether the edit page offers Duplicate (allow_duplication);
       // it also needs add permission.
       duplicate?: boolean;
+      // Whether unsaved changes are kept in the browser for recovery
+      // (recover_changes and the RECOVER_CHANGES setting; on when absent),
+      // and the fields never kept (recover_changes_exclude).
+      recover_changes?: boolean;
+      recover_changes_exclude?: string[];
       // The width of the edit page and its dialogs (edit_width).
       width?: EditWidth;
       inlines: {
@@ -650,7 +660,28 @@ export interface Resource {
   // The URL of the object's public page for the edit page's "View on
   // site" button (the studio's view_on_site), on detail responses.
   __view_on_site__?: string | null;
+  // The object's publishing, on studios with publishing (list rows and
+  // detail responses of saved objects).
+  __publishing__?: PublishingInfo | null;
   [key: string]: unknown;
+}
+
+// A publishable object's state, from its dates.
+export type PublishingState = "draft" | "scheduled" | "published" | "expired";
+
+export interface PublishingConfig {
+  // Whether objects can get an unpublish date.
+  unpublish: boolean;
+  // Whether the user may publish (per object in __publishing__).
+  can_publish: boolean;
+}
+
+export interface PublishingInfo {
+  state: PublishingState;
+  published_at: DateTimeString | null;
+  unpublish_at: DateTimeString | null;
+  // On detail responses: whether the user may publish this object.
+  can_publish?: boolean;
 }
 
 export interface UserInfo {
@@ -825,6 +856,8 @@ export enum FieldFormat {
   TextFormat = "TextFormat",
   TimeFormat = "TimeFormat",
   JSONFormat = "JSONFormat",
+  // The Status column of studios with publishing.
+  PublishingFormat = "PublishingFormat",
 }
 
 export enum FieldWidget {

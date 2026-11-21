@@ -16,6 +16,7 @@ The public API consists of:
   `get_tenants`,
   `get_thumbnail`, `get_media_serializer_fields`, `get_media_metadata`,
   `get_default_subscriptions`, `get_link_url`, `get_view_on_site_url`,
+  `has_publish_permission`, `on_publish`, `on_unpublish`,
   `crop_image` and `reset_crop`;
 - the documented options and methods of blocks: the `Meta` options of
   `Block`, `get_context` and `get_template_name`, and the
@@ -33,6 +34,7 @@ The public API consists of:
 - the `content_studio.webhooks` app's `content_studio_deliver_webhooks`
   command, and the requests its webhooks send: the payload with its
   `version`, and the `X-Content-Studio-*` headers;
+- the `content_studio_publish` command;
 - the `content_studio.notifications` app's
   `content_studio_prune_notifications` command, and its
   `content_studio_send_notification_digest` command with its `--delay`
@@ -291,6 +293,7 @@ Optional abstract base models.
 - `ContentModel`
 - `EditorModel`
 - `ManualOrderModel`
+- `PublishableModel`
 - `SingletonModel`
 - `SoftDeletableContentModel`
 - `SoftDeletableModel`
@@ -301,9 +304,23 @@ Optional abstract base models.
 
 Managers of the base models.
 
+- `PublishableQuerySet`
 - `SingletonManager`
 - `SoftDeletableManager`
 - `SoftDeletableQuerySet`
+
+## `content_studio.publishing`
+
+[Draft, publish and scheduling](/docs/publishing): the configuration, the states and the scheduled run.
+
+- `DRAFT`
+- `EXPIRED`
+- `PUBLISHED`
+- `Publishing`
+- `SCHEDULED`
+- `get_state`
+- `live`
+- `run_scheduled`
 
 ## `content_studio.signals`
 

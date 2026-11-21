@@ -113,14 +113,19 @@ def seed_categories():
 def seed_articles(users, media, categories, now):
     # Drafts first, then the published articles oldest to newest: the
     # list is newest first by pk, so the latest story leads it.
+    # Scheduled articles count as drafts.
     ordered = sorted(
         content.ARTICLES,
-        key=lambda a: (a["days"] is not None, -(a["days"] or 0)),
+        key=lambda a: (
+            a["days"] is not None and a["days"] >= 0,
+            -(a["days"] or 0),
+        ),
     )
     articles = {}
     for spec in ordered:
         days = spec["days"]
         published_at = now - timedelta(days=days, hours=3) if days is not None else None
+        live = days is not None and days >= 0
         author = users[spec["author"]]
         body = "\n\n".join(spec["body"])
         article = Article.objects.create(
@@ -130,9 +135,7 @@ def seed_articles(users, media, categories, now):
             # The first sentence, as the search-result description.
             meta_description=spec["body"][0].split(". ")[0].rstrip(".") + ".",
             **translated_values(spec["title"]),
-            status=(
-                Article.Status.PUBLISHED if days is not None else Article.Status.DRAFT
-            ),
+            status=Article.Status.PUBLISHED if live else Article.Status.DRAFT,
             author=author,
             cover=media[spec["cover"]],
             featured=spec.get("featured", spec["views"] > 6000),
