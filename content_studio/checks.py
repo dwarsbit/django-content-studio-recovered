@@ -1841,6 +1841,48 @@ def view_on_site_errors(studio) -> list[tuple[str, str]]:
     ]
 
 
+def preview_errors(studio) -> list[tuple[str, str]]:
+    """
+    A preview that is not a boolean (E056): anything else would silently
+    turn previews of drafts on or off.
+    """
+    value = getattr(studio, "preview", True)
+
+    if isinstance(value, bool):
+        return []
+
+    return [
+        (
+            "content_studio.E056",
+            f"{config_name(studio)}.preview must be True or False.",
+        )
+    ]
+
+
+def preview_middleware_warnings() -> list[tuple[str, str]]:
+    """
+    Shared draft links without PreviewMiddleware (W031): the pages they
+    open could be cached by a CDN or indexed, with the link's key in the
+    URL.
+    """
+    if not apps.is_installed("content_studio.previews"):
+        return []
+
+    path = "content_studio.previews.middleware.PreviewMiddleware"
+
+    if path in (getattr(settings, "MIDDLEWARE", None) or []):
+        return []
+
+    return [
+        (
+            "content_studio.W031",
+            "content_studio.previews is installed, but MIDDLEWARE has no "
+            f"{path}: pages opened with a shared draft link may be cached "
+            "or indexed. Add it to MIDDLEWARE.",
+        )
+    ]
+
+
 def duplication_errors(studio) -> list[tuple[str, str]]:
     """
     A misconfigured duplicate_inlines, as (check id, message) pairs: it
@@ -4294,6 +4336,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         for check_id, error in view_on_site_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
+        for check_id, error in preview_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
         for check_id, error in export_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
@@ -4395,6 +4440,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(
             checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
         )
+
+    for check_id, warning in preview_middleware_warnings():
+        messages.append(checks.Warning(warning, id=check_id))
 
     for check_id, error in presence_errors():
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))

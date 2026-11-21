@@ -1852,3 +1852,66 @@ msgstr "Fehlende Übersetzung"
 #: form.py
 msgid "Translations"
 msgstr "Übersetzungen"
+
+msgid "Previews"
+msgstr "Vorschauen"
+
+msgid "content type"
+msgstr "Inhaltstyp"
+
+msgid "object id"
+msgstr "Objekt-ID"
+
+msgid "language"
+msgstr "Sprache"
+
+msgid "key hash"
+msgstr "Schlüssel-Hash"
+
+msgid "note"
+msgstr "Notiz"
+
+msgid "expires at"
+msgstr "läuft ab am"
+
+msgid "opens"
+msgstr "Aufrufe"
+
+msgid "last opened at"
+msgstr "zuletzt geöffnet am"
+
+msgid "shared draft link"
+msgstr "geteilter Entwurfslink"
+
+msgid "shared draft links"
+msgstr "geteilte Entwurfslinks"
+
+msgid "Unknown language."
+msgstr "Unbekannte Sprache."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Das ist live: Kopiere den Link, statt einen Entwurfslink zu teilen."
+
+msgid "Enter a valid date."
+msgstr "Gib ein gültiges Datum ein."
+
+msgid "Pick a date in the future."
+msgstr "Wähle ein Datum in der Zukunft."
+
+msgid "Draft preview"
+msgstr "Entwurfsvorschau"
+
+msgid "Not public"
+msgstr "Nicht öffentlich"
+
+msgid "This link stops working at %(time)s"
+msgstr "Dieser Link gilt bis %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Geteilt von %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "Link läuft ab am %(date)s"
+
+msgid "Edit"
+msgstr "Bearbeiten"

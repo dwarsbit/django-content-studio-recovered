@@ -1826,3 +1826,66 @@ msgstr "Traduzione mancante"
 #: form.py
 msgid "Translations"
 msgstr "Traduzioni"
+
+msgid "Previews"
+msgstr "Anteprime"
+
+msgid "content type"
+msgstr "tipo di contenuto"
+
+msgid "object id"
+msgstr "id dell’oggetto"
+
+msgid "language"
+msgstr "lingua"
+
+msgid "key hash"
+msgstr "hash della chiave"
+
+msgid "note"
+msgstr "nota"
+
+msgid "expires at"
+msgstr "scade il"
+
+msgid "opens"
+msgstr "aperture"
+
+msgid "last opened at"
+msgstr "ultima apertura il"
+
+msgid "shared draft link"
+msgstr "link condiviso alla bozza"
+
+msgid "shared draft links"
+msgstr "link condivisi alle bozze"
+
+msgid "Unknown language."
+msgstr "Lingua sconosciuta."
+
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Questo è pubblicato: copia il suo link invece di condividere un link alla bozza."
+
+msgid "Enter a valid date."
+msgstr "Inserisci una data valida."
+
+msgid "Pick a date in the future."
+msgstr "Scegli una data futura."
+
+msgid "Draft preview"
+msgstr "Anteprima della bozza"
+
+msgid "Not public"
+msgstr "Non pubblica"
+
+msgid "This link stops working at %(time)s"
+msgstr "Questo link smette di funzionare alle %(time)s"
+
+msgid "Shared by %(name)s"
+msgstr "Condiviso da %(name)s"
+
+msgid "Link expires %(date)s"
+msgstr "Il link scade il %(date)s"
+
+msgid "Edit"
+msgstr "Modifica"

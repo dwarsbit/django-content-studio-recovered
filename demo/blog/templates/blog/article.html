@@ -1,0 +1,39 @@
+{% load content_studio %}<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ article.title }} · Northbound</title>
+<style>
+  :root { --fg:#1b1b18; --muted:#6b6a63; --bg:#fbfaf6; --line:#e6e3da; --accent:#b4532a; }
+  @media (prefers-color-scheme: dark) { :root { --fg:#ecebe6; --muted:#a3a29b; --bg:#151513; --line:#2c2b27; --accent:#e08a5f; } }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--fg); font: 17px/1.65 Georgia, "Times New Roman", serif; }
+  header.site { max-width:1080px; margin:0 auto; padding:22px 24px; display:flex; align-items:baseline; justify-content:space-between; border-bottom:1px solid var(--line); }
+  .brand { font-size:26px; letter-spacing:.02em; font-weight:700; }
+  nav { font: 14px system-ui, sans-serif; color:var(--muted); display:flex; gap:22px; }
+  article { max-width:720px; margin:0 auto; padding:44px 24px 80px; }
+  .kicker { font: 600 12px system-ui, sans-serif; letter-spacing:.12em; text-transform:uppercase; color:var(--accent); }
+  h1 { font-size:46px; line-height:1.12; margin:10px 0 14px; font-weight:700; }
+  .dek { font-size:20px; color:var(--muted); margin:0 0 22px; }
+  .byline { font: 14px system-ui, sans-serif; color:var(--muted); margin-bottom:28px; }
+  .cover { width:100%; aspect-ratio: 16/9; object-fit:cover; border-radius:4px; margin-bottom:30px; display:block; }
+  .body img { max-width:100%; }
+</style>
+</head>
+<body>
+{% preview_banner %}
+<header class="site">
+  <div class="brand">Northbound</div>
+  <nav><span>Travel</span><span>Design</span><span>Food</span><span>Journal</span></nav>
+</header>
+<article>
+  <div class="kicker">{% for c in article.categories.all|slice:":1" %}{{ c.name }}{% empty %}Journal{% endfor %}</div>
+  <h1>{{ article.title }}</h1>
+  {% if article.meta_description %}<p class="dek">{{ article.meta_description }}</p>{% endif %}
+  <div class="byline">By {{ article.author.get_full_name|default:article.author.username|default:"Northbound" }}{% if article.published_at %} · {{ article.published_at|date:"j F Y" }}{% endif %}</div>
+  {% if article.cover %}<img class="cover" src="{{ article.cover.file.url }}" alt="{{ article.cover.alt_text }}">{% endif %}
+  <div class="body">{{ article.body|safe }}</div>
+</article>
+</body>
+</html>

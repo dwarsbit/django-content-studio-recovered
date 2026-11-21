@@ -480,6 +480,13 @@ class ModelStudio(BaseStudio[T]):
     # returns the URL itself; None hides the button for that object.
     view_on_site: Union[bool, Callable[[Any], Optional[str]]] = True
 
+    # Previews, for a studio with publishing: while an object is not
+    # live, the View on site button becomes Preview, which opens its page
+    # with a preview token, and editors with the Can share permission
+    # can share a draft link (see content_studio.previews). False keeps
+    # drafts without a page link.
+    preview: bool = True
+
     # Duplicate (save as new), as an opt-in: the edit page offers to
     # open a create form prefilled with a copy of the object. Never
     # offered for singletons.
@@ -651,6 +658,25 @@ class ModelStudio(BaseStudio[T]):
         from .publishing import get_codename
 
         if not self.has_change_permission(request, obj):
+            return False
+
+        return request.user.has_perm(
+            f"{self.model._meta.app_label}.{get_codename(self.model)}"
+        )
+
+    def has_share_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        """
+        Whether the request may share draft links of obj (when given), and
+        see and revoke them: view permission plus the model's "Can share"
+        permission, share_<model_name>, which migrate creates for every
+        studio that previews (with the content_studio.previews app
+        installed). Superusers have it.
+        """
+        from .previews.permissions import get_codename
+
+        if not self.has_view_permission(request, obj):
             return False
 
         return request.user.has_perm(

@@ -555,6 +555,13 @@ Each is optional and has its own page:
   `live()`; a Can publish permission; `content_studio_publish` from cron
   or Huey records what went live; E054):
   https://djangocontentstudio.org/docs/publishing.md
+- Previews and shared draft links (on a studio with publishing; the site
+  shows drafts with `previewable(request, queryset)` from
+  `content_studio.previews` instead of `live()`, and
+  `{% preview_banner %}`; shared links need the `"content_studio.previews"`
+  app and `PreviewMiddleware`; a Can share permission; `preview = False`
+  turns it off; E056, W031):
+  https://djangocontentstudio.org/docs/previews.md
 - Translated content (`translations = ["title", "body"]` on a studio with
   `title_nl`-style columns, or `Translations(fields, languages=, required=,
   adapter=)`; django-modeltranslation and django-parler models are
