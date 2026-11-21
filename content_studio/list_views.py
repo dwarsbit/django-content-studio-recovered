@@ -1,7 +1,7 @@
 """
 The views of the list page beyond the table and the list: a calendar of
-the objects by a date field, and a board of them in columns by a choice
-field or a foreign key.
+the objects by a date field, a board of them in columns by a choice
+field or a foreign key, and a gallery of their images.
 
 A studio names its views in list_views, with strings for the views that
 need nothing more and objects for those that take a field:
@@ -14,6 +14,7 @@ need nothing more and objects for those that take a field:
             "list",
             CalendarView("published_at"),
             BoardView("stage"),
+            "gallery",
         ]
 
 "calendar" on its own is the calendar of the studio's publishing date,
@@ -37,7 +38,7 @@ from ._types import StrOrPromise
 __all__ = ["BoardView", "CalendarView"]
 
 # The views named by a plain string in list_views.
-VIEW_NAMES = {"table", "list", "calendar"}
+VIEW_NAMES = {"table", "list", "calendar", "gallery"}
 
 # The viewset actions that answer with list rows.
 ROW_ACTIONS = ("list", "trash", "calendar", "board")
@@ -181,7 +182,7 @@ def get_views(studio) -> list[ListView]:
 
 def view_types(studio) -> set[str]:
     """The kinds of views a studio offers: "table", "list", "calendar",
-    "board"."""
+    "board", "gallery"."""
     return {view if isinstance(view, str) else view.type for view in get_views(studio)}
 
 

@@ -160,6 +160,12 @@
       "add": "Adicionar a {{column}}",
       "show_more": "Mostrar mais"
     },
+    "gallery_view": "Visualização em galeria",
+    "gallery": {
+      "size": "Tamanho das miniaturas",
+      "large": "Miniaturas grandes",
+      "small": "Miniaturas pequenas"
+    },
     "empty_state": "Ainda não há itens",
     "no_results": "Nada corresponde à pesquisa ou aos filtros atuais",
     "filter": "Filtrar",

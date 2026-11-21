@@ -57,6 +57,14 @@
   columns, `label=`, `editable=False`. New endpoint
   `GET content/<model>/board`. Check `content_studio.E061`. See
   [Board](https://djangocontentstudio.org/docs/list-page#board).
+- **Gallery view.** Add `"gallery"` to `list_views` and the list page
+  shows the page as image tiles from the `list_item_display` thumbnail,
+  with the title, the meta badge or the publishing state, a placeholder
+  for items without an image, and the bulk checkbox and row menu on
+  hover. Large or small tiles, remembered per model; it pages, searches,
+  filters and sorts like the list. Check `content_studio.W033` (a
+  gallery without a thumbnail role). See
+  [Gallery](https://djangocontentstudio.org/docs/list-page#gallery).
 
 ## 1.20.0 (2026-11-21)
 

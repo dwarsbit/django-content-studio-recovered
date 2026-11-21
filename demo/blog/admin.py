@@ -148,8 +148,9 @@ class ArticleStudio(ModelStudio):
     # leaves it. The title, the first column, opens the article.
     table_edit = ["featured", "views", "author"]
     # The views of the list page, with a toggle: the table, the list,
-    # the calendar of the publishing date and a board by stage.
-    list_views = ["table", "list", "calendar", BoardView("stage")]
+    # the calendar of the publishing date, a board by stage and a
+    # gallery of the covers.
+    list_views = ["table", "list", "calendar", BoardView("stage"), "gallery"]
     list_item_display = {
         "title": "title",
         "description": "body",

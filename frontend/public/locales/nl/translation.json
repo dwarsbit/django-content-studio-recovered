@@ -156,6 +156,12 @@
       "add": "Toevoegen aan {{column}}",
       "show_more": "Meer tonen"
     },
+    "gallery_view": "Galerijweergave",
+    "gallery": {
+      "size": "Tegelgrootte",
+      "large": "Grote tegels",
+      "small": "Kleine tegels"
+    },
     "empty_state": "Nog geen items",
     "no_results": "Niets komt overeen met de huidige zoekopdracht of filters",
     "filter": "Filteren",

@@ -3162,6 +3162,37 @@ def table_edit_warnings(studio) -> list[tuple[str, str]]:
     return warnings
 
 
+def gallery_warnings(studio) -> list[tuple[str, str]]:
+    """
+    A gallery without images (W033): "gallery" in list_views while
+    list_item_display has no thumbnail role, so every tile shows a
+    placeholder. A studio that computes its items (get_list_item_display)
+    is trusted to set one.
+    """
+    from .admin import ModelStudio
+
+    if "gallery" not in (getattr(studio, "list_views", None) or []):
+        return []
+
+    if type(studio).get_list_item_display is not ModelStudio.get_list_item_display:
+        return []
+
+    display = getattr(studio, "list_item_display", None) or {}
+
+    if isinstance(display, dict) and display.get("thumbnail"):
+        return []
+
+    return [
+        (
+            "content_studio.W033",
+            f'{studio.__class__.__name__}.list_views offers "gallery", but '
+            'list_item_display has no "thumbnail", so every tile shows a '
+            "placeholder. Map the thumbnail role to an image field, a media "
+            "item or a method returning a URL.",
+        )
+    ]
+
+
 def list_display_warnings(studio) -> list[tuple[str, str]]:
     """
     Django admin naming on a studio, as (check id, message) pairs.
@@ -4679,6 +4710,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in table_edit_warnings(studio):
+            messages.append(checks.Warning(warning, obj=obj, id=check_id))
+
+        for check_id, warning in gallery_warnings(studio):
             messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in duplication_warnings(studio):

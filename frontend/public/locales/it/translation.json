@@ -160,6 +160,12 @@
       "add": "Aggiungi a {{column}}",
       "show_more": "Mostra altro"
     },
+    "gallery_view": "Vista galleria",
+    "gallery": {
+      "size": "Dimensione dei riquadri",
+      "large": "Riquadri grandi",
+      "small": "Riquadri piccoli"
+    },
     "empty_state": "Ancora nessun elemento",
     "no_results": "Nessun risultato per la ricerca o i filtri attuali",
     "filter": "Filtra",

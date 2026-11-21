@@ -5,8 +5,11 @@ import { useTranslation } from "react-i18next";
 import {
   PiCalendarBlankBold,
   PiFileTextBold,
+  PiGridNineBold,
+  PiImagesSquareBold,
   PiKanbanBold,
   PiRowsBold,
+  PiSquaresFourBold,
   PiTableBold,
 } from "react-icons/pi";
 import { Link, useParams, useSearchParams } from "react-router";
@@ -48,6 +51,7 @@ import { BoardView } from "./_components/board-view";
 import { ContentBulkBar } from "./_components/bulk-bar";
 import { CalendarView } from "./_components/calendar-view";
 import { Filters } from "./_components/filters";
+import { type GallerySize, GalleryView } from "./_components/gallery-view";
 import { ListActionsMenu } from "./_components/list-actions-menu";
 import { ListView } from "./_components/list-view";
 import { SortSelect } from "./_components/sort-select";
@@ -128,6 +132,20 @@ export function ModelListPage() {
   // The calendar or board the view switch shows, if it shows one.
   const calendar = findCalendar(viewConfigs, view);
   const board = findBoard(viewConfigs, view);
+  // The gallery's tile size, remembered per content type.
+  const [gallerySize, setGallerySizeState] = useState<GallerySize>(() =>
+    model?.label &&
+    safeStorage.get(`__dcs_gallery_size__:${model.label}`) === "small"
+      ? "small"
+      : "large",
+  );
+  const setGallerySize = (next: GallerySize) => {
+    setGallerySizeState(next);
+
+    if (model) {
+      safeStorage.set(`__dcs_gallery_size__:${model.label}`, next);
+    }
+  };
   const [ordering, setOrderingState] = useState<string | null>(() =>
     model?.label ? storedOrdering(model.label) : null,
   );
@@ -141,6 +159,11 @@ export function ModelListPage() {
   if (model && model.label !== lastLabel) {
     setLastLabel(model.label);
     setViewState(storedView(model.label));
+    setGallerySizeState(
+      safeStorage.get(`__dcs_gallery_size__:${model.label}`) === "small"
+        ? "small"
+        : "large",
+    );
     setOrderingState(storedOrdering(model.label));
     setFiltersState(storedFilters(model.label));
   }
@@ -149,7 +172,9 @@ export function ModelListPage() {
   // ordering; the stored ordering is kept for the table to pick
   // back up.
   const effectiveOrdering =
-    (view === "list" || board) && R.isNil(sortableBy) ? null : ordering;
+    (view === "list" || view === "gallery" || board) && R.isNil(sortableBy)
+      ? null
+      : ordering;
 
   // Selection is current-page: any URL change (page, search) or
   // change of the remembered ordering or filters resets it — during
@@ -404,7 +429,8 @@ export function ModelListPage() {
                 values={filters}
                 onValuesChange={setFilters}
               />
-              <div className="ml-auto h-8 shrink-0 flex items-center gap-1">
+              {/* Scrolls sideways when a phone cannot fit every toggle. */}
+              <div className="ml-auto h-8 min-w-0 flex items-center gap-1 overflow-x-auto">
                 {model.admin.translations && (
                   <>
                     <LanguageMenu className="h-8" />
@@ -434,13 +460,44 @@ export function ModelListPage() {
                         })}
                   </span>
                 )}
-                {(view === "list" || board) && !R.isNil(sortableBy) && (
-                  <SortSelect
-                    model={model}
-                    ordering={ordering}
-                    onOrderingChange={setOrdering}
-                  />
+                {view === "gallery" && (
+                  <ToggleGroup
+                    type="single"
+                    size="sm"
+                    value={gallerySize}
+                    onValueChange={(next) =>
+                      next && setGallerySize(next as GallerySize)
+                    }
+                    aria-label={t("list_view.gallery.size")}
+                    // A phone shows two columns of either size.
+                    className="hidden sm:flex gap-0.5 mr-1"
+                  >
+                    <ToggleGroupItem
+                      value="large"
+                      title={t("list_view.gallery.large")}
+                      aria-label={t("list_view.gallery.large")}
+                      className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                    >
+                      <PiSquaresFourBold />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem
+                      value="small"
+                      title={t("list_view.gallery.small")}
+                      aria-label={t("list_view.gallery.small")}
+                      className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                    >
+                      <PiGridNineBold />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
                 )}
+                {(view === "list" || view === "gallery" || board) &&
+                  !R.isNil(sortableBy) && (
+                    <SortSelect
+                      model={model}
+                      ordering={ordering}
+                      onOrderingChange={setOrdering}
+                    />
+                  )}
                 {views.length > 1 && (
                   <>
                     <span aria-hidden className="h-5 w-px bg-border mx-1" />
@@ -470,6 +527,16 @@ export function ModelListPage() {
                           className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
                         >
                           <PiRowsBold />
+                        </ToggleGroupItem>
+                      )}
+                      {views.includes("gallery") && (
+                        <ToggleGroupItem
+                          value="gallery"
+                          title={t("list_view.gallery_view")}
+                          aria-label={t("list_view.gallery_view")}
+                          className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                        >
+                          <PiImagesSquareBold />
                         </ToggleGroupItem>
                       )}
                       {viewConfigs.map(
@@ -534,6 +601,17 @@ export function ModelListPage() {
                 }}
                 selected={actions.length > 0 ? selected : undefined}
                 onToggle={actions.length > 0 ? toggle : undefined}
+              />
+            ) : view === "gallery" ? (
+              <GalleryView
+                items={data.results}
+                model={model}
+                size={gallerySize}
+                selected={actions.length > 0 ? selected : undefined}
+                onToggle={actions.length > 0 ? toggle : undefined}
+                filtered={filtered}
+                onClear={clearContext}
+                presence={presence}
               />
             ) : view === "list" ? (
               <ListView

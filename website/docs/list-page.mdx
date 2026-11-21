@@ -5,8 +5,9 @@ and act on its objects. You configure it on the model's studio, next to the
 options on [Registering models](/docs/registering-models).
 
 The list page shows objects as a **table**, the default, as a **list** of
-readable items, on a [**calendar**](#calendar) by a date, or on a
-[**board**](#board) in columns by a choice or a relation. Set the views
+readable items, on a [**calendar**](#calendar) by a date, on a
+[**board**](#board) in columns by a choice or a relation, or as a
+[**gallery**](#gallery) of images. Set the views
 to offer with `list_views`; with more than one, editors switch with a
 toggle and the admin remembers their choice per model.
 
@@ -322,6 +323,42 @@ without dragging.
 `content_studio.E061` reports a board field without choices that is not a
 foreign key, columns that are not choices of the field, and two boards of
 one field.
+
+## Gallery
+
+The gallery view shows the list as image tiles: the
+[list item](#list-items) thumbnail with the title under it. Add
+`"gallery"` to `list_views` and map the `thumbnail` role:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    list_views = ["table", "list", "gallery"]
+    list_item_display = {
+        "title": "title",
+        "meta": "get_status_display",
+        "thumbnail": "cover",
+    }
+```
+
+The thumbnail can be an image or file field, a media library item (its
+small thumbnail) or a method returning a URL. Items without one show a
+placeholder. With publishing, drafts, scheduled and expired items carry
+their state on the image; otherwise the large tiles show the meta badge.
+The gallery pages, searches, filters and sorts like the list. Editors
+switch between large and small tiles in the toolbar, remembered per
+model. With bulk actions, a tile gets a checkbox on hover; with row
+actions, a menu. On a phone the gallery has two columns.
+
+`content_studio.W033` warns about a gallery without a `thumbnail` role,
+unless the studio computes its items with `get_list_item_display`.
 
 ## Filters
 
