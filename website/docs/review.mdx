@@ -1,0 +1,225 @@
+# ✅ Review and approval
+
+Review puts a check in front of **Publish**. An editor submits an article for
+review; someone who may publish it reads the changes and either approves it,
+which publishes or schedules it in the same step, or asks for changes with a
+note. The editor fixes it and submits again.
+
+Review builds on [publishing](/docs/publishing) and is an optional app.
+
+<Screenshot
+  name="review"
+  alt="The Review changes dialog: the editor's note, the changed fields with word differences, a note field and the buttons Request changes, Approve and schedule and Approve and publish"
+/>
+
+## Set up review
+
+1. Add the review app to your project:
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.review",
+   ]
+   ```
+
+2. Run `manage.py migrate` to create its table.
+
+3. Turn it on for a studio with publishing:
+
+   ```python
+   # blog/admin.py
+   from content_studio import register
+   from content_studio.admin import ModelStudio
+   from content_studio.publishing import Publishing
+
+   from .models import Article
+
+
+   @register(Article)
+   class ArticleStudio(ModelStudio):
+       publishing = Publishing("published_at")
+       review = True
+   ```
+
+`review = True` is the same as `Review()`. For other choices, pass options:
+
+```python
+from content_studio.review import Review
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    publishing = Publishing("published_at", pending_changes=True)
+    review = Review(required=True)
+```
+
+| Option          | What it does                                                                                                                               |
+| --------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `required`      | Publishers go through review too: the object is published only by approving a review. Default `False`: people who may publish skip review. |
+| `self_approval` | Lets someone who may publish approve their own request. Default `False`.                                                                   |
+
+## What editors see
+
+- **Submit for review.** An editor who may not publish gets **Submit for
+  review** where **Publish** would be. The dialog asks who reviews it,
+  anyone who can publish or one person, and has room for a note. Unsaved
+  changes are saved first.
+- **In review.** The header and the Publishing card show **In review**. The
+  card shows who submitted it, when, and who reviews it. The submitter can
+  **Withdraw from review**. Editing stays allowed while it waits.
+- **Changes requested.** When the reviewer asks for changes, the badge turns
+  red, the card shows the reviewer's note, and the button reads **Submit
+  again**.
+- **Approved.** Approving publishes or schedules the object, and the review
+  is done.
+
+On published content with
+[unpublished changes](/docs/publishing#unpublished-changes), the changes are
+what goes through review: the header reads **Published** with **Changes in
+review**, and approving publishes the changes.
+
+The list page shows the review next to the publishing state, and its
+**Status** filter has **In review**, **Changes requested** and **Waiting for
+my review**.
+
+## What reviewers see
+
+Someone who may approve the request gets a **Review** button in the header
+and on the Publishing card. **Review changes** shows the editor's note and
+the changed fields with their word differences:
+
+- for published content, against the live version;
+- for content that was approved before, against the version approved last;
+- for new content, nothing to compare with, so read it on the page.
+
+The reviewer then picks one:
+
+- **Approve and publish** publishes it now.
+- **Approve and schedule…** asks when it goes live. Published content with
+  changes is always published now.
+- **Request changes** sends it back. It needs a note saying what to change.
+
+### Approving the version you saw
+
+Editing is allowed during review, so the article can change while the
+reviewer reads it. Each approval names the version the reviewer saw. If the
+object changed since the dialog opened, approving is refused and the
+reviewer looks again. When it was edited after it was submitted, the dialog
+says which fields changed. What goes live is exactly what was approved, and
+the approved values are kept on the review request.
+
+## Who may do what
+
+| Who                              | May                                                        |
+| -------------------------------- | ---------------------------------------------------------- |
+| Anyone who may change the object | Submit it for review, and withdraw their own request       |
+| Anyone who may publish it        | Approve or request changes, and withdraw any request       |
+| The submitter                    | Not approve their own request, unless `self_approval=True` |
+
+Who may publish comes from [`has_publish_permission`](/docs/publishing#who-can-publish).
+Publishing directly from the card or a bulk action counts as approving an
+open request. With `required=True`, **Publish**, **Schedule** and the bulk
+publish actions are gone, and the API refuses them; unpublishing still
+works.
+
+## Who is asked to review
+
+When the editor picks a reviewer, only that person is notified, but anyone
+who may publish can still review it. Otherwise everyone who may publish the
+object is notified. To ask someone else, override `get_reviewers`; return a
+list of users, or `None` for the default:
+
+```python
+@register(Article)
+class ArticleStudio(ModelStudio):
+    publishing = Publishing("published_at")
+    review = True
+
+    def get_reviewers(self, request, obj):
+        # The section's editor reviews its articles.
+        return [obj.section.editor] if obj.section.editor else None
+```
+
+## Notifications
+
+With the [notifications app](/docs/notifications) installed, review adds
+three events. Editors turn each of them off on their notification settings
+page.
+
+| Event             | Who is notified                                     |
+| ----------------- | --------------------------------------------------- |
+| Review requests   | The picked reviewer, or everyone who may publish it |
+| Approved reviews  | The submitter                                       |
+| Changes requested | The submitter                                       |
+
+Nobody is notified of their own action.
+
+## With comments
+
+With the [comments app](/docs/comments), review posts its notes as comments:
+the note sent with a request, with an approval or with a request for
+changes. They are labeled in the Comments card, so the discussion about a
+review stays in one place. Without comments, the notes are kept on the
+review request and shown on the Publishing card.
+
+## A dashboard widget
+
+`ReviewQueue` shows someone who may publish what waits for their review,
+oldest first. Editors who do not review see their own requests in review or
+with changes requested. `limit` sets how many it shows, 8 by default and at
+most 50; `title` and `description` replace its texts.
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+from content_studio.dashboard import Dashboard
+from content_studio.review.dashboard import ReviewQueue
+
+
+class BlogStudioSite(ContentStudioSite):
+    dashboard = Dashboard(widgets=[ReviewQueue()])
+
+
+admin_site = BlogStudioSite()
+```
+
+System check `content_studio.W021` reports the widget on a site without the
+review app.
+
+## Hooks and signals
+
+`on_submit_for_review(request, obj, review)` runs after an object was
+submitted, and `on_review(request, obj, review)` after a reviewer decided:
+`review.status` is `"approved"` or `"changes_requested"`. `review` is the
+`ReviewRequest`.
+
+```python
+class ArticleStudio(ModelStudio):
+    publishing = Publishing("published_at")
+    review = True
+
+    def on_review(self, request, obj, review):
+        if review.status == "changes_requested":
+            post_to_slack(f"{obj} needs changes: {review.decision_note}")
+```
+
+The `review_submitted` and `review_decided` signals are sent once the change
+is committed, with `request`, `review` and `target`:
+
+```python
+from django.dispatch import receiver
+
+from content_studio.review import review_decided
+
+
+@receiver(review_decided)
+def on_decided(sender, request, review, target, **kwargs):
+    ...
+```
+
+## Deleted objects
+
+Deleting an object for good deletes its review requests too.

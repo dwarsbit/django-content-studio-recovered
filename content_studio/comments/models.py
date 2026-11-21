@@ -42,6 +42,9 @@ class Comment(models.Model):
         verbose_name=_("Author"),
     )
     body = models.TextField(verbose_name=_("Comment"))
+    # What posted the comment besides a person writing it, such as
+    # "review.submitted" for the note of a review request.
+    kind = models.CharField(max_length=40, blank=True, default="")
     # The ids of the users the comment mentions.
     mentions = models.JSONField(default=list, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -1440,5 +1440,74 @@
     "delete_description": "Der Kommentar wird für alle entfernt. Antworten bleiben erhalten.",
     "error": "Der Kommentar konnte nicht gespeichert werden. Bitte erneut versuchen.",
     "mention": "Personen zum Erwähnen"
+  },
+  "review": {
+    "title": "Prüfung",
+    "submit": "Zur Prüfung einreichen",
+    "submit_again": "Erneut einreichen",
+    "review": "Prüfen",
+    "request_changes": "Änderungen anfordern",
+    "approve_schedule": "Freigeben und planen…",
+    "approve_publish": "Freigeben und veröffentlichen",
+    "anyone": "Alle, die veröffentlichen dürfen",
+    "after_review": "Nach der Prüfung",
+    "hint": "Jemand, der veröffentlichen darf, prüft es, bevor es live geht.",
+    "submitted": "Eingereicht",
+    "you": "Du",
+    "reviewer": "Prüfer",
+    "reviewed_by": "Geprüft von",
+    "states": {
+      "open": "In Prüfung",
+      "changes_requested": "Änderungen angefordert",
+      "changes_in_review": "Änderungen in Prüfung"
+    },
+    "withdraw": {
+      "title": "Aus der Prüfung zurückziehen?",
+      "description": "{{name}} wartet nicht mehr auf eine Prüfung. Du kannst es später erneut einreichen.",
+      "ok": "Aus der Prüfung zurückziehen"
+    },
+    "toast": {
+      "submitted": "{{name}} wurde zur Prüfung eingereicht.",
+      "withdrawn": "{{name}} wurde aus der Prüfung zurückgezogen.",
+      "approved": "{{name}} wurde freigegeben und veröffentlicht.",
+      "approved_scheduled": "{{name}} wurde freigegeben und geplant.",
+      "changes_requested": "Für {{name}} wurden Änderungen angefordert."
+    },
+    "submit_dialog": {
+      "description": "{{name}} wird veröffentlicht, sobald jemand, der veröffentlichen darf, es freigibt.",
+      "description_live": "Die Änderungen an {{name}} gehen live, sobald jemand, der veröffentlichen darf, sie freigibt.",
+      "reviewer": "Prüfer",
+      "reviewer_hint": "Nur {{name}} wird benachrichtigt. Alle, die veröffentlichen dürfen, können es trotzdem prüfen.",
+      "anyone_hint": "Alle, die veröffentlichen dürfen, werden benachrichtigt.",
+      "note": "Notiz für die Prüfung",
+      "note_placeholder": "Optional"
+    },
+    "dialog": {
+      "title": "Änderungen prüfen",
+      "description": "Sieh dir {{object}} an, bevor es live geht.",
+      "submitted_by": "{{name}} hat {{object}} {{when}} eingereicht.",
+      "edited_since": "Nach dem Einreichen bearbeitet: {{fields}}. Du gibst frei, was du jetzt siehst.",
+      "new_content": "Neu, noch nie freigegeben",
+      "new_content_hint": "Lies es auf der Seite, bevor du es freigibst.",
+      "changed_live_one": "{{count}} Feld gegenüber der veröffentlichten Version geändert",
+      "changed_live_other": "{{count}} Felder gegenüber der veröffentlichten Version geändert",
+      "changed_approved_one": "{{count}} Feld seit der letzten Freigabe geändert",
+      "changed_approved_other": "{{count}} Felder seit der letzten Freigabe geändert",
+      "note": "Notiz",
+      "note_hint": "Erforderlich, wenn du Änderungen anforderst."
+    },
+    "widget": {
+      "empty": "Nichts wartet auf deine Prüfung.",
+      "empty_mine": "Du hast nichts in Prüfung.",
+      "submitted_by": "{{name}} · {{when}}",
+      "submitted": "Eingereicht {{when}}",
+      "changes": "Änderungen",
+      "new": "Neu: {{model}}"
+    },
+    "kinds": {
+      "submitted": "Zur Prüfung eingereicht",
+      "approved": "Freigegeben",
+      "changes_requested": "Änderungen angefordert"
+    }
   }
 }

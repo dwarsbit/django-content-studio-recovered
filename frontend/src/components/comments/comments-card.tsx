@@ -10,6 +10,7 @@ import {
 } from "react-icons/pi";
 import { toast } from "sonner";
 
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -28,6 +29,16 @@ import { MentionText } from "./mention-text";
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
+
+// The notes review posts as comments.
+const KINDS = {
+  "review.submitted": { label: "review.kinds.submitted", tone: "purple" },
+  "review.approved": { label: "review.kinds.approved", tone: "green" },
+  "review.changes_requested": {
+    label: "review.kinds.changes_requested",
+    tone: "red",
+  },
+} as const;
 
 type Change = ReturnType<typeof useComments>["change"];
 
@@ -74,8 +85,19 @@ function Comment({
         className="mt-0.5 shrink-0"
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5 min-h-6">
-          <span className="text-sm font-medium truncate">{name}</span>
+        <div className="flex flex-wrap items-center gap-x-1.5 min-h-6">
+          <span className="text-sm font-medium truncate max-w-full">
+            {name}
+          </span>
+          {comment.kind && comment.kind in KINDS && (
+            <Badge
+              tone={KINDS[comment.kind as keyof typeof KINDS].tone}
+              className="shrink-0"
+              data-testid="comment-kind"
+            >
+              {t(KINDS[comment.kind as keyof typeof KINDS].label)}
+            </Badge>
+          )}
           <time
             className="text-xs text-muted-foreground shrink-0"
             dateTime={comment.created_at}

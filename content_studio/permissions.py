@@ -66,6 +66,11 @@ class ModelStudioPermissions(BasePermission):
             # is part of viewing it.
             return admin_model.has_view_permission(request)
 
+        if getattr(view, "action", None) == "review":
+            # The review endpoint checks each action on the object:
+            # submitting needs change permission, deciding Can publish.
+            return admin_model.has_view_permission(request)
+
         if getattr(view, "action", None) == "table_edit":
             # Saving a table cell is a change of that object.
             return admin_model.has_change_permission(request)
@@ -149,6 +154,7 @@ class ModelStudioPermissions(BasePermission):
         if getattr(view, "action", None) in (
             "run_component",
             "presence",
+            "review",
             "preview",
             "preview_links",
             "revoke_preview_link",

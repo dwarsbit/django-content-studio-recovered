@@ -34,6 +34,7 @@ INSTALLED_APPS = [
     "content_studio.preferences",
     "content_studio.previews",
     "content_studio.comments",
+    "content_studio.review",
     "demo.blog",
 ]
 

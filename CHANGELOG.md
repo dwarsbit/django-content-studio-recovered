@@ -15,6 +15,24 @@
   `comments = False` to leave a studio out. From code: `add_comment()`,
   `get_comments()` and the `comment_added` signal. See
   [Comments](https://djangocontentstudio.org/docs/comments).
+- **Review and approval.** Add `content_studio.review` to `INSTALLED_APPS`,
+  run `migrate` and set `review = True` on a studio with publishing.
+  Editors without Can publish get **Submit for review**, with an optional
+  reviewer and note; people who may publish get **Review**, which shows the
+  changes against the live or last approved version and then **Approve and
+  publish**, **Approve and schedule…** or **Request changes** with a note.
+  Approval is pinned to the version the reviewer saw, and editing stays
+  allowed meanwhile. `Review(required=True)` sends publishers through
+  review too; `self_approval=True` lets them approve their own requests.
+  Badges on the edit and list pages, **In review**, **Changes requested**
+  and **Waiting for my review** in the Status filter, three notification
+  events, review notes as comments with the comments app, a `ReviewQueue`
+  dashboard widget, the `get_reviewers`, `on_submit_for_review` and
+  `on_review` hooks and the `review_submitted` and `review_decided`
+  signals. System check `content_studio.E058`. See
+  [Review and approval](https://djangocontentstudio.org/docs/review).
+- Comments have a `kind`, set by `add_comment(..., kind=)`, for comments
+  posted by code such as review notes.
 - **Calendar view.** Add `"calendar"` to `list_views` and the list page
   offers the objects on a month grid by their publishing date, with the
   list's search and filters. Scheduled content shows on the day it goes
@@ -24,8 +42,8 @@
   date field use `CalendarView("starts_on", end=None, label=None,
   editable=True)` from `content_studio.list_views`: a drag saves the date
   through the same save as table editing. New endpoint
-  `GET content/<model>/calendar`. Checks `content_studio.E058` (a bare
-  `"calendar"` without publishing) and `content_studio.E059` (a calendar
+  `GET content/<model>/calendar`. Checks `content_studio.E059` (a bare
+  `"calendar"` without publishing) and `content_studio.E060` (a calendar
   field that is not a date). See
   [Calendar](https://djangocontentstudio.org/docs/list-page#calendar).
 

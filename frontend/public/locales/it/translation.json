@@ -1493,5 +1493,76 @@
     "delete_description": "Il commento viene rimosso per tutti. Le risposte restano.",
     "error": "Impossibile salvare il commento. Riprova.",
     "mention": "Persone da menzionare"
+  },
+  "review": {
+    "title": "Revisione",
+    "submit": "Invia in revisione",
+    "submit_again": "Invia di nuovo",
+    "review": "Revisiona",
+    "request_changes": "Richiedi modifiche",
+    "approve_schedule": "Approva e programma…",
+    "approve_publish": "Approva e pubblica",
+    "anyone": "Chiunque possa pubblicare",
+    "after_review": "Dopo la revisione",
+    "hint": "Qualcuno che può pubblicare lo revisiona prima che vada online.",
+    "submitted": "Inviato",
+    "you": "Tu",
+    "reviewer": "Revisore",
+    "reviewed_by": "Revisionato da",
+    "states": {
+      "open": "In revisione",
+      "changes_requested": "Modifiche richieste",
+      "changes_in_review": "Modifiche in revisione"
+    },
+    "withdraw": {
+      "title": "Ritirare dalla revisione?",
+      "description": "{{name}} non attende più la revisione. Puoi inviarlo di nuovo più tardi.",
+      "ok": "Ritira dalla revisione"
+    },
+    "toast": {
+      "submitted": "{{name}} è stato inviato in revisione.",
+      "withdrawn": "{{name}} è stato ritirato dalla revisione.",
+      "approved": "{{name}} è stato approvato e pubblicato.",
+      "approved_scheduled": "{{name}} è stato approvato e programmato.",
+      "changes_requested": "Sono state richieste modifiche per {{name}}."
+    },
+    "submit_dialog": {
+      "description": "{{name}} viene pubblicato quando qualcuno che può pubblicare lo approva.",
+      "description_live": "Le modifiche a {{name}} vanno online quando qualcuno che può pubblicare le approva.",
+      "reviewer": "Revisore",
+      "reviewer_hint": "Viene avvisato solo {{name}}. Chiunque possa pubblicare può comunque revisionarlo.",
+      "anyone_hint": "Vengono avvisati tutti quelli che possono pubblicare.",
+      "note": "Nota per il revisore",
+      "note_placeholder": "Facoltativa"
+    },
+    "dialog": {
+      "title": "Revisiona le modifiche",
+      "description": "Guarda {{object}} prima che vada online.",
+      "submitted_by": "{{name}} ha inviato {{object}} {{when}}.",
+      "edited_since": "Modificato dopo l’invio: {{fields}}. Approvi ciò che vedi ora.",
+      "new_content": "Nuovo, mai approvato",
+      "new_content_hint": "Leggilo nella pagina prima di approvarlo.",
+      "changed_live_one": "{{count}} campo modificato rispetto alla versione pubblicata",
+      "changed_live_other": "{{count}} campi modificati rispetto alla versione pubblicata",
+      "changed_live_many": "{{count}} campi modificati rispetto alla versione pubblicata",
+      "changed_approved_one": "{{count}} campo modificato dall’ultima approvazione",
+      "changed_approved_other": "{{count}} campi modificati dall’ultima approvazione",
+      "changed_approved_many": "{{count}} campi modificati dall’ultima approvazione",
+      "note": "Nota",
+      "note_hint": "Obbligatoria se richiedi modifiche."
+    },
+    "widget": {
+      "empty": "Niente attende la tua revisione.",
+      "empty_mine": "Non hai niente in revisione.",
+      "submitted_by": "{{name}} · {{when}}",
+      "submitted": "Inviato {{when}}",
+      "changes": "Modifiche",
+      "new": "Nuovo: {{model}}"
+    },
+    "kinds": {
+      "submitted": "Inviato in revisione",
+      "approved": "Approvato",
+      "changes_requested": "Modifiche richieste"
+    }
   }
 }

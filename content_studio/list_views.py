@@ -219,6 +219,12 @@ def can_drag(studio, request: HttpRequest, view: CalendarView) -> bool:
         return False
 
     if view.uses_publishing(studio):
+        from .review import get_review, review_enabled
+
+        # With required review, scheduling goes through a review request.
+        if review_enabled(studio) and get_review(studio).required:
+            return False
+
         return bool(studio.has_publish_permission(request))
 
     field = view.resolve_field(studio)

@@ -609,9 +609,9 @@ def _takes_data(handler) -> bool:
 def calendar_errors(studio) -> list[tuple[str, str]]:
     """
     Calendars that cannot be drawn, as (check id, message) pairs: a
-    bare "calendar" without publishing (E058), and a calendar whose
+    bare "calendar" without publishing (E059), and a calendar whose
     date or end field is not a date field, or whose date another
-    calendar already shows (E059).
+    calendar already shows (E060).
     """
     errors = []
     name = studio.__class__.__name__
@@ -623,7 +623,7 @@ def calendar_errors(studio) -> list[tuple[str, str]]:
         if field is None:
             errors.append(
                 (
-                    "content_studio.E058",
+                    "content_studio.E059",
                     f'{name}.list_views offers "calendar", which shows the '
                     "publishing date, but the studio has no publishing. "
                     'Name the date field instead: CalendarView("<field>").',
@@ -640,7 +640,7 @@ def calendar_errors(studio) -> list[tuple[str, str]]:
             if reason:
                 errors.append(
                     (
-                        "content_studio.E059",
+                        "content_studio.E060",
                         f"{name}.list_views has a calendar whose {role} " f"{reason}.",
                     )
                 )
@@ -650,7 +650,7 @@ def calendar_errors(studio) -> list[tuple[str, str]]:
         if key in keys:
             errors.append(
                 (
-                    "content_studio.E059",
+                    "content_studio.E060",
                     f"{name}.list_views has two calendars of '{field}'.",
                 )
             )
@@ -962,6 +962,52 @@ def publishing_errors(studio) -> list[tuple[str, str]]:
                         f"of '{config.status}'.",
                     )
                 )
+
+    return errors
+
+
+def review_errors(studio) -> list[tuple[str, str]]:
+    """
+    A misconfigured review (E058): True or a Review, on a studio with
+    publishing, with the review app installed.
+    """
+    from django.apps import apps as django_apps
+
+    from .publishing import get_publishing
+    from .review import Review
+
+    value = getattr(studio, "review", None)
+    name = studio.__class__.__name__
+
+    if value in (None, False):
+        return []
+
+    if value is not True and not isinstance(value, Review):
+        return [
+            (
+                "content_studio.E058",
+                f"{name}.review must be True or a Review; got {value!r}.",
+            )
+        ]
+
+    errors = []
+
+    if get_publishing(studio) is None:
+        errors.append(
+            (
+                "content_studio.E058",
+                f"{name}.review needs publishing: set {name}.publishing.",
+            )
+        )
+
+    if not django_apps.is_installed("content_studio.review"):
+        errors.append(
+            (
+                "content_studio.E058",
+                f"{name}.review needs the review app: add "
+                f"'content_studio.review' to INSTALLED_APPS.",
+            )
+        )
 
     return errors
 
@@ -3109,6 +3155,7 @@ BUILT_IN_WIDGET_TYPES = {
     "ActivityLogWidget",
     "ContentListWidget",
     "NotificationsWidget",
+    "ReviewQueue",
     "ScheduledTasksWidget",
     "SpacingWidget",
     "StatisticWidget",
@@ -3202,6 +3249,17 @@ def dashboard_widget_warnings(site) -> list[tuple[str, str]]:
                     "content_studio.W021",
                     f"The dashboard widget {widget.__class__.__name__} shows "
                     "notifications, but content_studio.notifications is not in "
+                    "INSTALLED_APPS; it is not shown.",
+                )
+            )
+        elif widget_type == "ReviewQueue" and not apps.is_installed(
+            "content_studio.review"
+        ):
+            warnings.append(
+                (
+                    "content_studio.W021",
+                    f"The dashboard widget {widget.__class__.__name__} shows "
+                    "review requests, but content_studio.review is not in "
                     "INSTALLED_APPS; it is not shown.",
                 )
             )
@@ -4473,6 +4531,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in publishing_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        for check_id, error in review_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in table_edit_errors(studio):

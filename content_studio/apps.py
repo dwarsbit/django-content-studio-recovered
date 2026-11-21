@@ -541,14 +541,25 @@ class DjangoContentStudioConfig(AppConfig):
                             ):
                                 return None
 
-                            return {
+                            request = self.context.get("request")
+                            result = {
                                 **serialize_state(config, obj),
                                 "can_publish": bool(
-                                    admin_model.has_publish_permission(
-                                        self.context.get("request"), obj
-                                    )
+                                    admin_model.has_publish_permission(request, obj)
                                 ),
                             }
+
+                            from .review import review_enabled
+
+                            if review_enabled(admin_model):
+                                from .review.core import get_current
+                                from .review.core import serialize as serialize_review
+
+                                result["review"] = serialize_review(
+                                    admin_model, request, obj, get_current(obj)
+                                )
+
+                            return result
 
                         def get_view_on_site(self, obj):
                             from .publishing import PUBLISHED, get_publishing, get_state
@@ -677,7 +688,10 @@ class DjangoContentStudioConfig(AppConfig):
                     if publishing_config is not None:
                         from .pending import pending_object_ids, uses_pending_changes
 
+                        from .review import review_enabled
+
                         with_pending = uses_pending_changes(self._admin_model)
+                        with_review = review_enabled(self._admin_model)
                         model_class = self._model
 
                         def get_publishing_state(
@@ -685,9 +699,27 @@ class DjangoContentStudioConfig(AppConfig):
                             obj,
                             config=publishing_config,
                             with_pending=with_pending,
+                            with_review=with_review,
                             model_class=model_class,
                         ):
                             state = serialize_state(config, obj)
+
+                            # Rows in review say so; the requests are
+                            # read once per request.
+                            if with_review:
+                                if "_review_statuses" not in self.context:
+                                    from .review.core import current_statuses
+
+                                    self.context["_review_statuses"] = current_statuses(
+                                        model_class
+                                    )
+
+                                current = self.context["_review_statuses"].get(
+                                    str(obj.pk)
+                                )
+                                state["review"] = (
+                                    {"status": current["status"]} if current else None
+                                )
 
                             # Rows with unpublished changes say so; the
                             # ids are read once per request.

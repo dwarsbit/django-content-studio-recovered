@@ -320,9 +320,21 @@ def _publishing_action(studio, action_id) -> Optional[BulkAction]:
         get_state,
     )
 
+    from .review import get_review, review_enabled
+
     config = get_publishing(studio)
 
     if config is None:
+        return None
+
+    with_review = review_enabled(studio)
+
+    # A studio that requires review publishes only through it.
+    if (
+        with_review
+        and get_review(studio).required
+        and action_id in (PUBLISH_ACTION_ID, SCHEDULE_ACTION_ID)
+    ):
         return None
 
     def run(request, queryset, action, data, skip):
@@ -333,6 +345,13 @@ def _publishing_action(studio, action_id) -> Optional[BulkAction]:
                 continue
 
             apply(studio, request, obj, action, data)
+
+            # Publishing settles a request in review.
+            if with_review and action in ("publish", "schedule"):
+                from .review.core import close_on_publish
+
+                close_on_publish(studio, request, obj)
+
             count += 1
 
         return count

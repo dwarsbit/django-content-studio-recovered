@@ -1440,5 +1440,74 @@
     "delete_description": "The comment is removed for everyone. Replies stay.",
     "error": "The comment could not be saved. Try again.",
     "mention": "People to mention"
+  },
+  "review": {
+    "title": "Review",
+    "submit": "Submit for review",
+    "submit_again": "Submit again",
+    "review": "Review",
+    "request_changes": "Request changes",
+    "approve_schedule": "Approve and schedule…",
+    "approve_publish": "Approve and publish",
+    "anyone": "Anyone who can publish",
+    "after_review": "After review",
+    "hint": "Someone who can publish reviews it before it goes live.",
+    "submitted": "Submitted",
+    "you": "You",
+    "reviewer": "Reviewer",
+    "reviewed_by": "Reviewed by",
+    "states": {
+      "open": "In review",
+      "changes_requested": "Changes requested",
+      "changes_in_review": "Changes in review"
+    },
+    "withdraw": {
+      "title": "Withdraw from review?",
+      "description": "{{name}} is no longer waiting for review. You can submit it again later.",
+      "ok": "Withdraw from review"
+    },
+    "toast": {
+      "submitted": "{{name}} was submitted for review.",
+      "withdrawn": "{{name}} was withdrawn from review.",
+      "approved": "{{name}} was approved and published.",
+      "approved_scheduled": "{{name}} was approved and scheduled.",
+      "changes_requested": "Changes were requested for {{name}}."
+    },
+    "submit_dialog": {
+      "description": "{{name}} is published once someone who can publish approves it.",
+      "description_live": "The changes to {{name}} go live once someone who can publish approves them.",
+      "reviewer": "Reviewer",
+      "reviewer_hint": "Only {{name}} is notified. Anyone who can publish can still review it.",
+      "anyone_hint": "Everyone who can publish is notified.",
+      "note": "Note for the reviewer",
+      "note_placeholder": "Optional"
+    },
+    "dialog": {
+      "title": "Review changes",
+      "description": "Look at {{object}} before it goes live.",
+      "submitted_by": "{{name}} submitted {{object}} {{when}}.",
+      "edited_since": "Edited after it was submitted: {{fields}}. You approve what you see now.",
+      "new_content": "New, not approved before",
+      "new_content_hint": "Read it on the page before you approve it.",
+      "changed_live_one": "{{count}} field changed against the published version",
+      "changed_live_other": "{{count}} fields changed against the published version",
+      "changed_approved_one": "{{count}} field changed since it was last approved",
+      "changed_approved_other": "{{count}} fields changed since it was last approved",
+      "note": "Note",
+      "note_hint": "Required when you request changes."
+    },
+    "widget": {
+      "empty": "Nothing is waiting for your review.",
+      "empty_mine": "You have nothing in review.",
+      "submitted_by": "{{name}} · {{when}}",
+      "submitted": "Submitted {{when}}",
+      "changes": "Changes",
+      "new": "New {{model}}"
+    },
+    "kinds": {
+      "submitted": "Submitted for review",
+      "approved": "Approved",
+      "changes_requested": "Requested changes"
+    }
   }
 }

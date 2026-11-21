@@ -37,7 +37,7 @@ models help with content-driven projects.
   background tasks.
 - **A media library** with folders, uploads, crops, focal points and image
   sizes.
-- **Collaboration**: internal comments with @mentions, notifications, presence avatars and a command palette.
+- **Collaboration**: review and approval before publishing, internal comments with @mentions, notifications, presence avatars and a command palette.
 - **Access control** that follows the permission hooks of the classic
   Django admin, down to single objects.
 - **Multi-tenancy**: one method decides which tenants an editor may work in.

@@ -9,6 +9,7 @@ const sidebars: SidebarsConfig = {
     "list-page",
     "edit-page",
     "publishing",
+    "review",
     "previews",
     "translations",
     "widgets",

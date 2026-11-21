@@ -844,6 +844,7 @@ class BaseModelViewSet(ModelViewSet):
                 raise PermissionDenied()
 
             pending_changes.discard(request, instance)
+            self._withdraw_live_review(request, instance)
 
             return Response(
                 {
@@ -856,6 +857,19 @@ class BaseModelViewSet(ModelViewSet):
         if not self._admin_model.has_publish_permission(request, instance):
             raise PermissionDenied()
 
+        from .review import get_review, review_enabled
+
+        with_review = review_enabled(self._admin_model)
+
+        if (
+            with_review
+            and get_review(self._admin_model).required
+            and action_name in ("publish", "schedule", "publish_changes")
+        ):
+            raise ValidationError(
+                _("This model is published after review: submit it for review.")
+            )
+
         using = router.db_for_write(self._model)
 
         if action_name == "publish_changes":
@@ -863,7 +877,15 @@ class BaseModelViewSet(ModelViewSet):
                 raise ValidationError("This model has no unpublished changes.")
 
             with transaction.atomic(using=using):
+                snapshot = self._review_snapshot(instance) if with_review else None
                 published = pending_changes.publish(self, instance)
+
+                if published and with_review:
+                    from .review.core import close_on_publish
+
+                    close_on_publish(
+                        self._admin_model, request, instance, snapshot=snapshot
+                    )
 
             if not published:
                 raise ValidationError(_("There are no unpublished changes."))
@@ -880,7 +902,20 @@ class BaseModelViewSet(ModelViewSet):
 
         try:
             with transaction.atomic(using=using):
+                snapshot = (
+                    self._review_snapshot(instance)
+                    if with_review and action_name in ("publish", "schedule")
+                    else None
+                )
                 result = apply(self._admin_model, request, instance, action_name, data)
+
+                # Publishing settles a request in review.
+                if snapshot is not None:
+                    from .review.core import close_on_publish
+
+                    close_on_publish(
+                        self._admin_model, request, instance, snapshot=snapshot
+                    )
 
                 # No longer live: the object takes its unpublished
                 # changes, as a draft or scheduled object would. An
@@ -901,6 +936,261 @@ class BaseModelViewSet(ModelViewSet):
                 "message": result.message,
             }
         )
+
+    def _review_snapshot(self, instance, with_pending=True):
+        """The object's values as review compares them: the edit page's
+        (with unpublished changes when with_pending), without the
+        publishing dates."""
+        from .publishing import get_publishing
+
+        data = self.get_serializer(instance).data
+
+        if with_pending:
+            data = self._with_pending(data, instance)
+
+        snapshot = self._snapshot(data) or {}
+        config = get_publishing(self._admin_model)
+
+        for name in config.field_names if config else ():
+            snapshot.pop(name, None)
+
+        return snapshot
+
+    def _withdraw_live_review(self, request, instance):
+        """Discarding unpublished changes withdraws their review."""
+        from .review import review_enabled
+
+        if not review_enabled(self._admin_model):
+            return
+
+        from .review.core import get_current, withdraw
+
+        review = get_current(instance)
+
+        if review is not None and review.live:
+            withdraw(self._admin_model, request, instance, review)
+
+    @action(methods=["get", "post"], detail=True, url_path="review")
+    def review(self, request, id):
+        """
+        Review before publishing (the review app). GET answers with the
+        current request, the object's version and what changed: against
+        the live version (unpublished changes), else against the last
+        approved values; ?include=reviewers adds who may be picked.
+
+        POST {"action": "submit" | "withdraw" | "approve" |
+        "request_changes", "note", "reviewer", "version", "at",
+        "unpublish_at"}: submit needs change permission; approve and
+        request_changes need Can publish (and not being the submitter,
+        unless self_approval); approve names the version the reviewer
+        saw and publishes now, or schedules at "at".
+        """
+        from . import pending as pending_changes
+        from .publishing import PUBLISHED, apply, get_publishing, get_state
+        from .publishing import serialize_state
+        from .review import review_enabled
+        from .review import core as reviewing
+
+        studio = self._admin_model
+
+        if not review_enabled(studio):
+            raise NotFound("This model has no review.")
+
+        instance = self.get_object()
+        config = get_publishing(studio)
+        current = reviewing.get_current(instance)
+        snapshot = self._review_snapshot(instance)
+        version = reviewing.fingerprint(snapshot)
+
+        def answer(review, message=""):
+            return Response(
+                {
+                    "review": reviewing.serialize(studio, request, instance, review),
+                    "publishing": serialize_state(config, instance),
+                    "message": message,
+                }
+            )
+
+        if request.method == "GET":
+            live = get_state(config, instance) == PUBLISHED
+            pending = (
+                pending_changes.get_pending(instance)
+                if pending_changes.uses_pending_changes(studio)
+                else None
+            )
+
+            if live:
+                base = "live"
+                before = self._review_snapshot(instance, with_pending=False)
+            else:
+                approved = reviewing.last_approved(instance)
+                base = "approved" if approved else None
+                before = approved.approved_snapshot if approved else None
+
+            fields = reviewing.changed_fields(before, snapshot)
+            result = {
+                "review": reviewing.serialize(studio, request, instance, current),
+                "version": version,
+                "changes": {
+                    "base": base,
+                    "fields": fields,
+                    "before": {name: (before or {}).get(name) for name in fields},
+                    "after": {name: snapshot.get(name) for name in fields},
+                },
+                "has_pending": pending is not None,
+                "changed_since_submitted": (
+                    reviewing.changed_fields(current.snapshot, snapshot)
+                    if current is not None and current.version != version
+                    else []
+                ),
+            }
+
+            if request.query_params.get("include") == "reviewers":
+                if not reviewing.may_submit(studio, request, instance):
+                    raise PermissionDenied()
+
+                config_review = reviewing.get_review(studio)
+                result["reviewers"] = [
+                    reviewing.describe(user, request)
+                    for user in reviewing.get_reviewers(
+                        studio,
+                        instance,
+                        reviewing.tenant_of(instance),
+                        exclude=(None if config_review.self_approval else request.user),
+                    )
+                ]
+
+            return Response(result)
+
+        data = request.data if hasattr(request.data, "get") else {}
+        action_name = str(data.get("action") or "")
+        note = data.get("note") or ""
+
+        if not isinstance(note, str):
+            raise ValidationError({"note": ["Enter a note."]})
+
+        try:
+            if action_name == "submit":
+                if not reviewing.may_submit(studio, request, instance):
+                    raise PermissionDenied()
+
+                live = get_state(config, instance) == PUBLISHED
+
+                if live and not pending_changes.get_pending(instance):
+                    raise ValidationError(
+                        _("There are no unpublished changes to review.")
+                    )
+
+                reviewer = None
+
+                if data.get("reviewer") not in (None, ""):
+                    reviewer = next(
+                        (
+                            user
+                            for user in reviewing.get_reviewers(
+                                studio, instance, reviewing.tenant_of(instance)
+                            )
+                            if str(user.pk) == str(data.get("reviewer"))
+                        ),
+                        None,
+                    )
+
+                    if reviewer is None:
+                        raise ValidationError(
+                            {"reviewer": [_("This person cannot review it.")]}
+                        )
+
+                review = reviewing.submit(
+                    studio,
+                    request,
+                    instance,
+                    snapshot=snapshot,
+                    live=live,
+                    note=note,
+                    reviewer=reviewer,
+                )
+
+                return answer(review, reviewing.MESSAGE_SUBMITTED)
+
+            if current is None:
+                raise ValidationError(_("This object is not in review."))
+
+            if action_name == "withdraw":
+                if not reviewing.may_withdraw(studio, request, instance, current):
+                    raise PermissionDenied()
+
+                reviewing.withdraw(studio, request, instance, current)
+
+                return answer(None, reviewing.MESSAGE_WITHDRAWN)
+
+            if action_name not in ("approve", "request_changes"):
+                raise ValidationError(
+                    _("Unknown review action %(action)s.") % {"action": action_name}
+                )
+
+            if not reviewing.may_approve(studio, request, instance, current):
+                raise PermissionDenied()
+
+            if action_name == "request_changes":
+                if not note.strip():
+                    raise ValidationError({"note": [_("Say what to change.")]})
+
+                with transaction.atomic(using=router.db_for_write(self._model)):
+                    review = reviewing.request_changes(
+                        studio, request, instance, current, note
+                    )
+
+                return answer(review, reviewing.MESSAGE_CHANGES_REQUESTED)
+
+            # Approve: what the reviewer saw is what goes live.
+            if str(data.get("version") or "") != version:
+                raise ValidationError(
+                    {
+                        "version": [
+                            _(
+                                "It changed since you opened it. Look at the "
+                                "changes again."
+                            )
+                        ]
+                    }
+                )
+
+            uses_pending = pending_changes.uses_pending_changes(studio)
+            was_live = pending_changes.holds_changes(studio, instance)
+            schedule = data.get("at") not in (None, "")
+
+            if was_live and schedule:
+                raise ValidationError(
+                    {"at": [_("Live content is approved to publish now.")]}
+                )
+
+            with transaction.atomic(using=router.db_for_write(self._model)):
+                if was_live:
+                    pending_changes.publish(self, instance)
+                else:
+                    apply(
+                        studio,
+                        request,
+                        instance,
+                        "schedule" if schedule else "publish",
+                        data,
+                    )
+
+                    if uses_pending:
+                        instance.refresh_from_db()
+                        pending_changes.publish(self, instance)
+
+                review = reviewing.approve(
+                    studio, request, instance, current, note=note, snapshot=snapshot
+                )
+        except reviewing.ReviewError as error:
+            raise ValidationError(error.message)
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+        instance.refresh_from_db()
+
+        return answer(None, reviewing.MESSAGE_APPROVED)
 
     @action(methods=["post"], detail=True, url_path="preview")
     def preview(self, request, id):

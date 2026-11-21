@@ -2,7 +2,7 @@
 Tests for the calendar list view (content_studio.list_views): the
 config and its serialization, the calendar endpoint (ranges, the tray,
 search and filters, the cap), saving a dragged date through the table
-edit save, and the checks (E002, E058, E059).
+edit save, and the checks (E002, E059, E060).
 """
 
 from datetime import datetime, timedelta, timezone as tz
@@ -143,6 +143,19 @@ def test_publishing_calendar_needs_publish_permission(story_calendar, db):
     view = AdminSerializer(StoryAdmin(Story, admin_site)).serialize(request)["list"][
         "views"
     ][1]
+
+    assert view["editable"] is False
+
+
+def test_publishing_calendar_is_read_only_with_required_review(
+    story_calendar, request_
+):
+    from content_studio.review import Review
+
+    with mock.patch.object(StoryAdmin, "review", Review(required=True), create=True):
+        view = AdminSerializer(StoryAdmin(Story, admin_site)).serialize(request_)[
+            "list"
+        ]["views"][1]
 
     assert view["editable"] is False
 
@@ -369,7 +382,7 @@ def test_unknown_views_are_rejected():
 def test_bare_calendar_needs_publishing():
     errors = _errors(["calendar"])
 
-    assert [error[0] for error in errors] == ["content_studio.E058"]
+    assert [error[0] for error in errors] == ["content_studio.E059"]
 
 
 def test_bare_calendar_with_publishing_validates():
@@ -383,7 +396,7 @@ def test_bare_calendar_with_publishing_validates():
 def test_calendar_field_must_be_a_date():
     errors = _errors([CalendarView("title")])
 
-    assert [error[0] for error in errors] == ["content_studio.E059"]
+    assert [error[0] for error in errors] == ["content_studio.E060"]
     assert "not a DateField" in errors[0][1]
 
 
@@ -391,13 +404,13 @@ def test_calendar_field_must_exist():
     errors = _errors([CalendarView("launch", end="views")])
 
     assert [error[0] for error in errors] == [
-        "content_studio.E059",
-        "content_studio.E059",
+        "content_studio.E060",
+        "content_studio.E060",
     ]
 
 
 def test_two_calendars_of_one_field_are_rejected():
     errors = _errors([CalendarView("published_at"), CalendarView("published_at")])
 
-    assert [error[0] for error in errors] == ["content_studio.E059"]
+    assert [error[0] for error in errors] == ["content_studio.E060"]
     assert "two calendars" in errors[0][1]

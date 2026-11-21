@@ -1493,5 +1493,76 @@
     "delete_description": "Le commentaire est supprimé pour tout le monde. Les réponses restent.",
     "error": "Le commentaire n'a pas pu être enregistré. Réessayez.",
     "mention": "Personnes à mentionner"
+  },
+  "review": {
+    "title": "Relecture",
+    "submit": "Soumettre à relecture",
+    "submit_again": "Soumettre à nouveau",
+    "review": "Relire",
+    "request_changes": "Demander des modifications",
+    "approve_schedule": "Approuver et programmer…",
+    "approve_publish": "Approuver et publier",
+    "anyone": "Toute personne pouvant publier",
+    "after_review": "Après relecture",
+    "hint": "Une personne pouvant publier le relit avant sa mise en ligne.",
+    "submitted": "Soumis",
+    "you": "Vous",
+    "reviewer": "Relecteur",
+    "reviewed_by": "Relu par",
+    "states": {
+      "open": "En relecture",
+      "changes_requested": "Modifications demandées",
+      "changes_in_review": "Modifications en relecture"
+    },
+    "withdraw": {
+      "title": "Retirer de la relecture ?",
+      "description": "{{name}} n’attend plus de relecture. Vous pourrez le soumettre à nouveau plus tard.",
+      "ok": "Retirer de la relecture"
+    },
+    "toast": {
+      "submitted": "{{name}} a été soumis à relecture.",
+      "withdrawn": "{{name}} a été retiré de la relecture.",
+      "approved": "{{name}} a été approuvé et publié.",
+      "approved_scheduled": "{{name}} a été approuvé et programmé.",
+      "changes_requested": "Des modifications ont été demandées pour {{name}}."
+    },
+    "submit_dialog": {
+      "description": "{{name}} est publié dès qu’une personne pouvant publier l’approuve.",
+      "description_live": "Les modifications de {{name}} sont mises en ligne dès qu’une personne pouvant publier les approuve.",
+      "reviewer": "Relecteur",
+      "reviewer_hint": "Seul(e) {{name}} est notifié(e). Toute personne pouvant publier peut quand même le relire.",
+      "anyone_hint": "Toutes les personnes pouvant publier sont notifiées.",
+      "note": "Note pour le relecteur",
+      "note_placeholder": "Facultatif"
+    },
+    "dialog": {
+      "title": "Relire les modifications",
+      "description": "Regardez {{object}} avant sa mise en ligne.",
+      "submitted_by": "{{name}} a soumis {{object}} {{when}}.",
+      "edited_since": "Modifié après la soumission : {{fields}}. Vous approuvez ce que vous voyez maintenant.",
+      "new_content": "Nouveau, jamais approuvé",
+      "new_content_hint": "Lisez-le sur la page avant de l’approuver.",
+      "changed_live_one": "{{count}} champ modifié par rapport à la version publiée",
+      "changed_live_other": "{{count}} champs modifiés par rapport à la version publiée",
+      "changed_live_many": "{{count}} champs modifiés par rapport à la version publiée",
+      "changed_approved_one": "{{count}} champ modifié depuis la dernière approbation",
+      "changed_approved_other": "{{count}} champs modifiés depuis la dernière approbation",
+      "changed_approved_many": "{{count}} champs modifiés depuis la dernière approbation",
+      "note": "Note",
+      "note_hint": "Obligatoire si vous demandez des modifications."
+    },
+    "widget": {
+      "empty": "Rien n’attend votre relecture.",
+      "empty_mine": "Vous n’avez rien en relecture.",
+      "submitted_by": "{{name}} · {{when}}",
+      "submitted": "Soumis {{when}}",
+      "changes": "Modifications",
+      "new": "Nouveau : {{model}}"
+    },
+    "kinds": {
+      "submitted": "Soumis à relecture",
+      "approved": "Approuvé",
+      "changes_requested": "Modifications demandées"
+    }
   }
 }

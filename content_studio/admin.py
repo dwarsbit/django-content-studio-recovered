@@ -474,6 +474,13 @@ class ModelStudio(BaseStudio[T]):
     # permission (see has_publish_permission).
     publishing: Union[str, "Publishing", None] = None
 
+    # Review before publishing, as an opt-in on a studio with publishing
+    # (with the content_studio.review app installed): True, or a
+    # Review(required=, self_approval=). Editors submit objects for
+    # review; someone who may publish approves (publishing or
+    # scheduling them) or requests changes.
+    review: Union[bool, "Review", None] = None
+
     # Inline models edited on the parent's edit page.
     inlines: list[Type["InlineModelStudio"]] = []
 
@@ -736,6 +743,23 @@ class ModelStudio(BaseStudio[T]):
         or at its unpublish date by the scheduled run (request is None
         then). The default does nothing.
         """
+
+    def get_reviewers(self, request: HttpRequest, obj: T):
+        """
+        The users asked to review obj when it is submitted without a
+        picked reviewer (with review). None, the default, asks everyone
+        who may publish obj.
+        """
+        return None
+
+    def on_submit_for_review(self, request: HttpRequest, obj: T, review) -> None:
+        """Called once obj was submitted for review (review is the
+        ReviewRequest). The default does nothing."""
+
+    def on_review(self, request: HttpRequest, obj: T, review) -> None:
+        """Called once a reviewer decided: review.status is "approved"
+        (obj is published or scheduled) or "changes_requested". The
+        default does nothing."""
 
     def has_add_permission(self, request: HttpRequest, obj: Optional[T] = None) -> bool:
         # Don't allow adding more than one singleton object.
@@ -1690,7 +1714,19 @@ def serialize_publishing(studio, request) -> Optional[dict[str, Any]]:
         "pending_changes": uses_pending_changes(studio),
         # Whether the request may publish (per object in __publishing__).
         "can_publish": bool(studio.has_publish_permission(request)),
+        # Review before publishing (the review app): required and
+        # self_approval, or None without review.
+        "review": serialize_review_config(studio),
     }
+
+
+def serialize_review_config(studio) -> Optional[dict[str, Any]]:
+    from .review import get_review, review_enabled
+
+    if not review_enabled(studio):
+        return None
+
+    return get_review(studio).serialize()
 
 
 def is_notifications_enabled(admin_class) -> bool:

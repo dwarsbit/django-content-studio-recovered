@@ -168,8 +168,9 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E055` | A studio's [`translations`](/docs/translations#languages-and-required-languages): not a list of field names or `Translations`, a field the model does not have, a language that is not a content language, a required language the studio does not have, or an unknown adapter. |
 | `content_studio.E056` | A studio's [`preview`](/docs/previews#options) that is not `True` or `False`. |
 | `content_studio.E057` | A studio's [`table_edit`](/docs/list-page#editing-in-the-table) (or `list_editable`) that is not a list of field names, or names a field a table cell cannot edit: not a `table_display` column, the first column, a field the edit page does not write, a read-only field, a many-to-many or reverse relation, a field with its own widget or a field publishing sets. |
-| `content_studio.E058` | `"calendar"` in [`list_views`](/docs/list-page#calendar) on a studio without publishing: name the date field with `CalendarView("<field>")`. |
-| `content_studio.E059` | A [calendar](/docs/list-page#calendar) whose field or end is not a `DateField` or `DateTimeField` of the model, or two calendars of the same field. |
+| `content_studio.E058` | A studio's [`review`](/docs/review#set-up-review) that is not `True` or a `Review`, on a studio without publishing, or without `content_studio.review` in `INSTALLED_APPS`. |
+| `content_studio.E059` | `"calendar"` in [`list_views`](/docs/list-page#calendar) on a studio without publishing: name the date field with `CalendarView("<field>")`. |
+| `content_studio.E060` | A [calendar](/docs/list-page#calendar) whose field or end is not a `DateField` or `DateTimeField` of the model, or two calendars of the same field. |
 
 ### Warnings
 
@@ -195,7 +196,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W018` | [Password reset](/docs/authentication#password-reset) emails sent during the request, because no task backend runs Django tasks in a worker. A deployment check: `manage.py check --deploy` reports it. |
 | `content_studio.W019` | `CoverImageWidget` on a field that is not a `MediaField` to the media library model. The widget edits one media item. |
 | `content_studio.W020` | A [Huey task dashboard](/docs/dashboard#huey) without Huey's stats app, so it cannot show runs, durations or errors. |
-| `content_studio.W021` | A [`NotificationsWidget`](/docs/notifications#a-dashboard-widget) on a site without `content_studio.notifications` in `INSTALLED_APPS`; it is not shown. |
+| `content_studio.W021` | A [`NotificationsWidget`](/docs/notifications#a-dashboard-widget) on a site without `content_studio.notifications` in `INSTALLED_APPS`, or a [`ReviewQueue`](/docs/review#a-dashboard-widget) without `content_studio.review`; it is not shown. |
 | `content_studio.W022` | [`IMAGE_SIZES`](/docs/settings#image_sizes) set while no sizes can be made: Pillow is not installed, `IMAGE_SIZE_FOLDER` is not set, or the media model has no metadata field. Every size is then the image's own file. |
 | `content_studio.W023` | An analytics provider missing a setting it needs, such as an [`UmamiProvider`](/docs/analytics#umami) without an `api_key` or `website_id`. Its reports show the statistics as unavailable. |
 | `content_studio.W024` | A required model field that only shows under a [condition](/docs/edit-page#conditional-fields). A hidden field is not saved, so creating an object while it is hidden fails. |
