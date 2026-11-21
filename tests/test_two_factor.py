@@ -217,17 +217,21 @@ class LoginTests(TwoFactorTestCase):
     def test_a_challenge_works_once(self):
         secret, _ = self.enable()
         challenge = self.challenge()
-        self.verify(challenge, code=code(secret, 1))
+        once = code(secret, 1)
+        self.verify(challenge, code=once)
 
-        response = self.verify(challenge, code=code(secret, 1))
+        response = self.verify(challenge, code=once)
 
         self.assertEqual(response.status_code, 400)
 
     def test_a_code_works_once(self):
         secret, _ = self.enable()
-        self.verify(self.challenge(), code=code(secret, 1))
+        # One code for both tries: computing it twice gives the next
+        # step's code when a 30 second step ends in between.
+        once = code(secret, 1)
+        self.verify(self.challenge(), code=once)
 
-        response = self.verify(self.challenge(), code=code(secret, 1))
+        response = self.verify(self.challenge(), code=once)
 
         self.assertEqual(response.status_code, 400)
 
