@@ -4,6 +4,7 @@ import { PiImage } from "react-icons/pi";
 import { useNavigate } from "react-router";
 
 import { PresenceIndicator } from "@/components/presence";
+import { PublishingBadge } from "@/components/publishing/publishing-badge";
 import { Reorderable, RowDragHandle } from "@/components/reorderable";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -208,6 +209,12 @@ function ListViewRow({
         ) : null}
       </div>
       <PresenceIndicator users={presence} />
+      {item.__publishing__ ? (
+        <PublishingBadge
+          state={item.__publishing__.state}
+          publishedAt={item.__publishing__.published_at}
+        />
+      ) : null}
       {display?.meta ? (
         <Badge variant="outline" className="shrink-0">
           {display.meta}

@@ -7,7 +7,6 @@ configured in CONTENT_STUDIO (demo.blog.studio.admin_site).
 from django import forms
 from django.contrib.auth import get_user_model
 from django.db.models import Q
-from django.db.models.functions import Now
 
 from content_studio import register, user_studios, widgets
 from content_studio.admin import ModelStudio, RelationDisplay, InlineModelStudio
@@ -24,6 +23,7 @@ from content_studio.form import (
 )
 from content_studio.actions import bulk_action
 from content_studio.filters import ListFilter
+from content_studio.publishing import Publishing
 
 from . import models
 
@@ -139,6 +139,8 @@ class ReachFilter(ListFilter):
 @register(models.Article)
 class ArticleStudio(ModelStudio):
     icon = "ph-bold ph-article"
+    # The status column shows the publishing state (Draft, Scheduled,
+    # Published, Expired).
     table_display = ["title", "status", "featured", "views", "author", "published_at"]
     # The list view's rows; both views are offered, with a toggle.
     list_views = ["table", "list"]
@@ -150,12 +152,12 @@ class ArticleStudio(ModelStudio):
     }
     # Newest first, so the seeded demo article leads the list.
     ordering = ["-pk"]
-    # One field per filter type: choices (status), boolean (featured),
-    # number range (views), date range (published_at), foreign key
-    # (author) and many to many (categories); a path across a reverse
-    # relation (review__stars) and a custom filter (ReachFilter).
+    # One field per filter type: boolean (featured), number range
+    # (views), date range (published_at), foreign key (author) and many
+    # to many (categories); a path across a reverse relation
+    # (review__stars) and a custom filter (ReachFilter). Publishing adds
+    # the Status filter.
     list_filter = [
-        "status",
         "featured",
         "views",
         "published_at",
@@ -167,6 +169,17 @@ class ArticleStudio(ModelStudio):
     # Opt-in soft delete: deleting moves articles to the trash, where
     # they can be restored or permanently deleted.
     soft_delete = "removed_at"
+    # Draft, publish and scheduling: the Publishing card sets the dates,
+    # and the status field follows the state.
+    publishing = Publishing(
+        "published_at",
+        unpublish_at="unpublish_at",
+        status="status",
+        status_values={
+            "draft": models.Article.Status.DRAFT,
+            "published": models.Article.Status.PUBLISHED,
+        },
+    )
     # Export the table, and import articles from a file: rows with an id
     # update that article, others create one. Authors are given by
     # username and categories by name.
@@ -176,19 +189,17 @@ class ArticleStudio(ModelStudio):
         "slug",
         "body",
         "meta_description",
-        "status",
         "author",
         "categories",
         "featured",
         "views",
-        "published_at",
     ]
     import_lookups = {"author": "username", "categories": "name"}
     # Each row's menu: publish or assign that one article, duplicate it,
     # or move it to the trash.
-    row_actions = ["publish", "assign", "duplicate", "delete"]
+    row_actions = ["publishing:publish", "assign", "duplicate", "delete"]
     # The edit page's more actions menu offers these on the article.
-    edit_actions = ["assign", "set_status"]
+    edit_actions = ["assign"]
     allow_duplication = True
     search_fields = ["title"]
     inlines = [ReviewInline]
@@ -204,8 +215,6 @@ class ArticleStudio(ModelStudio):
                 Text("Write for the web: short paragraphs, **one idea** each."),
                 "body",
                 Field("video_url", widget=widgets.EmbedWidget),
-                Subtitle("Publishing"),
-                "status",
                 "categories",
             ],
         ),
@@ -239,31 +248,18 @@ class ArticleStudio(ModelStudio):
     ]
     edit_sidebar = [
         ReadingTime(),
-        # The publication date only matters once the article is published.
-        Field("published_at", when=Q(status="published")),
-        Callout(
-            "Scheduled: the article goes live at its publication date.",
-            variant="info",
-            when=Q(status="published", published_at__gt=Now()),
-        ),
         "author",
         "featured",
+        Callout(
+            "Featured articles lead the home page.",
+            variant="info",
+            when=Q(featured=True),
+        ),
         "views",
         # The demo site serves articles at /articles/<id>/.
         Analytics(path_field="pk", path_prefix="/articles/", path_suffix="/"),
         ActivityLog(),
     ]
-
-    @bulk_action(
-        label="Publish",
-        icon="ph-bold ph-paper-plane-tilt",
-        confirm="...",
-        allowed_permissions=["change"],
-        destructive=False,
-    )
-    def publish(self, request, queryset):
-        queryset.update(status=models.Article.Status.PUBLISHED)
-        return f"Published {queryset.count()} articles."
 
     # An action with an input form: the dialog asks for an author (a
     # model field, with the edit form's picker) and an optional note,
@@ -293,18 +289,6 @@ class ArticleStudio(ModelStudio):
     def assign(self, request, queryset, data):
         count = queryset.update(author=data["author"])
         return f"Assigned {count} articles to {data['author'] or 'nobody'}."
-
-    @bulk_action(
-        label="Set status",
-        icon="ph-bold ph-flag",
-        fields=["status", Field("published_at", when=Q(status="published"))],
-    )
-    def set_status(self, request, queryset, data):
-        values = {"status": data["status"]}
-        if "published_at" in data:
-            values["published_at"] = data["published_at"]
-        count = queryset.update(**values)
-        return f"Updated {count} articles."
 
 
 @register(models.SiteSettings)

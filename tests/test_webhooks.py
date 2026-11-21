@@ -114,7 +114,7 @@ class MatchingTests(TestCase):
         self.assertFalse(self.matches(webhook, change(Note, "deleted", None)))
 
     def test_unknown_events_and_unsafe_urls_are_invalid(self):
-        webhook = Webhook(name="x", url="https://example.com", events=["published"])
+        webhook = Webhook(name="x", url="https://example.com", events=["launched"])
         with self.assertRaises(ValidationError):
             webhook.full_clean()
 

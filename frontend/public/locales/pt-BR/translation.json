@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} restaurou {{count}} {{models}}",
       "reordered_many_one": "{{actor}} reordenou {{count}} {{models}}",
       "reordered_many_other": "{{actor}} reordenou {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} reordenou {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} reordenou {{count}} {{models}}",
+      "published": "{{actor}} publicou {{object}} ({{model}})",
+      "published_many_one": "{{actor}} publicou {{count}} {{models}}",
+      "published_many_other": "{{actor}} publicou {{count}} {{models}}",
+      "published_many_many": "{{actor}} publicou {{count}} {{models}}",
+      "unpublished": "{{actor}} despublicou {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} despublicou {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} despublicou {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} despublicou {{count}} {{models}}"
     },
     "follow": {
       "follow": "Acompanhar",
@@ -738,7 +746,9 @@
       "updated": "Atualizado",
       "deleted": "Excluído",
       "restored": "Restaurado",
-      "reordered": "Movido"
+      "reordered": "Movido",
+      "published": "Publicado",
+      "unpublished": "Despublicado"
     }
   },
   "analytics": {
@@ -1303,5 +1313,57 @@
   "row_actions": {
     "menu": "Ações",
     "menu_for": "Ações para {{name}}"
+  },
+  "publishing": {
+    "title": "Publicação",
+    "states": {
+      "draft": "Rascunho",
+      "scheduled": "Agendado",
+      "published": "Publicado",
+      "expired": "Expirado"
+    },
+    "scheduled_for": "Agendado · {{time}}",
+    "published": "Publicado",
+    "publish_on": "Publicar em",
+    "unpublish_on": "Despublicar em",
+    "never": "Nunca",
+    "not_scheduled": "Não agendado",
+    "set": "Definir",
+    "publish": "Publicar",
+    "publish_now": "Publicar agora",
+    "time_zone": "Horários em {{zone}}.",
+    "schedule": {
+      "open": "Agendar…",
+      "title": "Agendar publicação",
+      "edit_title": "Alterar o agendamento",
+      "description": "Escolha quando “{{name}}” entra no ar. Até lá, continua um rascunho.",
+      "unpublish_toggle": "Despublicar em uma data",
+      "summary": "Entra no ar em {{at}}.",
+      "summary_until": "Entra no ar em {{at}} e sai em {{until}}.",
+      "submit": "Agendar"
+    },
+    "unpublish_date": {
+      "title": "Data de despublicação",
+      "description": "Escolha quando “{{name}}” sai do ar. Até lá, continua publicado.",
+      "remove": "Remover data"
+    },
+    "cancel_schedule": {
+      "title": "Cancelar o agendamento?",
+      "description": "“{{name}}” continua um rascunho e não entra no ar.",
+      "ok": "Cancelar agendamento"
+    },
+    "unpublish": {
+      "title": "Despublicar?",
+      "description": "“{{name}}” volta a ser um rascunho e sai do ar.",
+      "ok": "Despublicar"
+    },
+    "toast": {
+      "published": "“{{name}}” foi publicado",
+      "unscheduled": "“{{name}}” não está mais agendado",
+      "unpublished": "“{{name}}” foi despublicado",
+      "scheduled": "“{{name}}” foi agendado",
+      "unpublish_date_set": "Data de despublicação definida para “{{name}}”",
+      "unpublish_date_removed": "Data de despublicação removida de “{{name}}”"
+    }
   }
 }

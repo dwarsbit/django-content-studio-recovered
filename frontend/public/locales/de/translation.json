@@ -658,7 +658,13 @@
       "restored_many_one": "{{actor}} hat {{count}} {{models}} wiederhergestellt",
       "restored_many_other": "{{actor}} hat {{count}} {{models}} wiederhergestellt",
       "reordered_many_one": "{{actor}} hat {{count}} {{models}} neu sortiert",
-      "reordered_many_other": "{{actor}} hat {{count}} {{models}} neu sortiert"
+      "reordered_many_other": "{{actor}} hat {{count}} {{models}} neu sortiert",
+      "published": "{{actor}} hat {{object}} ({{model}}) veröffentlicht",
+      "published_many_one": "{{actor}} hat {{count}} {{models}} veröffentlicht",
+      "published_many_other": "{{actor}} hat {{count}} {{models}} veröffentlicht",
+      "unpublished": "{{actor}} hat {{object}} ({{model}}) zurückgezogen",
+      "unpublished_many_one": "{{actor}} hat {{count}} {{models}} zurückgezogen",
+      "unpublished_many_other": "{{actor}} hat {{count}} {{models}} zurückgezogen"
     },
     "follow": {
       "follow": "Folgen",
@@ -720,7 +726,9 @@
       "updated": "Aktualisiert",
       "deleted": "Gelöscht",
       "restored": "Wiederhergestellt",
-      "reordered": "Verschoben"
+      "reordered": "Verschoben",
+      "published": "Veröffentlicht",
+      "unpublished": "Zurückgezogen"
     }
   },
   "analytics": {
@@ -1257,5 +1265,57 @@
   "row_actions": {
     "menu": "Aktionen",
     "menu_for": "Aktionen für {{name}}"
+  },
+  "publishing": {
+    "title": "Veröffentlichung",
+    "states": {
+      "draft": "Entwurf",
+      "scheduled": "Geplant",
+      "published": "Veröffentlicht",
+      "expired": "Abgelaufen"
+    },
+    "scheduled_for": "Geplant · {{time}}",
+    "published": "Veröffentlicht",
+    "publish_on": "Veröffentlichen am",
+    "unpublish_on": "Zurückziehen am",
+    "never": "Nie",
+    "not_scheduled": "Nicht geplant",
+    "set": "Festlegen",
+    "publish": "Veröffentlichen",
+    "publish_now": "Jetzt veröffentlichen",
+    "time_zone": "Zeiten in {{zone}}.",
+    "schedule": {
+      "open": "Planen…",
+      "title": "Veröffentlichung planen",
+      "edit_title": "Planung ändern",
+      "description": "Wählen Sie, wann „{{name}}“ online geht. Bis dahin bleibt es ein Entwurf.",
+      "unpublish_toggle": "An einem Datum zurückziehen",
+      "summary": "Geht am {{at}} online.",
+      "summary_until": "Geht am {{at}} online und am {{until}} offline.",
+      "submit": "Planen"
+    },
+    "unpublish_date": {
+      "title": "Datum zum Zurückziehen",
+      "description": "Wählen Sie, wann „{{name}}“ offline geht. Bis dahin bleibt es veröffentlicht.",
+      "remove": "Datum entfernen"
+    },
+    "cancel_schedule": {
+      "title": "Planung abbrechen?",
+      "description": "„{{name}}“ bleibt ein Entwurf und geht nicht online.",
+      "ok": "Planung abbrechen"
+    },
+    "unpublish": {
+      "title": "Veröffentlichung zurückziehen?",
+      "description": "„{{name}}“ wird wieder ein Entwurf und ist nicht mehr online.",
+      "ok": "Zurückziehen"
+    },
+    "toast": {
+      "published": "„{{name}}“ ist veröffentlicht",
+      "unscheduled": "„{{name}}“ ist nicht mehr geplant",
+      "unpublished": "„{{name}}“ wurde zurückgezogen",
+      "scheduled": "„{{name}}“ ist geplant",
+      "unpublish_date_set": "Datum zum Zurückziehen für „{{name}}“ festgelegt",
+      "unpublish_date_removed": "Datum zum Zurückziehen von „{{name}}“ entfernt"
+    }
   }
 }

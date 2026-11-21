@@ -4,6 +4,31 @@
 
 ### Features
 
+- **Draft, publish and scheduling.** Set `publishing = "published_at"` on
+  a studio, or `Publishing(...)` for an unpublish date and a status field
+  kept in step, and new objects start as drafts. A **Publishing** card at
+  the top of the edit page's sidebar shows the state (Draft, Scheduled,
+  Published or Expired) and schedules, cancels, unpublishes and sets the
+  unpublish date; the header adds **Publish** next to Save while the
+  object is not live, saving unsaved changes first. The list gets a
+  Status column and filter, and the bulk actions Publish now, Schedule…
+  and Unpublish (also for `row_actions`). The state follows from the
+  dates, so content goes live on time without a worker.
+- **A Can publish permission** for each publishable model, created by
+  `migrate` and on the permission matrix. Override
+  `has_publish_permission(request, obj=None)` to decide per object.
+- **The scheduled run** records what went live or came down: a history
+  entry, the new `published` and `unpublished` changes for webhooks and
+  notifications, the status field, and the studio's
+  `on_publish`/`on_unpublish` hooks. It is a periodic task with Huey, or
+  `manage.py content_studio_publish` from cron, and is listed on the
+  status page.
+- `PublishableModel`, an abstract base model with `published_at` and
+  `unpublish_at`, and `Article.objects.live()`, `drafts()`, `scheduled()`
+  and `expired()`; `content_studio.publishing.live()` filters any
+  queryset. The system check `content_studio.E054` reports a publishing
+  configuration that cannot work. See
+  [Draft, publish and scheduling](https://djangocontentstudio.org/docs/publishing).
 - **Unsaved changes survive a crash, a reload or an expired session.** The
   edit page keeps an editor's changes in their browser while they work (a
   check next to *Unsaved changes* in the header says so) and, when the

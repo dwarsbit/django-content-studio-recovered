@@ -90,6 +90,12 @@ class ModelStudioPermissions(BasePermission):
                 request
             ) or admin_model.has_change_permission(request)
 
+        if getattr(view, "action", None) == "publishing":
+            # Publishing needs the studio's publish permission, which
+            # includes change permission.
+            has_publish = getattr(admin_model, "has_publish_permission", None)
+            return bool(has_publish and has_publish(request))
+
         if getattr(view, "action", None) in (
             "restore",
             "move",
@@ -129,6 +135,10 @@ class ModelStudioPermissions(BasePermission):
 
         if getattr(view, "action", None) in ("run_component", "presence"):
             return admin_model.has_view_permission(request, obj)
+
+        if getattr(view, "action", None) == "publishing":
+            has_publish = getattr(admin_model, "has_publish_permission", None)
+            return bool(has_publish and has_publish(request, obj))
 
         if request.method in ("PUT", "PATCH"):
             return admin_model.has_change_permission(request, obj)

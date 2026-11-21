@@ -102,13 +102,14 @@ class Command(BaseCommand):
                     now - timedelta(days=9),
                     ["opinion", "technology"],
                 ),
+                # Scheduled: goes live in three days.
                 (
                     "Tips and tricks for inlines",
                     Article.Status.DRAFT,
                     user,
                     False,
                     42,
-                    None,
+                    now + timedelta(days=3),
                     ["technology"],
                 ),
                 (

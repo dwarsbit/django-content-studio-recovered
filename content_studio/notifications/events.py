@@ -17,11 +17,13 @@ CONTENT_EVENTS = {
     "deleted": "content.deleted",
     "restored": "content.restored",
     "reordered": "content.reordered",
+    "published": "content.published",
+    "unpublished": "content.unpublished",
 }
 
 # What a user gets without a stored choice: these changes, to objects
-# they created.
-DEFAULT_CONTENT_ACTIONS = ("updated", "deleted", "restored")
+# they created (publishing them too, with publishing on the studio).
+DEFAULT_CONTENT_ACTIONS = ("updated", "deleted", "restored", "published", "unpublished")
 
 # A reorder touches many objects: it only notifies followers.
 FOLLOW_ONLY_ACTIONS = ("reordered",)

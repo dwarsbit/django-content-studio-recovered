@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} ha restaurado {{count}} {{models}}",
       "reordered_many_one": "{{actor}} ha reordenado {{count}} {{models}}",
       "reordered_many_other": "{{actor}} ha reordenado {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} ha reordenado {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} ha reordenado {{count}} {{models}}",
+      "published": "{{actor}} ha publicado {{object}} ({{model}})",
+      "published_many_one": "{{actor}} ha publicado {{count}} {{models}}",
+      "published_many_other": "{{actor}} ha publicado {{count}} {{models}}",
+      "published_many_many": "{{actor}} ha publicado {{count}} {{models}}",
+      "unpublished": "{{actor}} ha despublicado {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} ha despublicado {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} ha despublicado {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} ha despublicado {{count}} {{models}}"
     },
     "follow": {
       "follow": "Seguir",
@@ -738,7 +746,9 @@
       "updated": "Actualizado",
       "deleted": "Eliminado",
       "restored": "Restaurado",
-      "reordered": "Movido"
+      "reordered": "Movido",
+      "published": "Publicado",
+      "unpublished": "Despublicado"
     }
   },
   "analytics": {
@@ -1303,5 +1313,57 @@
   "row_actions": {
     "menu": "Acciones",
     "menu_for": "Acciones para {{name}}"
+  },
+  "publishing": {
+    "title": "Publicación",
+    "states": {
+      "draft": "Borrador",
+      "scheduled": "Programado",
+      "published": "Publicado",
+      "expired": "Caducado"
+    },
+    "scheduled_for": "Programado · {{time}}",
+    "published": "Publicado",
+    "publish_on": "Publicar el",
+    "unpublish_on": "Despublicar el",
+    "never": "Nunca",
+    "not_scheduled": "Sin programar",
+    "set": "Definir",
+    "publish": "Publicar",
+    "publish_now": "Publicar ahora",
+    "time_zone": "Horas en {{zone}}.",
+    "schedule": {
+      "open": "Programar…",
+      "title": "Programar publicación",
+      "edit_title": "Cambiar la programación",
+      "description": "Elige cuándo se publica «{{name}}». Hasta entonces sigue siendo un borrador.",
+      "unpublish_toggle": "Despublicar en una fecha",
+      "summary": "Se publica el {{at}}.",
+      "summary_until": "Se publica el {{at}} y se retira el {{until}}.",
+      "submit": "Programar"
+    },
+    "unpublish_date": {
+      "title": "Fecha de despublicación",
+      "description": "Elige cuándo se retira «{{name}}». Hasta entonces sigue publicado.",
+      "remove": "Quitar fecha"
+    },
+    "cancel_schedule": {
+      "title": "¿Cancelar la programación?",
+      "description": "«{{name}}» sigue siendo un borrador y no se publica.",
+      "ok": "Cancelar programación"
+    },
+    "unpublish": {
+      "title": "¿Despublicar?",
+      "description": "«{{name}}» vuelve a ser un borrador y deja de estar publicado.",
+      "ok": "Despublicar"
+    },
+    "toast": {
+      "published": "«{{name}}» está publicado",
+      "unscheduled": "«{{name}}» ya no está programado",
+      "unpublished": "«{{name}}» está despublicado",
+      "scheduled": "«{{name}}» está programado",
+      "unpublish_date_set": "Fecha de despublicación definida para «{{name}}»",
+      "unpublish_date_removed": "Fecha de despublicación quitada de «{{name}}»"
+    }
   }
 }

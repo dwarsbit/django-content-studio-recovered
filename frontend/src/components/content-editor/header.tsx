@@ -16,6 +16,12 @@ import {
   FollowMenuItem,
 } from "@/components/notifications/follow-button";
 import { PresenceAvatars } from "@/components/presence";
+import { PublishButton } from "@/components/publishing/publish-button";
+import {
+  usePublishing,
+  useShowPublishButton,
+} from "@/components/publishing/publishing";
+import { PublishingBadge } from "@/components/publishing/publishing-badge";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -161,6 +167,9 @@ export function Header({
       ? (resource[info.settings.edited_at_attr] as DateTimeString)
       : null;
   const queryClient = useQueryClient();
+  // Content that is not live: Save steps back for Publish.
+  const showPublish = useShowPublishButton();
+  const publishing = usePublishing();
 
   // After an edit action the object may have changed: show its new
   // values, unless that would discard the editor's unsaved changes.
@@ -252,6 +261,13 @@ export function Header({
                   <>
                     <span className="text-muted-foreground/50 shrink-0">/</span>
                     <span className="truncate">{resource.__str__}</span>
+                    {publishing && (
+                      <PublishingBadge
+                        state={publishing.info.state}
+                        short
+                        className="hidden sm:inline-flex ml-1"
+                      />
+                    )}
                   </>
                 )}
               </span>
@@ -520,6 +536,7 @@ export function Header({
                     addAnother={saveOptions.addAnother}
                     close={saveOptions.close}
                     defaultMode={saveOptions.defaultMode}
+                    outline={showPublish}
                     onSave={async (mode) => {
                       try {
                         await onSave(mode);
@@ -529,6 +546,7 @@ export function Header({
                     }}
                   />
                 )}
+                <PublishButton disabled={isSaving} />
               </>
             }
           />

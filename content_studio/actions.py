@@ -35,6 +35,13 @@ EXPORT_ACTION_ID = "export"
 # The id of the built-in duplicate row action.
 DUPLICATE_ACTION_ID = "duplicate"
 
+# The ids of the built-in publishing actions, for studios with
+# publishing (see publishing.py).
+PUBLISH_ACTION_ID = "publishing:publish"
+SCHEDULE_ACTION_ID = "publishing:schedule"
+UNPUBLISH_ACTION_ID = "publishing:unpublish"
+PUBLISHING_ACTION_IDS = (PUBLISH_ACTION_ID, SCHEDULE_ACTION_ID, UNPUBLISH_ACTION_ID)
+
 # The row actions a studio offers unless it lists its own.
 DEFAULT_ROW_ACTIONS = (DUPLICATE_ACTION_ID, DELETE_ACTION_ID)
 
@@ -278,6 +285,120 @@ def _export_action(studio):
     return handler
 
 
+_PUBLISH_META = BulkActionMeta(
+    label=_("Publish now"),
+    icon="ph-bold ph-paper-plane-tilt",
+    confirm=_("Publish the selected items now?"),
+    allowed_permissions=("publish",),
+    destructive=False,
+)
+
+_UNPUBLISH_META = BulkActionMeta(
+    label=_("Unpublish"),
+    icon="ph-bold ph-eye-slash",
+    confirm=_(
+        "The selected items go back to being drafts and leave the site. "
+        "Unpublish them?"
+    ),
+    allowed_permissions=("publish",),
+    destructive=False,
+)
+
+
+def _publishing_action(studio, action_id) -> Optional[BulkAction]:
+    """A built-in publishing action, or None when the studio has no
+    publishing."""
+    from django import forms
+
+    from .form import Field
+    from .publishing import (
+        DRAFT,
+        PUBLISHED,
+        SCHEDULED,
+        apply,
+        get_publishing,
+        get_state,
+    )
+
+    config = get_publishing(studio)
+
+    if config is None:
+        return None
+
+    def run(request, queryset, action, data, skip):
+        count = 0
+
+        for obj in queryset:
+            if get_state(config, obj) in skip:
+                continue
+
+            apply(studio, request, obj, action, data)
+            count += 1
+
+        return count
+
+    if action_id == PUBLISH_ACTION_ID:
+
+        def publish(request, queryset):
+            count = run(request, queryset, "publish", {}, skip=(PUBLISHED,))
+            return str(_("Published %(count)s items.") % {"count": count})
+
+        return BulkAction(id=action_id, handler=publish, meta=_PUBLISH_META)
+
+    if action_id == UNPUBLISH_ACTION_ID:
+
+        def unpublish(request, queryset):
+            count = run(request, queryset, "unpublish", {}, skip=(DRAFT,))
+            return str(_("Unpublished %(count)s items.") % {"count": count})
+
+        return BulkAction(id=action_id, handler=unpublish, meta=_UNPUBLISH_META)
+
+    if action_id == SCHEDULE_ACTION_ID:
+        fields = [
+            Field(
+                "at",
+                form_field=forms.DateTimeField(label=_("Publish on"), required=True),
+            )
+        ]
+
+        if config.unpublish_at:
+            fields.append(
+                Field(
+                    "unpublish_at",
+                    form_field=forms.DateTimeField(
+                        label=_("Unpublish on"), required=False
+                    ),
+                )
+            )
+
+        meta = BulkActionMeta(
+            label=_("Schedule…"),
+            icon="ph-bold ph-clock",
+            confirm=None,
+            allowed_permissions=("publish",),
+            destructive=False,
+            fields=tuple(fields),
+        )
+
+        def schedule(request, queryset, data):
+            values = {"at": data.get("at")}
+
+            if config.unpublish_at:
+                values["unpublish_at"] = data.get("unpublish_at")
+
+            count = run(request, queryset, "schedule", values, skip=())
+            return str(_("Scheduled %(count)s items.") % {"count": count})
+
+        return BulkAction(
+            id=action_id,
+            handler=schedule,
+            meta=meta,
+            form=get_action_form(studio.model, meta.fields),
+        )
+
+    return None
+
+
 def declared_bulk_actions(studio) -> dict[str, Callable]:
     """
     The @bulk_action methods of a studio, in definition order. Base
@@ -309,14 +430,18 @@ def get_bulk_actions(studio, request=None) -> list[BulkAction]:
     """
     from .export import get_export_formats, is_exportable
 
+    from .publishing import get_publishing
+
     declared = declared_bulk_actions(studio)
     exportable = is_exportable(studio)
+    publishable = get_publishing(studio) is not None
 
     names = getattr(studio, "actions", None)
     if names is None:
         names = [
             DELETE_ACTION_ID,
             *([EXPORT_ACTION_ID] if exportable else []),
+            *(PUBLISHING_ACTION_IDS if publishable else ()),
             # A declared "export" gives way to the built-in, like the
             # system checks report.
             *(
@@ -338,6 +463,11 @@ def get_bulk_actions(studio, request=None) -> list[BulkAction]:
             )
         elif name == DELETE_ACTION_ID:
             action = _builtin_delete(studio)
+        elif name in PUBLISHING_ACTION_IDS:
+            action = _publishing_action(studio, name)
+
+            if action is None:
+                continue
         else:
             handler = declared.get(name)
 
@@ -377,7 +507,9 @@ def get_row_actions(studio, request=None) -> list[BulkAction]:
     actions does for the bulk bar: None (the default) offers the
     built-in duplicate and delete, an empty list none, and an explicit
     list exactly those names ("duplicate" and "delete" naming the
-    built-ins, other names @bulk_action methods). Actions the user lacks
+    built-ins, and on studios with publishing "publishing:publish",
+    "publishing:schedule" and "publishing:unpublish" its actions; other
+    names @bulk_action methods). Actions the user lacks
     permission for are left out. The duplicate has no handler: it opens
     the create form with a copy.
     """
@@ -409,6 +541,14 @@ def get_row_actions(studio, request=None) -> list[BulkAction]:
                     else _ROW_DELETE_META
                 ),
             )
+        elif name in PUBLISHING_ACTION_IDS:
+            publishing = _publishing_action(studio, name)
+
+            # Without publishing, the system checks report the name.
+            if publishing is None:
+                continue
+
+            action = publishing
         else:
             handler = declared.get(name)
 

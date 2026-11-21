@@ -7,6 +7,7 @@ from django.utils import timezone
 from django.utils.translation import gettext_lazy as _
 
 from .managers import (
+    PublishableQuerySet,
     SingletonManager,
     SoftDeletableManager,
     SoftDeletableQuerySet,
@@ -16,6 +17,7 @@ __all__ = [
     "ContentModel",
     "EditorModel",
     "ManualOrderModel",
+    "PublishableModel",
     "SingletonModel",
     "SoftDeletableContentModel",
     "SoftDeletableModel",
@@ -114,6 +116,48 @@ class SoftDeletableModel(models.Model):
             return 1, {self.__class__._meta.label: 1}
 
         return super().delete(using=using, keep_parents=keep_parents)
+
+
+class PublishableModel(models.Model):
+    """
+    Content with a publish date and an optional unpublish date: a draft
+    without a publish date, scheduled before it, published after it and
+    expired after the unpublish date. Pair it with
+    publishing = Publishing("published_at", unpublish_at="unpublish_at")
+    on the studio (or PublishableModel.publishing), and show the site
+    Model.objects.live().
+    """
+
+    class Meta:
+        abstract = True
+
+    objects = PublishableQuerySet.as_manager()
+
+    published_at = models.DateTimeField(
+        null=True, blank=True, db_index=True, verbose_name=_("Published at")
+    )
+    unpublish_at = models.DateTimeField(
+        null=True, blank=True, verbose_name=_("Unpublish at")
+    )
+
+    @property
+    def publishing_status(self) -> str:
+        """ "draft", "scheduled", "published" or "expired"."""
+        from .publishing import get_state
+
+        return get_state(type(self)._publishing(), self)
+
+    @property
+    def is_live(self) -> bool:
+        from .publishing import PUBLISHED
+
+        return self.publishing_status == PUBLISHED
+
+    @classmethod
+    def _publishing(cls):
+        from .publishing import Publishing
+
+        return Publishing("published_at", unpublish_at="unpublish_at")
 
 
 class ContentModel(UUIDModel, TimeStampedModel, EditorModel):

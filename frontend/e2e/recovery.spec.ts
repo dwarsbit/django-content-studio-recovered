@@ -13,8 +13,6 @@ test("recovers unsaved changes after a reload", async ({ page }) => {
   await page.goto("/admin/content/demo_blog.article/new");
   await fieldByLabel(page, "title").fill(title);
   await fieldByLabel(page, "body").fill("Written by the e2e suite.");
-  await page.locator("[data-slot=select-trigger]").click();
-  await page.getByRole("option", { name: "Published" }).click();
   await page.getByRole("button", { name: "Create" }).click();
   await expect(page).toHaveURL(/\/content\/demo_blog\.article\/\d+$/);
 

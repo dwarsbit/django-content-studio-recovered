@@ -1722,3 +1722,129 @@ msgstr "Estado de la respuesta"
 #: webhooks/models.py:145
 msgid "Response"
 msgstr "Respuesta"
+
+#: publishing.py
+msgid "Draft"
+msgstr "Borrador"
+
+#: webhooks/models.py
+msgid "Published"
+msgstr "Publicado"
+
+#: webhooks/models.py
+msgid "Unpublished"
+msgstr "Despublicado"
+
+#: publishing.py
+msgid "Scheduled publishing"
+msgstr "Publicación programada"
+
+#: publishing.py
+msgid "Every minute"
+msgstr "Cada minuto"
+
+#: publishing.py
+msgid "Enter a valid date and time."
+msgstr "Introduce una fecha y hora válidas."
+
+#: publishing.py
+msgid "The unpublish date must be after the publish date."
+msgstr "La fecha de despublicación debe ser posterior a la de publicación."
+
+#: publishing.py
+msgid "Pick when to publish."
+msgstr "Elige cuándo publicar."
+
+#: publishing.py
+msgid "Pick a time in the future."
+msgstr "Elige una hora futura."
+
+#: publishing.py
+msgid "This model has no unpublish date."
+msgstr "Este modelo no tiene fecha de despublicación."
+
+#: publishing.py
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr "Publica o programa el objeto antes de definir una fecha de despublicación."
+
+#: publishing.py
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Acción de publicación desconocida %(action)s."
+
+#: actions.py
+msgid "Publish now"
+msgstr "Publicar ahora"
+
+#: actions.py
+msgid "Publish the selected items now?"
+msgstr "¿Publicar ahora los elementos seleccionados?"
+
+#: actions.py
+msgid "Unpublish"
+msgstr "Despublicar"
+
+#: actions.py
+msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
+msgstr "Los elementos seleccionados vuelven a ser borradores y salen del sitio. ¿Despublicarlos?"
+
+#: actions.py
+msgid "Schedule…"
+msgstr "Programar…"
+
+#: actions.py
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s elementos publicados."
+
+#: actions.py
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "%(count)s elementos despublicados."
+
+#: actions.py
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s elementos programados."
+
+#: actions.py
+msgid "Publish on"
+msgstr "Publicar el"
+
+#: actions.py
+msgid "Unpublish on"
+msgstr "Despublicar el"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s ha publicado %(object)s (%(model)s)"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s ha despublicado %(object)s (%(model)s)"
+
+#: models.py
+msgid "Published at"
+msgstr "Publicado el"
+
+#: models.py
+msgid "Unpublish at"
+msgstr "Despublicar el"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s ha publicado %(count)s %(models)s"
+msgstr[1] "%(actor)s ha publicado %(count)s %(models)s"
+msgstr[2] "%(actor)s ha publicado %(count)s %(models)s"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s ha despublicado %(count)s %(models)s"
+msgstr[1] "%(actor)s ha despublicado %(count)s %(models)s"
+msgstr[2] "%(actor)s ha despublicado %(count)s %(models)s"

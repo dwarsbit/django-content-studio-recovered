@@ -19,6 +19,7 @@ from . import formats, widgets
 from .actions import (
     BULK_ACTION_PERMISSIONS,
     DELETE_ACTION_ID,
+    PUBLISHING_ACTION_IDS,
     DUPLICATE_ACTION_ID,
     EXPORT_ACTION_ID,
     declared_bulk_actions,
@@ -342,6 +343,18 @@ def bulk_action_errors(studio) -> list[tuple[str, str]]:
                         "export_fields or allow_export.",
                     )
                 )
+            elif name in PUBLISHING_ACTION_IDS and name not in declared:
+                from .publishing import get_publishing
+
+                if get_publishing(studio) is None:
+                    errors.append(
+                        (
+                            "content_studio.E007",
+                            f"{studio.__class__.__name__}.actions contains "
+                            f"{name!r}, but the studio has no publishing; set "
+                            "publishing.",
+                        )
+                    )
             elif (
                 name not in (DELETE_ACTION_ID, EXPORT_ACTION_ID)
                 and name not in declared
@@ -407,8 +420,11 @@ def _action_list_errors(studio, declared) -> list[tuple[str, str]]:
             )
         )
 
+    # Studios with publishing offer its actions in the rows too.
+    publishing = PUBLISHING_ACTION_IDS if getattr(studio, "publishing", None) else ()
+
     for attribute, builtins in (
-        ("row_actions", (DELETE_ACTION_ID, DUPLICATE_ACTION_ID)),
+        ("row_actions", (DELETE_ACTION_ID, DUPLICATE_ACTION_ID, *publishing)),
         ("edit_actions", ()),
     ):
         names = getattr(studio, attribute, None)
@@ -736,6 +752,137 @@ def soft_delete_errors(studio) -> list[tuple[str, str]]:
                 f"'{studio.soft_delete}' is not.",
             )
         )
+
+    return errors
+
+
+def publishing_errors(studio) -> list[tuple[str, str]]:
+    """
+    A misconfigured publishing, as (check id, message) pairs: a field
+    name or a Publishing, whose date fields are nullable DateTimeFields
+    of the model and whose status field takes the values given for the
+    states.
+    """
+    from .publishing import STATES, Publishing, check_field, get_publishing
+
+    value = getattr(studio, "publishing", None)
+    name = studio.__class__.__name__
+
+    if value in (None, ""):
+        return []
+
+    if not isinstance(value, (str, Publishing)):
+        return [
+            (
+                "content_studio.E054",
+                f"{name}.publishing must be the name of a date field or a "
+                f"Publishing; got {value!r}.",
+            )
+        ]
+
+    config = get_publishing(studio)
+    model = studio.model
+    errors = []
+
+    if get_is_singleton(studio):
+        errors.append(
+            (
+                "content_studio.E054",
+                f"{name}.publishing is not supported on a singleton.",
+            )
+        )
+
+    for attribute in ("published_at", "unpublish_at"):
+        field_name = getattr(config, attribute)
+
+        if not field_name:
+            continue
+
+        problem = check_field(model, field_name)
+
+        if problem:
+            errors.append(
+                (
+                    "content_studio.E054",
+                    f"{name}.publishing {attribute}: {problem}.",
+                )
+            )
+
+    if config.unpublish_at and config.unpublish_at == config.published_at:
+        errors.append(
+            (
+                "content_studio.E054",
+                f"{name}.publishing unpublish_at must differ from published_at.",
+            )
+        )
+
+    if config.status_values and not config.status:
+        errors.append(
+            (
+                "content_studio.E054",
+                f"{name}.publishing has status_values but no status field.",
+            )
+        )
+
+    if config.status:
+        try:
+            field = model._meta.get_field(config.status)
+        except FieldDoesNotExist:
+            errors.append(
+                (
+                    "content_studio.E054",
+                    f"{name}.publishing status: '{config.status}' is not a "
+                    f"field of {model._meta.label}.",
+                )
+            )
+            return errors
+
+        unknown = [key for key in config.status_values if key not in STATES]
+
+        if unknown:
+            errors.append(
+                (
+                    "content_studio.E054",
+                    f"{name}.publishing status_values has unknown state(s) "
+                    f"{', '.join(map(repr, unknown))}; the states are "
+                    f"{', '.join(STATES)}.",
+                )
+            )
+
+        missing = [
+            key for key in ("draft", "published") if key not in config.status_values
+        ]
+
+        if missing:
+            errors.append(
+                (
+                    "content_studio.E054",
+                    f"{name}.publishing status_values needs a value for "
+                    f"{' and '.join(missing)}.",
+                )
+            )
+
+        choices = {
+            str(choice)
+            for choice, _label in (getattr(field, "flatchoices", None) or [])
+        }
+
+        if choices:
+            bad = [
+                value
+                for value in config.status_values.values()
+                if str(value) not in choices
+            ]
+
+            if bad:
+                errors.append(
+                    (
+                        "content_studio.E054",
+                        f"{name}.publishing status_values: "
+                        f"{', '.join(map(repr, bad))} not among the choices "
+                        f"of '{config.status}'.",
+                    )
+                )
 
     return errors
 
@@ -3935,6 +4082,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in reorder_errors(studio):
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        for check_id, error in publishing_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
 
         for check_id, error in edit_form_config_errors(studio):
