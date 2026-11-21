@@ -43,6 +43,7 @@ import type {
   DateTimeString,
   FormField,
   Model,
+  PendingChangesInfo,
   PresenceUser,
   Resource,
 } from "@/types";
@@ -286,6 +287,7 @@ export function Header({
                   dirty={isDirty && !readOnly}
                   keptAt={keptAt}
                   editedAt={editedAt}
+                  pending={publishing?.info.pending}
                 />
               </>
             }
@@ -574,10 +576,13 @@ function EditStatus({
   dirty,
   keptAt,
   editedAt,
+  pending,
 }: {
   dirty: boolean;
   keptAt: number | null;
   editedAt: DateTimeString | null;
+  // The live object's unpublished changes.
+  pending?: PendingChangesInfo | null;
 }) {
   const { t } = useTranslation();
   const line = "h-5 leading-5 whitespace-nowrap";
@@ -604,6 +609,35 @@ function EditStatus({
         <TooltipContent>
           <div className="font-medium">{t("editor.unsaved_changes")}</div>
           {keptAt && t("recovery.kept", { when: formatKeptAt(keptAt) })}
+        </TooltipContent>
+      </Tooltip>
+    );
+  }
+
+  if (pending) {
+    const when = dayjs(pending.edited_at).fromNow();
+
+    return (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <div
+            className={cn(box, "ml-1 min-w-1.5")}
+            data-testid="edit-status-pending"
+          >
+            <span className="h-5 flex items-center shrink-0">
+              <span className="size-1.5 rounded-full bg-warning" />
+            </span>
+            <span className={line}>{t("publishing.changes.title")}</span>
+          </div>
+        </TooltipTrigger>
+        <TooltipContent>
+          <div className="font-medium">{t("publishing.changes.title")}</div>
+          {pending.edited_by
+            ? t("publishing.changes.saved_by", {
+                name: pending.edited_by,
+                when,
+              })
+            : t("publishing.changes.saved", { when })}
         </TooltipContent>
       </Tooltip>
     );

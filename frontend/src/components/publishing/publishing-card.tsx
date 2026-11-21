@@ -1,10 +1,19 @@
+import dayjs from "dayjs";
+import relativeTime from "dayjs/plugin/relativeTime";
 import { useTranslation } from "react-i18next";
-import { PiCalendarBlankBold, PiGlobeBold } from "react-icons/pi";
+import {
+  PiArrowsLeftRightBold,
+  PiCalendarBlankBold,
+  PiGlobeBold,
+  PiInfoBold,
+} from "react-icons/pi";
 
 import { Button } from "@/components/ui/button";
 
 import { formatShortTime, timeZone, usePublishing } from "./publishing";
 import { PublishingBadge } from "./publishing-badge";
+
+dayjs.extend(relativeTime);
 
 function Row({
   label,
@@ -29,7 +38,7 @@ function Row({
  * the user may make.
  */
 export function PublishingCard() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const publishing = usePublishing();
 
   if (!publishing) {
@@ -111,6 +120,60 @@ export function PublishingCard() {
               </Button>
             )}
           </Row>
+        )}
+        {info.pending && (
+          <div
+            className="pt-3 mt-2 border-t space-y-2"
+            data-testid="pending-changes"
+          >
+            <div className="text-sm font-semibold pt-1">
+              {t("publishing.changes.title")}
+            </div>
+            <div className="text-sm">
+              <span className="font-medium">
+                {new Intl.ListFormat(i18n.language, {
+                  type: "conjunction",
+                }).format(info.pending.fields.map(publishing.fieldLabel))}
+              </span>
+              <span className="text-muted-foreground">
+                {" · "}
+                {info.pending.edited_by
+                  ? t("publishing.changes.saved_by", {
+                      name: info.pending.edited_by,
+                      when: dayjs(info.pending.edited_at).fromNow(),
+                    })
+                  : t("publishing.changes.saved", {
+                      when: dayjs(info.pending.edited_at).fromNow(),
+                    })}
+              </span>
+            </div>
+            <p className="text-xs text-muted-foreground flex gap-1.5">
+              <PiInfoBold className="shrink-0 mt-0.5" />
+              {t("publishing.changes.hint")}
+            </p>
+            <div className="flex gap-2 pt-1">
+              <Button
+                variant="outline"
+                size="sm"
+                className="flex-1"
+                onClick={publishing.openCompare}
+              >
+                <PiArrowsLeftRightBold />
+                {t("publishing.changes.compare")}
+              </Button>
+              {publishing.canDiscard && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 text-destructive"
+                  disabled={isPending}
+                  onClick={publishing.discardChanges}
+                >
+                  {t("publishing.changes.discard")}
+                </Button>
+              )}
+            </div>
+          </div>
         )}
         {canPublish && state === "published" && (
           <div className="pt-3">

@@ -406,3 +406,19 @@ class Guide(models.Model):
 
     def __str__(self):
         return self.title
+
+
+class Feature(models.Model):
+    """Publishing with unpublished changes; see test_pending_changes."""
+
+    title = models.CharField(max_length=100, unique=True)
+    summary = models.TextField(blank=True)
+    attachment = models.FileField(blank=True, upload_to="features")
+    section = models.ForeignKey(
+        Category, null=True, blank=True, on_delete=models.SET_NULL, related_name="+"
+    )
+    categories = models.ManyToManyField(Category, blank=True, related_name="features")
+    published_at = models.DateTimeField(null=True, blank=True)
+
+    def __str__(self):
+        return self.title

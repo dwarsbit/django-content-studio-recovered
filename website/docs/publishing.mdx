@@ -114,11 +114,51 @@ article shows up the minute it goes live.
   on …", "Unpublished on schedule." and so on.
 
 The dates are read-only on the edit form: the card, the bulk actions and your
-own code set them. Edits to published content go live when they are saved.
+own code set them. Edits to published content go live when they are saved,
+unless the studio keeps them as [unpublished changes](#unpublished-changes).
 
 To offer publishing in each row's menu, add `"publishing:publish"`,
 `"publishing:schedule"` or `"publishing:unpublish"` to
 [`row_actions`](/docs/list-page#row-actions).
+
+## Unpublished changes
+
+By default, saving a published object changes the live content. With
+`pending_changes=True`, edits to published content stay out of sight until
+someone publishes them:
+
+```python
+class ArticleStudio(ModelStudio):
+    publishing = Publishing("published_at", pending_changes=True)
+```
+
+It needs `content_studio.history` in `INSTALLED_APPS`, which stores the
+changes.
+
+- **Saving** a published object checks the values as a save would (field
+  validation and the model's `clean()`, unique fields and constraints) and
+  keeps the changed fields apart from the object. The site keeps showing the
+  published version. A field changed back to its published value is no longer
+  a change.
+- **The edit page** shows the object with its unpublished changes. The header
+  reads **Unpublished changes** and offers **Publish changes** to users who
+  may publish. The Publishing card names the changed fields and who saved
+  them, with **Compare** (the published values next to the changes) and
+  **Discard**.
+- **Publish changes** saves the changes to the object the regular way: the
+  studio's save hooks, the history version, the activity log, notifications
+  and webhooks. It needs **Can publish**. **Discard** needs change permission.
+- **The list** shows **Unpublished changes** next to Published, and the
+  **Status** filter finds them.
+- **Unpublishing** or **scheduling** the object again saves the changes to it
+  first, so the draft keeps them. So does publishing an object that expired
+  with them.
+
+A cell edited in the list's table (`table_edit`) on a published row is kept
+as an unpublished change too; the list goes on showing the published value,
+marked **Unpublished changes**. New files are stored right away, under the
+name a save would give them, and removed on Discard. Inline rows save on their
+own pages and go live as before.
 
 ## Who can publish
 
@@ -193,6 +233,7 @@ class ArticleStudio(ModelStudio):
 | `unpublish_at` | The unpublish date field, or `None` (the default) for content that stays up. A nullable `DateTimeField`. |
 | `status` | A field to keep in step with the state, such as a `status` choice field, or `None`. |
 | `status_values` | The value of `status` for each state: `"draft"` and `"published"` are needed, `"scheduled"` and `"expired"` fall back to the draft value. |
+| `pending_changes` | Keep edits to published objects as [unpublished changes](#unpublished-changes) until **Publish changes**. Needs `content_studio.history`. Default `False`. |
 
 The [system checks](/docs/deployment#system-checks) report a configuration
 that cannot work as `content_studio.E054`.

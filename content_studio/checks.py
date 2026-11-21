@@ -819,6 +819,15 @@ def publishing_errors(studio) -> list[tuple[str, str]]:
             )
         )
 
+    if config.pending_changes and not apps.is_installed("content_studio.history"):
+        errors.append(
+            (
+                "content_studio.E054",
+                f"{name}.publishing has pending_changes, which needs "
+                f"'content_studio.history' in INSTALLED_APPS.",
+            )
+        )
+
     if config.status_values and not config.status:
         errors.append(
             (

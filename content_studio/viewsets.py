@@ -316,12 +316,110 @@ class BaseModelViewSet(ModelViewSet):
         model = self.get_queryset().model
         return take_snapshot(data, model, getattr(self, "_admin_model", None))
 
-    def perform_update(self, serializer):
+    def retrieve(self, request, *args, **kwargs):
+        instance = self.get_object()
+        serializer = self.get_serializer(instance)
+
+        return Response(self._with_pending(serializer.data, instance))
+
+    def update(self, request, *args, **kwargs):
+        """
+        Save the object; on a studio with pending_changes, an edit of a
+        published object is kept as its unpublished changes instead
+        (see content_studio.pending), and the response shows the object
+        with them.
+        """
+        from .pending import holds_changes, uses_pending_changes
+
+        if self.is_singleton or not uses_pending_changes(self._admin_model):
+            return super().update(request, *args, **kwargs)
+
+        instance = self.get_object()
+
+        if not holds_changes(self._admin_model, instance):
+            return super().update(request, *args, **kwargs)
+
+        from .pending import save as save_pending
+
+        serializer = self.get_serializer(
+            instance, data=request.data, partial=kwargs.pop("partial", False)
+        )
+        serializer.is_valid(raise_exception=True)
+
+        try:
+            with transaction.atomic(using=router.db_for_write(self._model)):
+                save_pending(request, self._admin_model, serializer, instance)
+        except DjangoValidationError as error:
+            raise ValidationError(get_error_detail(error))
+
+        return Response(
+            self._with_pending(self.get_serializer(instance).data, instance)
+        )
+
+    def _with_pending(self, data, instance):
+        """
+        The edit page's representation of the object: on a studio with
+        pending_changes, with the object's unpublished changes in place
+        of the published values, and what they are under
+        __publishing__.pending (else None).
+        """
+        from .pending import get_pending, overlay, serialize, uses_pending_changes
+
+        if (
+            self.is_singleton
+            or not isinstance(data.get("__publishing__"), dict)
+            or not uses_pending_changes(self._admin_model)
+        ):
+            return data
+
+        pending = get_pending(instance)
+        result = overlay(dict(data), pending)
+        result["__publishing__"] = {
+            **data["__publishing__"],
+            "has_pending": pending is not None,
+            "pending": serialize(pending, data),
+        }
+
+        return result
+
+    def perform_update(self, serializer, files=None, keep_pending=False):
         # The object's values before and after the save: the activity
         # log names the fields the save changed, and the history app
         # keeps them as a version.
+        from .pending import (
+            get_pending,
+            holds_changes,
+            split_data,
+            uses_pending_changes,
+        )
+
         before = self._snapshot(serializer.to_representation(serializer.instance))
-        instance = self._save(serializer)
+        # An object saved from its edit page (no longer live) saves the
+        # unpublished changes it showed, with their new files: the form
+        # sends a file back only to replace it.
+        studio = getattr(self, "_admin_model", None)
+        pending = (
+            get_pending(serializer.instance)
+            if not keep_pending
+            and studio
+            and uses_pending_changes(studio)
+            and not holds_changes(studio, serializer.instance)
+            else None
+        )
+
+        if pending is not None:
+            files = {
+                name: stored
+                for name, stored in split_data(pending)[1].items()
+                if name not in serializer.validated_data
+            }
+
+        # files: the stored names of new files that unpublished changes
+        # kept (see content_studio.pending).
+        instance = self._save(serializer, **(files or {}))
+
+        if pending is not None:
+            pending.delete()
 
         # Stamp the editor with a targeted update: a full instance save
         # would race with concurrent edits (lost updates).
@@ -654,11 +752,19 @@ class BaseModelViewSet(ModelViewSet):
         """
         Change the object's publishing, for the Publishing card:
         {"action": "publish" | "schedule" | "unpublish" |
-        "set_unpublish_at", "at": ..., "unpublish_at": ...}. Needs the
-        studio's has_publish_permission on the object. Answers with the
-        object's new state and dates.
+        "set_unpublish_at" | "publish_changes" | "discard_changes",
+        "at": ..., "unpublish_at": ...}. Needs the studio's
+        has_publish_permission on the object; discarding unpublished
+        changes needs change permission. Answers with the object's new
+        state and dates.
+
+        Unpublished changes (pending_changes) are published with
+        publish_changes, and saved to the object when it stops being
+        live (unpublish, schedule), so the draft keeps them, or when an
+        object that was not live with them is published again.
         """
-        from .publishing import apply, get_publishing, serialize_state
+        from . import pending as pending_changes
+        from .publishing import PUBLISHED, apply, get_publishing, serialize_state
 
         config = get_publishing(self._admin_model)
 
@@ -666,23 +772,72 @@ class BaseModelViewSet(ModelViewSet):
             raise NotFound("This model has no publishing.")
 
         instance = self.get_object()
+        data = request.data if hasattr(request.data, "get") else {}
+        action_name = str(data.get("action") or "")
+        uses_pending = pending_changes.uses_pending_changes(self._admin_model)
+
+        if action_name == "discard_changes":
+            if not uses_pending:
+                raise ValidationError("This model has no unpublished changes.")
+
+            if not self._admin_model.has_change_permission(request, instance):
+                raise PermissionDenied()
+
+            pending_changes.discard(request, instance)
+
+            return Response(
+                {
+                    **serialize_state(config, instance),
+                    "has_pending": False,
+                    "message": pending_changes.MESSAGE_DISCARDED,
+                }
+            )
 
         if not self._admin_model.has_publish_permission(request, instance):
             raise PermissionDenied()
 
-        data = request.data if hasattr(request.data, "get") else {}
-        action_name = data.get("action")
+        using = router.db_for_write(self._model)
+
+        if action_name == "publish_changes":
+            if not uses_pending:
+                raise ValidationError("This model has no unpublished changes.")
+
+            with transaction.atomic(using=using):
+                published = pending_changes.publish(self, instance)
+
+            if not published:
+                raise ValidationError(_("There are no unpublished changes."))
+
+            return Response(
+                {
+                    **serialize_state(config, instance),
+                    "has_pending": False,
+                    "message": "Published changes.",
+                }
+            )
+
+        was_live = pending_changes.holds_changes(self._admin_model, instance)
 
         try:
-            result = apply(
-                self._admin_model, request, instance, str(action_name or ""), data
-            )
+            with transaction.atomic(using=using):
+                result = apply(self._admin_model, request, instance, action_name, data)
+
+                # No longer live: the object takes its unpublished
+                # changes, as a draft or scheduled object would. An
+                # object that was not live (it expired with them) goes
+                # live with the changes its edit page shows.
+                if uses_pending and (not was_live or result.state != PUBLISHED):
+                    instance.refresh_from_db()
+                    pending_changes.publish(self, instance)
         except DjangoValidationError as error:
             raise ValidationError(get_error_detail(error))
 
         return Response(
             {
                 **serialize_state(config, instance),
+                "has_pending": bool(
+                    uses_pending and pending_changes.get_pending(instance)
+                ),
                 "message": result.message,
             }
         )
@@ -1462,6 +1617,33 @@ class BaseModelViewSet(ModelViewSet):
             )
 
         serializer.is_valid(raise_exception=True)
+
+        # A live object of a studio with pending_changes keeps the edit
+        # as its unpublished changes, as its edit page would: the list
+        # goes on showing the published values, marked as changed.
+        from .pending import holds_changes
+        from .pending import save as save_pending
+
+        if holds_changes(self._admin_model, instance):
+            try:
+                with transaction.atomic(using=router.db_for_write(self._model)):
+                    pending = save_pending(
+                        request, self._admin_model, serializer, instance
+                    )
+            except DjangoValidationError as error:
+                raise ValidationError(get_error_detail(error))
+
+            saved = self._with_pending(self.get_serializer(instance).data, instance)
+
+            return Response(
+                {
+                    "id": instance.pk,
+                    "__str__": str(instance),
+                    "values": {key: saved.get(key) for key in values},
+                    "has_pending": pending is not None,
+                }
+            )
+
         self.perform_update(serializer)
         saved = serializer.data
 

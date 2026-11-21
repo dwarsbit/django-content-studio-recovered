@@ -1892,3 +1892,15 @@ msgstr "Il link scade il %(date)s"
 
 msgid "Edit"
 msgstr "Modifica"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Modifiche non pubblicate"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Non ci sono modifiche non pubblicate."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "modifiche non pubblicate"

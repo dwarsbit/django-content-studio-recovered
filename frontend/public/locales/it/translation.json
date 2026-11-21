@@ -1332,6 +1332,7 @@
     "set": "Imposta",
     "publish": "Pubblica",
     "publish_now": "Pubblica ora",
+    "publish_changes": "Pubblica modifiche",
     "time_zone": "Orari in {{zone}}.",
     "schedule": {
       "open": "Programma…",
@@ -1364,7 +1365,21 @@
       "unpublished": "«{{name}}» è stato ritirato",
       "scheduled": "«{{name}}» è programmato",
       "unpublish_date_set": "Data di ritiro impostata per «{{name}}»",
-      "unpublish_date_removed": "Data di ritiro rimossa da «{{name}}»"
+      "unpublish_date_removed": "Data di ritiro rimossa da «{{name}}»",
+      "changes_published": "Le modifiche a «{{name}}» sono pubblicate",
+      "changes_discarded": "Le modifiche non pubblicate a «{{name}}» sono state scartate"
+    },
+    "changes": {
+      "title": "Modifiche non pubblicate",
+      "saved_by": "salvate da {{name}} {{when}}",
+      "saved": "salvate {{when}}",
+      "hint": "I lettori vedono la versione pubblicata finché le modifiche non vengono pubblicate.",
+      "compare": "Confronta",
+      "compare_title": "Modifiche non pubblicate",
+      "compare_description": "La versione pubblicata accanto alle modifiche.",
+      "discard": "Scarta",
+      "discard_title": "Scartare le modifiche non pubblicate?",
+      "discard_description": "«{{name}}» mantiene la versione pubblicata. Le modifiche non si possono recuperare."
     }
   },
   "translations": {

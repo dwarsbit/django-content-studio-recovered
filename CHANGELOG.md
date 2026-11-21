@@ -52,6 +52,18 @@
   a page link. System checks `content_studio.E056` and
   `content_studio.W031` report a configuration that cannot work. See
   [Previews and shared draft links](https://djangocontentstudio.org/docs/previews).
+- **Unpublished changes.** With `Publishing(..., pending_changes=True)`,
+  saving a published object keeps the edit apart instead of changing the
+  live content: it is validated as a save would be, the edit page shows it,
+  and the site keeps the published version. The header offers **Publish
+  changes**, which saves them the regular way (save hooks, history,
+  notifications), and the Publishing card names the changed fields with
+  **Compare** and **Discard**. The list marks objects with **Unpublished
+  changes** and the Status filter finds them; table edits of published rows
+  are kept as unpublished changes too. Unpublishing or scheduling again
+  keeps the changes in the draft. Needs `content_studio.history`
+  (system check `content_studio.E054`); run `migrate` for its new table. See
+  [Unpublished changes](https://djangocontentstudio.org/docs/publishing#unpublished-changes).
 
 ### Changes
 

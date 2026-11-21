@@ -15,18 +15,23 @@ export function PublishButton({ disabled }: { disabled?: boolean }) {
     return null;
   }
 
+  const live = publishing.info.state === "published";
+
   return (
     <Button
       className="min-w-20"
       isLoading={publishing.isPending}
       disabled={disabled}
-      onClick={publishing.publishNow}
+      onClick={live ? publishing.publishChanges : publishing.publishNow}
+      data-testid="publish-button"
     >
       {!publishing.isPending && <PiPaperPlaneTiltBold />}
       {t(
-        publishing.info.state === "scheduled"
-          ? "publishing.publish_now"
-          : "publishing.publish",
+        live
+          ? "publishing.publish_changes"
+          : publishing.info.state === "scheduled"
+            ? "publishing.publish_now"
+            : "publishing.publish",
       )}
     </Button>
   );

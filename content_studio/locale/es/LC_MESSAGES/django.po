@@ -1927,3 +1927,15 @@ msgstr "El enlace caduca el %(date)s"
 
 msgid "Edit"
 msgstr "Editar"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Cambios sin publicar"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "No hay cambios sin publicar."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "cambios sin publicar"

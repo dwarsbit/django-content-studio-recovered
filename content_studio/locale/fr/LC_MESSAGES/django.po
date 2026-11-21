@@ -1936,3 +1936,15 @@ msgstr "Le lien expire le %(date)s"
 
 msgid "Edit"
 msgstr "Modifier"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Modifications non publiées"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Il n’y a pas de modifications non publiées."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "modifications non publiées"

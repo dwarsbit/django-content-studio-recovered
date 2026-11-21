@@ -6,6 +6,7 @@ from content_studio.form import FormSet, TableColumn
 from content_studio.publishing import Publishing
 
 from .models import (
+    Feature,
     Attachment,
     Article,
     Bulletin,
@@ -248,3 +249,16 @@ class GuideAdmin(ModelStudio):
     search_fields = ["title"]
     translations = ["title", "slug", "body"]
     prepopulated_fields = {"slug": ["title"]}
+
+
+@register(Feature)
+class FeatureAdmin(ModelStudio):
+    table_display = ["title", "summary"]
+    table_edit = ["summary"]
+    publishing = Publishing("published_at", pending_changes=True)
+
+    def save_model(self, request, obj, data, change):
+        type(self).saves.append(obj.title)
+        super().save_model(request, obj, data, change)
+
+    saves: list = []

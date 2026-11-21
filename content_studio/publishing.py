@@ -92,6 +92,10 @@ CATCH_UP = datetime.timedelta(days=1)
 # The cache key of the sweep's last run, for the status page.
 LAST_RUN_CACHE_KEY = "content_studio:publishing:last_run"
 
+# The Status filter's option for objects with unpublished changes (see
+# content_studio.pending).
+PENDING = "pending"
+
 # The column and filter names the list uses.
 STATUS_COLUMN = "__publishing__"
 STATUS_FILTER = "publishing_status"
@@ -116,6 +120,12 @@ class Publishing:
         )
 
     A state without a value of its own takes the draft value.
+
+    pending_changes=True keeps edits to published content out of sight
+    until they are published: saving a live object stores the changes
+    as unpublished changes (see content_studio.pending), and Publish
+    changes makes them live. It needs the history app
+    (content_studio.history), which stores them.
     """
 
     def __init__(
@@ -125,8 +135,10 @@ class Publishing:
         unpublish_at: Optional[str] = None,
         status: Optional[str] = None,
         status_values: Optional[Mapping[str, Any]] = None,
+        pending_changes: bool = False,
     ):
         self.published_at = published_at
+        self.pending_changes = bool(pending_changes)
         self.unpublish_at = unpublish_at or None
         self.status = status or None
         self.status_values = dict(status_values or {})
@@ -152,6 +164,7 @@ class Publishing:
         return {
             "published_at": self.published_at,
             "unpublish_at": self.unpublish_at,
+            "pending_changes": self.pending_changes,
         }
 
 
@@ -716,14 +729,43 @@ def get_status_filter_class():
         multiple = True
 
         def get_options(self, request):
+            from .pending import uses_pending_changes
+
             config = get_publishing(self.studio)
             states = STATES if config and config.unpublish_at else STATES[:3]
-            return [(state, STATE_LABELS[state]) for state in states]
+            options = [(state, STATE_LABELS[state]) for state in states]
+
+            if uses_pending_changes(self.studio):
+                options.append((PENDING, _("Unpublished changes")))
+
+            return options
 
         def queryset(self, request, queryset, value):
             config = get_publishing(self.studio)
             values = value if isinstance(value, list) else [value]
-            return filter_state(queryset, config, values)
+            states = [state for state in values if state != PENDING]
+            filtered = filter_state(queryset, config, states) if states else None
+
+            if PENDING not in values:
+                return filtered
+
+            from .pending import pending_object_ids, uses_pending_changes
+
+            if not uses_pending_changes(self.studio):
+                return filtered if filtered is not None else queryset.none()
+
+            pk = queryset.model._meta.pk
+            ids = []
+
+            for object_id in pending_object_ids(queryset.model):
+                try:
+                    ids.append(pk.to_python(object_id))
+                except ValidationError:
+                    pass
+
+            with_pending = queryset.filter(pk__in=ids)
+
+            return with_pending if filtered is None else filtered | with_pending
 
     return StatusFilter
 

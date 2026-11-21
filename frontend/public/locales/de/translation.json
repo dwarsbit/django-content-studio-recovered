@@ -1284,6 +1284,7 @@
     "set": "Festlegen",
     "publish": "Veröffentlichen",
     "publish_now": "Jetzt veröffentlichen",
+    "publish_changes": "Änderungen veröffentlichen",
     "time_zone": "Zeiten in {{zone}}.",
     "schedule": {
       "open": "Planen…",
@@ -1316,7 +1317,21 @@
       "unpublished": "„{{name}}“ wurde zurückgezogen",
       "scheduled": "„{{name}}“ ist geplant",
       "unpublish_date_set": "Datum zum Zurückziehen für „{{name}}“ festgelegt",
-      "unpublish_date_removed": "Datum zum Zurückziehen von „{{name}}“ entfernt"
+      "unpublish_date_removed": "Datum zum Zurückziehen von „{{name}}“ entfernt",
+      "changes_published": "Änderungen an „{{name}}“ sind veröffentlicht",
+      "changes_discarded": "Unveröffentlichte Änderungen an „{{name}}“ wurden verworfen"
+    },
+    "changes": {
+      "title": "Unveröffentlichte Änderungen",
+      "saved_by": "gespeichert von {{name}} {{when}}",
+      "saved": "gespeichert {{when}}",
+      "hint": "Leser sehen die veröffentlichte Version, bis die Änderungen veröffentlicht sind.",
+      "compare": "Vergleichen",
+      "compare_title": "Unveröffentlichte Änderungen",
+      "compare_description": "Die veröffentlichte Version neben den Änderungen.",
+      "discard": "Verwerfen",
+      "discard_title": "Unveröffentlichte Änderungen verwerfen?",
+      "discard_description": "„{{name}}“ behält die veröffentlichte Version. Die Änderungen lassen sich nicht wiederherstellen."
     }
   },
   "translations": {

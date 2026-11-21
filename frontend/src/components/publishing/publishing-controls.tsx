@@ -8,6 +8,7 @@ import { useHttp } from "@/hooks/use-http";
 import { getErrorMessage } from "@/lib/utils";
 import type { Model, PublishingInfo, Resource } from "@/types";
 
+import { CompareDialog } from "./compare-dialog";
 import {
   type PublishingAction,
   PublishingContext,
@@ -63,9 +64,9 @@ export function PublishingProvider({
   const { t } = useTranslation();
   const http = useHttp();
   const confirm = useConfirmDialog();
-  const [dialog, setDialog] = useState<"schedule" | "unpublish_at" | null>(
-    null,
-  );
+  const [dialog, setDialog] = useState<
+    "schedule" | "unpublish_at" | "compare" | null
+  >(null);
   const config = model.admin.list.publishing;
   const info = resource?.__publishing__;
 
@@ -96,13 +97,15 @@ export function PublishingProvider({
 
   const name = resource.__str__ || model.verbose_name;
 
-  // Runs a change, saving unsaved changes first; resolves whether it
-  // happened (a dialog stays open on a refused one, which shows why).
+  // Runs a change, saving unsaved changes first (unless saveFirst is
+  // false); resolves whether it happened (a dialog stays open on a
+  // refused one, which shows why).
   async function run(
     data: { action: PublishingAction } & Record<string, unknown>,
     success: string,
+    saveFirst = true,
   ) {
-    if (isDirty && !readOnly && !(await save())) {
+    if (saveFirst && isDirty && !readOnly && !(await save())) {
       return false;
     }
 
@@ -118,11 +121,46 @@ export function PublishingProvider({
     return true;
   }
 
+  // On studios with pending_changes, saving a live object keeps the
+  // changes unpublished until Publish changes.
+  const holdsChanges = !!config.pending_changes && info.state === "published";
+
   const controls: PublishingControls = {
     info,
     unpublish: config.unpublish,
     canPublish: info.can_publish ?? config.can_publish,
     isPending,
+    hasChanges: holdsChanges && (!!info.has_pending || (isDirty && !readOnly)),
+    canDiscard: !readOnly,
+    async publishChanges() {
+      await run(
+        { action: "publish_changes" },
+        t("publishing.toast.changes_published", { name }),
+      );
+    },
+    async discardChanges() {
+      const confirmed = await confirm({
+        title: t("publishing.changes.discard_title"),
+        description: t("publishing.changes.discard_description", { name }),
+        okText: t("publishing.changes.discard"),
+      });
+
+      if (confirmed) {
+        await run(
+          { action: "discard_changes" },
+          t("publishing.toast.changes_discarded", { name }),
+          false,
+        );
+      }
+    },
+    openCompare() {
+      setDialog("compare");
+    },
+    fieldLabel(name) {
+      const label = model.fields[name]?.verbose_name ?? name;
+
+      return label.charAt(0).toUpperCase() + label.slice(1);
+    },
     async publishNow() {
       await run(
         { action: "publish" },
@@ -169,6 +207,14 @@ export function PublishingProvider({
     <PublishingContext value={controls}>
       {children}
       <>
+        {info.pending && (
+          <CompareDialog
+            open={dialog === "compare"}
+            onOpenChange={(open) => setDialog(open ? "compare" : null)}
+            model={model}
+            resource={resource}
+          />
+        )}
         <ScheduleDialog
           open={dialog === "schedule"}
           onOpenChange={(open) => setDialog(open ? "schedule" : null)}

@@ -1897,3 +1897,15 @@ msgstr "O link expira em %(date)s"
 
 msgid "Edit"
 msgstr "Editar"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Alterações não publicadas"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Não há alterações não publicadas."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "alterações não publicadas"

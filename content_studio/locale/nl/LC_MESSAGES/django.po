@@ -1909,3 +1909,15 @@ msgstr "Link verloopt %(date)s"
 
 msgid "Edit"
 msgstr "Bewerken"
+
+#: content_studio/publishing.py
+msgid "Unpublished changes"
+msgstr "Niet-gepubliceerde wijzigingen"
+
+#: content_studio/viewsets.py
+msgid "There are no unpublished changes."
+msgstr "Er zijn geen niet-gepubliceerde wijzigingen."
+
+#: content_studio/history/models.py
+msgid "unpublished changes"
+msgstr "niet-gepubliceerde wijzigingen"

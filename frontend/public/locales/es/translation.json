@@ -1332,6 +1332,7 @@
     "set": "Definir",
     "publish": "Publicar",
     "publish_now": "Publicar ahora",
+    "publish_changes": "Publicar cambios",
     "time_zone": "Horas en {{zone}}.",
     "schedule": {
       "open": "Programar…",
@@ -1364,7 +1365,21 @@
       "unpublished": "«{{name}}» está despublicado",
       "scheduled": "«{{name}}» está programado",
       "unpublish_date_set": "Fecha de despublicación definida para «{{name}}»",
-      "unpublish_date_removed": "Fecha de despublicación quitada de «{{name}}»"
+      "unpublish_date_removed": "Fecha de despublicación quitada de «{{name}}»",
+      "changes_published": "Los cambios de «{{name}}» están publicados",
+      "changes_discarded": "Se descartaron los cambios sin publicar de «{{name}}»"
+    },
+    "changes": {
+      "title": "Cambios sin publicar",
+      "saved_by": "guardados por {{name}} {{when}}",
+      "saved": "guardados {{when}}",
+      "hint": "Los lectores ven la versión publicada hasta que se publiquen los cambios.",
+      "compare": "Comparar",
+      "compare_title": "Cambios sin publicar",
+      "compare_description": "La versión publicada junto a los cambios.",
+      "discard": "Descartar",
+      "discard_title": "¿Descartar los cambios sin publicar?",
+      "discard_description": "«{{name}}» conserva su versión publicada. Los cambios no se pueden recuperar."
     }
   },
   "translations": {
