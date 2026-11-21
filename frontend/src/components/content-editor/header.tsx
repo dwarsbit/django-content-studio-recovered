@@ -224,15 +224,26 @@ export function Header({
         {keptAt && (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span
-                className="inline-flex text-success"
-                aria-label={t("recovery.kept", {
-                  when: formatKeptAt(keptAt),
-                })}
-                data-testid="changes-kept"
-              >
-                <PiCheckBold className="size-3.5" />
-              </span>
+              {ui ? (
+                // Mockups: no green check, which reads as "saved".
+                <span
+                  className="inline-flex items-center gap-1.5 cursor-default"
+                  data-testid="changes-kept"
+                >
+                  <span className="text-muted-foreground/50">·</span>
+                  kept
+                </span>
+              ) : (
+                <span
+                  className="inline-flex text-success"
+                  aria-label={t("recovery.kept", {
+                    when: formatKeptAt(keptAt),
+                  })}
+                  data-testid="changes-kept"
+                >
+                  <PiCheckBold className="size-3.5" />
+                </span>
+              )}
             </TooltipTrigger>
             <TooltipContent>
               {t("recovery.kept", { when: formatKeptAt(keptAt) })}
