@@ -251,10 +251,18 @@ class BaseStudio(Generic[T]):
         form field: its hash is not sent to the admin, and admins set
         it with Set password.
         """
+        from .publishing import get_publishing
+
         exclude = set(self.exclude or [])
 
         if self.model is get_user_model():
             exclude.add("password")
+
+        # The Publishing card edits the publishing fields.
+        config = get_publishing(self)
+
+        if config is not None:
+            exclude.update(config.field_names)
 
         return [
             field.name
@@ -418,6 +426,16 @@ class ModelStudio(BaseStudio[T]):
     # or permanently deleted.
     soft_delete: str = ""
 
+    # Draft, publish and scheduling, as an opt-in: the name of the
+    # model's nullable publish date field, or a Publishing (see
+    # content_studio.publishing) that also names an unpublish date and
+    # a status field. Objects are drafts without a publish date,
+    # scheduled before it and published after it. The edit page shows a
+    # Publishing card, the list a Status column, filter and bulk
+    # actions; changing the dates needs the model's "Can publish"
+    # permission (see has_publish_permission).
+    publishing: Union[str, "Publishing", None] = None
+
     # Inline models edited on the parent's edit page.
     inlines: list[Type["InlineModelStudio"]] = []
 
@@ -578,6 +596,39 @@ class ModelStudio(BaseStudio[T]):
             return ""
 
         return str(value)
+
+    def has_publish_permission(
+        self, request: HttpRequest, obj: Optional[T] = None
+    ) -> bool:
+        """
+        Whether the request may publish, schedule and unpublish (obj, when
+        given): change permission plus the model's "Can publish"
+        permission, publish_<model_name>, which migrate creates for every
+        studio with publishing. Superusers have it.
+        """
+        from .publishing import get_codename
+
+        if not self.has_change_permission(request, obj):
+            return False
+
+        return request.user.has_perm(
+            f"{self.model._meta.app_label}.{get_codename(self.model)}"
+        )
+
+    def on_publish(self, request: Optional[HttpRequest], obj: T) -> None:
+        """
+        Called once obj went live: published now from the admin, or at
+        its publish date by the scheduled run (request is None then).
+        Override to purge a cache or start a deploy. obj is already
+        saved; the default does nothing.
+        """
+
+    def on_unpublish(self, request: Optional[HttpRequest], obj: T) -> None:
+        """
+        Called once obj stopped being live: unpublished from the admin,
+        or at its unpublish date by the scheduled run (request is None
+        then). The default does nothing.
+        """
 
     def has_add_permission(self, request: HttpRequest, obj: Optional[T] = None) -> bool:
         # Don't allow adding more than one singleton object.
@@ -1214,8 +1265,17 @@ def get_studio_readonly_fields(
 
     names = list(studio.get_readonly_fields(request, obj))
     guarded = guarded_field_names(getattr(studio, "model", None), request, obj)
+    names += sorted(guarded - set(names))
 
-    return names + sorted(guarded - set(names))
+    # The publishing fields change through the Publishing card only.
+    from .publishing import get_publishing
+
+    config = get_publishing(studio)
+
+    if config is not None:
+        names += [name for name in config.field_names if name not in names]
+
+    return names
 
 
 def get_readonly_field_names(
@@ -1455,6 +1515,23 @@ def serialize_prepopulated_fields(studio, request: HttpRequest) -> dict[str, lis
     }
 
 
+def serialize_publishing(studio, request) -> Optional[dict[str, Any]]:
+    """A studio's publishing for the admin, or None without it."""
+    from .publishing import get_publishing
+
+    config = get_publishing(studio)
+
+    if config is None:
+        return None
+
+    return {
+        # Whether objects can get an unpublish date.
+        "unpublish": bool(config.unpublish_at),
+        # Whether the request may publish (per object in __publishing__).
+        "can_publish": bool(studio.has_publish_permission(request)),
+    }
+
+
 def is_notifications_enabled(admin_class) -> bool:
     """
     Whether a studio's edit page offers Follow and its model is on the
@@ -1624,6 +1701,9 @@ class AdminSerializer:
                 "search_field": get_search_field(admin_class),
                 "filter": serialize_list_filters(admin_class, request),
                 "trash": bool(admin_class.soft_delete),
+                # The Status column, filter and bulk actions of a studio
+                # with publishing.
+                "publishing": serialize_publishing(admin_class, request),
                 "sortable_by": admin_class.sortable_by,
                 "reorderable": is_reorderable(admin_class, request),
                 # The formats the list can be exported in, or None when
@@ -1665,7 +1745,29 @@ class AdminSerializer:
         return [i.serialize() for i in self.get_edit_sidebar(admin_class.edit_sidebar)]
 
     def get_table_display(self) -> list[dict[str, Any]]:
-        return [column.serialize() for column in self.get_columns()]
+        from .publishing import STATUS_COLUMN, get_publishing
+
+        columns = [column.serialize() for column in self.get_columns()]
+        config = get_publishing(self.admin_class)
+
+        if config is None:
+            return columns
+
+        # The Status column: in place of the status field, else after
+        # the first column.
+        status = {
+            "name": STATUS_COLUMN,
+            "header": str(_("Status")),
+            "format": {"name": "PublishingFormat", "options": {}},
+        }
+        names = [column["name"] for column in columns]
+
+        if config.status and config.status in names:
+            columns[names.index(config.status)] = status
+        else:
+            columns.insert(min(1, len(columns)), status)
+
+        return columns
 
     def get_columns(self) -> list[TableColumn]:
         return get_table_display_columns(self.admin_class)

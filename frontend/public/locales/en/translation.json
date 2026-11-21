@@ -658,7 +658,13 @@
       "restored_many_one": "{{actor}} restored {{count}} {{models}}",
       "restored_many_other": "{{actor}} restored {{count}} {{models}}",
       "reordered_many_one": "{{actor}} reordered {{count}} {{models}}",
-      "reordered_many_other": "{{actor}} reordered {{count}} {{models}}"
+      "reordered_many_other": "{{actor}} reordered {{count}} {{models}}",
+      "published": "{{actor}} published the {{model}} {{object}}",
+      "published_many_one": "{{actor}} published {{count}} {{models}}",
+      "published_many_other": "{{actor}} published {{count}} {{models}}",
+      "unpublished": "{{actor}} unpublished the {{model}} {{object}}",
+      "unpublished_many_one": "{{actor}} unpublished {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} unpublished {{count}} {{models}}"
     },
     "follow": {
       "follow": "Follow",
@@ -720,7 +726,9 @@
       "updated": "Updated",
       "deleted": "Deleted",
       "restored": "Restored",
-      "reordered": "Moved"
+      "reordered": "Moved",
+      "published": "Published",
+      "unpublished": "Unpublished"
     }
   },
   "analytics": {
@@ -1221,5 +1229,57 @@
   "row_actions": {
     "menu": "Actions",
     "menu_for": "Actions for {{name}}"
+  },
+  "publishing": {
+    "title": "Publishing",
+    "states": {
+      "draft": "Draft",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "expired": "Expired"
+    },
+    "scheduled_for": "Scheduled · {{time}}",
+    "published": "Published",
+    "publish_on": "Publish on",
+    "unpublish_on": "Unpublish on",
+    "never": "Never",
+    "not_scheduled": "Not scheduled",
+    "set": "Set",
+    "publish": "Publish",
+    "publish_now": "Publish now",
+    "time_zone": "Times are in {{zone}}.",
+    "schedule": {
+      "open": "Schedule…",
+      "title": "Schedule publishing",
+      "edit_title": "Change the schedule",
+      "description": "Choose when “{{name}}” goes live. It stays a draft until then.",
+      "unpublish_toggle": "Unpublish on a date",
+      "summary": "Goes live {{at}}.",
+      "summary_until": "Goes live {{at}} and comes down {{until}}.",
+      "submit": "Schedule"
+    },
+    "unpublish_date": {
+      "title": "Unpublish date",
+      "description": "Choose when “{{name}}” comes down. It stays published until then.",
+      "remove": "Remove date"
+    },
+    "cancel_schedule": {
+      "title": "Cancel the schedule?",
+      "description": "“{{name}}” stays a draft and does not go live.",
+      "ok": "Cancel schedule"
+    },
+    "unpublish": {
+      "title": "Unpublish?",
+      "description": "“{{name}}” goes back to draft and is no longer live.",
+      "ok": "Unpublish"
+    },
+    "toast": {
+      "published": "“{{name}}” is published",
+      "unscheduled": "“{{name}}” is no longer scheduled",
+      "unpublished": "“{{name}}” is unpublished",
+      "scheduled": "“{{name}}” is scheduled",
+      "unpublish_date_set": "Unpublish date set for “{{name}}”",
+      "unpublish_date_removed": "Unpublish date removed from “{{name}}”"
+    }
   }
 }

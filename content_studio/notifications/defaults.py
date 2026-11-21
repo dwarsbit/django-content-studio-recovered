@@ -19,7 +19,14 @@ from .events import DEFAULT_CONTENT_ACTIONS, Event
 
 # The content changes a default can name: a reorder only notifies
 # followers.
-DEFAULT_ACTIONS = ("created", "updated", "deleted", "restored")
+DEFAULT_ACTIONS = (
+    "created",
+    "updated",
+    "deleted",
+    "restored",
+    "published",
+    "unpublished",
+)
 SCOPES = ("all", "mine")
 
 

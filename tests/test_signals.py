@@ -218,7 +218,7 @@ class CustomBulkActionTests(SignalTestCase):
         request.user = self.user
 
         with self.assertRaises(ValueError):
-            record_change(request, Article.objects.create(title="a"), "published")
+            record_change(request, Article.objects.create(title="a"), "launched")
 
 
 class FailingReceiverTests(SignalTestCase):

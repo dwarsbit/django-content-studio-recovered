@@ -1,5 +1,7 @@
 import * as R from "ramda";
 
+import { usePublishing } from "@/components/publishing/publishing";
+import { PublishingCard } from "@/components/publishing/publishing-card";
 import { cn } from "@/lib/utils";
 import type { Model } from "@/types";
 
@@ -20,13 +22,16 @@ export function Aside({
       edit: { sidebar },
     },
   } = model;
-  const hasSidebar = !R.isEmpty(sidebar) && !R.isNil(sidebar);
+  // Studios with publishing open the sidebar with the Publishing card.
+  const publishing = usePublishing();
+  const hasSidebar = (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!publishing;
 
   return (
     hasSidebar && (
       <EditPlacementContext.Provider value="sidebar">
         <aside className="space-y-4">
-          {sidebar.map((formSet, idx) => (
+          <PublishingCard />
+          {(sidebar ?? []).map((formSet, idx) => (
             <Conditional
               key={idx}
               when={formSet.when}

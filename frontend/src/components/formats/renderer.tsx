@@ -1,5 +1,6 @@
 import { type ComponentType, useMemo } from "react";
 
+import { PublishingFormat } from "@/components/publishing/publishing-badge";
 import { useAdminInfo } from "@/hooks/use-admin-info";
 import {
   FieldFormat,
@@ -64,6 +65,7 @@ const FORMATS: Partial<Record<FieldFormat, FormatComponent>> = {
   [FieldFormat.NumberFormat]: NumberFormat,
   [FieldFormat.PercentFormat]: PercentFormat,
   [FieldFormat.ProgressFormat]: ProgressFormat,
+  [FieldFormat.PublishingFormat]: PublishingFormat,
   [FieldFormat.TagFormat]: TagFormat,
   [FieldFormat.TextFormat]: TextFormat,
   [FieldFormat.TimeFormat]: TimeFormat,

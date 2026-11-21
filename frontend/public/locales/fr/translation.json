@@ -674,7 +674,15 @@
       "restored_many_many": "{{actor}} a restauré {{count}} {{models}}",
       "reordered_many_one": "{{actor}} a réordonné {{count}} {{models}}",
       "reordered_many_other": "{{actor}} a réordonné {{count}} {{models}}",
-      "reordered_many_many": "{{actor}} a réordonné {{count}} {{models}}"
+      "reordered_many_many": "{{actor}} a réordonné {{count}} {{models}}",
+      "published": "{{actor}} a publié {{object}} ({{model}})",
+      "published_many_one": "{{actor}} a publié {{count}} {{models}}",
+      "published_many_other": "{{actor}} a publié {{count}} {{models}}",
+      "published_many_many": "{{actor}} a publié {{count}} {{models}}",
+      "unpublished": "{{actor}} a dépublié {{object}} ({{model}})",
+      "unpublished_many_one": "{{actor}} a dépublié {{count}} {{models}}",
+      "unpublished_many_other": "{{actor}} a dépublié {{count}} {{models}}",
+      "unpublished_many_many": "{{actor}} a dépublié {{count}} {{models}}"
     },
     "follow": {
       "follow": "Suivre",
@@ -738,7 +746,9 @@
       "updated": "Modifié",
       "deleted": "Supprimé",
       "restored": "Restauré",
-      "reordered": "Déplacé"
+      "reordered": "Déplacé",
+      "published": "Publié",
+      "unpublished": "Dépublié"
     }
   },
   "analytics": {
@@ -1260,5 +1270,57 @@
   "row_actions": {
     "menu": "Actions",
     "menu_for": "Actions pour {{name}}"
+  },
+  "publishing": {
+    "title": "Publication",
+    "states": {
+      "draft": "Brouillon",
+      "scheduled": "Planifié",
+      "published": "Publié",
+      "expired": "Expiré"
+    },
+    "scheduled_for": "Planifié · {{time}}",
+    "published": "Publié",
+    "publish_on": "Publier le",
+    "unpublish_on": "Dépublier le",
+    "never": "Jamais",
+    "not_scheduled": "Non planifié",
+    "set": "Définir",
+    "publish": "Publier",
+    "publish_now": "Publier maintenant",
+    "time_zone": "Heures en {{zone}}.",
+    "schedule": {
+      "open": "Planifier…",
+      "title": "Planifier la publication",
+      "edit_title": "Modifier la planification",
+      "description": "Choisissez quand « {{name}} » sera en ligne. Il reste un brouillon jusque-là.",
+      "unpublish_toggle": "Dépublier à une date",
+      "summary": "En ligne le {{at}}.",
+      "summary_until": "En ligne le {{at}} et retiré le {{until}}.",
+      "submit": "Planifier"
+    },
+    "unpublish_date": {
+      "title": "Date de dépublication",
+      "description": "Choisissez quand « {{name}} » sera retiré. Il reste publié jusque-là.",
+      "remove": "Supprimer la date"
+    },
+    "cancel_schedule": {
+      "title": "Annuler la planification ?",
+      "description": "« {{name}} » reste un brouillon et ne sera pas mis en ligne.",
+      "ok": "Annuler la planification"
+    },
+    "unpublish": {
+      "title": "Dépublier ?",
+      "description": "« {{name}} » redevient un brouillon et n’est plus en ligne.",
+      "ok": "Dépublier"
+    },
+    "toast": {
+      "published": "« {{name}} » est publié",
+      "unscheduled": "« {{name}} » n’est plus planifié",
+      "unpublished": "« {{name}} » est dépublié",
+      "scheduled": "« {{name}} » est planifié",
+      "unpublish_date_set": "Date de dépublication définie pour « {{name}} »",
+      "unpublish_date_removed": "Date de dépublication supprimée de « {{name}} »"
+    }
   }
 }

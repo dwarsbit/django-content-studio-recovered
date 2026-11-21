@@ -44,6 +44,7 @@ export function SaveButton({
   addAnother = false,
   close = false,
   defaultMode = "save",
+  outline = false,
   onSave,
 }: {
   // A create form: the buttons say Create.
@@ -54,6 +55,8 @@ export function SaveButton({
   // What the button does; one the editor does not offer falls back to
   // a plain save.
   defaultMode?: SaveMode;
+  // Next to a primary button (Publish): Save steps back.
+  outline?: boolean;
   onSave(mode: SaveMode): void;
 }) {
   const { t } = useTranslation();
@@ -70,6 +73,7 @@ export function SaveButton({
   const button = (
     <Button
       className="min-w-20"
+      variant={outline ? "outline" : "default"}
       isLoading={isSaving}
       aria-keyshortcuts={
         main === "save" ? (mac ? "Meta+S" : "Control+S") : undefined
@@ -101,11 +105,14 @@ export function SaveButton({
   return (
     <ButtonGroup>
       {save}
-      <ButtonGroupSeparator className="bg-primary-foreground/25" />
+      {!outline && (
+        <ButtonGroupSeparator className="bg-primary-foreground/25" />
+      )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
             size="icon"
+            variant={outline ? "outline" : "default"}
             className="w-7"
             disabled={isSaving}
             aria-label={t("editor.save_options")}

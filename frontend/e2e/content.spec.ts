@@ -32,12 +32,16 @@ test("creates, edits and deletes an article", async ({ page }) => {
   await expect(page).toHaveURL(/\/content\/demo_blog\.article\/new$/);
   await fieldByLabel(page, "title").fill(title);
   await fieldByLabel(page, "body").fill("Written by the e2e suite.");
-  await page.locator("[data-slot=select-trigger]").click();
-  await page.getByRole("option", { name: "Published" }).click();
   await page.getByRole("button", { name: "Create" }).click();
   // Saving keeps the editor open; after a create, the route becomes the
   // new object's.
   await expect(page).toHaveURL(editorUrl);
+
+  // New articles are drafts; Publish puts them live.
+  const card = page.getByTestId("publishing-card");
+  await expect(card.getByTestId("publishing-badge")).toHaveText("Draft");
+  await page.getByRole("button", { name: "Publish", exact: true }).click();
+  await expect(card.getByTestId("publishing-badge")).toHaveText("Published");
 
   await page.getByRole("button", { name: "Back to the list" }).click();
   await expect(page).toHaveURL(listUrl);

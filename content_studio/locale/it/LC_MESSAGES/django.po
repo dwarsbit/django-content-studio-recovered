@@ -1692,3 +1692,127 @@ msgstr "Stato della risposta"
 #: webhooks/models.py:145
 msgid "Response"
 msgstr "Risposta"
+
+#: publishing.py
+msgid "Draft"
+msgstr "Bozza"
+
+#: webhooks/models.py
+msgid "Published"
+msgstr "Pubblicato"
+
+#: webhooks/models.py
+msgid "Unpublished"
+msgstr "Ritirato"
+
+#: publishing.py
+msgid "Scheduled publishing"
+msgstr "Pubblicazione programmata"
+
+#: publishing.py
+msgid "Every minute"
+msgstr "Ogni minuto"
+
+#: publishing.py
+msgid "Enter a valid date and time."
+msgstr "Inserisci una data e un’ora valide."
+
+#: publishing.py
+msgid "The unpublish date must be after the publish date."
+msgstr "La data di ritiro deve seguire la data di pubblicazione."
+
+#: publishing.py
+msgid "Pick when to publish."
+msgstr "Scegli quando pubblicare."
+
+#: publishing.py
+msgid "Pick a time in the future."
+msgstr "Scegli un orario futuro."
+
+#: publishing.py
+msgid "This model has no unpublish date."
+msgstr "Questo modello non ha una data di ritiro."
+
+#: publishing.py
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr "Pubblica o programma l’oggetto prima di impostare una data di ritiro."
+
+#: publishing.py
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Azione di pubblicazione sconosciuta %(action)s."
+
+#: actions.py
+msgid "Publish now"
+msgstr "Pubblica ora"
+
+#: actions.py
+msgid "Publish the selected items now?"
+msgstr "Pubblicare ora gli elementi selezionati?"
+
+#: actions.py
+msgid "Unpublish"
+msgstr "Ritira"
+
+#: actions.py
+msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
+msgstr "Gli elementi selezionati tornano bozze e lasciano il sito. Ritirarli?"
+
+#: actions.py
+msgid "Schedule…"
+msgstr "Programma…"
+
+#: actions.py
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s elementi pubblicati."
+
+#: actions.py
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "%(count)s elementi ritirati."
+
+#: actions.py
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s elementi programmati."
+
+#: actions.py
+msgid "Publish on"
+msgstr "Pubblica il"
+
+#: actions.py
+msgid "Unpublish on"
+msgstr "Ritira il"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s ha pubblicato %(object)s (%(model)s)"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s ha ritirato %(object)s (%(model)s)"
+
+#: models.py
+msgid "Published at"
+msgstr "Pubblicato il"
+
+#: models.py
+msgid "Unpublish at"
+msgstr "Ritira il"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s ha pubblicato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha pubblicato %(count)s %(models)s"
+
+#: notifications/digest.py
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s ha ritirato %(count)s %(models)s"
+msgstr[1] "%(actor)s ha ritirato %(count)s %(models)s"

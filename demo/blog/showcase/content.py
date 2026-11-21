@@ -150,7 +150,7 @@ MEDIA = {
 }
 
 # The articles, oldest first. days: days since publication (None for a
-# draft); views; author username; featured; categories; cover scene.
+# draft, negative for one scheduled to go live); views; author username; featured; categories; cover scene.
 ARTICLES = [
     {
         "title": "Ten days on the coastal path",
@@ -321,7 +321,8 @@ ARTICLES = [
         "cover": "lilac-sphere",
         "categories": ["Design"],
         "author": "priya",
-        "days": None,
+        # Scheduled: goes live in three days.
+        "days": -3,
         "views": 0,
         "body": [
             "Draft. Twelve objects that made our desks, kitchens and bags better this year, and the small studios behind them.",
