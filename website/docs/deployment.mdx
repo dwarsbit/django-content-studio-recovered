@@ -112,7 +112,7 @@ probably not as you intended. Neither stops the server from starting, but
 | ID | Reports |
 |----|---------|
 | `content_studio.E001` | `list_display` set to a mapping. The list view's mapping belongs in `list_item_display`; `list_display` sets the table columns. |
-| `content_studio.E002` | `list_views` with an unknown view name. |
+| `content_studio.E002` | `list_views` with an unknown view name, or an entry that is neither a name nor a `CalendarView`. |
 | `content_studio.E003` | Two extensions with the same ID. Pass an `extension_id` to tell them apart. |
 | `content_studio.E004` | Two dashboard widgets with the same ID, on the start page and the [dashboard pages](/docs/extensions#dashboardpage) together. Pass a `widget_id` to tell them apart. |
 | `content_studio.E005` | Two components with the same ID on one studio, or on an inline and the inlined model's own studio. Pass a `component_id` to tell them apart; the same component class may serve several studios. |
@@ -169,6 +169,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E056` | A studio's [`preview`](/docs/previews#options) that is not `True` or `False`. |
 | `content_studio.E057` | A studio's [`table_edit`](/docs/list-page#editing-in-the-table) (or `list_editable`) that is not a list of field names, or names a field a table cell cannot edit: not a `table_display` column, the first column, a field the edit page does not write, a read-only field, a many-to-many or reverse relation, a field with its own widget or a field publishing sets. |
 | `content_studio.E058` | A studio's [`review`](/docs/review#set-up-review) that is not `True` or a `Review`, on a studio without publishing, or without `content_studio.review` in `INSTALLED_APPS`. |
+| `content_studio.E059` | `"calendar"` in [`list_views`](/docs/list-page#calendar) on a studio without publishing: name the date field with `CalendarView("<field>")`. |
+| `content_studio.E060` | A [calendar](/docs/list-page#calendar) whose field or end is not a `DateField` or `DateTimeField` of the model, or two calendars of the same field. |
 
 ### Warnings
 

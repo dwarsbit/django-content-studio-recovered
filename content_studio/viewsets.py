@@ -485,6 +485,66 @@ class BaseModelViewSet(ModelViewSet):
 
         return self.list(request)
 
+    @action(methods=["get"], detail=False, url_path="calendar")
+    def calendar(self, request):
+        """
+        The objects of a calendar view, as list rows, with the list's
+        search and filters: those dated in [from, to) (?view=<key>&
+        from=&to=, dates for a DateField and ISO date-times otherwise),
+        at most CALENDAR_MAX_ITEMS, or with ?unscheduled=1 those
+        without a date, for the calendar's tray. Answers {"results",
+        "truncated"} (and "count" for the tray).
+        """
+        from .list_views import (
+            CALENDAR_MAX_ITEMS,
+            CALENDAR_MAX_UNSCHEDULED,
+            filter_range,
+            filter_unscheduled,
+            find_calendar,
+        )
+
+        view = find_calendar(self._admin_model, request.query_params.get("view"))
+
+        if view is None or self.is_singleton:
+            raise NotFound("This model has no such calendar.")
+
+        queryset = self.filter_queryset(self.get_queryset())
+
+        if request.query_params.get("unscheduled"):
+            queryset = filter_unscheduled(queryset, self._admin_model, view)
+            count = queryset.count()
+            rows = list(queryset[:CALENDAR_MAX_UNSCHEDULED])
+
+            return Response(
+                {
+                    "results": self.get_serializer(rows, many=True).data,
+                    "count": count,
+                    "truncated": count > len(rows),
+                }
+            )
+
+        try:
+            queryset = filter_range(
+                queryset,
+                self._admin_model,
+                view,
+                request.query_params.get("from") or "",
+                request.query_params.get("to") or "",
+            )
+        except ValueError as error:
+            raise ValidationError({"from": [str(error)]})
+
+        rows = list(queryset[: CALENDAR_MAX_ITEMS + 1])
+
+        return Response(
+            {
+                "results": self.get_serializer(
+                    rows[:CALENDAR_MAX_ITEMS], many=True
+                ).data,
+                "truncated": len(rows) > CALENDAR_MAX_ITEMS,
+            }
+        )
+
     @action(methods=["get"], detail=False, url_path="export")
     def export(self, request):
         """
@@ -1858,7 +1918,8 @@ class BaseModelViewSet(ModelViewSet):
         rather than overwriting someone else's change. The save goes
         through the update path of the edit page: the studio's save
         hooks, model validation, the activity log and history. Answers
-        with the saved values as the list shows them.
+        with the saved values as the list shows them. A calendar view's
+        drag saves its date (and end) fields through here too.
         """
         from .table_edit import comparable, get_cell_keys
 
@@ -1869,7 +1930,13 @@ class BaseModelViewSet(ModelViewSet):
         if not isinstance(values, dict) or not values or not isinstance(base, dict):
             raise ValidationError("A table edit requires a non-empty values object.")
 
-        keys = get_cell_keys(self._admin_model, request)
+        from .list_views import get_drag_fields
+
+        # The cells of table_edit, and the dates a calendar drag saves.
+        keys = {
+            **get_cell_keys(self._admin_model, request),
+            **{name: name for name in get_drag_fields(self._admin_model, request)},
+        }
         unknown = sorted(key for key in values if key not in keys)
 
         if unknown:

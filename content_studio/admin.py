@@ -30,6 +30,7 @@ from .form import (
     FormSetGroup,
     TableColumn,
 )
+from .list_views import CalendarView, serialize_views
 from .login_backends import LoginBackendManager
 from .media_library import fields as ml_fields
 from .presence import is_presence_enabled
@@ -409,9 +410,11 @@ class ModelStudio(BaseStudio[T]):
     # method names, e.g. {"title": "name", "description": "subtitle"}.
     list_item_display: Optional[dict[str, str]] = None
 
-    # The views offered by the list page: "table" and/or "list". More than
-    # one enables a toggle in the interface.
-    list_views: list[str] = ["table"]
+    # The views offered by the list page: "table", "list", "calendar"
+    # (the publishing date's calendar) and CalendarView objects
+    # (content_studio.list_views) for a calendar by another date field.
+    # More than one enables a switch in the interface.
+    list_views: list[Union[str, CalendarView]] = ["table"]
 
     # Fields the list search searches through.
     search_fields: list[str] = []
@@ -1921,7 +1924,7 @@ class AdminSerializer:
                 "per_page": admin_class.list_per_page,
                 "description": admin_class.list_description,
                 "display": self.get_table_display(),
-                "views": admin_class.list_views,
+                "views": serialize_views(admin_class, request),
                 "search": len(admin_class.search_fields) > 0,
                 # The field a relation picker fills with the typed search
                 # text when it creates an object of this model.

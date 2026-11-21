@@ -2,7 +2,12 @@ import { keepPreviousData, useQuery } from "@tanstack/react-query";
 import * as R from "ramda";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PiFileTextBold, PiRowsBold, PiTableBold } from "react-icons/pi";
+import {
+  PiCalendarBlankBold,
+  PiFileTextBold,
+  PiRowsBold,
+  PiTableBold,
+} from "react-icons/pi";
 import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
@@ -39,11 +44,13 @@ import type {
 } from "@/types";
 
 import { ContentBulkBar } from "./_components/bulk-bar";
+import { CalendarView } from "./_components/calendar-view";
 import { Filters } from "./_components/filters";
 import { ListActionsMenu } from "./_components/list-actions-menu";
 import { ListView } from "./_components/list-view";
 import { SortSelect } from "./_components/sort-select";
 import { type ReorderProps, TableView } from "./_components/table-view";
+import { findCalendar, viewKey } from "./_components/view-config";
 import { ContentEditorPage } from "./[id]/page";
 
 export function ModelListPage() {
@@ -57,7 +64,8 @@ export function ModelListPage() {
   const search = searchParams.get("search");
   // The views the admin offers; more than one shows a toggle. The
   // choice is remembered per content type in local storage.
-  const views = model?.admin.list.views ?? ["table"];
+  const viewConfigs = model?.admin.list.views ?? ["table"];
+  const views = viewConfigs.map(viewKey);
   const sortableBy = model?.admin.list.sortable_by ?? null;
 
   // Reads the remembered choice, falling back to the first offered
@@ -115,6 +123,8 @@ export function ModelListPage() {
   const [view, setViewState] = useState<string>(() =>
     model?.label ? storedView(model.label) : views[0],
   );
+  // The calendar the view switch shows, if it shows one.
+  const calendar = findCalendar(viewConfigs, view);
   const [ordering, setOrderingState] = useState<string | null>(() =>
     model?.label ? storedOrdering(model.label) : null,
   );
@@ -459,12 +469,38 @@ export function ModelListPage() {
                           <PiRowsBold />
                         </ToggleGroupItem>
                       )}
+                      {viewConfigs.map(
+                        (config) =>
+                          typeof config !== "string" &&
+                          config.type === "calendar" && (
+                            <ToggleGroupItem
+                              key={config.key}
+                              value={config.key}
+                              title={t("list_view.calendar_view", {
+                                label: config.label,
+                              })}
+                              aria-label={t("list_view.calendar_view", {
+                                label: config.label,
+                              })}
+                              className="min-w-8 rounded-md first:rounded-md last:rounded-md text-muted-foreground"
+                            >
+                              <PiCalendarBlankBold />
+                            </ToggleGroupItem>
+                          ),
+                      )}
                     </ToggleGroup>
                   </>
                 )}
               </div>
             </div>
-            {view === "list" ? (
+            {calendar ? (
+              <CalendarView
+                key={calendar.key}
+                model={model}
+                config={calendar}
+                params={{ ...filters, search: search || undefined }}
+              />
+            ) : view === "list" ? (
               <ListView
                 items={data.results}
                 model={model}
@@ -494,7 +530,7 @@ export function ModelListPage() {
               />
             )}
           </div>
-          {data.results.length > 0 && (
+          {data.results.length > 0 && !calendar && (
             <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
               <span className="tabular-nums select-none">
                 <ListCount model={model} pagination={data.pagination} />

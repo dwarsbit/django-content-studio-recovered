@@ -182,6 +182,12 @@ class DjangoContentStudioConfig(AppConfig):
         )
         from .export import fetch_related
         from .form import TableColumn
+        from .list_views import (
+            ROW_ACTIONS,
+            get_calendars,
+            get_drag_fields,
+            uses_item_display,
+        )
         from .viewsets import BaseModelViewSet
         from .router import content_studio_router
         from .serializers import ContentSerializer
@@ -236,7 +242,7 @@ class DjangoContentStudioConfig(AppConfig):
                 user_model = get_user_model()
                 excluded_fields = None
                 # For list views we include the specified table_display fields.
-                if self.action in ("list", "trash") and not self.is_singleton:
+                if self.action in ROW_ACTIONS and not self.is_singleton:
                     available_fields = ["id", "__str__"] + [
                         column.field for column in columns
                     ]
@@ -248,8 +254,16 @@ class DjangoContentStudioConfig(AppConfig):
                         available_fields.append(self._admin_model.soft_delete)
                     # Rows carry their resolved list item display when
                     # the list view is enabled.
-                    if "list" in self._admin_model.list_views:
+                    if uses_item_display(self._admin_model):
                         available_fields.append("list_item_display")
+                    # A calendar's rows carry its date (and end) fields.
+                    for calendar in get_calendars(self._admin_model):
+                        for name in (
+                            calendar.resolve_field(self._admin_model),
+                            calendar.end,
+                        ):
+                            if name and name not in available_fields:
+                                available_fields.append(name)
                     # A translated column carries every language's value
                     # (the serializer adds those kept outside the
                     # model's columns).
@@ -304,7 +318,7 @@ class DjangoContentStudioConfig(AppConfig):
                 # fields, for the Languages column.
                 list_translations = (
                     build_translation_config(self._admin_model)
-                    if self.action in ("list", "trash") and not self.is_singleton
+                    if self.action in ROW_ACTIONS and not self.is_singleton
                     else None
                 )
 
@@ -321,16 +335,19 @@ class DjangoContentStudioConfig(AppConfig):
                         def get_languages(self, obj):
                             return list_translations.missing_counts(obj)
 
-                # With inline editing, list rows say whether the editor
-                # may change them (has_change_permission with the
-                # object): rows they may not change stay read-only.
+                # With inline editing (or a calendar that saves dragged
+                # dates), list rows say whether the editor may change
+                # them (has_change_permission with the object): rows
+                # they may not change stay read-only.
                 get_table_edit = getattr(self._admin_model, "get_table_edit", None)
 
                 if (
-                    self.action == "list"
+                    self.action in ("list", "calendar")
                     and not self.is_singleton
-                    and get_table_edit is not None
-                    and get_table_edit(self.request)
+                    and (
+                        (get_table_edit is not None and get_table_edit(self.request))
+                        or get_drag_fields(self._admin_model, self.request)
+                    )
                 ):
                     edit_studio = self._admin_model
 
@@ -359,7 +376,7 @@ class DjangoContentStudioConfig(AppConfig):
                 # Detail views: read-only fields are never written, and
                 # each object reports its own so the editor can show
                 # them (get_readonly_fields may depend on the object).
-                if self.action not in ("list", "trash") or self.is_singleton:
+                if self.action not in ROW_ACTIONS or self.is_singleton:
                     admin_model = self._admin_model
                     parent_fk = self.parent_fk
 
@@ -634,7 +651,7 @@ class DjangoContentStudioConfig(AppConfig):
                 # Columns backed by a model studio method ship their
                 # computed value on every row, through the column's
                 # format (TextFormat when unset).
-                if self.action in ("list", "trash") and not self.is_singleton:
+                if self.action in ROW_ACTIONS and not self.is_singleton:
                     method_columns = [
                         column
                         for column in columns
@@ -663,7 +680,7 @@ class DjangoContentStudioConfig(AppConfig):
 
                 # Rows of a studio with publishing carry their state for
                 # the Status column.
-                if self.action in ("list", "trash") and not self.is_singleton:
+                if self.action in ROW_ACTIONS and not self.is_singleton:
                     from .publishing import get_publishing, serialize_state
 
                     publishing_config = get_publishing(self._admin_model)
@@ -733,9 +750,9 @@ class DjangoContentStudioConfig(AppConfig):
                 # resolved list item display so the frontend renders fully
                 # computed rows (declarative mapping or override).
                 if (
-                    self.action in ("list", "trash")
+                    self.action in ROW_ACTIONS
                     and not self.is_singleton
-                    and "list" in self._admin_model.list_views
+                    and uses_item_display(self._admin_model)
                 ):
                     admin_model = self._admin_model
 
@@ -820,7 +837,7 @@ class DjangoContentStudioConfig(AppConfig):
 
                 # Lists fetch the related objects their rows show along
                 # with the rows, instead of one query per row.
-                if self.action in ("list", "trash") and not self.is_singleton:
+                if self.action in ROW_ACTIONS and not self.is_singleton:
                     qs = fetch_related(self._admin_model, qs, self._get_row_columns())
 
                 return qs
@@ -830,7 +847,7 @@ class DjangoContentStudioConfig(AppConfig):
                 with the list view, the list item display's fields."""
                 row_columns = list(columns)
 
-                if "list" in self._admin_model.list_views:
+                if uses_item_display(self._admin_model):
                     row_columns += [
                         TableColumn(field=field)
                         for field in (

@@ -50,12 +50,16 @@ from .form import (
     SEOPreview,
     TableColumn,
 )
+from .list_views import (
+    VIEW_NAMES as LIST_VIEW_NAMES,
+    CalendarView,
+    calendar_field_error,
+    get_calendars,
+)
 from .settings import cs_settings
 from .throttling import parse_rate
 from .translations import translated_attribute_names
 from .utils import as_instance, flatten, get_tenant_field_name
-
-LIST_VIEW_NAMES = {"table", "list"}
 
 LIST_COUNT_MODES = ("exact", "estimated", "none")
 
@@ -602,6 +606,60 @@ def _takes_data(handler) -> bool:
     return len(positional) >= 3
 
 
+def calendar_errors(studio) -> list[tuple[str, str]]:
+    """
+    Calendars that cannot be drawn, as (check id, message) pairs: a
+    bare "calendar" without publishing (E059), and a calendar whose
+    date or end field is not a date field, or whose date another
+    calendar already shows (E060).
+    """
+    errors = []
+    name = studio.__class__.__name__
+    keys = set()
+
+    for view in get_calendars(studio):
+        field = view.resolve_field(studio)
+
+        if field is None:
+            errors.append(
+                (
+                    "content_studio.E059",
+                    f'{name}.list_views offers "calendar", which shows the '
+                    "publishing date, but the studio has no publishing. "
+                    'Name the date field instead: CalendarView("<field>").',
+                )
+            )
+            continue
+
+        for role, field_name in (("field", field), ("end", view.end)):
+            if role == "end" and not field_name:
+                continue
+
+            reason = calendar_field_error(studio, field_name)
+
+            if reason:
+                errors.append(
+                    (
+                        "content_studio.E060",
+                        f"{name}.list_views has a calendar whose {role} " f"{reason}.",
+                    )
+                )
+
+        key = view.key(studio)
+
+        if key in keys:
+            errors.append(
+                (
+                    "content_studio.E060",
+                    f"{name}.list_views has two calendars of '{field}'.",
+                )
+            )
+
+        keys.add(key)
+
+    return errors
+
+
 def list_config_errors(studio) -> list[tuple[str, str]]:
     """
     Misconfigured list pages, as (check id, message) pairs. list_display
@@ -622,17 +680,26 @@ def list_config_errors(studio) -> list[tuple[str, str]]:
             )
         )
 
-    unknown_views = [view for view in studio.list_views if view not in LIST_VIEW_NAMES]
+    name = studio.__class__.__name__
+    unknown_views = [
+        repr(view)
+        for view in studio.list_views
+        if not isinstance(view, CalendarView)
+        and not (isinstance(view, str) and view in LIST_VIEW_NAMES)
+    ]
 
     if unknown_views:
         errors.append(
             (
                 "content_studio.E002",
-                f"{studio.__class__.__name__}.list_views contains unknown "
+                f"{name}.list_views contains unknown "
                 f"view(s) {', '.join(unknown_views)}. Available views: "
-                f"{', '.join(sorted(LIST_VIEW_NAMES))}.",
+                f"{', '.join(sorted(LIST_VIEW_NAMES))} and CalendarView "
+                "objects (content_studio.list_views).",
             )
         )
+    else:
+        errors.extend(calendar_errors(studio))
 
     list_count = getattr(studio, "list_count", "exact")
 
