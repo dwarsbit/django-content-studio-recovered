@@ -916,7 +916,8 @@
     "close": "Sluiten",
     "restore_count_one": "{{count}} veld herstellen",
     "restore_count_other": "{{count}} velden herstellen",
-    "kept": "Bewaard in deze browser om {{when}} tot je opslaat"
+    "kept": "Bewaard in deze browser om {{when}} tot je opslaat",
+    "kept_short": "bewaard"
   },
   "users": {
     "set_password": {

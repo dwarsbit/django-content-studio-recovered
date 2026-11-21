@@ -916,7 +916,8 @@
     "close": "Close",
     "restore_count_one": "Restore {{count}} field",
     "restore_count_other": "Restore {{count}} fields",
-    "kept": "Kept in this browser at {{when}} until you save"
+    "kept": "Kept in this browser at {{when}} until you save",
+    "kept_short": "kept"
   },
   "users": {
     "set_password": {

@@ -944,7 +944,8 @@
     "restore_count_one": "Restaurar {{count}} campo",
     "restore_count_other": "Restaurar {{count}} campos",
     "restore_count_many": "Restaurar {{count}} campos",
-    "kept": "Conservado en este navegador a las {{when}} hasta que guardes"
+    "kept": "Conservado en este navegador a las {{when}} hasta que guardes",
+    "kept_short": "conservados"
   },
   "users": {
     "set_password": {

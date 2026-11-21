@@ -71,8 +71,8 @@ function hintFor(
 }
 
 /**
- * Follow in the edit page's header: every change to the object then
- * notifies the user. Pressed while following.
+ * Follow in the edit page's header, an icon button: every change to the
+ * object then notifies the user. Pressed while following.
  */
 export function FollowButton({
   model,
@@ -92,26 +92,29 @@ export function FollowButton({
     return null;
   }
 
+  const label = t(
+    following
+      ? "notifications.follow.following"
+      : "notifications.follow.follow",
+  );
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          size="sm"
-          variant={following ? "secondary" : "outline"}
+          size="icon"
+          variant={following ? "secondary" : "ghost"}
           aria-pressed={following}
+          aria-label={label}
           className={className}
           disabled={follow.mutation.isPending}
           onClick={() => toggle()}
         >
           {following ? <PiBellRingingBold /> : <PiBellBold />}
-          {t(
-            following
-              ? "notifications.follow.following"
-              : "notifications.follow.follow",
-          )}
         </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64">
+        <div className="font-medium">{label}</div>
         {hintFor(t, following, follow.data.creator)}
       </TooltipContent>
     </Tooltip>
