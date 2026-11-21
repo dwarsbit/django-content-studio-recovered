@@ -79,11 +79,14 @@ export function FollowButton({
   id,
   name,
   className,
+  look = "button",
 }: {
   model: Model;
   id: Id;
   name: string;
   className?: string;
+  // Mockups: an icon button, or a quiet labelled button.
+  look?: "button" | "icon" | "quiet";
 }) {
   const { t } = useTranslation();
   const { follow, following, toggle } = useFollowToggle(model, id, name);
@@ -92,26 +95,38 @@ export function FollowButton({
     return null;
   }
 
+  const label = t(
+    following
+      ? "notifications.follow.following"
+      : "notifications.follow.follow",
+  );
+
   return (
     <Tooltip>
       <TooltipTrigger asChild>
         <Button
-          size="sm"
-          variant={following ? "secondary" : "outline"}
+          size={look === "icon" ? "icon" : "sm"}
+          variant={
+            look === "button"
+              ? following
+                ? "secondary"
+                : "outline"
+              : following
+                ? "secondary"
+                : "ghost"
+          }
           aria-pressed={following}
+          aria-label={look === "icon" ? label : undefined}
           className={className}
           disabled={follow.mutation.isPending}
           onClick={() => toggle()}
         >
           {following ? <PiBellRingingBold /> : <PiBellBold />}
-          {t(
-            following
-              ? "notifications.follow.following"
-              : "notifications.follow.follow",
-          )}
+          {look !== "icon" && label}
         </Button>
       </TooltipTrigger>
       <TooltipContent className="max-w-64">
+        {look === "icon" && <div className="font-medium">{label}</div>}
         {hintFor(t, following, follow.data.creator)}
       </TooltipContent>
     </Tooltip>

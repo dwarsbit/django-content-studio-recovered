@@ -395,8 +395,17 @@ export function TranslationsCard() {
 /** Option A: one compact button in the header, the languages in a menu. */
 export function LanguageMenu({
   states,
+  variant = "outline",
+  size = "default",
+  full = false,
+  align = "end",
 }: {
   states?: Record<string, { missing: number; total: number }>;
+  variant?: "outline" | "ghost";
+  size?: "default" | "sm";
+  // The language's name instead of its code.
+  full?: boolean;
+  align?: "start" | "end";
 }) {
   const { t } = useTranslation();
   const { config, language, setLanguage } = useContentLanguage();
@@ -411,14 +420,22 @@ export function LanguageMenu({
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button
-          variant="outline"
-          className="gap-1.5 px-2.5"
+          variant={variant}
+          size={size}
+          className={cn("gap-1.5 px-2.5", variant === "ghost" && "px-2")}
           aria-label={t("translations.content_language")}
         >
           <PiTranslateBold className="text-muted-foreground" />
-          <span className="text-xs font-semibold uppercase tracking-wide">
-            {language}
-          </span>
+          {full ? (
+            <span>
+              {config.languages.find((l) => l.code === language)?.name ??
+                language}
+            </span>
+          ) : (
+            <span className="text-xs font-semibold uppercase tracking-wide">
+              {language}
+            </span>
+          )}
           {current && (
             <span
               className={cn(
@@ -430,7 +447,7 @@ export function LanguageMenu({
           <PiCaretDownBold className="size-3 text-muted-foreground" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-72">
+      <DropdownMenuContent align={align} className="w-72">
         <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
           {t("translations.content_language")}
         </DropdownMenuLabel>

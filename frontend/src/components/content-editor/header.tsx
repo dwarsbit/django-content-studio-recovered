@@ -28,6 +28,7 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -204,6 +205,399 @@ export function Header({
     },
   });
 
+  // Mockups: ?header=a|b|c picks a layout; none is today's header.
+  const ui = headerUi();
+  // Option B: Follow, View on site and "Last edited" live in the menu.
+  const menuHasAll = ui === "b";
+  const menuHasView = menuHasAll && !!viewOnSiteUrl;
+  const divider = <span className="h-5 w-px bg-border mx-1 shrink-0" />;
+  const statusBody =
+    isDirty && !readOnly ? (
+      <div
+        className={cn(
+          "hidden lg:flex items-center gap-1.5 text-muted-foreground text-sm select-none shrink-0 whitespace-nowrap",
+          !ui && "mr-2",
+        )}
+      >
+        <span className="size-1.5 rounded-full bg-warning" />
+        {t("editor.unsaved_changes")}
+        {keptAt && (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span
+                className="inline-flex text-success"
+                aria-label={t("recovery.kept", {
+                  when: formatKeptAt(keptAt),
+                })}
+                data-testid="changes-kept"
+              >
+                <PiCheckBold className="size-3.5" />
+              </span>
+            </TooltipTrigger>
+            <TooltipContent>
+              {t("recovery.kept", { when: formatKeptAt(keptAt) })}
+            </TooltipContent>
+          </Tooltip>
+        )}
+      </div>
+    ) : editedAt ? (
+      <div
+        className={cn(
+          "hidden lg:block text-muted-foreground text-sm select-none shrink-0 whitespace-nowrap",
+          !ui && "mr-2",
+        )}
+      >
+        {`${t("editor.last_edited")} ${dayjs(editedAt).fromNow()}`}
+      </div>
+    ) : null;
+  const viewOnSite = (look: "button" | "icon" | "quiet") =>
+    viewOnSiteUrl ? (
+      look === "icon" ? (
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button asChild size="icon" variant="ghost">
+              <a
+                href={viewOnSiteUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={t("editor.view_on_site")}
+              >
+                <PiArrowSquareOutBold />
+              </a>
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>{t("editor.view_on_site")}</TooltipContent>
+        </Tooltip>
+      ) : (
+        <Button
+          asChild
+          variant={look === "quiet" ? "ghost" : "outline"}
+          size={look === "quiet" ? "sm" : "default"}
+          className={cn(look === "button" && "max-lg:w-8 max-lg:px-0")}
+        >
+          <a href={viewOnSiteUrl} target="_blank" rel="noopener noreferrer">
+            <PiArrowSquareOutBold />
+            <span className={cn(look === "button" && "sr-only lg:not-sr-only")}>
+              {t("editor.view_on_site")}
+            </span>
+          </a>
+        </Button>
+      )
+    ) : null;
+  const headerComponents = components.map((component) => (
+    <Conditional key={component.component_id} when={component.when}>
+      <ComponentRenderer formField={component} model={model} />
+    </Conditional>
+  ));
+  const moreMenu =
+    !isCreate &&
+    (showDelete ||
+      showDuplicate ||
+      showUserActions ||
+      showEditActions ||
+      canFollow ||
+      menuHasView) ? (
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="icon"
+            variant="ghost"
+            aria-label={t("editor.more_actions")}
+            // Only Follow inside: the header shows it wide.
+            className={cn(
+              !menuHasAll &&
+                !showDelete &&
+                !showDuplicate &&
+                !showSetPassword &&
+                !showEditActions &&
+                "lg:hidden",
+            )}
+          >
+            <PiDotsThreeBold />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          {menuHasView && (
+            <DropdownMenuItem asChild>
+              <a
+                href={viewOnSiteUrl!}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                {t("editor.view_on_site")}
+                <PiArrowSquareOutBold />
+              </a>
+            </DropdownMenuItem>
+          )}
+          {canFollow && (
+            <FollowMenuItem
+              model={model}
+              id={resource.id}
+              name={resource.__str__}
+              className={cn(!menuHasAll && "lg:hidden")}
+            />
+          )}
+          {menuHasAll &&
+            (menuHasView || canFollow) &&
+            (showEditActions ||
+              showDuplicate ||
+              showUserActions ||
+              showDelete) && <DropdownMenuSeparator />}
+          {editActions.map((action) => (
+            <DropdownMenuItem
+              key={action.id}
+              variant={action.destructive ? "destructive" : "default"}
+              className="justify-start"
+              onSelect={() =>
+                runAction(action, [String(resource!.id)], {
+                  name: resource!.__str__,
+                  onDone: refreshObject,
+                })
+              }
+            >
+              {action.icon && <span className={cn(action.icon, "text-sm")} />}
+              {action.label}
+            </DropdownMenuItem>
+          ))}
+          {showEditActions && (showDuplicate || showUserActions) && (
+            <DropdownMenuSeparator />
+          )}
+          {showDuplicate && (
+            <DropdownMenuItem onSelect={onDuplicate!}>
+              {t("editor.duplicate")}
+            </DropdownMenuItem>
+          )}
+          {showSetPassword && (
+            <DropdownMenuItem onSelect={() => setSetPasswordOpen(true)}>
+              {t("users.set_password.menu")}
+            </DropdownMenuItem>
+          )}
+          {showSendLink && (
+            <DropdownMenuItem
+              onSelect={async () => {
+                const confirmed = await confirm({
+                  title: t(
+                    invited
+                      ? "users.send_link.invite_title"
+                      : "users.send_link.title",
+                  ),
+                  description: t(
+                    invited
+                      ? "users.send_link.invite_description"
+                      : "users.send_link.description",
+                    { name: resource.__str__ },
+                  ),
+                  okText: t("users.send_link.send"),
+                });
+
+                if (!confirmed) {
+                  return;
+                }
+
+                try {
+                  const { email } = await sendLink(String(resource.id));
+                  toast.success(
+                    t(
+                      invited
+                        ? "users.send_link.invite_sent"
+                        : "users.send_link.sent",
+                      { email },
+                    ),
+                  );
+                } catch (e: unknown) {
+                  toast.error(getErrorMessage(e));
+                }
+              }}
+            >
+              {t(
+                invited
+                  ? "users.send_link.invite_menu"
+                  : "users.send_link.menu",
+              )}
+            </DropdownMenuItem>
+          )}
+          {showResetTwoFactor && (
+            <DropdownMenuItem
+              onSelect={async () => {
+                const confirmed = await confirm({
+                  title: t("users.reset_two_factor.title"),
+                  description: t("users.reset_two_factor.description", {
+                    name: resource.__str__,
+                  }),
+                  okText: t("users.reset_two_factor.reset"),
+                });
+
+                if (!confirmed) {
+                  return;
+                }
+
+                try {
+                  await resetTwoFactor(String(resource.id));
+                  await queryClient.invalidateQueries({
+                    queryKey: ["resources", model.label],
+                  });
+                  toast.success(
+                    t("users.reset_two_factor.done", {
+                      name: resource.__str__,
+                    }),
+                  );
+                } catch (e: unknown) {
+                  toast.error(getErrorMessage(e));
+                }
+              }}
+            >
+              {t("users.reset_two_factor.menu")}
+            </DropdownMenuItem>
+          )}
+          {(showDuplicate || showUserActions || showEditActions) &&
+            showDelete && <DropdownMenuSeparator />}
+          {showDelete && (
+            <DropdownMenuItem
+              className="text-destructive"
+              onSelect={async () => {
+                const confirmed = await confirm({
+                  title: t("common.delete_confirm_title"),
+                  // With soft delete the object lands in the
+                  // trash and can be restored, which the
+                  // regular message denies.
+                  description: t(
+                    model.admin.list.trash
+                      ? "common.delete_to_trash_confirm_description"
+                      : "common.delete_confirm_description",
+                  ),
+                });
+
+                if (!confirmed) {
+                  return;
+                }
+
+                // A refused delete (objects that refer to it,
+                // or the studio's delete_model) keeps the page
+                // open and says why.
+                try {
+                  await mutateAsync(resource!.id);
+                } catch (e: unknown) {
+                  toast.error(getErrorMessage(e));
+                  return;
+                }
+
+                onDelete?.();
+              }}
+            >
+              {t("common.delete")}
+            </DropdownMenuItem>
+          )}
+          {menuHasAll && editedAt && (
+            <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="text-xs text-muted-foreground font-normal">
+                {`${t("editor.last_edited")} ${dayjs(editedAt).fromNow()}`}
+              </DropdownMenuLabel>
+            </>
+          )}
+        </DropdownMenuContent>
+      </DropdownMenu>
+    ) : null;
+  const saveButton = !readOnly && (
+    <SaveButton
+      create={isCreate && !isSingleton}
+      isSaving={isSaving}
+      addAnother={saveOptions.addAnother}
+      close={saveOptions.close}
+      defaultMode={saveOptions.defaultMode}
+      outline={showPublish}
+      onSave={async (mode) => {
+        try {
+          await onSave(mode);
+        } catch {
+          // Errors are already surfaced by the save flow.
+        }
+      }}
+    />
+  );
+  const publishButton = <PublishButton disabled={isSaving} />;
+  // Where the status text does not fit: the dot alone.
+  const statusDot =
+    isDirty && !readOnly ? (
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <span
+            className="xl:hidden shrink-0 size-4 flex items-center justify-center"
+            aria-label={t("editor.unsaved_changes")}
+          >
+            <span className="size-1.5 rounded-full bg-warning" />
+          </span>
+        </TooltipTrigger>
+        <TooltipContent>{t("editor.unsaved_changes")}</TooltipContent>
+      </Tooltip>
+    ) : null;
+  const follow = (look: "button" | "icon" | "quiet") =>
+    canFollow ? (
+      <FollowButton
+        model={model}
+        id={resource.id}
+        name={resource.__str__}
+        look={look}
+        className="hidden lg:inline-flex"
+      />
+    ) : null;
+  const badge =
+    resource && publishing ? (
+      <PublishingBadge
+        state={publishing.info.state}
+        short
+        className="hidden sm:inline-flex shrink-0"
+      />
+    ) : null;
+
+  const actions =
+    ui === "a" ? (
+      <>
+        <PresenceAvatars users={presence} />
+        <HeaderLanguageMenu />
+        <div className="flex items-center gap-0.5">
+          {follow("icon")}
+          {viewOnSite("icon")}
+          {headerComponents}
+          {moreMenu}
+        </div>
+        {divider}
+        {saveButton}
+        {publishButton}
+      </>
+    ) : ui === "b" ? (
+      <>
+        {isDirty && !readOnly && (
+          <div className="mr-2 hidden xl:block">{statusBody}</div>
+        )}
+        {statusDot}
+        <PresenceAvatars users={presence} />
+        {headerComponents}
+        {moreMenu}
+        {saveButton}
+        {publishButton}
+      </>
+    ) : ui === "c" ? (
+      <>
+        <PresenceAvatars users={presence} />
+        {moreMenu}
+        {saveButton}
+        {publishButton}
+      </>
+    ) : (
+      <>
+        <HeaderLanguageSwitcher />
+        <PresenceAvatars users={presence} />
+        {follow("button")}
+        {statusBody}
+        {viewOnSite("button")}
+        {headerComponents}
+        {moreMenu}
+        {saveButton}
+        {publishButton}
+      </>
+    );
+
   return (
     model && (
       <>
@@ -259,6 +653,7 @@ export function Header({
                     className={cn(
                       "shrink-0 first-letter:uppercase",
                       resource && "text-muted-foreground font-medium",
+                      ui && resource && "max-lg:hidden",
                     )}
                   >
                     {model.verbose_name_plural}
@@ -266,9 +661,16 @@ export function Header({
                 )}
                 {resource && (
                   <>
-                    <span className="text-muted-foreground/50 shrink-0">/</span>
+                    <span
+                      className={cn(
+                        "text-muted-foreground/50 shrink-0",
+                        ui && "max-lg:hidden",
+                      )}
+                    >
+                      /
+                    </span>
                     <span className="truncate">{resource.__str__}</span>
-                    {publishing && (
+                    {publishing && !ui && (
                       <PublishingBadge
                         state={publishing.info.state}
                         short
@@ -279,285 +681,49 @@ export function Header({
                 )}
               </span>
             }
-            actions={
-              <>
-                <HeaderLanguageSwitcher />
-                <PresenceAvatars users={presence} />
-                {canFollow && (
-                  <FollowButton
-                    model={model}
-                    id={resource.id}
-                    name={resource.__str__}
-                    className="hidden lg:inline-flex"
-                  />
-                )}
-                {isDirty && !readOnly ? (
-                  <div className="hidden lg:flex items-center gap-1.5 text-muted-foreground text-sm mr-2 select-none">
-                    <span className="size-1.5 rounded-full bg-warning" />
-                    {t("editor.unsaved_changes")}
-                    {keptAt && (
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <span
-                            className="inline-flex text-success"
-                            aria-label={t("recovery.kept", {
-                              when: formatKeptAt(keptAt),
-                            })}
-                            data-testid="changes-kept"
-                          >
-                            <PiCheckBold className="size-3.5" />
-                          </span>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          {t("recovery.kept", { when: formatKeptAt(keptAt) })}
-                        </TooltipContent>
-                      </Tooltip>
-                    )}
-                  </div>
-                ) : editedAt ? (
-                  <div className="hidden lg:block text-muted-foreground text-sm mr-2 select-none">
-                    {`${t("editor.last_edited")} ${dayjs(editedAt).fromNow()}`}
-                  </div>
-                ) : null}
-                {viewOnSiteUrl && (
-                  <Button
-                    asChild
-                    variant="outline"
-                    className="max-lg:w-8 max-lg:px-0"
-                  >
-                    <a
-                      href={viewOnSiteUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <PiArrowSquareOutBold />
-                      <span className="sr-only lg:not-sr-only">
-                        {t("editor.view_on_site")}
-                      </span>
-                    </a>
-                  </Button>
-                )}
-                {components.map((component) => (
-                  <Conditional
-                    key={component.component_id}
-                    when={component.when}
-                  >
-                    <ComponentRenderer formField={component} model={model} />
-                  </Conditional>
-                ))}
-                {!isCreate &&
-                  (showDelete ||
-                    showDuplicate ||
-                    showUserActions ||
-                    showEditActions ||
-                    canFollow) && (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          aria-label={t("editor.more_actions")}
-                          // Only Follow inside: the header shows it wide.
-                          className={cn(
-                            !showDelete &&
-                              !showDuplicate &&
-                              !showSetPassword &&
-                              !showEditActions &&
-                              "lg:hidden",
-                          )}
-                        >
-                          <PiDotsThreeBold />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        {canFollow && (
-                          <FollowMenuItem
-                            model={model}
-                            id={resource.id}
-                            name={resource.__str__}
-                            className="lg:hidden"
-                          />
-                        )}
-                        {editActions.map((action) => (
-                          <DropdownMenuItem
-                            key={action.id}
-                            variant={
-                              action.destructive ? "destructive" : "default"
-                            }
-                            className="justify-start"
-                            onSelect={() =>
-                              runAction(action, [String(resource!.id)], {
-                                name: resource!.__str__,
-                                onDone: refreshObject,
-                              })
-                            }
-                          >
-                            {action.icon && (
-                              <span className={cn(action.icon, "text-sm")} />
-                            )}
-                            {action.label}
-                          </DropdownMenuItem>
-                        ))}
-                        {showEditActions &&
-                          (showDuplicate || showUserActions) && (
-                            <DropdownMenuSeparator />
-                          )}
-                        {showDuplicate && (
-                          <DropdownMenuItem onSelect={onDuplicate!}>
-                            {t("editor.duplicate")}
-                          </DropdownMenuItem>
-                        )}
-                        {showSetPassword && (
-                          <DropdownMenuItem
-                            onSelect={() => setSetPasswordOpen(true)}
-                          >
-                            {t("users.set_password.menu")}
-                          </DropdownMenuItem>
-                        )}
-                        {showSendLink && (
-                          <DropdownMenuItem
-                            onSelect={async () => {
-                              const confirmed = await confirm({
-                                title: t(
-                                  invited
-                                    ? "users.send_link.invite_title"
-                                    : "users.send_link.title",
-                                ),
-                                description: t(
-                                  invited
-                                    ? "users.send_link.invite_description"
-                                    : "users.send_link.description",
-                                  { name: resource.__str__ },
-                                ),
-                                okText: t("users.send_link.send"),
-                              });
-
-                              if (!confirmed) {
-                                return;
-                              }
-
-                              try {
-                                const { email } = await sendLink(
-                                  String(resource.id),
-                                );
-                                toast.success(
-                                  t(
-                                    invited
-                                      ? "users.send_link.invite_sent"
-                                      : "users.send_link.sent",
-                                    { email },
-                                  ),
-                                );
-                              } catch (e: unknown) {
-                                toast.error(getErrorMessage(e));
-                              }
-                            }}
-                          >
-                            {t(
-                              invited
-                                ? "users.send_link.invite_menu"
-                                : "users.send_link.menu",
-                            )}
-                          </DropdownMenuItem>
-                        )}
-                        {showResetTwoFactor && (
-                          <DropdownMenuItem
-                            onSelect={async () => {
-                              const confirmed = await confirm({
-                                title: t("users.reset_two_factor.title"),
-                                description: t(
-                                  "users.reset_two_factor.description",
-                                  { name: resource.__str__ },
-                                ),
-                                okText: t("users.reset_two_factor.reset"),
-                              });
-
-                              if (!confirmed) {
-                                return;
-                              }
-
-                              try {
-                                await resetTwoFactor(String(resource.id));
-                                await queryClient.invalidateQueries({
-                                  queryKey: ["resources", model.label],
-                                });
-                                toast.success(
-                                  t("users.reset_two_factor.done", {
-                                    name: resource.__str__,
-                                  }),
-                                );
-                              } catch (e: unknown) {
-                                toast.error(getErrorMessage(e));
-                              }
-                            }}
-                          >
-                            {t("users.reset_two_factor.menu")}
-                          </DropdownMenuItem>
-                        )}
-                        {(showDuplicate ||
-                          showUserActions ||
-                          showEditActions) &&
-                          showDelete && <DropdownMenuSeparator />}
-                        {showDelete && (
-                          <DropdownMenuItem
-                            className="text-destructive"
-                            onSelect={async () => {
-                              const confirmed = await confirm({
-                                title: t("common.delete_confirm_title"),
-                                // With soft delete the object lands in the
-                                // trash and can be restored, which the
-                                // regular message denies.
-                                description: t(
-                                  model.admin.list.trash
-                                    ? "common.delete_to_trash_confirm_description"
-                                    : "common.delete_confirm_description",
-                                ),
-                              });
-
-                              if (!confirmed) {
-                                return;
-                              }
-
-                              // A refused delete (objects that refer to it,
-                              // or the studio's delete_model) keeps the page
-                              // open and says why.
-                              try {
-                                await mutateAsync(resource!.id);
-                              } catch (e: unknown) {
-                                toast.error(getErrorMessage(e));
-                                return;
-                              }
-
-                              onDelete?.();
-                            }}
-                          >
-                            {t("common.delete")}
-                          </DropdownMenuItem>
-                        )}
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+            meta={
+              ui === "a" ? (
+                <>
+                  {badge}
+                  {statusBody && (
+                    <span className="hidden xl:flex items-center gap-2 shrink-0">
+                      <span className="text-muted-foreground/50">·</span>
+                      {statusBody}
+                    </span>
                   )}
-                {!readOnly && (
-                  <SaveButton
-                    create={isCreate && !isSingleton}
-                    isSaving={isSaving}
-                    addAnother={saveOptions.addAnother}
-                    close={saveOptions.close}
-                    defaultMode={saveOptions.defaultMode}
-                    outline={showPublish}
-                    onSave={async (mode) => {
-                      try {
-                        await onSave(mode);
-                      } catch {
-                        // Errors are already surfaced by the save flow.
-                      }
-                    }}
-                  />
-                )}
-                <PublishButton disabled={isSaving} />
-              </>
+                  {statusDot}
+                </>
+              ) : ui === "b" ? (
+                <>
+                  {badge}
+                  <HeaderLanguageMenu variant="ghost" align="start" />
+                </>
+              ) : ui === "c" ? (
+                badge
+              ) : undefined
             }
-          />
+            actions={actions}
+          >
+            {ui === "c" && (
+              <div className="border-t bg-muted/30">
+                <div className="px-6 h-10 flex items-center gap-2 max-w-[1280px] mx-auto w-full">
+                  <div className="-ml-2">
+                    <HeaderLanguageMenu
+                      variant="ghost"
+                      size="sm"
+                      align="start"
+                      full
+                    />
+                  </div>
+                  {statusBody}
+                  <div className="flex-1" />
+                  {headerComponents}
+                  {follow("quiet")}
+                  <div className="-mr-2">{viewOnSite("quiet")}</div>
+                </div>
+              </div>
+            )}
+          </PageHeader>
           <HeaderLanguageBar />
         </DialogHeader>
         {showSetPassword && (
@@ -573,6 +739,21 @@ export function Header({
       </>
     )
   );
+}
+
+/** Which header layout the mockups show: ?header=a|b|c. */
+function headerUi() {
+  const value = new URLSearchParams(window.location.search).get("header");
+
+  return value === "a" || value === "b" || value === "c" ? value : null;
+}
+
+function HeaderLanguageMenu(
+  props: Omit<React.ComponentProps<typeof LanguageMenu>, "states">,
+) {
+  const states = useLanguageStates();
+
+  return <LanguageMenu states={states} {...props} />;
 }
 
 function HeaderLanguageSwitcher() {
