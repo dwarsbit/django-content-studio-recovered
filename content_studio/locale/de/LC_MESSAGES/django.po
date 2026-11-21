@@ -1989,3 +1989,136 @@ msgstr "%(actor)s hat auf einen Kommentar zu %(object)s geantwortet"
 #, python-format
 msgid "%(actor)s commented on %(object)s"
 msgstr "%(actor)s hat %(object)s kommentiert"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s asked you to review %(object)s"
+msgstr "%(actor)s bittet dich, %(object)s zu prüfen"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s submitted %(object)s for review"
+msgstr "%(actor)s hat %(object)s zur Prüfung eingereicht"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s approved %(object)s"
+msgstr "%(actor)s hat %(object)s freigegeben"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s requested changes to %(object)s"
+msgstr "%(actor)s fordert Änderungen an %(object)s an"
+
+#: content_studio/review
+msgid "Review requests"
+msgstr "Prüfanfragen"
+
+#: content_studio/review
+msgid "Someone submits content for you to review."
+msgstr "Jemand reicht Inhalte zur Prüfung durch dich ein."
+
+#: content_studio/review
+msgid "Approved reviews"
+msgstr "Freigegebene Prüfungen"
+
+#: content_studio/review
+msgid "Content you submitted for review is approved."
+msgstr "Von dir eingereichte Inhalte wurden freigegeben."
+
+#: content_studio/review
+msgid "Changes requested"
+msgstr "Änderungen angefordert"
+
+#: content_studio/review
+msgid "A reviewer asks for changes to content you submitted."
+msgstr "Ein Prüfer fordert Änderungen an von dir eingereichten Inhalten an."
+
+#: content_studio/review
+msgid "review request"
+msgstr "Prüfanfrage"
+
+#: content_studio/review
+msgid "review requests"
+msgstr "Prüfanfragen"
+
+#: content_studio/review
+msgid "In review"
+msgstr "In Prüfung"
+
+#: content_studio/review
+msgid "Approved"
+msgstr "Freigegeben"
+
+#: content_studio/review
+msgid "Withdrawn"
+msgstr "Zurückgezogen"
+
+#: content_studio/review
+msgid "Submitted by"
+msgstr "Eingereicht von"
+
+#: content_studio/review
+msgid "Reviewer"
+msgstr "Prüfer"
+
+#: content_studio/review
+msgid "Review"
+msgstr "Prüfung"
+
+#: content_studio/review
+msgid "Waiting for your review"
+msgstr "Wartet auf deine Prüfung"
+
+#: content_studio/review
+msgid "Submitted for review, oldest first"
+msgstr "Zur Prüfung eingereicht, älteste zuerst"
+
+#: content_studio/review
+msgid "Your review requests"
+msgstr "Deine Prüfanfragen"
+
+#: content_studio/review
+msgid "In review or with changes requested"
+msgstr "In Prüfung oder mit angeforderten Änderungen"
+
+#: content_studio/review
+msgid "Waiting for my review"
+msgstr "Wartet auf meine Prüfung"
+
+#: content_studio/review
+msgid "This object is already in review."
+msgstr "Dieses Objekt ist bereits in Prüfung."
+
+#: content_studio/review
+msgid "This object is not in review."
+msgstr "Dieses Objekt ist nicht in Prüfung."
+
+#: content_studio/review
+msgid "There are no unpublished changes to review."
+msgstr "Es gibt keine unveröffentlichten Änderungen zu prüfen."
+
+#: content_studio/review
+msgid "This person cannot review it."
+msgstr "Diese Person kann es nicht prüfen."
+
+#: content_studio/review
+#, python-format
+msgid "Unknown review action %(action)s."
+msgstr "Unbekannte Prüfaktion %(action)s."
+
+#: content_studio/review
+msgid "Say what to change."
+msgstr "Sag, was geändert werden soll."
+
+#: content_studio/review
+msgid "It changed since you opened it. Look at the changes again."
+msgstr "Es wurde geändert, seit du es geöffnet hast. Sieh dir die Änderungen erneut an."
+
+#: content_studio/review
+msgid "Live content is approved to publish now."
+msgstr "Live-Inhalte werden zur sofortigen Veröffentlichung freigegeben."
+
+#: content_studio/review
+msgid "This model is published after review: submit it for review."
+msgstr "Dieses Modell wird nach einer Prüfung veröffentlicht: reiche es zur Prüfung ein."

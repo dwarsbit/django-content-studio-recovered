@@ -1980,3 +1980,136 @@ msgstr "%(actor)s antwoordde op een opmerking bij %(object)s"
 #, python-format
 msgid "%(actor)s commented on %(object)s"
 msgstr "%(actor)s plaatste een opmerking bij %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s asked you to review %(object)s"
+msgstr "%(actor)s vraagt je %(object)s te reviewen"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s submitted %(object)s for review"
+msgstr "%(actor)s heeft %(object)s ter review aangeboden"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s approved %(object)s"
+msgstr "%(actor)s heeft %(object)s goedgekeurd"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s requested changes to %(object)s"
+msgstr "%(actor)s vraagt wijzigingen in %(object)s"
+
+#: content_studio/review
+msgid "Review requests"
+msgstr "Reviewverzoeken"
+
+#: content_studio/review
+msgid "Someone submits content for you to review."
+msgstr "Iemand biedt content aan die jij reviewt."
+
+#: content_studio/review
+msgid "Approved reviews"
+msgstr "Goedgekeurde reviews"
+
+#: content_studio/review
+msgid "Content you submitted for review is approved."
+msgstr "Content die je ter review aanbood is goedgekeurd."
+
+#: content_studio/review
+msgid "Changes requested"
+msgstr "Wijzigingen gevraagd"
+
+#: content_studio/review
+msgid "A reviewer asks for changes to content you submitted."
+msgstr "Een reviewer vraagt wijzigingen in content die je aanbood."
+
+#: content_studio/review
+msgid "review request"
+msgstr "reviewverzoek"
+
+#: content_studio/review
+msgid "review requests"
+msgstr "reviewverzoeken"
+
+#: content_studio/review
+msgid "In review"
+msgstr "In review"
+
+#: content_studio/review
+msgid "Approved"
+msgstr "Goedgekeurd"
+
+#: content_studio/review
+msgid "Withdrawn"
+msgstr "Ingetrokken"
+
+#: content_studio/review
+msgid "Submitted by"
+msgstr "Aangeboden door"
+
+#: content_studio/review
+msgid "Reviewer"
+msgstr "Reviewer"
+
+#: content_studio/review
+msgid "Review"
+msgstr "Review"
+
+#: content_studio/review
+msgid "Waiting for your review"
+msgstr "Wacht op jouw review"
+
+#: content_studio/review
+msgid "Submitted for review, oldest first"
+msgstr "Ter review aangeboden, oudste eerst"
+
+#: content_studio/review
+msgid "Your review requests"
+msgstr "Jouw reviewverzoeken"
+
+#: content_studio/review
+msgid "In review or with changes requested"
+msgstr "In review of met gevraagde wijzigingen"
+
+#: content_studio/review
+msgid "Waiting for my review"
+msgstr "Wacht op mijn review"
+
+#: content_studio/review
+msgid "This object is already in review."
+msgstr "Dit object is al in review."
+
+#: content_studio/review
+msgid "This object is not in review."
+msgstr "Dit object is niet in review."
+
+#: content_studio/review
+msgid "There are no unpublished changes to review."
+msgstr "Er zijn geen ongepubliceerde wijzigingen om te reviewen."
+
+#: content_studio/review
+msgid "This person cannot review it."
+msgstr "Deze persoon kan het niet reviewen."
+
+#: content_studio/review
+#, python-format
+msgid "Unknown review action %(action)s."
+msgstr "Onbekende reviewactie %(action)s."
+
+#: content_studio/review
+msgid "Say what to change."
+msgstr "Zeg wat er moet veranderen."
+
+#: content_studio/review
+msgid "It changed since you opened it. Look at the changes again."
+msgstr "Het is gewijzigd sinds je het opende. Bekijk de wijzigingen opnieuw."
+
+#: content_studio/review
+msgid "Live content is approved to publish now."
+msgstr "Live content wordt goedgekeurd om nu te publiceren."
+
+#: content_studio/review
+msgid "This model is published after review: submit it for review."
+msgstr "Dit model wordt na review gepubliceerd: bied het ter review aan."

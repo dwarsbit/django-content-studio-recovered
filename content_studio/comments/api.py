@@ -27,12 +27,15 @@ def add_comment(
     parent=None,
     mentions=None,
     notify: bool = True,
+    kind: str = "",
 ):
     """
     Post a comment on obj as author (a user, or None for a comment from
     the system). parent makes it a reply in that thread; mentions are
     the users (or user ids) it mentions, who are notified with the
-    notifications app installed. Returns the Comment.
+    notifications app installed. kind marks a comment posted by a
+    feature, such as "review.submitted" for a review note. Returns the
+    Comment.
     """
     from .models import Comment
     from .notifying import notify_comment
@@ -57,6 +60,7 @@ def add_comment(
         author=author,
         body=body[:MAX_LENGTH],
         mentions=mention_ids,
+        kind=kind[:40],
     )
 
     if notify:

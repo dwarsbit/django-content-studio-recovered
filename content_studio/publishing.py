@@ -96,6 +96,13 @@ LAST_RUN_CACHE_KEY = "content_studio:publishing:last_run"
 # content_studio.pending).
 PENDING = "pending"
 
+# The Status filter's review options (see content_studio.review): in
+# review, changes requested, and in review waiting for the user.
+IN_REVIEW = "in_review"
+CHANGES_REQUESTED = "changes_requested"
+MY_REVIEW = "my_review"
+REVIEW_OPTIONS = (IN_REVIEW, CHANGES_REQUESTED, MY_REVIEW)
+
 # The column and filter names the list uses.
 STATUS_COLUMN = "__publishing__"
 STATUS_FILTER = "publishing_status"
@@ -738,13 +745,27 @@ def get_status_filter_class():
             if uses_pending_changes(self.studio):
                 options.append((PENDING, _("Unpublished changes")))
 
+            from .review import review_enabled
+
+            if review_enabled(self.studio):
+                options += [
+                    (IN_REVIEW, _("In review")),
+                    (CHANGES_REQUESTED, _("Changes requested")),
+                    (MY_REVIEW, _("Waiting for my review")),
+                ]
+
             return options
 
         def queryset(self, request, queryset, value):
             config = get_publishing(self.studio)
             values = value if isinstance(value, list) else [value]
-            states = [state for state in values if state != PENDING]
+            states = [state for state in values if state in STATES]
             filtered = filter_state(queryset, config, states) if states else None
+            reviewing = [state for state in values if state in REVIEW_OPTIONS]
+
+            if reviewing:
+                in_review = self._review_queryset(request, queryset, reviewing)
+                filtered = in_review if filtered is None else filtered | in_review
 
             if PENDING not in values:
                 return filtered
@@ -766,6 +787,42 @@ def get_status_filter_class():
             with_pending = queryset.filter(pk__in=ids)
 
             return with_pending if filtered is None else filtered | with_pending
+
+        def _review_queryset(self, request, queryset, options):
+            """The objects whose current review request matches the
+            options; "waiting for my review" is an open request that
+            names the user, or names nobody and the user may approve."""
+            from .review import review_enabled
+
+            if not review_enabled(self.studio):
+                return queryset.none()
+
+            from .review.core import current_statuses
+
+            pk = queryset.model._meta.pk
+            ids = []
+            can_publish = self.studio.has_publish_permission(request)
+
+            for object_id, current in current_statuses(queryset.model).items():
+                status = current["status"]
+                mine = (
+                    status == "open"
+                    and can_publish
+                    and current["submitted_by_id"] != request.user.pk
+                    and current["reviewer_id"] in (None, request.user.pk)
+                )
+
+                if (
+                    (IN_REVIEW in options and status == "open")
+                    or (CHANGES_REQUESTED in options and status == CHANGES_REQUESTED)
+                    or (MY_REVIEW in options and mine)
+                ):
+                    try:
+                        ids.append(pk.to_python(object_id))
+                    except ValidationError:
+                        pass
+
+            return queryset.filter(pk__in=ids)
 
     return StatusFilter
 

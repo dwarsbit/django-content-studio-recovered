@@ -248,6 +248,9 @@ export interface CommentInfo {
   edited_at: DateTimeString | null;
   // Deleted with replies: shown as "Comment deleted".
   deleted: boolean;
+  // What posted it besides a person, such as "review.submitted" for a
+  // review note; empty for an ordinary comment.
+  kind?: string;
   can_edit: boolean;
   can_delete: boolean;
 }
@@ -738,6 +741,57 @@ export interface PublishingConfig {
   // Whether edits to published objects stay unpublished until Publish
   // changes.
   pending_changes?: boolean;
+  // Review before publishing (the review app), or null without it.
+  review?: ReviewConfig | null;
+}
+
+export interface ReviewConfig {
+  // Whether publishers go through review too.
+  required: boolean;
+  // Whether a publisher may approve their own request.
+  self_approval: boolean;
+}
+
+export type ReviewStatus =
+  "open" | "changes_requested" | "approved" | "withdrawn";
+
+// The object's current review request, on detail responses (list rows
+// carry only the status).
+export interface ReviewInfo {
+  id: number;
+  status: ReviewStatus;
+  // Whether the review is of a live object's unpublished changes.
+  live: boolean;
+  submitted_by: CommentPerson | null;
+  submitted_at: DateTimeString;
+  reviewer: CommentPerson | null;
+  note: string;
+  decided_by: CommentPerson | null;
+  decided_at: DateTimeString | null;
+  decision_note: string;
+  // Whether the user submitted it.
+  mine: boolean;
+  can_approve: boolean;
+  can_withdraw: boolean;
+}
+
+// What the Review dialog shows: GET .../review.
+export interface ReviewDetails {
+  review: ReviewInfo | null;
+  // The version an approval names.
+  version: string;
+  changes: {
+    // What the values are compared with: the live version, the last
+    // approved values, or nothing (never approved).
+    base: "live" | "approved" | null;
+    fields: string[];
+    before: Record<string, unknown>;
+    after: Record<string, unknown>;
+  };
+  has_pending: boolean;
+  // The fields changed since the request was submitted.
+  changed_since_submitted: string[];
+  reviewers?: CommentPerson[];
 }
 
 // The unpublished changes of a published object, on detail responses.
@@ -761,6 +815,9 @@ export interface PublishingInfo {
   // changes, and (on detail responses) what they are.
   has_pending?: boolean;
   pending?: PendingChangesInfo | null;
+  // On studios with review: the current review request (null without
+  // one); list rows carry only its status.
+  review?: ReviewInfo | { status: ReviewStatus } | null;
 }
 
 export interface UserInfo {
@@ -1082,6 +1139,7 @@ export enum DashboardWidgetType {
   ScheduledTasksWidget = "ScheduledTasksWidget",
   ContentListWidget = "ContentListWidget",
   NotificationsWidget = "NotificationsWidget",
+  ReviewQueue = "ReviewQueue",
 }
 
 export interface ActivityLogEntry {

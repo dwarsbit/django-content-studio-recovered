@@ -2,7 +2,7 @@ import dayjs from "dayjs";
 import localizedFormat from "dayjs/plugin/localizedFormat";
 import { createContext, useContext } from "react";
 
-import type { PublishingInfo } from "@/types";
+import type { PublishingInfo, ReviewInfo } from "@/types";
 
 dayjs.extend(localizedFormat);
 
@@ -13,6 +13,9 @@ export type PublishingAction =
   | "set_unpublish_at"
   | "publish_changes"
   | "discard_changes";
+
+export type ReviewAction =
+  "submit" | "withdraw" | "approve" | "request_changes";
 
 export interface PublishingControls {
   info: PublishingInfo;
@@ -36,7 +39,32 @@ export interface PublishingControls {
   cancelSchedule(): Promise<void>;
   unpublishNow(): Promise<void>;
   openUnpublishDate(): void;
+  // Review before publishing (the review app), or null without it.
+  review: ReviewControls | null;
 }
+
+export interface ReviewControls {
+  // Whether publishers go through review too.
+  required: boolean;
+  // The object's current request, or null.
+  current: ReviewInfo | null;
+  // Whether the user may submit it (change permission).
+  canSubmit: boolean;
+  // Whether the studio has comments, which hold the review notes.
+  comments: boolean;
+  openSubmit(): void;
+  openReview(): void;
+  withdraw(): Promise<void>;
+}
+
+// The header's main publishing button.
+export type PrimaryAction =
+  | "publish"
+  | "publish_now"
+  | "publish_changes"
+  | "submit"
+  | "resubmit"
+  | "review";
 
 export const PublishingContext = createContext<PublishingControls | null>(null);
 
@@ -51,13 +79,53 @@ export function usePublishing() {
  * publish it.
  */
 export function useShowPublishButton() {
+  return usePrimaryAction() !== null;
+}
+
+/**
+ * The header's main publishing button, if any: Publish (now, or the
+ * changes) for someone who may publish; with review, Submit for review
+ * (again, after changes were requested) for editors, and Review for
+ * someone who may approve the request in review.
+ */
+export function usePrimaryAction(): PrimaryAction | null {
   const publishing = usePublishing();
 
-  return (
-    !!publishing &&
-    publishing.canPublish &&
-    (publishing.info.state !== "published" || publishing.hasChanges)
-  );
+  if (!publishing) {
+    return null;
+  }
+
+  const { info, canPublish, hasChanges, review } = publishing;
+  const live = info.state === "published";
+
+  if (review) {
+    const { current } = review;
+
+    if (current?.status === "open") {
+      return current.can_approve ? "review" : null;
+    }
+
+    if (current?.status === "changes_requested") {
+      return review.canSubmit ? "resubmit" : null;
+    }
+
+    if (!canPublish || review.required) {
+      const submittable =
+        info.state === "draft" || info.state === "expired" || hasChanges;
+
+      return review.canSubmit && submittable ? "submit" : null;
+    }
+  }
+
+  if (!canPublish || (live && !hasChanges)) {
+    return null;
+  }
+
+  return live
+    ? "publish_changes"
+    : info.state === "scheduled"
+      ? "publish_now"
+      : "publish";
 }
 
 /** The browser's time zone, which the pickers show times in. */

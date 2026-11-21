@@ -3,6 +3,7 @@ import localizedFormat from "dayjs/plugin/localizedFormat";
 import { useTranslation } from "react-i18next";
 import { PiClockBold } from "react-icons/pi";
 
+import { ReviewBadge } from "@/components/review/review-badge";
 import { Badge } from "@/components/ui/badge";
 import type { PublishingInfo, PublishingState } from "@/types";
 
@@ -56,7 +57,10 @@ export function PublishingFormat({ value }: { value: unknown }) {
     return null;
   }
 
-  if (!info.has_pending) {
+  const review = info.review?.status;
+  const inReview = review === "open" || review === "changes_requested";
+
+  if (!info.has_pending && !inReview) {
     return (
       <PublishingBadge state={info.state} publishedAt={info.published_at} />
     );
@@ -65,7 +69,11 @@ export function PublishingFormat({ value }: { value: unknown }) {
   return (
     <span className="inline-flex items-center gap-1.5">
       <PublishingBadge state={info.state} publishedAt={info.published_at} />
-      <PendingChangesBadge />
+      {inReview ? (
+        <ReviewBadge status={review} live={info.state === "published"} />
+      ) : (
+        <PendingChangesBadge />
+      )}
     </span>
   );
 }

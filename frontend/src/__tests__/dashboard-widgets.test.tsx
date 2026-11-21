@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ActivityLogWidget } from "@/pages/(studio)/(dashboard)/_components/activity-log-widget";
 import { ContentListWidget } from "@/pages/(studio)/(dashboard)/_components/content-list-widget";
+import { ReviewQueueWidget } from "@/pages/(studio)/(dashboard)/_components/review-queue-widget";
 import { StatisticWidget } from "@/pages/(studio)/(dashboard)/_components/statistic-widget";
 import { type DashboardWidget } from "@/types";
 
@@ -144,5 +145,66 @@ describe("ActivityLogWidget", () => {
       await screen.findByText("dashboard.widgets.activity_log.today"),
     ).toBeInTheDocument();
     expect(screen.getByText("ML")).toBeInTheDocument();
+  });
+});
+
+describe("ReviewQueueWidget", () => {
+  beforeEach(() => vi.clearAllMocks());
+
+  it("lists what waits for review, linking to the edit pages", async () => {
+    httpMock.get.mockResolvedValue({
+      data: {
+        title: "Waiting for your review",
+        description: "Submitted for review, oldest first",
+        mode: "review",
+        total: 2,
+        results: [
+          {
+            id: 1,
+            model: "blog.article",
+            model_name: "article",
+            object_id: "7",
+            title: "Spring launch",
+            status: "open",
+            live: false,
+            submitted_by: { id: "3", name: "Sam", initials: "S", avatar: null },
+            submitted_at: new Date().toISOString(),
+            reviewer: null,
+          },
+          {
+            id: 2,
+            model: "blog.article",
+            model_name: "article",
+            object_id: "8",
+            title: "Pricing",
+            status: "open",
+            live: true,
+            submitted_by: null,
+            submitted_at: new Date().toISOString(),
+            reviewer: null,
+          },
+        ],
+      },
+    });
+    renderWidget(<ReviewQueueWidget widget={widget("ReviewQueue")} />);
+
+    const link = await screen.findByRole("link", { name: /Spring launch/ });
+    expect(link).toHaveAttribute("href", "/content/blog.article/7");
+    expect(link).toHaveTextContent("review.widget.new");
+    expect(screen.getByRole("link", { name: /Pricing/ })).toHaveTextContent(
+      "review.widget.changes",
+    );
+    expect(screen.getByText("2")).toBeInTheDocument();
+  });
+
+  it("says when nothing waits", async () => {
+    httpMock.get.mockResolvedValue({
+      data: { title: "", description: "", mode: "mine", total: 0, results: [] },
+    });
+    renderWidget(<ReviewQueueWidget widget={widget("ReviewQueue")} />);
+
+    expect(
+      await screen.findByText("review.widget.empty_mine"),
+    ).toBeInTheDocument();
   });
 });

@@ -1968,3 +1968,136 @@ msgstr "%(actor)s respondeu a um comentário em %(object)s"
 #, python-format
 msgid "%(actor)s commented on %(object)s"
 msgstr "%(actor)s comentou em %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s asked you to review %(object)s"
+msgstr "%(actor)s pediu que você revise %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s submitted %(object)s for review"
+msgstr "%(actor)s enviou %(object)s para revisão"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s approved %(object)s"
+msgstr "%(actor)s aprovou %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s requested changes to %(object)s"
+msgstr "%(actor)s pediu alterações em %(object)s"
+
+#: content_studio/review
+msgid "Review requests"
+msgstr "Pedidos de revisão"
+
+#: content_studio/review
+msgid "Someone submits content for you to review."
+msgstr "Alguém envia conteúdo para você revisar."
+
+#: content_studio/review
+msgid "Approved reviews"
+msgstr "Revisões aprovadas"
+
+#: content_studio/review
+msgid "Content you submitted for review is approved."
+msgstr "O conteúdo que você enviou para revisão foi aprovado."
+
+#: content_studio/review
+msgid "Changes requested"
+msgstr "Alterações pedidas"
+
+#: content_studio/review
+msgid "A reviewer asks for changes to content you submitted."
+msgstr "Um revisor pede alterações em conteúdo que você enviou."
+
+#: content_studio/review
+msgid "review request"
+msgstr "pedido de revisão"
+
+#: content_studio/review
+msgid "review requests"
+msgstr "pedidos de revisão"
+
+#: content_studio/review
+msgid "In review"
+msgstr "Em revisão"
+
+#: content_studio/review
+msgid "Approved"
+msgstr "Aprovado"
+
+#: content_studio/review
+msgid "Withdrawn"
+msgstr "Retirado"
+
+#: content_studio/review
+msgid "Submitted by"
+msgstr "Enviado por"
+
+#: content_studio/review
+msgid "Reviewer"
+msgstr "Revisor"
+
+#: content_studio/review
+msgid "Review"
+msgstr "Revisão"
+
+#: content_studio/review
+msgid "Waiting for your review"
+msgstr "Aguardando sua revisão"
+
+#: content_studio/review
+msgid "Submitted for review, oldest first"
+msgstr "Enviados para revisão, mais antigos primeiro"
+
+#: content_studio/review
+msgid "Your review requests"
+msgstr "Seus pedidos de revisão"
+
+#: content_studio/review
+msgid "In review or with changes requested"
+msgstr "Em revisão ou com alterações pedidas"
+
+#: content_studio/review
+msgid "Waiting for my review"
+msgstr "Aguardando minha revisão"
+
+#: content_studio/review
+msgid "This object is already in review."
+msgstr "Este objeto já está em revisão."
+
+#: content_studio/review
+msgid "This object is not in review."
+msgstr "Este objeto não está em revisão."
+
+#: content_studio/review
+msgid "There are no unpublished changes to review."
+msgstr "Não há alterações não publicadas para revisar."
+
+#: content_studio/review
+msgid "This person cannot review it."
+msgstr "Esta pessoa não pode revisar."
+
+#: content_studio/review
+#, python-format
+msgid "Unknown review action %(action)s."
+msgstr "Ação de revisão desconhecida %(action)s."
+
+#: content_studio/review
+msgid "Say what to change."
+msgstr "Diga o que mudar."
+
+#: content_studio/review
+msgid "It changed since you opened it. Look at the changes again."
+msgstr "Mudou desde que você abriu. Veja as alterações novamente."
+
+#: content_studio/review
+msgid "Live content is approved to publish now."
+msgstr "Conteúdo no ar é aprovado para publicar agora."
+
+#: content_studio/review
+msgid "This model is published after review: submit it for review."
+msgstr "Este modelo é publicado após revisão: envie para revisão."

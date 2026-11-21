@@ -555,6 +555,13 @@ Each is optional and has its own page:
   `live()`; a Can publish permission; `content_studio_publish` from cron
   or Huey records what went live; E054):
   https://djangocontentstudio.org/docs/publishing.md
+- Review and approval before publishing (`"content_studio.review"` app,
+  `review = True` or `Review(required=, self_approval=)` on a studio with
+  publishing; editors submit, people who may publish approve, which
+  publishes or schedules, or request changes; `get_reviewers`,
+  `on_submit_for_review`, `on_review`, `review_submitted`/`review_decided`
+  signals, `ReviewQueue` dashboard widget; E058):
+  https://djangocontentstudio.org/docs/review.md
 - Previews and shared draft links (on a studio with publishing; the site
   shows drafts with `previewable(request, queryset)` from
   `content_studio.previews` instead of `live()`, and

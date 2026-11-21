@@ -1419,5 +1419,74 @@
     "delete_description": "De opmerking verdwijnt voor iedereen. Antwoorden blijven staan.",
     "error": "De opmerking kon niet worden opgeslagen. Probeer het opnieuw.",
     "mention": "Mensen om te noemen"
+  },
+  "review": {
+    "title": "Review",
+    "submit": "Ter review aanbieden",
+    "submit_again": "Opnieuw aanbieden",
+    "review": "Reviewen",
+    "request_changes": "Wijzigingen vragen",
+    "approve_schedule": "Goedkeuren en inplannen…",
+    "approve_publish": "Goedkeuren en publiceren",
+    "anyone": "Iedereen die mag publiceren",
+    "after_review": "Na review",
+    "hint": "Iemand die mag publiceren reviewt het voordat het live gaat.",
+    "submitted": "Aangeboden",
+    "you": "Jij",
+    "reviewer": "Reviewer",
+    "reviewed_by": "Gereviewd door",
+    "states": {
+      "open": "In review",
+      "changes_requested": "Wijzigingen gevraagd",
+      "changes_in_review": "Wijzigingen in review"
+    },
+    "withdraw": {
+      "title": "Uit review halen?",
+      "description": "{{name}} wacht niet meer op review. Je kunt het later opnieuw aanbieden.",
+      "ok": "Uit review halen"
+    },
+    "toast": {
+      "submitted": "{{name}} is ter review aangeboden.",
+      "withdrawn": "{{name}} is uit review gehaald.",
+      "approved": "{{name}} is goedgekeurd en gepubliceerd.",
+      "approved_scheduled": "{{name}} is goedgekeurd en ingepland.",
+      "changes_requested": "Er zijn wijzigingen gevraagd voor {{name}}."
+    },
+    "submit_dialog": {
+      "description": "{{name}} wordt gepubliceerd zodra iemand die mag publiceren het goedkeurt.",
+      "description_live": "De wijzigingen in {{name}} gaan live zodra iemand die mag publiceren ze goedkeurt.",
+      "reviewer": "Reviewer",
+      "reviewer_hint": "Alleen {{name}} krijgt een melding. Iedereen die mag publiceren kan het nog steeds reviewen.",
+      "anyone_hint": "Iedereen die mag publiceren krijgt een melding.",
+      "note": "Notitie voor de reviewer",
+      "note_placeholder": "Optioneel"
+    },
+    "dialog": {
+      "title": "Wijzigingen reviewen",
+      "description": "Bekijk {{object}} voordat het live gaat.",
+      "submitted_by": "{{name}} heeft {{object}} {{when}} aangeboden.",
+      "edited_since": "Bewerkt na het aanbieden: {{fields}}. Je keurt goed wat je nu ziet.",
+      "new_content": "Nieuw, nog niet eerder goedgekeurd",
+      "new_content_hint": "Lees het op de pagina voordat je het goedkeurt.",
+      "changed_live_one": "{{count}} veld gewijzigd ten opzichte van de gepubliceerde versie",
+      "changed_live_other": "{{count}} velden gewijzigd ten opzichte van de gepubliceerde versie",
+      "changed_approved_one": "{{count}} veld gewijzigd sinds de laatste goedkeuring",
+      "changed_approved_other": "{{count}} velden gewijzigd sinds de laatste goedkeuring",
+      "note": "Notitie",
+      "note_hint": "Verplicht als je wijzigingen vraagt."
+    },
+    "widget": {
+      "empty": "Er wacht niets op jouw review.",
+      "empty_mine": "Je hebt niets in review.",
+      "submitted_by": "{{name}} · {{when}}",
+      "submitted": "Aangeboden {{when}}",
+      "changes": "Wijzigingen",
+      "new": "Nieuw: {{model}}"
+    },
+    "kinds": {
+      "submitted": "Ter review aangeboden",
+      "approved": "Goedgekeurd",
+      "changes_requested": "Wijzigingen gevraagd"
+    }
   }
 }
