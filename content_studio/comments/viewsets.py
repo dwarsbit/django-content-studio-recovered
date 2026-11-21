@@ -150,6 +150,7 @@ class CommentViewSet(ViewSet):
                 "created_at": comment.created_at,
                 "edited_at": comment.edited_at,
                 "deleted": deleted,
+                "kind": comment.kind,
                 "can_edit": mine and not deleted,
                 "can_delete": (mine or can_moderate) and not deleted,
             }

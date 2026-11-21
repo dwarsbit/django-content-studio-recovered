@@ -188,6 +188,9 @@ class ArticleStudio(ModelStudio):
             "published": models.Article.Status.PUBLISHED,
         },
     )
+    # Review before publishing: editors without Can publish submit
+    # articles for review, and a publisher approves them.
+    review = True
     # Export the table, and import articles from a file: rows with an id
     # update that article, others create one. Authors are given by
     # username and categories by name.

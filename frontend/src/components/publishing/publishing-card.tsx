@@ -6,9 +6,13 @@ import {
   PiCalendarBlankBold,
   PiGlobeBold,
   PiInfoBold,
+  PiSealCheckBold,
 } from "react-icons/pi";
 
+import { ReviewBadge } from "@/components/review/review-badge";
 import { Button } from "@/components/ui/button";
+import { UserAvatar } from "@/components/ui/user-avatar";
+import type { ReviewInfo } from "@/types";
 
 import { formatShortTime, timeZone, usePublishing } from "./publishing";
 import { PublishingBadge } from "./publishing-badge";
@@ -48,6 +52,15 @@ export function PublishingCard() {
   const { info, canPublish, isPending } = publishing;
   const { state } = info;
   const live = state === "published" || state === "expired";
+  const review = publishing.review;
+  const current =
+    review?.current?.status === "open" ||
+    review?.current?.status === "changes_requested"
+      ? review.current
+      : null;
+  // Whether it goes live through review: for editors, and for everyone
+  // on studios that require it.
+  const throughReview = !!review && (!canPublish || review.required);
 
   return (
     <section
@@ -56,12 +69,22 @@ export function PublishingCard() {
     >
       <div className="px-5 py-3 border-b flex items-center justify-between gap-3">
         <h4 className="font-semibold">{t("publishing.title")}</h4>
-        <PublishingBadge state={state} short />
+        <div className="flex flex-wrap items-center justify-end gap-1.5 min-w-0">
+          <PublishingBadge state={state} short />
+          <ReviewBadge status={current?.status} live={current?.live} />
+        </div>
       </div>
       <div className="p-5 pt-3 space-y-1">
         <Row label={t(live ? "publishing.published" : "publishing.publish_on")}>
           {state === "draft" || !info.published_at ? (
-            canPublish ? (
+            throughReview || current?.status === "open" ? (
+              <span
+                className="text-muted-foreground font-normal"
+                data-testid="after-review"
+              >
+                {t("review.after_review")}
+              </span>
+            ) : canPublish ? (
               <Button
                 variant="outline"
                 size="sm"
@@ -175,6 +198,13 @@ export function PublishingCard() {
             </div>
           </div>
         )}
+        {current && <ReviewSection review={current} />}
+        {!current && throughReview && !canPublish && (
+          <p className="text-xs text-muted-foreground pt-2 flex gap-1.5">
+            <PiInfoBold className="shrink-0 mt-0.5" />
+            {t("review.hint")}
+          </p>
+        )}
         {canPublish && state === "published" && (
           <div className="pt-3">
             <Button
@@ -209,5 +239,95 @@ export function PublishingCard() {
         )}
       </div>
     </section>
+  );
+}
+
+/** The object's request in review, or the changes asked for. */
+function ReviewSection({ review }: { review: ReviewInfo }) {
+  const { t } = useTranslation();
+  const publishing = usePublishing()!;
+  const controls = publishing.review!;
+  const submitter = review.submitted_by;
+  const changes = review.status === "changes_requested";
+  // Comments hold the notes when the studio has them.
+  const note = changes
+    ? review.decision_note
+    : controls.comments
+      ? ""
+      : review.note;
+
+  return (
+    <div className="pt-3 mt-2 border-t space-y-1" data-testid="review-section">
+      <div className="text-sm font-semibold pt-1 pb-1">
+        {t(changes ? "review.states.changes_requested" : "review.title")}
+      </div>
+      <Row label={t("review.submitted")}>
+        {submitter && (
+          <UserAvatar
+            name={submitter.name}
+            initials={submitter.initials}
+            src={submitter.avatar}
+            className="size-5"
+          />
+        )}
+        <span className="truncate">
+          {review.mine ? t("review.you") : (submitter?.name ?? "")}
+        </span>
+        <span className="text-muted-foreground font-normal shrink-0">
+          {dayjs(review.submitted_at).fromNow()}
+        </span>
+      </Row>
+      {changes && review.decided_by ? (
+        <Row label={t("review.reviewed_by")}>
+          <span className="truncate">{review.decided_by.name}</span>
+        </Row>
+      ) : (
+        <Row label={t("review.reviewer")}>
+          {review.reviewer ? (
+            <span className="truncate">{review.reviewer.name}</span>
+          ) : (
+            <span className="text-muted-foreground font-normal truncate">
+              {t("review.anyone")}
+            </span>
+          )}
+        </Row>
+      )}
+      {note && (
+        <p
+          className="rounded-md bg-muted px-3 py-2 text-sm whitespace-pre-wrap break-words"
+          data-testid="review-note"
+        >
+          {note}
+        </p>
+      )}
+      {(review.can_approve || review.can_withdraw) && (
+        <div className="flex gap-2 pt-2">
+          {review.can_approve && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={publishing.isPending}
+              onClick={controls.openReview}
+            >
+              <PiSealCheckBold />
+              {t("review.review")}
+            </Button>
+          )}
+          {review.can_withdraw && !changes && (
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              disabled={publishing.isPending}
+              onClick={controls.withdraw}
+              data-testid="review-withdraw"
+            >
+              {t("review.withdraw.ok")}
+            </Button>
+          )}
+        </div>
+      )}
+    </div>
   );
 }

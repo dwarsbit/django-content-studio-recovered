@@ -22,6 +22,7 @@ from content_studio.dashboard.activity_log import ActivityLogWidget
 from content_studio.dashboard.tasks import TaskDashboard
 from content_studio.extensions import UserMenuLink
 from content_studio.notifications.dashboard import NotificationsWidget
+from content_studio.review.dashboard import ReviewQueue
 
 from . import models
 from .analytics import DemoAnalyticsProvider
@@ -59,6 +60,7 @@ class DemoStudioSite(ContentStudioSite):
             PublishedArticlesWidget(),
             TotalViewsWidget(),
             AnalyticsStatisticWidget(metric="visitors"),
+            ReviewQueue(),
             FeaturedArticlesWidget(),
             AnalyticsTopPagesWidget(),
             LatestArticlesWidget(),

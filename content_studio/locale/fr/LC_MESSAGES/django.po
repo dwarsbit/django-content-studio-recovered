@@ -2007,3 +2007,136 @@ msgstr "%(actor)s a répondu à un commentaire sur %(object)s"
 #, python-format
 msgid "%(actor)s commented on %(object)s"
 msgstr "%(actor)s a commenté %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s asked you to review %(object)s"
+msgstr "%(actor)s vous demande de relire %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s submitted %(object)s for review"
+msgstr "%(actor)s a soumis %(object)s à relecture"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s approved %(object)s"
+msgstr "%(actor)s a approuvé %(object)s"
+
+#: content_studio/review
+#, python-format
+msgid "%(actor)s requested changes to %(object)s"
+msgstr "%(actor)s demande des modifications de %(object)s"
+
+#: content_studio/review
+msgid "Review requests"
+msgstr "Demandes de relecture"
+
+#: content_studio/review
+msgid "Someone submits content for you to review."
+msgstr "Quelqu’un soumet un contenu à votre relecture."
+
+#: content_studio/review
+msgid "Approved reviews"
+msgstr "Relectures approuvées"
+
+#: content_studio/review
+msgid "Content you submitted for review is approved."
+msgstr "Un contenu que vous avez soumis à relecture est approuvé."
+
+#: content_studio/review
+msgid "Changes requested"
+msgstr "Modifications demandées"
+
+#: content_studio/review
+msgid "A reviewer asks for changes to content you submitted."
+msgstr "Un relecteur demande des modifications d’un contenu que vous avez soumis."
+
+#: content_studio/review
+msgid "review request"
+msgstr "demande de relecture"
+
+#: content_studio/review
+msgid "review requests"
+msgstr "demandes de relecture"
+
+#: content_studio/review
+msgid "In review"
+msgstr "En relecture"
+
+#: content_studio/review
+msgid "Approved"
+msgstr "Approuvé"
+
+#: content_studio/review
+msgid "Withdrawn"
+msgstr "Retiré"
+
+#: content_studio/review
+msgid "Submitted by"
+msgstr "Soumis par"
+
+#: content_studio/review
+msgid "Reviewer"
+msgstr "Relecteur"
+
+#: content_studio/review
+msgid "Review"
+msgstr "Relecture"
+
+#: content_studio/review
+msgid "Waiting for your review"
+msgstr "En attente de votre relecture"
+
+#: content_studio/review
+msgid "Submitted for review, oldest first"
+msgstr "Soumis à relecture, les plus anciens d’abord"
+
+#: content_studio/review
+msgid "Your review requests"
+msgstr "Vos demandes de relecture"
+
+#: content_studio/review
+msgid "In review or with changes requested"
+msgstr "En relecture ou avec des modifications demandées"
+
+#: content_studio/review
+msgid "Waiting for my review"
+msgstr "En attente de ma relecture"
+
+#: content_studio/review
+msgid "This object is already in review."
+msgstr "Cet objet est déjà en relecture."
+
+#: content_studio/review
+msgid "This object is not in review."
+msgstr "Cet objet n’est pas en relecture."
+
+#: content_studio/review
+msgid "There are no unpublished changes to review."
+msgstr "Il n’y a aucune modification non publiée à relire."
+
+#: content_studio/review
+msgid "This person cannot review it."
+msgstr "Cette personne ne peut pas le relire."
+
+#: content_studio/review
+#, python-format
+msgid "Unknown review action %(action)s."
+msgstr "Action de relecture inconnue %(action)s."
+
+#: content_studio/review
+msgid "Say what to change."
+msgstr "Dites ce qu’il faut modifier."
+
+#: content_studio/review
+msgid "It changed since you opened it. Look at the changes again."
+msgstr "Il a changé depuis que vous l’avez ouvert. Regardez à nouveau les modifications."
+
+#: content_studio/review
+msgid "Live content is approved to publish now."
+msgstr "Un contenu en ligne est approuvé pour être publié maintenant."
+
+#: content_studio/review
+msgid "This model is published after review: submit it for review."
+msgstr "Ce modèle est publié après relecture : soumettez-le à relecture."

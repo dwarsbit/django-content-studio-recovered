@@ -17,6 +17,7 @@ import {
   useShowPublishButton,
 } from "@/components/publishing/publishing";
 import { PublishingBadge } from "@/components/publishing/publishing-badge";
+import { ReviewBadge } from "@/components/review/review-badge";
 import { Button } from "@/components/ui/button";
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
@@ -280,6 +281,13 @@ export function Header({
                   <PublishingBadge
                     state={publishing.info.state}
                     short
+                    className="hidden sm:inline-flex shrink-0"
+                  />
+                )}
+                {resource && publishing?.review?.current && (
+                  <ReviewBadge
+                    status={publishing.review.current.status}
+                    live={publishing.review.current.live}
                     className="hidden sm:inline-flex shrink-0"
                   />
                 )}
