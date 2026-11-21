@@ -2,8 +2,10 @@ import * as R from "ramda";
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { UseFormReturn } from "react-hook-form";
 
+import { useAdminInfo } from "@/hooks/use-admin-info";
 import { useMe } from "@/hooks/use-me";
 import {
+  DEFAULT_MAX_AGE_DAYS,
   type KeptChanges,
   mergeKept,
   pruneKept,
@@ -11,6 +13,7 @@ import {
   type Recovery,
   recoveryKey,
   removeKept,
+  sameValue,
   writeKept,
 } from "@/lib/recovery";
 import { useTenant } from "@/tenant";
@@ -55,6 +58,7 @@ export function useRecovery({
   ready: boolean;
 }) {
   const { data: me } = useMe();
+  const { data: info } = useAdminInfo();
   const { tenantId } = useTenant();
   const key =
     enabled && me
@@ -75,6 +79,9 @@ export function useRecovery({
   // When the changes were last kept; null while nothing is (or the
   // browser refused).
   const [keptAt, setKeptAt] = useState<number | null>(null);
+  // Whether what is kept under the key is this tab's: another tab with
+  // the same object open must not drop it by having nothing to keep.
+  const ownsRef = useRef(false);
 
   const keepable = useCallback(
     (name: string, value: unknown, base: unknown) => {
@@ -96,14 +103,22 @@ export function useRecovery({
     [form, model],
   );
 
+  // Changes older than RECOVERY_MAX_AGE are dropped, once per page load.
+  useEffect(() => {
+    if (pruned || !info) {
+      return;
+    }
+    pruned = true;
+    const maxAge = info.settings.recovery_max_age;
+    pruneKept(
+      typeof maxAge === "number" && maxAge > 0 ? maxAge : DEFAULT_MAX_AGE_DAYS,
+    );
+  }, [info]);
+
   // Offer changes kept earlier, once the form holds the object.
   useEffect(() => {
     if (!key || !ready) {
       return;
-    }
-    if (!pruned) {
-      pruned = true;
-      pruneKept();
     }
 
     const kept = readKept(key);
@@ -126,6 +141,7 @@ export function useRecovery({
     // once the form holds the object.
     // eslint-disable-next-line react-hooks/set-state-in-effect -- syncs from browser storage
     setOffer({ kept: usable, recovery });
+    ownsRef.current = true;
   }, [key, ready, form, keepable, setOffer]);
 
   const keepNow = useCallback(() => {
@@ -144,8 +160,9 @@ export function useRecovery({
       const value = values[name];
       const base = defaults[name];
 
-      if (!R.equals(value, base) && keepable(name, value, base)) {
-        fields[name] = { value, base };
+      if (!sameValue(value, base) && keepable(name, value, base)) {
+        // undefined does not survive JSON: an empty start is null.
+        fields[name] = { value: value ?? null, base: base ?? null };
       }
     }
 
@@ -164,7 +181,10 @@ export function useRecovery({
       : fields;
 
     if (R.isEmpty(all)) {
-      removeKept(key);
+      if (ownsRef.current) {
+        removeKept(key);
+        ownsRef.current = false;
+      }
       setKeptAt(null);
       return;
     }
@@ -176,6 +196,7 @@ export function useRecovery({
       name: (values.__str__ as string | undefined) ?? undefined,
       fields: all,
     });
+    ownsRef.current = ok;
     setKeptAt(ok && !R.isEmpty(fields) ? now : null);
   }, [key, form, model, keepable]);
 
@@ -186,7 +207,11 @@ export function useRecovery({
       return;
     }
 
-    let timer: ReturnType<typeof setTimeout> | undefined;
+    // Changes made before the object finished loading count too.
+    let timer: ReturnType<typeof setTimeout> | undefined = setTimeout(
+      keepNow,
+      KEEP_DELAY,
+    );
     const subscription = form.watch(() => {
       clearTimeout(timer);
       timer = setTimeout(keepNow, KEEP_DELAY);
@@ -200,14 +225,23 @@ export function useRecovery({
         flush();
       }
     };
+    // Another tab kept changes to the same object: they are its own
+    // until this tab changes something again (the last change wins).
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === key) {
+        ownsRef.current = false;
+      }
+    };
 
     window.addEventListener("pagehide", flush);
+    window.addEventListener("storage", onStorage);
     document.addEventListener("visibilitychange", onVisibility);
 
     return () => {
       clearTimeout(timer);
       subscription.unsubscribe();
       window.removeEventListener("pagehide", flush);
+      window.removeEventListener("storage", onStorage);
       document.removeEventListener("visibilitychange", onVisibility);
     };
   }, [key, ready, form, keepNow]);
@@ -247,6 +281,7 @@ export function useRecovery({
   const clear = useCallback(() => {
     setOffer(null);
     setKeptAt(null);
+    ownsRef.current = false;
     if (key) {
       removeKept(key);
     }

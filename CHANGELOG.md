@@ -1,5 +1,25 @@
 # Changelog
 
+## 1.19.0 (unreleased)
+
+### Features
+
+- **Unsaved changes survive a crash, a reload or an expired session.** The
+  edit page keeps an editor's changes in their browser while they work (a
+  check next to *Unsaved changes* in the header says so) and, when the
+  object opens again, offers them back on a banner: **Restore unsaved
+  changes**, **Compare** (word by word against the object as it is now) or
+  **Discard**. If someone saved the object in the meantime, the banner says
+  who; fields only you changed are restored, and fields you both changed
+  keep the saved value unless you pick yours in Compare. Unfinished create
+  forms are offered too. Nothing reaches the server until Save; logging out
+  clears the browser's copy, and passwords, files and read-only fields are
+  never kept. Turn it off per model with `recover_changes = False`, keep
+  fields out with `recover_changes_exclude`, or turn it off everywhere with
+  the `RECOVER_CHANGES` setting; `RECOVERY_MAX_AGE` (7 days) sets how long
+  changes are kept. System check `content_studio.W029` reports a
+  `recover_changes_exclude` naming a field the model does not have.
+
 ## 1.18.1 (2026-11-20)
 
 ### Fixes

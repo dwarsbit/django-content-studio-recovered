@@ -196,6 +196,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W025` | A [`RichTextWidget`](/docs/widgets#rich-text) with the image feature without the media library, or with a `link_models` model or an `image_sizes` size that does not exist, has no URL or has no `search_fields`. |
 | `content_studio.W026` | `import_fields` or `allow_import` on a singleton, an empty `import_fields`, or `import_id_fields` that need not be unique. |
 | `content_studio.W028` | `BACKUP_SCHEDULE` is set but Huey is not installed to run it. Run `content_studio_backup` [from cron](/docs/backups#with-cron) and silence the warning. |
+| `content_studio.W029` | A `recover_changes_exclude` that is not a list of field names, or names a field the model does not have, so its [unsaved changes](/docs/edit-page#unsaved-changes) are kept in the browser after all. |
 
 ## Reporting a vulnerability
 

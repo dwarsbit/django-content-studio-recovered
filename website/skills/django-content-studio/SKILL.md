@@ -114,7 +114,9 @@ or `allow_import` (CSV, Excel or JSON; rows matched on `import_id_fields`,
 the primary key by default; relations by `import_lookups`, e.g.
 `{"author": "username"}`), `edit_width`
 (`"default"` or `"wide"`), `readonly_fields`, `prepopulated_fields`,
-`exclude`, `is_singleton`, `presence` and `icon`.
+`exclude`, `is_singleton`, `presence`, `recover_changes` and
+`recover_changes_exclude` (unsaved edits are kept in the editor's browser
+and offered back; `False` or excluded fields for sensitive data) and `icon`.
 
 `list_filter` takes field names, paths across relations
 (`"author__country"`) and filter classes: subclass

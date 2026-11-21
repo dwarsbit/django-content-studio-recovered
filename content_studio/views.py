@@ -136,6 +136,8 @@ class AdminApiViewSet(ViewSet):
                 "created_at_attr": cs_settings.CREATED_AT_ATTR,
                 "edited_by_attr": cs_settings.EDITED_BY_ATTR,
                 "edited_at_attr": cs_settings.EDITED_AT_ATTR,
+                # Days unsaved changes stay in the browser for recovery.
+                "recovery_max_age": cs_settings.RECOVERY_MAX_AGE,
             },
         }
 

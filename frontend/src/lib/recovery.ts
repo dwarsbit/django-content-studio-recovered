@@ -121,6 +121,11 @@ export function clearKept() {
   }
 }
 
+/** Equal values; an empty start (undefined, null) is one value. */
+export function sameValue(a: unknown, b: unknown) {
+  return R.equals(a ?? null, b ?? null);
+}
+
 export interface Recovery {
   // Fields whose value nobody changed since: the kept value is restored.
   clean: string[];
@@ -146,11 +151,11 @@ export function mergeKept(
   for (const [name, { value, base }] of Object.entries(kept.fields)) {
     const now = current[name];
 
-    if (R.equals(now, base)) {
+    if (sameValue(now, base)) {
       clean.push(name);
     } else {
       changedSince = true;
-      if (!R.equals(now, value)) {
+      if (!sameValue(now, value)) {
         clashes.push(name);
       }
     }

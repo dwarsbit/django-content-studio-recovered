@@ -145,6 +145,12 @@ DEFAULTS = {
     # Whether edit and list pages show which users have an object open;
     # a studio opts out with presence = False.
     "PRESENCE": True,
+    # Whether edit pages keep unsaved changes in the editor's browser and
+    # offer them back when the page opens again; a studio opts out with
+    # recover_changes = False.
+    "RECOVER_CHANGES": True,
+    # Days unsaved changes stay in the browser before they are dropped.
+    "RECOVERY_MAX_AGE": 7,
     # The cache alias presence is stored in. Across several processes or
     # servers it must be a shared cache (Redis, Memcached, database).
     "PRESENCE_CACHE": "default",

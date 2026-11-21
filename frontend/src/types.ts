@@ -67,6 +67,9 @@ export interface AdminInfo {
     created_by_attr: string;
     edited_at_attr: string;
     edited_by_attr: string;
+    // Days unsaved changes stay in the browser for recovery
+    // (RECOVERY_MAX_AGE).
+    recovery_max_age?: number;
   };
 }
 

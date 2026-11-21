@@ -762,9 +762,12 @@ describe("Editor", () => {
       ),
     );
     // Nothing loads the object; the page only reads the profile's
-    // default save action.
+    // default save action, and who is signed in (whose unsaved changes
+    // are kept).
     expect(
-      httpMock.get.mock.calls.filter(([url]) => url !== "/profile"),
+      httpMock.get.mock.calls.filter(
+        ([url]) => url !== "/profile" && url !== "/me",
+      ),
     ).toEqual([]);
     expect(httpMock.put).not.toHaveBeenCalled();
     await waitFor(() => expect(onSave).toHaveBeenCalled());
