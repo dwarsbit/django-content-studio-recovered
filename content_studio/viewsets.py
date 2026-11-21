@@ -56,6 +56,7 @@ from .presence import (
 from .reordering import get_reorder_scope
 from .serializers import RelatedItemSerializer
 from .snapshots import get_tracked_field_names, take_snapshot
+from .translations import get_search_fields
 from .settings import cs_settings
 from .uniqueness import find_duplicate, get_unique_sets
 from .users import check_invite_email, invite_new_user, is_user_model
@@ -1585,7 +1586,7 @@ class BaseModelViewSet(ModelViewSet):
         if not search:
             return qs
 
-        search_fields = related_admin.search_fields if related_admin else None
+        search_fields = get_search_fields(related_admin) if related_admin else None
 
         if not search_fields:
             return related_model._default_manager.none()

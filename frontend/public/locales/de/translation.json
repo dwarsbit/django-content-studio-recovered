@@ -1221,5 +1221,17 @@
   "row_actions": {
     "menu": "Aktionen",
     "menu_for": "Aktionen für {{name}}"
+  },
+  "translations": {
+    "content_language": "Inhaltssprache",
+    "default_short": "Standard",
+    "complete": "Vollständig",
+    "missing_short_one": "{{count}} fehlt",
+    "missing_short_other": "{{count}} fehlen",
+    "copy": "Kopieren",
+    "copy_from": "Aus {{language}} kopieren",
+    "shared": "In jeder Sprache gleich",
+    "languages_complete": "{{done}} von {{total}} Sprachen vollständig",
+    "languages_column": "Sprachen"
   }
 }

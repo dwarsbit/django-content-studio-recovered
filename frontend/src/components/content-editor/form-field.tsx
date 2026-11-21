@@ -25,14 +25,15 @@ import { Switch } from "@/components/ui/switch";
 import { PermissionMatrixWidget } from "@/components/widgets/permission-matrix-widget";
 import { WidgetRenderer } from "@/components/widgets/renderer";
 import { useAdminInfo } from "@/hooks/use-admin-info";
+import { useContentLanguage, useTranslatedName } from "@/lib/content-language";
 import { cn } from "@/lib/utils";
 import { FieldWidget, type FormField as IFormField, type Model } from "@/types";
 
 import {
+  LanguageBadge,
   SharedFieldMarker,
   TranslationReference,
-  useContentLanguage,
-  useTranslatedName,
+  TranslationStatus,
 } from "./content-language";
 import { EditorReadOnlyContext } from "./editor-read-only";
 import { UniqueSetWarning, UniqueWarning } from "./unique-warning";
@@ -56,6 +57,7 @@ const COMPONENTS: Partial<
   Text,
   Callout,
   SEOPreview,
+  TranslationStatus,
 };
 
 export function FormField({
@@ -67,10 +69,13 @@ export function FormField({
 }) {
   const form = useFormContext();
   const { data: info } = useAdminInfo();
+  // A translated field is edited in the shown content language's
+  // column; its label stays the field's own.
   const translation = useTranslatedName(formField.name);
   const { language } = useContentLanguage();
-  const modelField = model.fields[formField.name];
-  const label = formField.label || modelField?.verbose_name;
+  const baseField = model.fields[formField.name];
+  const modelField = model.fields[translation.name] ?? baseField;
+  const label = formField.label || baseField?.verbose_name;
   // The studio's read-only fields travel with the form values: the
   // create form starts from the studio's list, a saved object brings
   // its own.
@@ -82,7 +87,8 @@ export function FormField({
     !modelField ||
     modelField.readonly ||
     formField.readonly ||
-    (readonlyFields?.includes(formField.name) ?? false);
+    (readonlyFields?.includes(formField.name) ?? false) ||
+    (readonlyFields?.includes(translation.name) ?? false);
 
   // Checkboxes render their label inline after the box, not above it.
   const widgetClass =
@@ -130,12 +136,7 @@ export function FormField({
               )}
             >
               {label}
-              {translation.translated &&
-                translation.name !== formField.name && (
-                  <span className="ml-1.5 rounded bg-muted px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground align-middle">
-                    {language}
-                  </span>
-                )}
+              {translation.translated && <LanguageBadge code={language} />}
               {translation.shared && <SharedFieldMarker />}
             </span>
           );
@@ -222,10 +223,7 @@ export function FormField({
                   </FormLabel>
                   {control}
                   {translation.translated && !isReadonly && (
-                    <TranslationReference
-                      name={formField.name}
-                      column={translation.name}
-                    />
+                    <TranslationReference name={formField.name} />
                   )}
                 </>
               )}
@@ -261,7 +259,7 @@ export function FormField({
 
 /**
  * Renders a component (Link, LinkButton, Button, ActivityLog, Title,
- * Subtitle, Text, Callout, SEOPreview) of the edit page, in a form set
+ * Subtitle, Text, Callout, SEOPreview, TranslationStatus) of the edit page, in a form set
  * or in the header.
  */
 export function ComponentRenderer({

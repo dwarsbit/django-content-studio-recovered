@@ -733,7 +733,8 @@ export interface FormField {
     | "Text"
     | "Callout"
     | "Analytics"
-    | "SEOPreview";
+    | "SEOPreview"
+    | "TranslationStatus";
   copy: boolean;
   icon: string;
   title?: string | null;

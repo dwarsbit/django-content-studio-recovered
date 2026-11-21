@@ -10,6 +10,7 @@ from .models import (
     Coupon,
     Edition,
     Event,
+    Guide,
     Label,
     LandingPage,
     Note,
@@ -208,3 +209,11 @@ class VenueAdmin(ModelStudio):
     import_fields = ["name", "slug", "kind", "capacity", "opened", "host", "events"]
     import_id_fields = ["slug"]
     import_lookups = {"host": "username", "events": "title"}
+
+
+@register(Guide)
+class GuideAdmin(ModelStudio):
+    table_display = ["title", "views"]
+    search_fields = ["title"]
+    translations = ["title", "slug", "body"]
+    prepopulated_fields = {"slug": ["title"]}

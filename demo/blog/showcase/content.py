@@ -457,3 +457,83 @@ LANDING_PAGE = {
         ),
     ],
 }
+
+
+# Dutch and German translations of some articles, by English title
+# (ArticleStudio.translations). The rest is left untranslated, so the
+# list's Languages column and Missing translation filter have work.
+TRANSLATIONS = {
+    "Why the best trips start with a slow train": {
+        "nl": {
+            "title": "Waarom de mooiste reizen beginnen met een boemeltrein",
+            "slug": "waarom-de-mooiste-reizen-beginnen-met-een-boemeltrein",
+            "meta_description": "Drie regionale lijnen in een week: waarom de boemeltrein de mooiste manier is om de bergen te zien.",
+            "body": [
+                "De plaats bij het raam in een boemeltrein is het mooiste uitzicht op reis: bergen die rug voor rug verschijnen, dorpen zo dichtbij dat je de winkelborden kunt lezen.",
+                "Onze redacteur reed in een week drie regionale lijnen, stapte elf keer over en verlangde geen moment naar een vliegtuig.",
+                "Dit is de route, met de kaartjes die geld besparen en de stations waar je moet uitstappen.",
+            ],
+        },
+        # Started, not finished: the German editor has the title.
+        "de": {
+            "title": "Warum die schönsten Reisen mit einem Bummelzug beginnen",
+        },
+    },
+    "Colour notes: the palette of a northern autumn": {
+        "nl": {
+            "title": "Kleurnotities: het palet van een noordelijke herfst",
+            "slug": "kleurnotities-het-palet-van-een-noordelijke-herfst",
+            "meta_description": "Zes ontwerpers maakten een palet van één ochtendwandeling in de noordelijke herfst.",
+            "body": [
+                "De herfst is hier in het noorden kort en luid: heideroze, berkengoud en een violette lucht die urenlang blijft hangen.",
+                "We vroegen zes ontwerpers een palet te maken van één ochtendwandeling, en maakten er stalen van om te downloaden.",
+            ],
+        },
+    },
+    "After dark: a night walk through the old town": {
+        "nl": {
+            "title": "Na het donker: een nachtwandeling door de oude stad",
+            "slug": "na-het-donker-een-nachtwandeling-door-de-oude-stad",
+            "meta_description": "Van zonsondergang tot zonsopgang door de oude stad, met een nachtverpleegkundige, een jazzpianist en een bakker.",
+            "body": [
+                "Steden wisselen van dienst als het donker wordt. De kantoren lopen leeg, de bakkerijen sluiten en een andere stad neemt het over: nachtbussen, late keukens en verlichte ramen.",
+                "We liepen van zonsondergang tot zonsopgang met een nachtverpleegkundige, een jazzpianist en een bakker die het brood voor de volgende dag begon.",
+            ],
+        },
+        "de": {
+            "title": "Nach Einbruch der Dunkelheit: ein Nachtspaziergang durch die Altstadt",
+            "slug": "nach-einbruch-der-dunkelheit-ein-nachtspaziergang-durch-die-altstadt",
+            "meta_description": "Von Sonnenuntergang bis Sonnenaufgang durch die Altstadt, mit einer Nachtschwester, einem Jazzpianisten und einem Bäcker.",
+            "body": [
+                "Städte wechseln bei Einbruch der Dunkelheit die Schicht. Die Bürotürme leeren sich, die Bäckereien schließen, und eine andere Stadt übernimmt: Nachtbusse, späte Küchen und erleuchtete Fenster.",
+                "Wir gingen von Sonnenuntergang bis Sonnenaufgang mit einer Nachtschwester, einem Jazzpianisten und einem Bäcker, der das Brot für den nächsten Tag begann.",
+            ],
+        },
+    },
+    "Five forest walks within an hour of the city": {
+        "nl": {
+            "title": "Vijf boswandelingen binnen een uur van de stad",
+            "slug": "vijf-boswandelingen-binnen-een-uur-van-de-stad",
+            "meta_description": "Vijf bewegwijzerde boswandelingen die beginnen bij een station en eindigen bij een café.",
+            "body": [
+                "Je hebt geen lang weekend nodig om te verdwalen tussen de bomen. Deze vijf wandelingen beginnen bij een station en eindigen bij een café, met een paar uur dennennaalden ertussen.",
+                "Elke wandeling is korter dan vijftien kilometer, bewegwijzerd en rustig op doordeweekse dagen. Onze favoriet is de derde: een kamwandeling boven de mistgrens.",
+            ],
+        },
+        "de": {
+            "title": "Fünf Waldwanderungen eine Stunde von der Stadt",
+            "slug": "funf-waldwanderungen-eine-stunde-von-der-stadt",
+            "meta_description": "Fünf markierte Waldwanderungen, die an einem Bahnhof beginnen und in einem Café enden.",
+            "body": [
+                "Man braucht kein langes Wochenende, um sich zwischen Bäumen zu verlieren. Diese fünf Wanderungen beginnen an einem Bahnhof und enden in einem Café, mit ein paar Stunden Kiefernnadeln dazwischen.",
+                "Jede ist kürzer als fünfzehn Kilometer, markiert und unter der Woche ruhig. Unser Favorit ist die dritte: eine Kammwanderung über der Nebelgrenze.",
+            ],
+        },
+    },
+    "The last ferry of the season": {
+        "nl": {
+            "title": "De laatste veerboot van het seizoen",
+            "slug": "de-laatste-veerboot-van-het-seizoen",
+        },
+    },
+}

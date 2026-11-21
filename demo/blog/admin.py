@@ -21,10 +21,10 @@ from content_studio.form import (
     SEOPreview,
     Subtitle,
     Text,
+    TranslationStatus,
 )
 from content_studio.actions import bulk_action
 from content_studio.filters import ListFilter
-from content_studio.translations import MissingTranslationFilter
 
 from . import models
 
@@ -164,9 +164,10 @@ class ArticleStudio(ModelStudio):
         "categories",
         "review__stars",
         ReachFilter,
-        MissingTranslationFilter,
     ]
-    # Written in English, Dutch and German (CONTENT_LANGUAGES).
+    # Written in English, Dutch and German (CONTENT_LANGUAGES): the
+    # header's language menu switches these fields, the list gets a
+    # Languages column and a Missing translation filter.
     translations = ["title", "slug", "body", "meta_description"]
     # Opt-in soft delete: deleting moves articles to the trash, where
     # they can be restored or permanently deleted.
@@ -242,6 +243,7 @@ class ArticleStudio(ModelStudio):
         ),
     ]
     edit_sidebar = [
+        TranslationStatus(),
         ReadingTime(),
         # The publication date only matters once the article is published.
         Field("published_at", when=Q(status="published")),

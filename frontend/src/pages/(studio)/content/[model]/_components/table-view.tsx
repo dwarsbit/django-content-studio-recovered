@@ -3,7 +3,6 @@ import { useTranslation } from "react-i18next";
 import { TbCaretDownFilled, TbCaretUpFilled } from "react-icons/tb";
 import { useNavigate } from "react-router";
 
-import { useContentLanguage } from "@/components/content-editor/content-language";
 import { FormatRenderer } from "@/components/formats/renderer";
 import { PresenceIndicator } from "@/components/presence";
 import { Reorderable, RowDragHandle } from "@/components/reorderable";
@@ -18,6 +17,7 @@ import {
 } from "@/components/ui/table";
 import { useReorderableRow } from "@/hooks/use-reorderable-row";
 import { useRunAction } from "@/hooks/use-run-action";
+import { useContentLanguage } from "@/lib/content-language";
 import { getEdges, type Move } from "@/lib/reorder";
 import { cn } from "@/lib/utils";
 import {

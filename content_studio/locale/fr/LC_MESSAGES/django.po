@@ -1731,3 +1731,11 @@ msgstr "Statut de la réponse"
 #: webhooks/models.py:145
 msgid "Response"
 msgstr "Réponse"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Traduction manquante"
+
+#: form.py
+msgid "Translations"
+msgstr "Traductions"

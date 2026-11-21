@@ -18,8 +18,16 @@ import { useHttp } from "@/hooks/use-http";
 import { usePresence } from "@/hooks/use-presence";
 import { usePreferences } from "@/hooks/use-profile";
 import { useShowResult } from "@/hooks/use-show-result";
+import {
+  columnLanguage,
+  useContentLanguageState,
+} from "@/lib/content-language";
 import { contentFormSchema } from "@/lib/invalid-input";
-import { applyFieldErrors, getNonFieldErrors } from "@/lib/server-errors";
+import {
+  applyFieldErrors,
+  getFieldErrors,
+  getNonFieldErrors,
+} from "@/lib/server-errors";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type {
   ButtonResult,
@@ -183,6 +191,9 @@ function EditorForm({
   );
 
   const formSchema = contentFormSchema;
+  // The content language the translated fields show; a failed save
+  // switches to the language of its errors.
+  const contentLanguage = useContentLanguageState(model);
   const form = useForm<Partial<Resource>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -399,6 +410,19 @@ function EditorForm({
     } catch (e: unknown) {
       if (applyFieldErrors(e, form.setError as never)) {
         const messages = getNonFieldErrors(e);
+        // A translation that failed in another language than the shown
+        // one: show that language, so its message is in view.
+        const errored = Object.keys(getFieldErrors(e) ?? {}).map((key) =>
+          columnLanguage(contentLanguage.config, key),
+        );
+
+        if (
+          errored.length > 0 &&
+          !errored.includes(contentLanguage.language) &&
+          errored[0]
+        ) {
+          contentLanguage.setLanguage(errored[0]);
+        }
 
         setNonFieldErrors(messages);
         toast.error(
@@ -502,7 +526,7 @@ function EditorForm({
 
   return model && initialized ? (
     <Form {...form}>
-      <ContentLanguageProvider model={model}>
+      <ContentLanguageProvider model={model} value={contentLanguage}>
         <ResourcePathContext value={resourcePath}>
           <EditorReadOnlyContext value={isReadOnly}>
             {/* A duplicate's slugs are copied with a free suffix, not

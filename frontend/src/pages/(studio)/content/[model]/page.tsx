@@ -8,7 +8,7 @@ import { toast } from "sonner";
 
 import {
   ContentLanguageProvider,
-  LanguageSwitcher,
+  LanguageMenu,
 } from "@/components/content-editor/content-language";
 import { HeaderTabs } from "@/components/header-tabs";
 import { ImportDialog } from "@/components/import-dialog";
@@ -390,7 +390,7 @@ export function ModelListPage() {
               <div className="ml-auto h-8 shrink-0 flex items-center gap-1">
                 {model.admin.translations && (
                   <>
-                    <LanguageSwitcher />
+                    <LanguageMenu className="h-8" />
                     <span aria-hidden className="h-5 w-px bg-border mx-1" />
                   </>
                 )}

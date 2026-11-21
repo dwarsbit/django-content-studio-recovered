@@ -51,6 +51,7 @@ from .form import (
 )
 from .settings import cs_settings
 from .throttling import parse_rate
+from .translations import translated_attribute_names
 from .utils import as_instance, flatten, get_tenant_field_name
 
 LIST_VIEW_NAMES = {"table", "list"}
@@ -108,9 +109,11 @@ def table_column_errors(studio) -> list[tuple[str, str]]:
         if model is None:
             return
 
-        model_field_names = {
-            field.name for field in model._meta.get_fields()
-        } | model_property_names(model)
+        model_field_names = (
+            {field.name for field in model._meta.get_fields()}
+            | model_property_names(model)
+            | translated_attribute_names(model)
+        )
         seen = set()
 
         for entry in resolve_table_display(owner):
@@ -1318,7 +1321,11 @@ def edit_form_config_errors(studio) -> list[tuple[str, str]]:
         return []
 
     errors = []
-    field_names = model_field_names(model) | model_property_names(model)
+    field_names = (
+        model_field_names(model)
+        | model_property_names(model)
+        | translated_attribute_names(model)
+    )
 
     for field in iter_edit_fields(studio):
         if field.name not in field_names:
@@ -1358,7 +1365,12 @@ def list_query_errors(studio) -> list[tuple[str, str]]:
         if model is None:
             return
 
+        translated = translated_attribute_names(model)
+
         for entry in getattr(owner, "search_fields", None) or []:
+            if entry.lstrip("^=@$") in translated:
+                continue
+
             if not resolvable_name(model, entry):
                 errors.append(
                     (
@@ -3361,6 +3373,156 @@ def login_throttle_errors() -> list[str]:
     return errors
 
 
+def translation_errors(studio) -> list[tuple[str, str]]:
+    """
+    A malformed `translations` (E055): a list of field names or a
+    Translations naming fields the adapter knows, languages among the
+    content languages, required languages among them and a known
+    adapter.
+    """
+    from .translations import (
+        ADAPTERS,
+        TranslationAdapter,
+        Translations,
+        get_content_languages,
+        get_studio_translations,
+        resolve_adapter,
+    )
+
+    value = getattr(studio, "translations", None)
+    name = config_name(studio)
+    model = getattr(studio, "model", None)
+
+    if value is None or value is False or model is None:
+        return []
+
+    if not isinstance(value, (list, tuple, Translations)) or (
+        isinstance(value, (list, tuple))
+        and not all(isinstance(entry, str) for entry in value)
+    ):
+        return [
+            (
+                "content_studio.E055",
+                f"{name}.translations must be a list of field names or a "
+                "Translations.",
+            )
+        ]
+
+    config = get_studio_translations(studio)
+
+    if config is None:
+        return []
+
+    adapter = config.adapter
+
+    if isinstance(adapter, str) and adapter not in ADAPTERS:
+        return [
+            (
+                "content_studio.E055",
+                f"{name}.translations has an unknown adapter {adapter!r}; use "
+                + ", ".join(repr(key) for key in ADAPTERS)
+                + " or a TranslationAdapter subclass.",
+            )
+        ]
+
+    if not isinstance(adapter, (str, type(None))) and not (
+        isinstance(adapter, type) and issubclass(adapter, TranslationAdapter)
+    ):
+        return [
+            (
+                "content_studio.E055",
+                f"{name}.translations adapter must be a TranslationAdapter "
+                "subclass.",
+            )
+        ]
+
+    errors = []
+    resolved = resolve_adapter(model, config)
+
+    for field in config.fields or []:
+        if resolved.model_field(field) is None:
+            errors.append(
+                (
+                    "content_studio.E055",
+                    f"{name}.translations names {field!r}, which is not a "
+                    f"field of {model._meta.label}.",
+                )
+            )
+
+    codes = [code for code, _ in get_content_languages()]
+
+    for code in config.languages or []:
+        if code not in codes:
+            errors.append(
+                (
+                    "content_studio.E055",
+                    f"{name}.translations has language {code!r}, which is "
+                    "not in CONTENT_LANGUAGES (or LANGUAGES).",
+                )
+            )
+
+    languages = config.languages or codes
+
+    for code in config.required or []:
+        if code not in languages:
+            errors.append(
+                (
+                    "content_studio.E055",
+                    f"{name}.translations requires language {code!r}, which "
+                    "is not one of its languages.",
+                )
+            )
+
+    return errors
+
+
+def translation_warnings(studio) -> list[tuple[str, str]]:
+    """
+    A translated field without a column for one of the languages a
+    studio names, or CONTENT_LANGUAGES sets (W030): that language is
+    not offered for the field.
+    """
+    from .translations import build_translation_config, get_studio_translations
+
+    explicit = get_studio_translations(studio)
+
+    if explicit is None or (
+        explicit.languages is None and not cs_settings.CONTENT_LANGUAGES
+    ):
+        return []
+
+    try:
+        config = build_translation_config(studio)
+    except Exception:
+        # Reported by E055.
+        return []
+
+    if config is None:
+        return []
+
+    warnings = []
+    wanted = explicit.languages or [
+        code for code, _ in cs_settings.CONTENT_LANGUAGES or []
+    ]
+    columns = config.columns()
+
+    for field, per_language in columns.items():
+        missing = [code for code in wanted if code not in per_language]
+
+        if missing:
+            warnings.append(
+                (
+                    "content_studio.W030",
+                    f"{config_name(studio)}.translations: {field!r} has no "
+                    f"column for {', '.join(missing)}, so editors cannot "
+                    "translate it into "
+                    + ("that language." if len(missing) == 1 else "those languages."),
+                )
+            )
+
+    return warnings
+
+
 @checks.register(checks.Tags.security)
 def check_login_throttles(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
     return [
@@ -3948,6 +4110,16 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
 
         for check_id, error in import_errors(studio):
             messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        translations_valid = True
+
+        for check_id, error in translation_errors(studio):
+            translations_valid = False
+            messages.append(checks.Error(error, obj=obj, id=check_id))
+
+        if translations_valid:
+            for check_id, warning in translation_warnings(studio):
+                messages.append(checks.Warning(warning, obj=obj, id=check_id))
 
         for check_id, warning in edit_field_warnings(studio):
             messages.append(checks.Warning(warning, obj=obj, id=check_id))

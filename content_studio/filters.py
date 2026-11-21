@@ -265,6 +265,21 @@ def get_filter_specs(
         if custom is not None and custom.parameter_name:
             specs.append(CustomFilterSpec(custom))
 
+    # A studio with translations filters on missing ones, unless it
+    # placed the filter itself.
+    from .translations import MissingTranslationFilter, build_translation_config
+
+    if (
+        model is not None
+        and not any(
+            isinstance(spec, CustomFilterSpec)
+            and isinstance(spec.filter, MissingTranslationFilter)
+            for spec in specs
+        )
+        and build_translation_config(studio) is not None
+    ):
+        specs.append(CustomFilterSpec(MissingTranslationFilter(studio)))
+
     return specs
 
 

@@ -1224,21 +1224,14 @@
   },
   "translations": {
     "content_language": "Content language",
-    "language_default": "Default language",
-    "language_complete": "Complete",
-    "language_missing_one": "{{count}} field missing",
-    "language_missing_other": "{{count}} fields missing",
-    "language_required_missing": "Required: {{count}} missing",
-    "card_title": "Translations",
-    "card_description": "{{done}} of {{total}} languages complete",
-    "reference": "{{language}}",
-    "copy": "Copy",
-    "copied": "Copied from {{language}}",
-    "shared": "Same in every language",
-    "languages_column": "Languages",
-    "empty_in_language": "Not translated yet",
+    "default_short": "Default",
+    "complete": "Complete",
     "missing_short_one": "{{count}} missing",
     "missing_short_other": "{{count}} missing",
-    "language_default_short": "Default"
+    "copy": "Copy",
+    "copy_from": "Copy from {{language}}",
+    "shared": "Same in every language",
+    "languages_complete": "{{done}} of {{total}} languages complete",
+    "languages_column": "Languages"
   }
 }
