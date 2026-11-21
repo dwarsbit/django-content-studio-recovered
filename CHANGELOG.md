@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.19.0 (unreleased)
+## 1.19.0 (2026-11-21)
 
 ### Features
 
