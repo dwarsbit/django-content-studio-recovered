@@ -1748,7 +1748,9 @@ msgstr "Dit model heeft geen datum voor offline halen."
 
 #: publishing.py
 msgid "Publish or schedule the object before setting an unpublish date."
-msgstr "Publiceer of plan het object voordat je een datum voor offline halen instelt."
+msgstr ""
+"Publiceer of plan het object voordat je een datum voor offline halen "
+"instelt."
 
 #: publishing.py
 #, python-format
@@ -1768,8 +1770,12 @@ msgid "Unpublish"
 msgstr "Publicatie intrekken"
 
 #: actions.py
-msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
-msgstr "De geselecteerde items worden weer concepten en verdwijnen van de site. Publicatie intrekken?"
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"De geselecteerde items worden weer concepten en verdwijnen van de site. "
+"Publicatie intrekken?"
 
 #: actions.py
 msgid "Schedule…"
@@ -1829,3 +1835,11 @@ msgid "%(actor)s unpublished %(count)s %(models)s"
 msgid_plural "%(actor)s unpublished %(count)s %(models)s"
 msgstr[0] "%(actor)s heeft de publicatie van %(count)s %(models)s ingetrokken"
 msgstr[1] "%(actor)s heeft de publicatie van %(count)s %(models)s ingetrokken"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Ontbrekende vertaling"
+
+#: form.py
+msgid "Translations"
+msgstr "Vertalingen"

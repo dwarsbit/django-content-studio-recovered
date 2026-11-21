@@ -14,6 +14,11 @@ from .actions import get_bulk_actions, get_edit_actions, get_row_actions
 from .exceptions import AlreadyRegistered, NotRegistered
 from .export import get_export_formats, is_exportable
 from .importing import serialize_import
+from .translations import (
+    Translations,
+    build_translation_config,
+    serialize_translations,
+)
 from .filters import serialize_list_filters
 from .form import (
     ButtonResult,
@@ -264,11 +269,31 @@ class BaseStudio(Generic[T]):
         if config is not None:
             exclude.update(config.field_names)
 
-        return [
+        names = [
             field.name
             for field in self.model._meta.get_fields()
             if field.editable and not field.auto_created and field.name not in exclude
         ]
+
+        # A translated field is one form field, whatever language is
+        # shown: its other languages' columns are left out, and fields
+        # kept outside the model's columns (parler) are added.
+        config = build_translation_config(self)
+
+        if config is not None:
+            columns = config.column_languages()
+            names = [
+                name
+                for name in names
+                if name not in columns or columns[name][0] == name
+            ]
+            names += [
+                name
+                for name in config.fields
+                if name not in names and name not in exclude
+            ]
+
+        return names
 
     def get_readonly_fields(
         self, request: HttpRequest, obj: Optional[T] = None
@@ -502,6 +527,12 @@ class ModelStudio(BaseStudio[T]):
     # Whether changes to the model notify anyone (with the notifications
     # app installed).
     notifications: bool = True
+
+    # The fields written in more than one content language: a list of
+    # field names, or Translations(fields, languages=, required=,
+    # adapter=). None detects django-modeltranslation and django-parler
+    # models; False turns translations off.
+    translations: Union[list[str], "Translations", None, bool] = None
 
     def get_duplicate_initial(self, request: HttpRequest, obj: T) -> dict[str, Any]:
         """
@@ -1310,7 +1341,7 @@ def get_readonly_field_names(
         if isinstance(field, Field) and field.readonly:
             names.add(field.name)
 
-    return names
+    return with_translation_columns(studio, names)
 
 
 def get_form_field_names(
@@ -1338,6 +1369,26 @@ def get_form_field_names(
             names.add(field)
         elif isinstance(field, Field):
             names.add(field.name)
+
+    return with_translation_columns(studio, names)
+
+
+def with_translation_columns(studio, names: set[str]) -> set[str]:
+    """
+    The names plus every language's column of the translated fields
+    among them: a translated field on the edit page is written, or
+    read-only, in every language.
+    """
+    config = build_translation_config(studio)
+
+    if config is None:
+        return names
+
+    names = set(names)
+
+    for name, per_language in config.columns().items():
+        if name in names:
+            names.update(per_language.values())
 
     return names
 
@@ -1520,10 +1571,32 @@ def serialize_prepopulated_fields(studio, request: HttpRequest) -> dict[str, lis
     """
     The create form's prepopulated fields, with the sources as lists.
     """
-    return {
+    prepopulated = {
         target: list(sources)
         for target, sources in studio.get_prepopulated_fields(request).items()
     }
+    config = build_translation_config(studio)
+
+    if config is None:
+        return prepopulated
+
+    # A translated slug follows the title in its own language: slug_nl
+    # from title_nl.
+    columns = config.columns()
+
+    for target, sources in list(prepopulated.items()):
+        if target not in columns or not all(source in columns for source in sources):
+            continue
+
+        del prepopulated[target]
+
+        for code, column in columns[target].items():
+            per_language = [columns[source].get(code) for source in sources]
+
+            if all(per_language):
+                prepopulated[column] = per_language
+
+    return prepopulated
 
 
 def serialize_publishing(studio, request) -> Optional[dict[str, Any]]:
@@ -1660,6 +1733,9 @@ class AdminSerializer:
             "notifications": is_notifications_enabled(admin_class),
             # Whether rich text can link to the model's objects.
             "linkable": is_linkable(admin_class),
+            # The translated fields and the columns per language, or
+            # None without translations.
+            "translations": serialize_translations(admin_class),
             "edit": {
                 "header": serialize_edit_header(admin_class),
                 "main": self.serialize_edit_main(request),

@@ -20,8 +20,16 @@ import { usePresence } from "@/hooks/use-presence";
 import { usePreferences } from "@/hooks/use-profile";
 import { useRecovery } from "@/hooks/use-recovery";
 import { useShowResult } from "@/hooks/use-show-result";
+import {
+  columnLanguage,
+  useContentLanguageState,
+} from "@/lib/content-language";
 import { contentFormSchema } from "@/lib/invalid-input";
-import { applyFieldErrors, getNonFieldErrors } from "@/lib/server-errors";
+import {
+  applyFieldErrors,
+  getFieldErrors,
+  getNonFieldErrors,
+} from "@/lib/server-errors";
 import { cn, getErrorMessage } from "@/lib/utils";
 import type {
   ButtonResult,
@@ -33,6 +41,7 @@ import type {
 } from "@/types";
 
 import { Aside } from "./aside";
+import { ContentLanguageProvider } from "./content-language";
 import { getMainColumnWidth } from "./edit-width";
 import { EditorReadOnlyContext } from "./editor-read-only";
 import { Header } from "./header";
@@ -185,6 +194,9 @@ function EditorForm({
   );
 
   const formSchema = contentFormSchema;
+  // The content language the translated fields show; a failed save
+  // switches to the language of its errors.
+  const contentLanguage = useContentLanguageState(model);
   const form = useForm<Partial<Resource>>({
     resolver: zodResolver(formSchema),
     mode: "onChange",
@@ -420,6 +432,19 @@ function EditorForm({
     } catch (e: unknown) {
       if (applyFieldErrors(e, form.setError as never)) {
         const messages = getNonFieldErrors(e);
+        // A translation that failed in another language than the shown
+        // one: show that language, so its message is in view.
+        const errored = Object.keys(getFieldErrors(e) ?? {}).map((key) =>
+          columnLanguage(contentLanguage.config, key),
+        );
+
+        if (
+          errored.length > 0 &&
+          !errored.includes(contentLanguage.language) &&
+          errored[0]
+        ) {
+          contentLanguage.setLanguage(errored[0]);
+        }
 
         setNonFieldErrors(messages);
         toast.error(
@@ -557,125 +582,127 @@ function EditorForm({
 
   return model && initialized ? (
     <Form {...form}>
-      <ResourcePathContext value={resourcePath}>
-        <EditorReadOnlyContext value={isReadOnly}>
-          <PublishingProvider
-            model={model}
-            // Inline rows are published with their parent.
-            resource={inlineOf ? undefined : resource}
-            resourcePath={resourcePath}
-            isDirty={isDirty}
-            readOnly={isReadOnly}
-            save={async () => !!(await saveAndReport())}
-            onChanged={refreshPublishing}
-          >
-            {/* A duplicate's slugs are copied with a free suffix, not
-              made from the copied sources again. */}
-            <Prepopulate
+      <ContentLanguageProvider model={model} value={contentLanguage}>
+        <ResourcePathContext value={resourcePath}>
+          <EditorReadOnlyContext value={isReadOnly}>
+            <PublishingProvider
               model={model}
-              fields={
-                isDuplicate
-                  ? {}
-                  : (prepopulatedFields ??
-                    model.admin?.edit.prepopulated_fields ??
-                    {})
-              }
-            />
-            <div
-              ref={rootRef}
-              className="flex-1 flex flex-col overflow-hidden w-full"
+              // Inline rows are published with their parent.
+              resource={inlineOf ? undefined : resource}
+              resourcePath={resourcePath}
+              isDirty={isDirty}
+              readOnly={isReadOnly}
+              save={async () => !!(await saveAndReport())}
+              onChanged={refreshPublishing}
             >
-              <TenantInfo label={model.label} />
-              <Header
+              {/* A duplicate's slugs are copied with a free suffix, not
+              made from the copied sources again. */}
+              <Prepopulate
                 model={model}
-                resource={resource}
-                resourcePath={resourcePath}
-                isSaving={isPending}
-                dialog={dialog}
-                components={headerComponents}
-                readOnly={isReadOnly}
-                canDelete={mayDelete}
-                presence={presence}
-                keptAt={recovery.keptAt}
-                onDuplicate={
-                  canDuplicate && resource?.id != null
-                    ? () => onDuplicate?.(String(resource.id))
-                    : undefined
+                fields={
+                  isDuplicate
+                    ? {}
+                    : (prepopulatedFields ??
+                      model.admin?.edit.prepopulated_fields ??
+                      {})
                 }
-                saveOptions={saveOptions}
-                onSave={saveWith}
-                onDelete={() => {
-                  // The changes died with the object; leaving must not
-                  // trigger the navigation guard.
-                  form.reset();
-                  recovery.clear();
-                  allowNextNavigation.current = true;
-                  onDelete?.();
-                }}
-                onClose={onClose}
               />
-              <div className="@container flex flex-col items-center overflow-y-auto scrollbar">
-                {/* The sidebar sits next to the main column, and under it
+              <div
+                ref={rootRef}
+                className="flex-1 flex flex-col overflow-hidden w-full"
+              >
+                <TenantInfo label={model.label} />
+                <Header
+                  model={model}
+                  resource={resource}
+                  resourcePath={resourcePath}
+                  isSaving={isPending}
+                  dialog={dialog}
+                  components={headerComponents}
+                  readOnly={isReadOnly}
+                  canDelete={mayDelete}
+                  presence={presence}
+                  keptAt={recovery.keptAt}
+                  onDuplicate={
+                    canDuplicate && resource?.id != null
+                      ? () => onDuplicate?.(String(resource.id))
+                      : undefined
+                  }
+                  saveOptions={saveOptions}
+                  onSave={saveWith}
+                  onDelete={() => {
+                    // The changes died with the object; leaving must not
+                    // trigger the navigation guard.
+                    form.reset();
+                    recovery.clear();
+                    allowNextNavigation.current = true;
+                    onDelete?.();
+                  }}
+                  onClose={onClose}
+                />
+                <div className="@container flex flex-col items-center overflow-y-auto scrollbar">
+                  {/* The sidebar sits next to the main column, and under it
                   where the editor is too narrow for both (a phone). */}
-                <div className="flex flex-col @3xl:flex-row p-6 w-full max-w-[1280px] gap-6 justify-center">
-                  <div
-                    className={cn(
-                      "w-full @3xl:flex-1 min-w-0",
-                      getMainColumnWidth(width ?? model.admin.edit.width),
-                    )}
-                  >
-                    {recovery.offer && (
-                      <RecoveryBanner
-                        model={model}
-                        resourcePath={resourcePath}
-                        objectId={
-                          resource?.id != null ? String(resource.id) : null
-                        }
-                        offer={recovery.offer}
-                        onRestore={recovery.restore}
-                        onDiscard={recovery.discard}
-                      />
-                    )}
-                    {nonFieldErrors.length > 0 && (
-                      <Alert
-                        ref={nonFieldErrorsRef}
-                        variant="destructive"
-                        className="mb-6 scroll-mt-6"
-                        data-testid="non-field-errors"
-                      >
-                        <AlertDescription>
-                          {nonFieldErrors.length === 1 ? (
-                            nonFieldErrors[0]
-                          ) : (
-                            <ul className="list-disc pl-4 space-y-1">
-                              {nonFieldErrors.map((message, index) => (
-                                <li key={index}>{message}</li>
-                              ))}
-                            </ul>
-                          )}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    {isDuplicate && duplicate && !form.getValues("id") && (
-                      <Alert className="mb-6">
-                        <AlertDescription>
-                          {t("editor.duplicate_notice", {
-                            object: duplicate.source.__str__,
-                          })}
-                        </AlertDescription>
-                      </Alert>
-                    )}
-                    <Main model={model} id={id} hiddenFields={hiddenFields} />
-                  </div>
-                  <div className="shrink-0 w-full @3xl:w-[320px] empty:hidden">
-                    <Aside model={model} hiddenFields={hiddenFields} />
+                  <div className="flex flex-col @3xl:flex-row p-6 w-full max-w-[1280px] gap-6 justify-center">
+                    <div
+                      className={cn(
+                        "w-full @3xl:flex-1 min-w-0",
+                        getMainColumnWidth(width ?? model.admin.edit.width),
+                      )}
+                    >
+                      {recovery.offer && (
+                        <RecoveryBanner
+                          model={model}
+                          resourcePath={resourcePath}
+                          objectId={
+                            resource?.id != null ? String(resource.id) : null
+                          }
+                          offer={recovery.offer}
+                          onRestore={recovery.restore}
+                          onDiscard={recovery.discard}
+                        />
+                      )}
+                      {nonFieldErrors.length > 0 && (
+                        <Alert
+                          ref={nonFieldErrorsRef}
+                          variant="destructive"
+                          className="mb-6 scroll-mt-6"
+                          data-testid="non-field-errors"
+                        >
+                          <AlertDescription>
+                            {nonFieldErrors.length === 1 ? (
+                              nonFieldErrors[0]
+                            ) : (
+                              <ul className="list-disc pl-4 space-y-1">
+                                {nonFieldErrors.map((message, index) => (
+                                  <li key={index}>{message}</li>
+                                ))}
+                              </ul>
+                            )}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      {isDuplicate && duplicate && !form.getValues("id") && (
+                        <Alert className="mb-6">
+                          <AlertDescription>
+                            {t("editor.duplicate_notice", {
+                              object: duplicate.source.__str__,
+                            })}
+                          </AlertDescription>
+                        </Alert>
+                      )}
+                      <Main model={model} id={id} hiddenFields={hiddenFields} />
+                    </div>
+                    <div className="shrink-0 w-full @3xl:w-[320px] empty:hidden">
+                      <Aside model={model} hiddenFields={hiddenFields} />
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          </PublishingProvider>
-        </EditorReadOnlyContext>
-      </ResourcePathContext>
+            </PublishingProvider>
+          </EditorReadOnlyContext>
+        </ResourcePathContext>
+      </ContentLanguageProvider>
     </Form>
   ) : (
     <div className="py-12 sm:py-24 md:py-48 flex items-center justify-center">

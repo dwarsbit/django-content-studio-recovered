@@ -132,6 +132,13 @@ object, the admin fills in `created_by`; when they save it, `edited_by` and
 
 ## Content
 
+### CONTENT_LANGUAGES {#content_languages}
+
+The languages of [translated content](/docs/translations), as
+`(code, name)` pairs, the default language first. Default: `None`, which
+uses `LANGUAGES` with `LANGUAGE_CODE`'s language first. These are not the
+admin's interface languages.
+
 ### HTML_SANITIZER {#html_sanitizer}
 
 The sanitizer that cleans [`HTMLField`](/docs/registering-models)

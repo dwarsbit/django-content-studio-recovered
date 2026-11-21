@@ -1317,5 +1317,17 @@
       "unpublish_date_set": "Unpublish date set for “{{name}}”",
       "unpublish_date_removed": "Unpublish date removed from “{{name}}”"
     }
+  },
+  "translations": {
+    "content_language": "Content language",
+    "default_short": "Default",
+    "complete": "Complete",
+    "missing_short_one": "{{count}} missing",
+    "missing_short_other": "{{count}} missing",
+    "copy": "Copy",
+    "copy_from": "Copy from {{language}}",
+    "shared": "Same in every language",
+    "languages_complete": "{{done}} of {{total}} languages complete",
+    "languages_column": "Languages"
   }
 }

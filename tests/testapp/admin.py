@@ -13,6 +13,7 @@ from .models import (
     Coupon,
     Edition,
     Event,
+    Guide,
     Label,
     LandingPage,
     Note,
@@ -239,3 +240,11 @@ class StoryAdmin(ModelStudio):
 class BulletinAdmin(ModelStudio):
     table_display = ["title"]
     publishing = "published_at"
+
+
+@register(Guide)
+class GuideAdmin(ModelStudio):
+    table_display = ["title", "views"]
+    search_fields = ["title"]
+    translations = ["title", "slug", "body"]
+    prepopulated_fields = {"slug": ["title"]}

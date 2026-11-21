@@ -127,4 +127,6 @@ CONTENT_STUDIO = {
     "BACKUP_STORAGE": "backups",
     # Scheduled backups are off; the tests set a schedule where needed.
     "BACKUP_SCHEDULE": None,
+    # Translated content (test_translations): English first, the default.
+    "CONTENT_LANGUAGES": [("en", "English"), ("nl", "Dutch"), ("de", "German")],
 }

@@ -388,3 +388,21 @@ class Bulletin(PublishableModel):
 
     def __str__(self):
         return self.title
+
+
+class Guide(models.Model):
+    """Translated content: one column per language; see test_translations."""
+
+    title = models.CharField(max_length=100)
+    title_nl = models.CharField(max_length=100, blank=True)
+    title_de = models.CharField(max_length=100, blank=True)
+    slug = models.SlugField(blank=True)
+    slug_nl = models.SlugField(blank=True)
+    slug_de = models.SlugField(blank=True)
+    body = models.TextField(blank=True)
+    body_nl = models.TextField(blank=True)
+    body_de = models.TextField(blank=True)
+    views = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.title

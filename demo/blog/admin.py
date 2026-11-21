@@ -20,6 +20,7 @@ from content_studio.form import (
     SEOPreview,
     Subtitle,
     Text,
+    TranslationStatus,
 )
 from content_studio.actions import bulk_action
 from content_studio.filters import ListFilter
@@ -166,6 +167,10 @@ class ArticleStudio(ModelStudio):
         "review__stars",
         ReachFilter,
     ]
+    # Written in English, Dutch and German (CONTENT_LANGUAGES): the
+    # header's language menu switches these fields, the list gets a
+    # Languages column and a Missing translation filter.
+    translations = ["title", "slug", "body", "meta_description"]
     # Opt-in soft delete: deleting moves articles to the trash, where
     # they can be restored or permanently deleted.
     soft_delete = "removed_at"
@@ -247,6 +252,7 @@ class ArticleStudio(ModelStudio):
         ),
     ]
     edit_sidebar = [
+        TranslationStatus(),
         ReadingTime(),
         "author",
         "featured",

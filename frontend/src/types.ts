@@ -142,6 +142,9 @@ export interface Model {
     notifications?: boolean;
     // Whether rich text can link to the model's objects.
     linkable?: boolean;
+    // The translated fields and their column per language; null
+    // without translations.
+    translations?: TranslationConfig | null;
     list: {
       per_page: number;
       description: string;
@@ -761,7 +764,8 @@ export interface FormField {
     | "Text"
     | "Callout"
     | "Analytics"
-    | "SEOPreview";
+    | "SEOPreview"
+    | "TranslationStatus";
   copy: boolean;
   icon: string;
   title?: string | null;
@@ -1154,4 +1158,12 @@ export enum ExtensionType {
   DashboardPage = "DashboardPage",
   AnalyticsExtension = "AnalyticsExtension",
   AnalyticsPage = "AnalyticsPage",
+}
+
+export interface TranslationConfig {
+  languages: { code: string; name: string }[];
+  default: string;
+  required: string[];
+  // {field: {language code: column}}
+  fields: Record<string, Record<string, string>>;
 }

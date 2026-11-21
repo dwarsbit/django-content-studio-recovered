@@ -1755,7 +1755,9 @@ msgid "Unpublish"
 msgstr "Ritira"
 
 #: actions.py
-msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
 msgstr "Gli elementi selezionati tornano bozze e lasciano il sito. Ritirarli?"
 
 #: actions.py
@@ -1816,3 +1818,11 @@ msgid "%(actor)s unpublished %(count)s %(models)s"
 msgid_plural "%(actor)s unpublished %(count)s %(models)s"
 msgstr[0] "%(actor)s ha ritirato %(count)s %(models)s"
 msgstr[1] "%(actor)s ha ritirato %(count)s %(models)s"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Traduzione mancante"
+
+#: form.py
+msgid "Translations"
+msgstr "Traduzioni"

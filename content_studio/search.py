@@ -21,6 +21,7 @@ from .parsers import ObjectJSONParser
 from .permissions import IsActiveStaff
 from .rich_text import get_link_url
 from .settings import cs_settings
+from .translations import get_search_fields
 from .utils import get_tenant_scoped_queryset
 
 # The minimum term length, matching the frontend's debounce gate.
@@ -83,7 +84,10 @@ class SearchViewSet(ViewSet):
 
             query = reduce(
                 operator.or_,
-                (Q(**{f"{field}__icontains": term}) for field in studio.search_fields),
+                (
+                    Q(**{f"{field}__icontains": term})
+                    for field in get_search_fields(studio)
+                ),
             )
             ordering = studio.ordering or ["pk"]
             queryset = get_tenant_scoped_queryset(

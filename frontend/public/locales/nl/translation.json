@@ -1317,5 +1317,17 @@
       "unpublish_date_set": "Datum offline halen ingesteld voor “{{name}}”",
       "unpublish_date_removed": "Datum offline halen verwijderd van “{{name}}”"
     }
+  },
+  "translations": {
+    "content_language": "Inhoudstaal",
+    "default_short": "Standaard",
+    "complete": "Compleet",
+    "missing_short_one": "{{count}} ontbreekt",
+    "missing_short_other": "{{count}} ontbreken",
+    "copy": "Kopiëren",
+    "copy_from": "Kopiëren uit {{language}}",
+    "shared": "Hetzelfde in elke taal",
+    "languages_complete": "{{done}} van {{total}} talen compleet",
+    "languages_column": "Talen"
   }
 }

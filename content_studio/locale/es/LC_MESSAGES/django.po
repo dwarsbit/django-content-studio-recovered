@@ -1765,7 +1765,8 @@ msgstr "Este modelo no tiene fecha de despublicación."
 
 #: publishing.py
 msgid "Publish or schedule the object before setting an unpublish date."
-msgstr "Publica o programa el objeto antes de definir una fecha de despublicación."
+msgstr ""
+"Publica o programa el objeto antes de definir una fecha de despublicación."
 
 #: publishing.py
 #, python-format
@@ -1785,8 +1786,12 @@ msgid "Unpublish"
 msgstr "Despublicar"
 
 #: actions.py
-msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
-msgstr "Los elementos seleccionados vuelven a ser borradores y salen del sitio. ¿Despublicarlos?"
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Los elementos seleccionados vuelven a ser borradores y salen del sitio. "
+"¿Despublicarlos?"
 
 #: actions.py
 msgid "Schedule…"
@@ -1848,3 +1853,11 @@ msgid_plural "%(actor)s unpublished %(count)s %(models)s"
 msgstr[0] "%(actor)s ha despublicado %(count)s %(models)s"
 msgstr[1] "%(actor)s ha despublicado %(count)s %(models)s"
 msgstr[2] "%(actor)s ha despublicado %(count)s %(models)s"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Traducción pendiente"
+
+#: form.py
+msgid "Translations"
+msgstr "Traducciones"

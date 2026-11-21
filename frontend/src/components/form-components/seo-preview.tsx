@@ -2,6 +2,7 @@ import { useWatch } from "react-hook-form";
 import { useTranslation } from "react-i18next";
 import { PiGlobeBold } from "react-icons/pi";
 
+import { translatedName, useContentLanguage } from "@/lib/content-language";
 import {
   cutOff,
   DESCRIPTION_LIMIT,
@@ -26,9 +27,23 @@ export function SEOPreview({
   formField: FormField;
 }) {
   const { t } = useTranslation();
-  const titleField = formField.title_field ?? "";
-  const descriptionField = formField.description_field ?? "";
-  const pathField = formField.path_field ?? "";
+  // Translated fields preview in the shown content language.
+  const { config, language } = useContentLanguage();
+  const titleField = translatedName(
+    config,
+    language,
+    formField.title_field ?? "",
+  ).name;
+  const descriptionField = translatedName(
+    config,
+    language,
+    formField.description_field ?? "",
+  ).name;
+  const pathField = translatedName(
+    config,
+    language,
+    formField.path_field ?? "",
+  ).name;
   // Unset fields watch a name no form has, which reads as undefined.
   const [titleValue, descriptionValue, pathValue] = useWatch({
     name: [

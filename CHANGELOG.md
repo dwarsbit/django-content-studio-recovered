@@ -44,6 +44,22 @@
   the `RECOVER_CHANGES` setting; `RECOVERY_MAX_AGE` (7 days) sets how long
   changes are kept. System check `content_studio.W029` reports a
   `recover_changes_exclude` naming a field the model does not have.
+- **Translated content.** Name a studio's translated fields with
+  `translations = ["title", "body"]` and give the model a column per
+  language (`title_nl`, `title_de`); models registered with
+  django-modeltranslation or built on django-parler's `TranslatableModel`
+  are detected without it. The edit page gets a language menu in the
+  header with how complete each language is; translated fields switch to
+  the picked language, show the default language's text with **Copy**
+  under them, and shared fields are marked. Add `TranslationStatus()` to
+  the sidebar for each language's progress. The list page shows the
+  translated columns in the picked language, a Languages column, and a
+  **Missing translation** filter; search looks in every language. Set the
+  languages with `CONTENT_LANGUAGES` (default: `LANGUAGES`), and the
+  languages that must be complete with `Translations(required=...)` (the
+  default language). System checks `content_studio.E055` and
+  `content_studio.W030` report a configuration that cannot work. See
+  [Translated content](https://djangocontentstudio.org/docs/translations).
 
 ### Fixes
 

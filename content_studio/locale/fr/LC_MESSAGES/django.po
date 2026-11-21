@@ -1774,7 +1774,8 @@ msgstr "Ce modèle n’a pas de date de dépublication."
 
 #: publishing.py
 msgid "Publish or schedule the object before setting an unpublish date."
-msgstr "Publiez ou planifiez l’objet avant de définir une date de dépublication."
+msgstr ""
+"Publiez ou planifiez l’objet avant de définir une date de dépublication."
 
 #: publishing.py
 #, python-format
@@ -1794,8 +1795,12 @@ msgid "Unpublish"
 msgstr "Dépublier"
 
 #: actions.py
-msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
-msgstr "Les éléments sélectionnés redeviennent des brouillons et quittent le site. Les dépublier ?"
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Les éléments sélectionnés redeviennent des brouillons et quittent le site. "
+"Les dépublier ?"
 
 #: actions.py
 msgid "Schedule…"
@@ -1857,3 +1862,11 @@ msgid_plural "%(actor)s unpublished %(count)s %(models)s"
 msgstr[0] "%(actor)s a dépublié %(count)s %(models)s"
 msgstr[1] "%(actor)s a dépublié %(count)s %(models)s"
 msgstr[2] "%(actor)s a dépublié %(count)s %(models)s"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Traduction manquante"
+
+#: form.py
+msgid "Translations"
+msgstr "Traductions"

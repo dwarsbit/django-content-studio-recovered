@@ -47,7 +47,7 @@ content_studio/
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E054, W001-W029)
+├── checks.py            # System checks (content_studio.E001-E055, W001-W030)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
@@ -65,6 +65,7 @@ content_studio/
 ├── user_studios.py      # The default UserStudio and GroupStudio, registered when a project registers none
 ├── extensions.py        # Extension base classes
 ├── filters.py           # Filter definitions
+├── translations.py      # Translated content: ModelStudio.translations, Translations, the adapters (columns, modeltranslation, parler), CONTENT_LANGUAGES, the Missing translation filter and the search expansion
 ├── languages.py         # The admin's languages (LANGUAGES), and the per-request pick: language cookie, Accept-Language, LANGUAGE_CODE; urls.py wraps every view with admin_language
 ├── dashboard/
 │   ├── __init__.py

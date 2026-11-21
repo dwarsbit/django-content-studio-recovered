@@ -1740,7 +1740,8 @@ msgstr "Geben Sie ein gültiges Datum mit Uhrzeit ein."
 
 #: publishing.py
 msgid "The unpublish date must be after the publish date."
-msgstr "Das Datum zum Zurückziehen muss nach dem Veröffentlichungsdatum liegen."
+msgstr ""
+"Das Datum zum Zurückziehen muss nach dem Veröffentlichungsdatum liegen."
 
 #: publishing.py
 msgid "Pick when to publish."
@@ -1756,7 +1757,9 @@ msgstr "Dieses Modell hat kein Datum zum Zurückziehen."
 
 #: publishing.py
 msgid "Publish or schedule the object before setting an unpublish date."
-msgstr "Veröffentlichen oder planen Sie das Objekt, bevor Sie ein Datum zum Zurückziehen festlegen."
+msgstr ""
+"Veröffentlichen oder planen Sie das Objekt, bevor Sie ein Datum zum "
+"Zurückziehen festlegen."
 
 #: publishing.py
 #, python-format
@@ -1776,8 +1779,12 @@ msgid "Unpublish"
 msgstr "Zurückziehen"
 
 #: actions.py
-msgid "The selected items go back to being drafts and leave the site. Unpublish them?"
-msgstr "Die ausgewählten Einträge werden wieder zu Entwürfen und verschwinden von der Website. Zurückziehen?"
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Die ausgewählten Einträge werden wieder zu Entwürfen und verschwinden von "
+"der Website. Zurückziehen?"
 
 #: actions.py
 msgid "Schedule…"
@@ -1837,3 +1844,11 @@ msgid "%(actor)s unpublished %(count)s %(models)s"
 msgid_plural "%(actor)s unpublished %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s zurückgezogen"
 msgstr[1] "%(actor)s hat %(count)s %(models)s zurückgezogen"
+
+#: translations.py
+msgid "Missing translation"
+msgstr "Fehlende Übersetzung"
+
+#: form.py
+msgid "Translations"
+msgstr "Übersetzungen"

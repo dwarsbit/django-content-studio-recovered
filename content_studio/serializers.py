@@ -323,7 +323,42 @@ class ContentSerializer(serializers.ModelSerializer):
             if isinstance(field, serializers.CharField):
                 fields[name] = WriteOnlyCharField(*field._args, **field._kwargs)
 
+        self._add_translation_fields(fields)
+
         return fields
+
+    def _translation_config(self):
+        from .translations import get_translation_config
+
+        return get_translation_config(self.Meta.model)
+
+    def _add_translation_fields(self, fields):
+        """
+        Translated fields: proxies are read-only (modeltranslation's
+        original field writes the active language), and values kept
+        outside the model's columns (parler) travel as <field>__<code>.
+        """
+        config = self._translation_config()
+
+        if config is None:
+            return
+
+        for name in config.adapter.readonly_fields():
+            if name in fields:
+                fields[name].read_only = True
+
+        listed = getattr(self.Meta, "fields", None)
+
+        for column, (name, code) in config.virtual_columns().items():
+            if listed != "__all__" and name not in (listed or ()):
+                continue
+
+            model_field = config.adapter.model_field(name)
+
+            if model_field is not None:
+                fields[column] = build_translation_field(
+                    self, config, model_field, column, name, code
+                )
 
     def validate(self, attrs):
         attrs = super().validate(attrs)
@@ -332,8 +367,45 @@ class ContentSerializer(serializers.ModelSerializer):
         request = self.context.get("request")
         check_permission_changes(self.Meta.model, instance, attrs, request)
         self._check_rich_text_links(instance, attrs, request)
+        self._check_required_languages(instance, attrs)
 
         return attrs
+
+    def _check_required_languages(self, instance, attrs):
+        """
+        The languages a studio requires (the default one by default)
+        must have every translated field the model requires.
+        """
+        from .translations import is_empty
+
+        config = self._translation_config()
+
+        if config is None:
+            return
+
+        errors = {}
+
+        for name, per_language in config.columns().items():
+            model_field = config.adapter.model_field(name)
+
+            if model_field is None or model_field.blank:
+                continue
+
+            for code in config.required:
+                column = per_language.get(code)
+
+                if column is None or (column not in attrs and instance is not None):
+                    continue
+
+                value = attrs[column] if column in attrs else None
+
+                if is_empty(value):
+                    errors[column] = [
+                        serializers.Field.default_error_messages["required"]
+                    ]
+
+        if errors:
+            raise serializers.ValidationError(errors)
 
     def _check_rich_text_links(self, instance, attrs, request):
         """
@@ -398,6 +470,15 @@ class ContentSerializer(serializers.ModelSerializer):
         studio = self.context.get("studio")
         model = self.Meta.model
         many_to_many = {field.name for field in model._meta.many_to_many}
+        config = self._translation_config()
+        virtual = config.virtual_columns() if config else {}
+        # Translations kept outside the model's columns (parler) are set
+        # through the adapter; the model's save stores them.
+        translated = {
+            name: validated_data.pop(name)
+            for name in list(validated_data)
+            if name in virtual
+        }
         values = {
             name: value
             for name, value in validated_data.items()
@@ -410,6 +491,10 @@ class ContentSerializer(serializers.ModelSerializer):
         else:
             for name, value in values.items():
                 setattr(instance, name, value)
+
+        for column, value in translated.items():
+            field_name, code = virtual[column]
+            config.adapter.set_value(instance, field_name, code, value)
 
         full_clean(self, instance, getattr(self, "_server_set_fields", ()))
 
@@ -492,6 +577,13 @@ class ContentSerializer(serializers.ModelSerializer):
         """
         Override to handle property fields.
         """
+        # A translated attribute of a parler model is a proxy of the
+        # active language, not a model field.
+        parler_meta = getattr(model_class, "_parler_meta", None)
+
+        if parler_meta is not None and field_name in parler_meta.get_all_fields():
+            return serializers.ReadOnlyField, {}
+
         # Check if this is a property
         if hasattr(model_class, field_name):
             attr = getattr(model_class, field_name)
@@ -500,6 +592,32 @@ class ContentSerializer(serializers.ModelSerializer):
 
         # Fall back to default behavior for regular fields
         return super().build_field(field_name, info, model_class, nested_depth)
+
+
+def build_translation_field(serializer, config, model_field, column, name, code):
+    """
+    A serializer field for a translation kept outside the model's
+    columns: read and written through the adapter.
+    """
+    field_class, kwargs = serializer.build_standard_field(column, model_field)
+    required = code in config.required and not model_field.blank
+    kwargs.pop("required", None)
+    kwargs["required"] = required
+    kwargs["label"] = f"{model_field.verbose_name} ({config.language_name(code)})"
+
+    if issubclass(field_class, serializers.CharField) and not required:
+        kwargs["allow_blank"] = True
+
+    if not required:
+        kwargs["allow_null"] = True
+
+    adapter = config.adapter
+
+    class TranslationValueField(field_class):
+        def get_attribute(self, instance):
+            return adapter.get_value(instance, name, code)
+
+    return TranslationValueField(**kwargs)
 
 
 class RelatedItemSerializer(serializers.Serializer):
@@ -606,7 +724,55 @@ class ModelSerializer:
             if field.name == tenant_field:
                 fields[field.name]["readonly"] = True
 
+        self.add_translation_fields(fields)
+
         return fields
+
+    def add_translation_fields(self, fields):
+        """
+        Translation columns are labelled with their language, and
+        translations kept outside the model's columns (parler) are
+        described by the translations model's fields.
+        """
+        from .translations import get_translation_config
+
+        config = get_translation_config(self.model)
+
+        if config is None:
+            return
+
+        for name, per_language in config.columns().items():
+            model_field = config.adapter.model_field(name)
+
+            if model_field is None:
+                continue
+
+            if name not in fields:
+                fields[name] = self.get_field(model_field)
+
+            for code, column in per_language.items():
+                data = dict(fields.get(column) or self.get_field(model_field))
+                # modeltranslation's columns are Translation* subclasses;
+                # the frontend picks widgets by the original field's type.
+                for key in ("type", "widget_class"):
+                    if key in fields[name]:
+                        data[key] = fields[name][key]
+                # The field itself keeps its own label: the editor shows
+                # it with a language badge.
+                if column != name:
+                    data["verbose_name"] = (
+                        f"{model_field.verbose_name} ({config.language_name(code)})"
+                    )
+                # Only the required languages must be complete.
+                data["required"] = code in config.required and not model_field.blank
+
+                if column == name:
+                    data.pop("readonly", None)
+
+                fields[column] = data
+
+            if name in config.adapter.readonly_fields():
+                fields[name]["readonly"] = True
 
     def get_field(self, field):
         data = {

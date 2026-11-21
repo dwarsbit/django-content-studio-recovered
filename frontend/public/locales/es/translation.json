@@ -1365,5 +1365,18 @@
       "unpublish_date_set": "Fecha de despublicación definida para «{{name}}»",
       "unpublish_date_removed": "Fecha de despublicación quitada de «{{name}}»"
     }
+  },
+  "translations": {
+    "content_language": "Idioma del contenido",
+    "default_short": "Predeterminado",
+    "complete": "Completo",
+    "missing_short_one": "Falta {{count}}",
+    "missing_short_many": "Faltan {{count}}",
+    "missing_short_other": "Faltan {{count}}",
+    "copy": "Copiar",
+    "copy_from": "Copiar de: {{language}}",
+    "shared": "Igual en todos los idiomas",
+    "languages_complete": "{{done}} de {{total}} idiomas completos",
+    "languages_column": "Idiomas"
   }
 }

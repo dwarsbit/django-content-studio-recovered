@@ -32,6 +32,7 @@ __all__ = [
     "TableColumn",
     "Text",
     "Title",
+    "TranslationStatus",
 ]
 
 
@@ -471,6 +472,30 @@ class ActivityLog(Component):
     def __init__(self, title=None, component_id=None, *, when=None):
         # Set before super().__init__(): get_id_parts() reads it.
         self.title = title or _("Activity")
+        super().__init__(component_id, when=when)
+
+    def get_id_parts(self) -> tuple[Any, ...]:
+        return (self.title,)
+
+    def serialize(self) -> dict[str, Any]:
+        return {
+            **super().serialize(),
+            "title": str(self.title),
+        }
+
+
+class TranslationStatus(Component):
+    """
+    How complete each content language of the object is, with a click
+    to switch to it; place it in edit_sidebar or edit_main of a studio
+    with translations. It shows nothing on studios without.
+    """
+
+    component_type = "TranslationStatus"
+
+    def __init__(self, title=None, component_id=None, *, when=None):
+        # Set before super().__init__(): get_id_parts() reads it.
+        self.title = title or _("Translations")
         super().__init__(component_id, when=when)
 
     def get_id_parts(self) -> tuple[Any, ...]:

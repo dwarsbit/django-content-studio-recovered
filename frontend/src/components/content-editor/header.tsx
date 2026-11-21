@@ -53,6 +53,7 @@ import type {
 } from "@/types";
 
 import { Conditional } from "./conditional";
+import { EditorLanguageMenu } from "./content-language";
 import { ComponentRenderer } from "./form-field";
 import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
@@ -274,6 +275,7 @@ export function Header({
             }
             actions={
               <>
+                <EditorLanguageMenu />
                 <PresenceAvatars users={presence} />
                 {canFollow && (
                   <FollowButton

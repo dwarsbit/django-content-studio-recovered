@@ -13,6 +13,7 @@ from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 from django.core.files.base import ContentFile
 from django.utils import timezone
+from django.utils.text import slugify
 from django.utils.html import escape
 
 from content_studio.media_library.metadata import read_image_size
@@ -126,9 +127,14 @@ def seed_articles(users, media, categories, now):
         published_at = now - timedelta(days=days, hours=3) if days is not None else None
         live = days is not None and days >= 0
         author = users[spec["author"]]
+        body = "\n\n".join(spec["body"])
         article = Article.objects.create(
             title=spec["title"],
-            body="\n\n".join(spec["body"]),
+            slug=slugify(spec["title"]),
+            body=body,
+            # The first sentence, as the search-result description.
+            meta_description=spec["body"][0].split(". ")[0].rstrip(".") + ".",
+            **translated_values(spec["title"]),
             status=Article.Status.PUBLISHED if live else Article.Status.DRAFT,
             author=author,
             cover=media[spec["cover"]],
@@ -142,6 +148,19 @@ def seed_articles(users, media, categories, now):
         article.categories.set([categories[name] for name in spec["categories"]])
         articles[spec["title"]] = article
     return articles
+
+
+def translated_values(title):
+    """The Dutch and German columns of an article, from TRANSLATIONS."""
+    values = {}
+
+    for language, fields in content.TRANSLATIONS.get(title, {}).items():
+        for name, value in fields.items():
+            if isinstance(value, list):
+                value = "\n\n".join(value)
+            values[f"{name}_{language}"] = value
+
+    return values
 
 
 def seed_reviews(articles):

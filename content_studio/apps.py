@@ -185,6 +185,7 @@ class DjangoContentStudioConfig(AppConfig):
         from .viewsets import BaseModelViewSet
         from .router import content_studio_router
         from .serializers import ContentSerializer
+        from .translations import build_translation_config, get_search_fields
         from .utils import get_related_field_name, get_tenant_field_name
 
         inline_parent_fk = None
@@ -225,7 +226,7 @@ class DjangoContentStudioConfig(AppConfig):
             is_singleton = get_is_singleton(admin_model)
             pagination_class = Pagination
             queryset = _model._default_manager.none()
-            search_fields = list(admin_model.search_fields)
+            search_fields = get_search_fields(admin_model)
             ordering_fields = allowed_ordering
             # Inline viewsets: the FK to the parent model.
             parent_fk = inline_parent_fk
@@ -249,6 +250,19 @@ class DjangoContentStudioConfig(AppConfig):
                     # the list view is enabled.
                     if "list" in self._admin_model.list_views:
                         available_fields.append("list_item_display")
+                    # A translated column carries every language's value
+                    # (the serializer adds those kept outside the
+                    # model's columns).
+                    translation_config = build_translation_config(self._admin_model)
+
+                    if translation_config and not translation_config.adapter.virtual:
+                        for name, per_language in translation_config.columns().items():
+                            if name in available_fields:
+                                available_fields.extend(
+                                    column
+                                    for column in per_language.values()
+                                    if column not in available_fields
+                                )
                 # For the user model we exclude the password and the username field.
                 elif model is user_model:
                     available_fields = None
@@ -285,6 +299,27 @@ class DjangoContentStudioConfig(AppConfig):
                         model = self._model
                         fields = available_fields
                         exclude = excluded_fields
+
+                # List rows count each language's empty translated
+                # fields, for the Languages column.
+                list_translations = (
+                    build_translation_config(self._admin_model)
+                    if self.action in ("list", "trash") and not self.is_singleton
+                    else None
+                )
+
+                if list_translations is not None:
+
+                    class Serializer(Serializer):  # noqa: F811
+                        __languages__ = serializers.SerializerMethodField(
+                            method_name="get_languages"
+                        )
+
+                        class Meta(Serializer.Meta):
+                            fields = list(available_fields) + ["__languages__"]
+
+                        def get_languages(self, obj):
+                            return list_translations.missing_counts(obj)
 
                 # Rows always carry an "id": models whose primary key has
                 # another name get it as an alias of the pk.
