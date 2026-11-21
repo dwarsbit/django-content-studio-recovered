@@ -53,6 +53,13 @@ import type {
 } from "@/types";
 
 import { Conditional } from "./conditional";
+import {
+  LanguageBar,
+  LanguageMenu,
+  LanguageSwitcher,
+  languageUi,
+  useLanguageStates,
+} from "./content-language";
 import { ComponentRenderer } from "./form-field";
 import { SaveButton, type SaveMode } from "./save-button";
 import { SetPasswordDialog } from "./set-password-dialog";
@@ -274,6 +281,7 @@ export function Header({
             }
             actions={
               <>
+                <HeaderLanguageSwitcher />
                 <PresenceAvatars users={presence} />
                 {canFollow && (
                   <FollowButton
@@ -550,6 +558,7 @@ export function Header({
               </>
             }
           />
+          <HeaderLanguageBar />
         </DialogHeader>
         {showSetPassword && (
           <SetPasswordDialog
@@ -564,4 +573,21 @@ export function Header({
       </>
     )
   );
+}
+
+function HeaderLanguageSwitcher() {
+  const states = useLanguageStates();
+  const ui = languageUi();
+
+  return ui === "menu" ? (
+    <LanguageMenu states={states} />
+  ) : ui === "bar" ? null : (
+    <LanguageSwitcher states={states} className="mr-1" />
+  );
+}
+
+function HeaderLanguageBar() {
+  const states = useLanguageStates();
+
+  return languageUi() === "bar" ? <LanguageBar states={states} /> : null;
 }

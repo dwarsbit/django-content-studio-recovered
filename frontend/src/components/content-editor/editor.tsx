@@ -33,6 +33,7 @@ import type {
 } from "@/types";
 
 import { Aside } from "./aside";
+import { ContentLanguageProvider } from "./content-language";
 import { getMainColumnWidth } from "./edit-width";
 import { EditorReadOnlyContext } from "./editor-read-only";
 import { Header } from "./header";
@@ -557,6 +558,7 @@ function EditorForm({
 
   return model && initialized ? (
     <Form {...form}>
+      <ContentLanguageProvider model={model}>
       <ResourcePathContext value={resourcePath}>
         <EditorReadOnlyContext value={isReadOnly}>
           <PublishingProvider
@@ -676,6 +678,7 @@ function EditorForm({
           </PublishingProvider>
         </EditorReadOnlyContext>
       </ResourcePathContext>
+      </ContentLanguageProvider>
     </Form>
   ) : (
     <div className="py-12 sm:py-24 md:py-48 flex items-center justify-center">

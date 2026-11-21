@@ -28,6 +28,12 @@ import { useAdminInfo } from "@/hooks/use-admin-info";
 import { cn } from "@/lib/utils";
 import { FieldWidget, type FormField as IFormField, type Model } from "@/types";
 
+import {
+  SharedFieldMarker,
+  TranslationReference,
+  useContentLanguage,
+  useTranslatedName,
+} from "./content-language";
 import { EditorReadOnlyContext } from "./editor-read-only";
 import { UniqueSetWarning, UniqueWarning } from "./unique-warning";
 
@@ -61,6 +67,8 @@ export function FormField({
 }) {
   const form = useFormContext();
   const { data: info } = useAdminInfo();
+  const translation = useTranslatedName(formField.name);
+  const { language } = useContentLanguage();
   const modelField = model.fields[formField.name];
   const label = formField.label || modelField?.verbose_name;
   // The studio's read-only fields travel with the form values: the
@@ -105,8 +113,9 @@ export function FormField({
   return (
     <div>
       <RootFormField
+        key={translation.name}
         control={form.control}
-        name={formField.name}
+        name={translation.name}
         render={({ field }) => {
           // The label's text, capitalized; a required field gets a mark
           // through CSS so the label's text stays the field's name.
@@ -121,6 +130,13 @@ export function FormField({
               )}
             >
               {label}
+              {translation.translated &&
+                translation.name !== formField.name && (
+                  <span className="ml-1.5 rounded bg-muted px-1 py-px text-[10px] font-semibold uppercase tracking-wide text-muted-foreground align-middle">
+                    {language}
+                  </span>
+                )}
+              {translation.shared && <SharedFieldMarker />}
             </span>
           );
           const control =
@@ -205,6 +221,12 @@ export function FormField({
                     {labelText}
                   </FormLabel>
                   {control}
+                  {translation.translated && !isReadonly && (
+                    <TranslationReference
+                      name={formField.name}
+                      column={translation.name}
+                    />
+                  )}
                 </>
               )}
               {!isReadonly && modelField?.unique && (

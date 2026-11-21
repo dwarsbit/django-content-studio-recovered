@@ -7,6 +7,7 @@ import type { Model } from "@/types";
 
 import { Conditional } from "./conditional";
 import { fieldNames } from "./conditional-fields";
+import { TranslationsCard } from "./content-language";
 import { EditPlacementContext } from "./edit-placement";
 import { FormSet, HIDE_EMPTY_FORM_SET } from "./form-set";
 
@@ -24,13 +25,17 @@ export function Aside({
   } = model;
   // Studios with publishing open the sidebar with the Publishing card.
   const publishing = usePublishing();
-  const hasSidebar = (!R.isEmpty(sidebar) && !R.isNil(sidebar)) || !!publishing;
+  const hasSidebar =
+    (!R.isEmpty(sidebar) && !R.isNil(sidebar)) ||
+    !!publishing ||
+    !!model.admin.translations;
 
   return (
     hasSidebar && (
       <EditPlacementContext.Provider value="sidebar">
         <aside className="space-y-4">
           <PublishingCard />
+          <TranslationsCard />
           {(sidebar ?? []).map((formSet, idx) => (
             <Conditional
               key={idx}

@@ -247,6 +247,9 @@ DEFAULTS = {
     # Loggers, besides Content Studio's own, whose warnings and errors
     # show in the developer tools.
     "DEVTOOLS_LOGGERS": [],
+    # The languages content is written in, as (code, name) pairs; the
+    # first is the default. None uses settings.LANGUAGES.
+    "CONTENT_LANGUAGES": None,
 }
 
 

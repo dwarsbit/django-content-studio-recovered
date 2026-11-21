@@ -24,6 +24,7 @@ from content_studio.form import (
 from content_studio.actions import bulk_action
 from content_studio.filters import ListFilter
 from content_studio.publishing import Publishing
+from content_studio.translations import MissingTranslationFilter
 
 from . import models
 
@@ -165,7 +166,10 @@ class ArticleStudio(ModelStudio):
         "categories",
         "review__stars",
         ReachFilter,
+        MissingTranslationFilter,
     ]
+    # Written in English, Dutch and German (CONTENT_LANGUAGES).
+    translations = ["title", "slug", "body", "meta_description"]
     # Opt-in soft delete: deleting moves articles to the trash, where
     # they can be restored or permanently deleted.
     soft_delete = "removed_at"

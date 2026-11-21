@@ -14,6 +14,7 @@ from .actions import get_bulk_actions, get_edit_actions, get_row_actions
 from .exceptions import AlreadyRegistered, NotRegistered
 from .export import get_export_formats, is_exportable
 from .importing import serialize_import
+from .translations import serialize_translations
 from .filters import serialize_list_filters
 from .form import (
     ButtonResult,
@@ -502,6 +503,11 @@ class ModelStudio(BaseStudio[T]):
     # Whether changes to the model notify anyone (with the notifications
     # app installed).
     notifications: bool = True
+
+    # The fields written in every content language (CONTENT_LANGUAGES).
+    # Each language other than the first is kept in a column named
+    # <field>_<code>, such as title_nl.
+    translations: list[str] = []
 
     def get_duplicate_initial(self, request: HttpRequest, obj: T) -> dict[str, Any]:
         """
@@ -1660,6 +1666,9 @@ class AdminSerializer:
             "notifications": is_notifications_enabled(admin_class),
             # Whether rich text can link to the model's objects.
             "linkable": is_linkable(admin_class),
+            # The translated fields and the columns per language, or
+            # None without translations.
+            "translations": serialize_translations(admin_class),
             "edit": {
                 "header": serialize_edit_header(admin_class),
                 "main": self.serialize_edit_main(request),

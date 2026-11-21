@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { TbCaretDownFilled, TbCaretUpFilled } from "react-icons/tb";
 import { useNavigate } from "react-router";
 
+import { useContentLanguage } from "@/components/content-editor/content-language";
 import { FormatRenderer } from "@/components/formats/renderer";
 import { PresenceIndicator } from "@/components/presence";
 import { Reorderable, RowDragHandle } from "@/components/reorderable";
@@ -193,6 +194,11 @@ export function TableView({
                 </TableHead>
               );
             })}
+            {model.admin.translations && (
+              <TableHead className="sticky top-0 z-10 bg-muted">
+                {t("translations.languages_column")}
+              </TableHead>
+            )}
             {hasMenu && (
               <TableHead className="sticky top-0 z-10 bg-muted w-10">
                 <span className="sr-only">{t("row_actions.menu")}</span>
@@ -308,6 +314,9 @@ function TableViewRow({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const fields = model.admin.list.display;
+  const { config: translations, language } = useContentLanguage();
+  const languageStates = item.__languages__ as
+    Record<string, number> | undefined;
 
   return (
     <TableRow
@@ -350,17 +359,34 @@ function TableViewRow({
               "justify-end": isNumeric(model.fields[name]?.type),
             })}
           >
-            <FormatRenderer
-              value={item[name]}
-              field={model.fields[name]}
-              format={format}
-            />
+            <TranslatedCell
+              item={item}
+              name={name}
+              column={translations?.fields[name]?.[language]}
+              defaultLanguage={translations?.default}
+            >
+              {(value) => (
+                <FormatRenderer
+                  value={value}
+                  field={model.fields[name]}
+                  format={format}
+                />
+              )}
+            </TranslatedCell>
             {index === 0 && (
               <PresenceIndicator users={presence} className="ml-2" />
             )}
           </div>
         </TableCell>
       ))}
+      {translations && (
+        <TableCell>
+          <LanguageBadges
+            languages={translations.languages.map((l) => l.code)}
+            states={languageStates}
+          />
+        </TableCell>
+      )}
       {(reorder || rowActions.length > 0) && (
         <TableCell
           className="w-10"
@@ -383,5 +409,69 @@ function TableViewRow({
         </TableCell>
       )}
     </TableRow>
+  );
+}
+
+function TranslatedCell({
+  item,
+  name,
+  column,
+  defaultLanguage,
+  children,
+}: {
+  item: Record<string, unknown>;
+  name: string;
+  column?: string;
+  defaultLanguage?: string;
+  children: (value: unknown) => React.ReactNode;
+}) {
+  if (!column || column === name) {
+    return children(item[name]);
+  }
+
+  const value = item[column];
+
+  if (value === "" || value == null) {
+    // Not translated: the default language's value, muted.
+    return (
+      <span className="flex items-center gap-1.5 min-w-0 text-muted-foreground font-normal">
+        <span className="shrink-0 rounded bg-muted px-1 py-px text-[10px] font-semibold uppercase tracking-wide">
+          {defaultLanguage}
+        </span>
+        <span className="truncate italic">{children(item[name])}</span>
+      </span>
+    );
+  }
+
+  return children(value);
+}
+
+function LanguageBadges({
+  languages,
+  states,
+}: {
+  languages: string[];
+  states?: Record<string, number>;
+}) {
+  return (
+    <div className="flex items-center gap-1">
+      {languages.map((code) => {
+        const missing = states?.[code] ?? 0;
+
+        return (
+          <span
+            key={code}
+            className={cn(
+              "inline-flex items-center h-5 px-1.5 rounded border text-[10px] font-semibold uppercase tracking-wide",
+              missing === 0
+                ? "bg-background text-foreground"
+                : "border-dashed text-muted-foreground/60",
+            )}
+          >
+            {code}
+          </span>
+        );
+      })}
+    </div>
   );
 }
