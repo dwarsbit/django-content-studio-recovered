@@ -125,8 +125,8 @@ edit page, the shortcut saves the dialog.
 ## Unsaved changes
 
 While an editor changes an object, the edit page keeps the changes in their
-browser, a few seconds after each change and when the tab closes. A check
-next to **Unsaved changes** in the header says they are kept. When the page
+browser, a few seconds after each change and when the tab closes. The header
+then reads **Unsaved changes · kept** next to the title. When the page
 crashes, is reloaded or closed, or the session ends before Save, nothing is
 lost: opening the object again shows a banner with the changes and when they
 were made, and three choices:
@@ -795,8 +795,20 @@ shows the object's new values, unless it has unsaved changes.
 
 ### The header
 
-Components in `edit_header` appear in the edit page's header, next to the
-save button. Use it for buttons that act on the whole object:
+The header is one row, in a fixed order. On the left is the title, followed
+by the object's [publishing](/docs/publishing) state and by **Unsaved
+changes**, or else when the object was last edited. On the right come the
+editors who have the object open, the
+[content language](/docs/translations), and the quiet actions as icon
+buttons: Follow, View on site, your `edit_header` components and the more
+actions menu. Save and Publish come last, set apart.
+
+The title keeps its room in a narrow window: the status text gives way
+first and leaves its dot, and below 1024 pixels the model's name is hidden
+and Follow moves into the more actions menu.
+
+Components in `edit_header` appear in the edit page's header, before the
+more actions menu. Use it for buttons that act on the whole object:
 
 ```python
 # blog/admin.py
@@ -833,7 +845,7 @@ components; system check `content_studio.E020` reports anything else.
 ### View on site
 
 When the model has `get_absolute_url()`, the header shows a **View on
-site** button that opens the object's public page in a new tab. It appears
+site** icon button that opens the object's public page in a new tab. It appears
 once the object is saved, and after a save it links to the new URL, such as
 one with a changed slug. A relative URL, such as `/blog/hello/`, opens on
 the domain Content Studio runs on. Only `http`, `https`, `mailto` and

@@ -916,7 +916,8 @@
     "close": "Schließen",
     "restore_count_one": "{{count}} Feld wiederherstellen",
     "restore_count_other": "{{count}} Felder wiederherstellen",
-    "kept": "In diesem Browser behalten um {{when}}, bis Sie speichern"
+    "kept": "In diesem Browser behalten um {{when}}, bis Sie speichern",
+    "kept_short": "aufbewahrt"
   },
   "users": {
     "set_password": {
