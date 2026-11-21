@@ -1331,6 +1331,14 @@
     "languages_complete": "{{done}} von {{total}} Sprachen vollständig",
     "languages_column": "Sprachen"
   },
+  "table_edit": {
+    "saved": "{{field}} gespeichert",
+    "saved_short": "Gespeichert",
+    "saving": "Wird gespeichert…",
+    "undo": "Rückgängig",
+    "failed": "Diese Änderung konnte nicht gespeichert werden.",
+    "locked": "Du kannst dieses Objekt ({{model}}) nicht ändern"
+  },
   "preview": {
     "preview_draft": "Entwurf ansehen",
     "menu": "Ansehen und teilen",

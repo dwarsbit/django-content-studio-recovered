@@ -1380,6 +1380,14 @@
     "languages_complete": "{{done}} langues complètes sur {{total}}",
     "languages_column": "Langues"
   },
+  "table_edit": {
+    "saved": "{{field}} enregistré",
+    "saved_short": "Enregistré",
+    "saving": "Enregistrement…",
+    "undo": "Annuler",
+    "failed": "Impossible d’enregistrer cette modification.",
+    "locked": "Vous ne pouvez pas modifier cet élément ({{model}})"
+  },
   "preview": {
     "preview_draft": "Aperçu du brouillon",
     "menu": "Aperçu et partage",

@@ -1380,6 +1380,14 @@
     "languages_complete": "{{done}} de {{total}} idiomas completos",
     "languages_column": "Idiomas"
   },
+  "table_edit": {
+    "saved": "{{field}} salvo",
+    "saved_short": "Salvo",
+    "saving": "Salvando…",
+    "undo": "Desfazer",
+    "failed": "Não foi possível salvar esta alteração.",
+    "locked": "Você não pode alterar este item ({{model}})"
+  },
   "preview": {
     "preview_draft": "Ver rascunho",
     "menu": "Ver e compartilhar",

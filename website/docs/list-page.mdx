@@ -132,6 +132,71 @@ Here `word_count` is a property on `Article`, shown as a table column. A
 property named in `list_item_display` is computed for each item of the list
 view.
 
+## Editing in the table
+
+`table_edit` names the table columns editors can change in place, without
+opening the edit page:
+
+```python
+# blog/admin.py
+from content_studio import register
+from content_studio.admin import ModelStudio
+
+from .models import Article
+
+
+@register(Article)
+class ArticleStudio(ModelStudio):
+    table_display = ["title", "author", "featured", "views", "status"]
+    table_edit = ["author", "featured", "views"]
+```
+
+The first column opens the object, so it is never edited in place, as in
+the Django admin.
+
+A cell saves as soon as the editor leaves it: Enter or a click elsewhere
+saves a text or number cell, Tab saves it and moves on to the next editable
+cell, and Esc puts the old value back. Switches, selects, dates and pickers
+save when they change. A toast names the saved field and offers Undo. The
+other cells of the row still open the edit page.
+
+A cell edits these fields:
+
+| Field | Cell |
+| --- | --- |
+| `CharField`, `TextField`, integer, decimal and float fields | Input |
+| `BooleanField` | Switch |
+| Any field with `choices` | Select |
+| `DateField`, `DateTimeField`, `TimeField` | Date and time picker |
+| `ForeignKey` | Search picker, like the edit page's |
+
+A save goes through the same path as the edit page: the studio's
+[save hooks](/docs/edit-page), the model's `clean()` and unique checks, the
+editor stamps and the [history](/docs/history). An invalid value stays in the
+cell with the reason, until the editor fixes it or presses Esc.
+
+Each save sends the value the editor saw. When someone else changed that
+field since the list loaded, the cell refuses the save and says so; Esc
+then shows their value. Other fields of the row save as usual.
+
+A cell is only editable for editors with change permission, and only for
+fields the edit page writes: fields left out of `edit_main` and
+`edit_sidebar` and read-only fields stay plain. Rows the editor may not
+change (the object form of `has_change_permission`) stay plain too, with a
+lock on hover.
+On a [translated](/docs/translations) field, the cell edits the language
+the list shows. Override `get_table_edit(request)` to choose the columns
+per request.
+
+`list_editable`, the classic Django admin's name, also works. System check
+`content_studio.W032` asks you to rename it to `table_edit`, and warns
+when `table_edit` is set on a studio without the table view.
+`content_studio.E057` reports names that are not `table_display` columns
+or fields the edit page writes, the first column, read-only fields, many-to-many and reverse
+relations, fields with their own widget (rich text, blocks, media) and the
+fields [publishing](/docs/publishing) sets, which the Status column and
+the Publish actions change.
+
 ## Filters
 
 `list_filter` lists the filters above the list. Each entry is a field

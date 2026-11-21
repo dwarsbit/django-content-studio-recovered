@@ -1871,6 +1871,9 @@ msgstr "Traduction manquante"
 msgid "Translations"
 msgstr "Traductions"
 
+msgid "Changed by someone else since you loaded the list."
+msgstr "Modifié par quelqu'un d'autre depuis le chargement de la liste."
+
 msgid "Previews"
 msgstr "Aperçus"
 

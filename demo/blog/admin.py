@@ -143,6 +143,9 @@ class ArticleStudio(ModelStudio):
     # The status column shows the publishing state (Draft, Scheduled,
     # Published, Expired).
     table_display = ["title", "status", "featured", "views", "author", "published_at"]
+    # Edited in place in the table: each cell saves when the editor
+    # leaves it. The title, the first column, opens the article.
+    table_edit = ["featured", "views", "author"]
     # The list view's rows; both views are offered, with a toggle.
     list_views = ["table", "list"]
     list_item_display = {

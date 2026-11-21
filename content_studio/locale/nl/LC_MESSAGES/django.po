@@ -1844,6 +1844,9 @@ msgstr "Ontbrekende vertaling"
 msgid "Translations"
 msgstr "Vertalingen"
 
+msgid "Changed by someone else since you loaded the list."
+msgstr "Iemand anders heeft dit gewijzigd sinds je de lijst hebt geladen."
+
 msgid "Previews"
 msgstr "Voorbeelden"
 

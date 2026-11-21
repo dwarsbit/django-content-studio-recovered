@@ -1403,6 +1403,76 @@ class BaseModelViewSet(ModelViewSet):
         ):
             raise NotFound()
 
+    @action(methods=["post"], detail=True, url_path="table-edit")
+    def table_edit(self, request, id):
+        """
+        Save table cells edited in place: {"values": {key: value},
+        "base": {key: value}}, the keys being table_edit names or a
+        translated name's language columns. base holds the values the
+        list showed; a cell whose value changed since is refused (409)
+        rather than overwriting someone else's change. The save goes
+        through the update path of the edit page: the studio's save
+        hooks, model validation, the activity log and history. Answers
+        with the saved values as the list shows them.
+        """
+        from .table_edit import comparable, get_cell_keys
+
+        data = request.data if hasattr(request.data, "get") else {}
+        values = data.get("values")
+        base = data.get("base") or {}
+
+        if not isinstance(values, dict) or not values or not isinstance(base, dict):
+            raise ValidationError("A table edit requires a non-empty values object.")
+
+        keys = get_cell_keys(self._admin_model, request)
+        unknown = sorted(key for key in values if key not in keys)
+
+        if unknown:
+            raise ValidationError(
+                {key: ["This column cannot be edited in the table."] for key in unknown}
+            )
+
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=values, partial=True)
+        writable = {field.field_name for field in serializer._writable_fields}
+        unwritable = sorted(key for key in values if key not in writable)
+
+        if unwritable:
+            raise ValidationError(
+                {
+                    key: ["This column cannot be edited in the table."]
+                    for key in unwritable
+                }
+            )
+
+        current = serializer.to_representation(instance)
+        conflicts = {
+            key: [_("Changed by someone else since you loaded the list.")]
+            for key in values
+            if key in base and comparable(current.get(key)) != comparable(base[key])
+        }
+
+        if conflicts:
+            return Response(
+                {
+                    "conflicts": conflicts,
+                    "current": {k: current.get(k) for k in conflicts},
+                },
+                status=409,
+            )
+
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        saved = serializer.data
+
+        return Response(
+            {
+                "id": instance.pk,
+                "__str__": str(instance),
+                "values": {key: saved.get(key) for key in values},
+            }
+        )
+
     @action(methods=["post"], detail=False, url_path="bulk")
     def bulk(self, request):
         """

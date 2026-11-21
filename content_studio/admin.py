@@ -437,6 +437,16 @@ class ModelStudio(BaseStudio[T]):
     # run on the object being edited. None (the default) offers none.
     edit_actions: Optional[list[str]] = None
 
+    # Table columns edited in place: names from table_display that are
+    # model fields. A cell saves as soon as the editor leaves it, through
+    # the same save as the edit page. Empty, the default, keeps the table
+    # read-only. The Django admin's list_editable is accepted as an alias.
+    table_edit: list[str] = []
+
+    # The Django admin's name for table_edit (check W031 asks for
+    # table_edit).
+    list_editable: Optional[list[str]] = None
+
     # The columns that may be sorted on; None allows all.
     sortable_by: Optional[list[str]] = None
 
@@ -645,6 +655,20 @@ class ModelStudio(BaseStudio[T]):
             return ""
 
         return str(value)
+
+    def get_table_edit(self, request: HttpRequest) -> list[str]:
+        """
+        The table columns this request may edit in place. The default is
+        table_edit (or list_editable) without the fields the editor
+        cannot write: read-only fields, fields the edit page does not
+        write, and every field for editors without change permission.
+        Override it to offer inline editing to some editors only; rows
+        the editor may not change (has_change_permission with the
+        object) stay read-only either way.
+        """
+        from .table_edit import get_default_table_edit
+
+        return get_default_table_edit(self, request)
 
     def has_publish_permission(
         self, request: HttpRequest, obj: Optional[T] = None
@@ -1855,6 +1879,8 @@ class AdminSerializer:
                     action.serialize()
                     for action in get_row_actions(admin_class, request)
                 ],
+                # The columns edited in place (table_edit).
+                "edit": admin_class.get_table_edit(request),
             },
             "permissions": serialize_permissions(admin_class, request),
         }

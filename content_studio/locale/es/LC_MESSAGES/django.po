@@ -1862,6 +1862,9 @@ msgstr "Traducción pendiente"
 msgid "Translations"
 msgstr "Traducciones"
 
+msgid "Changed by someone else since you loaded the list."
+msgstr "Otra persona lo cambió después de que cargaras la lista."
+
 msgid "Previews"
 msgstr "Vistas previas"
 

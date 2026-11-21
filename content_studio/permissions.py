@@ -66,6 +66,10 @@ class ModelStudioPermissions(BasePermission):
             # is part of viewing it.
             return admin_model.has_view_permission(request)
 
+        if getattr(view, "action", None) == "table_edit":
+            # Saving a table cell is a change of that object.
+            return admin_model.has_change_permission(request)
+
         if getattr(view, "action", None) == "bulk":
             # The bulk endpoint enforces its own per-action permissions
             # (see actions.get_bulk_actions); seeing the list is the
@@ -150,6 +154,9 @@ class ModelStudioPermissions(BasePermission):
             "revoke_preview_link",
         ):
             return admin_model.has_view_permission(request, obj)
+
+        if getattr(view, "action", None) == "table_edit":
+            return admin_model.has_change_permission(request, obj)
 
         if getattr(view, "action", None) == "publishing":
             has_publish = getattr(admin_model, "has_publish_permission", None)

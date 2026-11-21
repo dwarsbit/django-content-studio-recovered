@@ -1331,6 +1331,14 @@
     "languages_complete": "{{done}} of {{total}} languages complete",
     "languages_column": "Languages"
   },
+  "table_edit": {
+    "saved": "{{field}} saved",
+    "saved_short": "Saved",
+    "saving": "Saving…",
+    "undo": "Undo",
+    "failed": "Could not save this change.",
+    "locked": "You can't change this {{model}}"
+  },
   "preview": {
     "preview_draft": "Preview draft",
     "menu": "Preview and share",
