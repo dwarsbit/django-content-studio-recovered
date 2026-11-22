@@ -234,6 +234,88 @@ def test_backup_leaves_out_backup_exclude():
     assert "testapp.Article" not in backup.manifest["counts"]
 
 
+@pytest.fixture
+def placeholder_model():
+    """
+    A model with managed = False and no table, like a third-party app's
+    stand-in for an admin page: dumpdata alone fails on it.
+    """
+    from django.apps import apps
+    from django.db import models
+
+    class Placeholder(models.Model):
+        class Meta:
+            app_label = "testapp"
+            managed = False
+            db_table = "testapp_placeholder_without_table"
+
+    yield Placeholder
+
+    del apps.all_models["testapp"]["placeholder"]
+    apps.clear_cache()
+
+
+@pytest.mark.django_db
+def test_backup_leaves_out_models_without_a_table(placeholder_model):
+    Article.objects.create(title="Kept")
+
+    from django.db import transaction
+
+    # dumpdata on its own stops at the missing table.
+    with pytest.raises(CommandError, match="testapp_placeholder_without_table"):
+        with transaction.atomic():
+            call_command("dumpdata", stdout=io.StringIO(), verbosity=0)
+
+    backup = backups.make_backup()
+
+    assert backup.status == Backup.DONE
+    assert backup.manifest["skipped"] == [
+        {
+            "model": "testapp.Placeholder",
+            "tables": ["testapp_placeholder_without_table"],
+        }
+    ]
+    assert "testapp.Placeholder" not in backup.manifest["counts"]
+
+    objects = read_fixture(storages["backups"], backup.file)
+
+    assert "testapp.article" in {item["model"] for item in objects}
+    assert "testapp.placeholder" not in {item["model"] for item in objects}
+
+
+@pytest.mark.django_db
+def test_backup_leaves_out_models_whose_many_to_many_table_is_missing():
+    from django.db import connection
+
+    through = Article.categories.through._meta.db_table
+    table_names = connection.introspection.table_names
+
+    def without_through(*args, **kwargs):
+        return [name for name in table_names(*args, **kwargs) if name != through]
+
+    with mock.patch.object(
+        connection.introspection, "table_names", side_effect=without_through
+    ):
+        missing = backups.get_missing_tables("default", backups.get_excludes())
+
+    assert missing == [{"model": "testapp.Article", "tables": [through]}]
+
+
+@pytest.mark.django_db
+def test_backup_has_nothing_to_skip_when_every_table_exists():
+    assert backups.get_missing_tables("default", backups.get_excludes()) == []
+
+
+@pytest.mark.django_db
+def test_backups_endpoint_lists_skipped_models(superuser, placeholder_model):
+    backups.make_backup()
+
+    response = client_for(superuser).get("/api/backups")
+
+    assert response.status_code == 200
+    assert response.json()["backups"][0]["skipped"] == ["testapp.Placeholder"]
+
+
 @pytest.mark.django_db
 def test_a_failed_backup_is_recorded_and_leaves_no_file(fresh_storage):
     with mock.patch.object(backups, "dump", side_effect=RuntimeError("disk full")):

@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.21.1 (unreleased)
+
+### Fixes
+
+- **Backups no longer fail on models without a table.** A backup stopped
+  with "Unable to serialize database: relation … does not exist" when an
+  installed app had a model with no table, such as a `managed = False`
+  model that only stands in for an admin page, or an app that was never
+  migrated. Such models are now left out: the backup logs a warning, lists
+  them under `skipped` in its manifest and names them on the Backups page.
+
 ## 1.21.0 (2026-11-22)
 
 ### Features

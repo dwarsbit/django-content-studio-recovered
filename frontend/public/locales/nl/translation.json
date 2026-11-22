@@ -1197,6 +1197,9 @@
       "empty_description": "Back-ups verschijnen hier zodra er een is gemaakt. Kies Nu back-uppen voor de eerste."
     },
     "restore_hint": "Een back-up terugzetten doe je met",
+    "skipped_one": "{{count}} model zonder tabel overgeslagen: {{models}}",
+    "skipped_other": "{{count}} modellen zonder tabel overgeslagen: {{models}}",
+    "skipped_hint": "Hun tabellen staan niet in de database (een app zonder migraties, of een model met managed = False), dus er was niets te back-uppen.",
     "by": "{{trigger}} door {{user}}",
     "download": "{{name}} downloaden",
     "trigger": {

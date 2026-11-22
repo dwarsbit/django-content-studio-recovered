@@ -42,6 +42,7 @@ function backup(overrides: Record<string, unknown> = {}) {
     name: "2026-11-20T030000Z.json.gz",
     size: 3_565_158,
     error: null,
+    skipped: [],
     created_by: null,
     created_at: now,
     started_at: now,
@@ -242,6 +243,21 @@ describe("BackupsPage", () => {
     expect(
       await screen.findByRole("button", { name: /backups\.running/ }),
     ).toBeDisabled();
+  });
+
+  it("names the models a backup left out", async () => {
+    httpMock.get.mockResolvedValue({
+      data: list({
+        backups: [backup({ skipped: ["hueystats.HueyDashboard"] })],
+      }),
+    });
+    renderPage();
+
+    expect(
+      await screen.findByText(
+        'backups.skipped {"count":1,"models":"hueystats.HueyDashboard"}',
+      ),
+    ).toBeVisible();
   });
 
   it("explains an empty list", async () => {

@@ -115,13 +115,19 @@ Left out:
 - The backup records themselves.
 - Whatever you list in [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude),
   as app labels (`"analytics"`) or models (`"shop.Cart"`).
+- Models whose table is not in the database: an installed app that was
+  never migrated, or a model with `managed = False` that only stands in for
+  an admin page. There is nothing to back up for them, and plain `dumpdata`
+  would stop at them. The backup logs a warning, lists them in its manifest
+  under `skipped` and names them on the Backups page.
 
 Media files are not part of a backup: they stay in the storage they are
 in. Protect them with the storage's own versioning or replication.
 
 Next to each backup the app saves its manifest,
 `<name>.manifest.json`: the Content Studio and Django versions, the database
-engine, the applied migrations and the number of rows per model. A backup of
+engine, the applied migrations, the models left out and the number of rows
+per model. A backup of
 database `default` made on 20 November 2026 at 03:00 UTC is saved under the
 time it started and a random token:
 

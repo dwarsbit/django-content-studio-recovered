@@ -1242,6 +1242,10 @@
       "empty_description": "Les sauvegardes apparaissent ici dès qu’une a été faite. Choisissez Sauvegarder maintenant pour la première."
     },
     "restore_hint": "Pour restaurer une sauvegarde, exécutez",
+    "skipped_one": "{{count}} modèle sans table ignoré : {{models}}",
+    "skipped_other": "{{count}} modèles sans table ignorés : {{models}}",
+    "skipped_many": "{{count}} modèles sans table ignorés : {{models}}",
+    "skipped_hint": "Leurs tables ne sont pas dans la base de données (une app non migrée ou un modèle avec managed = False), il n’y avait donc rien à sauvegarder.",
     "by": "{{trigger}} par {{user}}",
     "download": "Télécharger {{name}}",
     "trigger": {

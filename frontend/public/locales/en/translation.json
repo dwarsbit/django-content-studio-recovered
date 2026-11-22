@@ -1197,6 +1197,9 @@
       "empty_description": "Backups appear here once one has run. Back up now to make the first one."
     },
     "restore_hint": "To restore a backup, run",
+    "skipped_one": "Left out {{count}} model without a table: {{models}}",
+    "skipped_other": "Left out {{count}} models without a table: {{models}}",
+    "skipped_hint": "Their tables are not in the database (an unmigrated app, or a model with managed = False), so there was nothing to back up.",
     "by": "{{trigger}} by {{user}}",
     "download": "Download {{name}}",
     "trigger": {

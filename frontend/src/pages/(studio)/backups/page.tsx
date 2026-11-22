@@ -424,6 +424,17 @@ function BackupRow({
             {backup.error}
           </div>
         )}
+        {backup.status === "done" && backup.skipped?.length > 0 && (
+          <div
+            className="text-xs text-muted-foreground break-words"
+            title={t("backups.skipped_hint")}
+          >
+            {t("backups.skipped", {
+              count: backup.skipped.length,
+              models: backup.skipped.join(", "),
+            })}
+          </div>
+        )}
       </div>
       <Badge variant="secondary" className="gap-1.5 pl-1.5 shrink-0 mt-0.5">
         {backup.status === "running" ? (

@@ -1242,6 +1242,10 @@
       "empty_description": "Las copias aparecen aquí en cuanto se haya hecho una. Elija Hacer copia ahora para la primera."
     },
     "restore_hint": "Para restaurar una copia, ejecute",
+    "skipped_one": "Se omitió {{count}} modelo sin tabla: {{models}}",
+    "skipped_other": "Se omitieron {{count}} modelos sin tabla: {{models}}",
+    "skipped_many": "Se omitieron {{count}} modelos sin tabla: {{models}}",
+    "skipped_hint": "Sus tablas no están en la base de datos (una app sin migrar o un modelo con managed = False), así que no había nada que respaldar.",
     "by": "{{trigger}} por {{user}}",
     "download": "Descargar {{name}}",
     "trigger": {

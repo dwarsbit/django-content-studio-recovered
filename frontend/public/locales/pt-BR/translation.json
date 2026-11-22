@@ -1242,6 +1242,10 @@
       "empty_description": "Os backups aparecem aqui assim que um for feito. Escolha Fazer backup agora para o primeiro."
     },
     "restore_hint": "Para restaurar um backup, execute",
+    "skipped_one": "{{count}} modelo sem tabela foi ignorado: {{models}}",
+    "skipped_other": "{{count}} modelos sem tabela foram ignorados: {{models}}",
+    "skipped_many": "{{count}} modelos sem tabela foram ignorados: {{models}}",
+    "skipped_hint": "As tabelas deles não estão no banco de dados (um app sem migrações ou um modelo com managed = False), então não havia nada para fazer backup.",
     "by": "{{trigger}} por {{user}}",
     "download": "Baixar {{name}}",
     "trigger": {

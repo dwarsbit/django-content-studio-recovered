@@ -163,6 +163,44 @@ def get_models(alias: str, excludes: list[str]) -> list:
     ]
 
 
+def get_missing_tables(alias: str, excludes: list[str]) -> list[dict]:
+    """
+    The models dumpdata would read whose table (or many-to-many table) is
+    not in the database: an app installed but never migrated, or a model
+    with managed = False that stands in for a page and has no table at
+    all. dumpdata stops at the first one, so a backup leaves them out.
+    """
+    connection = connections[alias]
+
+    with connection.cursor() as cursor:
+        tables = set(connection.introspection.table_names(cursor, include_views=True))
+
+    def known(name: str) -> bool:
+        return connection.introspection.identifier_converter(name) in tables
+
+    missing = []
+
+    for model in apps.get_models():
+        if (
+            model._meta.proxy
+            or not router.allow_migrate_model(alias, model)
+            or is_excluded(model, excludes)
+        ):
+            continue
+
+        names = [model._meta.db_table] + [
+            field.remote_field.through._meta.db_table
+            for field in model._meta.local_many_to_many
+            if field.remote_field.through._meta.auto_created
+        ]
+        absent = [name for name in names if not known(name)]
+
+        if absent:
+            missing.append({"model": model._meta.label, "tables": absent})
+
+    return missing
+
+
 def get_applied_migrations(alias: str) -> dict[str, list[str]]:
     recorder = MigrationRecorder(connections[alias])
 
@@ -177,13 +215,21 @@ def get_applied_migrations(alias: str) -> dict[str, list[str]]:
     return applied
 
 
-def build_manifest(alias: str, excludes: list[str]) -> dict:
+def build_manifest(
+    alias: str, excludes: list[str], skipped: Optional[list[dict]] = None
+) -> dict:
     from content_studio import __version__
 
     connection = connections[alias]
     counts = {}
 
+    skipped = list(skipped or [])
+    skipped_labels = {item["model"] for item in skipped}
+
     for model in get_models(alias, excludes):
+        if model._meta.label in skipped_labels:
+            continue
+
         try:
             counts[model._meta.label] = model._default_manager.using(alias).count()
         except Exception:
@@ -198,6 +244,8 @@ def build_manifest(alias: str, excludes: list[str]) -> dict:
         "content_studio": __version__,
         "django": django.get_version(),
         "excluded": excludes,
+        # Left out because their table is not in the database.
+        "skipped": skipped,
         "migrations": get_applied_migrations(alias),
         "counts": counts,
     }
@@ -306,10 +354,20 @@ def make_backup(
     try:
         storage = get_storage()
         excludes = get_excludes()
-        manifest = build_manifest(alias, excludes)
+        skipped = get_missing_tables(alias, excludes)
+
+        for item in skipped:
+            logger.warning(
+                "The backup of database %r leaves out %s: table %s does not exist.",
+                alias,
+                item["model"],
+                ", ".join(item["tables"]),
+            )
+
+        manifest = build_manifest(alias, excludes, skipped)
         path = os.path.join(folder, "backup" + EXTENSION)
 
-        dump(alias, path, excludes)
+        dump(alias, path, [*excludes, *(item["model"] for item in skipped)])
 
         with open(path, "rb") as file:
             name = storage.save(backup_name(alias, backup.started_at), File(file))

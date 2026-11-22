@@ -23,6 +23,8 @@ export interface Backup {
   // Bytes.
   size: number | null;
   error: string | null;
+  // Models left out because their table is not in the database.
+  skipped: string[];
   created_by: string | null;
   created_at: DateTimeString;
   started_at: DateTimeString | null;
