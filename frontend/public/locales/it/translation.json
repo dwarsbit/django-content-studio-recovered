@@ -1242,6 +1242,10 @@
       "empty_description": "I backup compaiono qui non appena ne è stato eseguito uno. Scegli Esegui backup ora per il primo."
     },
     "restore_hint": "Per ripristinare un backup, esegui",
+    "skipped_one": "{{count}} modello senza tabella escluso: {{models}}",
+    "skipped_other": "{{count}} modelli senza tabella esclusi: {{models}}",
+    "skipped_many": "{{count}} modelli senza tabella esclusi: {{models}}",
+    "skipped_hint": "Le loro tabelle non sono nel database (un'app non migrata o un modello con managed = False), quindi non c'era nulla da salvare.",
     "by": "{{trigger}} da {{user}}",
     "download": "Scarica {{name}}",
     "trigger": {

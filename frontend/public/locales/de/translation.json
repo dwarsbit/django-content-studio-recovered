@@ -1197,6 +1197,9 @@
       "empty_description": "Backups erscheinen hier, sobald eines gelaufen ist. Wählen Sie Jetzt sichern für das erste."
     },
     "restore_hint": "Um ein Backup wiederherzustellen, führen Sie aus:",
+    "skipped_one": "{{count}} Modell ohne Tabelle ausgelassen: {{models}}",
+    "skipped_other": "{{count}} Modelle ohne Tabelle ausgelassen: {{models}}",
+    "skipped_hint": "Ihre Tabellen fehlen in der Datenbank (eine nicht migrierte App oder ein Modell mit managed = False), daher gab es nichts zu sichern.",
     "by": "{{trigger}} von {{user}}",
     "download": "{{name}} herunterladen",
     "trigger": {

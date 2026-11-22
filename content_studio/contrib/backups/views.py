@@ -54,6 +54,10 @@ def serialize(backup: Backup) -> dict:
         "name": posixpath.basename(backup.file) if backup.file else "",
         "size": backup.size,
         "error": backup.error or None,
+        # Models left out because their table is not in the database.
+        "skipped": [
+            item["model"] for item in (backup.manifest or {}).get("skipped") or []
+        ],
         "created_by": str(backup.created_by) if backup.created_by_id else None,
         "created_at": iso(backup.created_at),
         "started_at": iso(backup.started_at),
