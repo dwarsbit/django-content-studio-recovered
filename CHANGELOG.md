@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.22.0 (unreleased)
+## 1.22.0 (2026-11-25)
 
 ### Features
 
