@@ -2,9 +2,11 @@
 Tests for translated content (ModelStudio.translations): the adapters,
 the API's per-language columns, required languages, the list's
 language states, the Missing translation filter, search, prepopulated
-fields and the checks (E055, W030).
+fields and the checks (E055, W030, and E006/E010/E011/W001 for a model
+with a column for every language).
 """
 
+from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest import mock
 
@@ -19,7 +21,15 @@ from content_studio.admin import (
     get_form_field_names,
     serialize_prepopulated_fields,
 )
-from content_studio.checks import translation_errors, translation_warnings
+from content_studio.checks import (
+    edit_field_warnings,
+    edit_form_config_errors,
+    list_query_errors,
+    table_column_errors,
+    translation_errors,
+    translation_warnings,
+)
+from content_studio.form import FormSet
 from content_studio.filters import get_filter_specs
 from content_studio.serializers import ModelSerializer
 from content_studio.token_backends.jwt import create_access_token
@@ -34,7 +44,7 @@ from content_studio.translations import (
     get_search_fields,
     translated_attribute_names,
 )
-from tests.testapp.models import Article, Guide
+from tests.testapp.models import Article, Guide, NewsItem
 
 GUIDES = "/api/content/testapp.guide"
 
@@ -330,3 +340,87 @@ def test_field_without_a_column_for_a_language_is_w030():
     ids = check_ids(translation_warnings, ["title", "views"])
 
     assert ids == ["content_studio.W030"]
+
+
+# A column for every language, no base column (NewsItem)
+
+NEWS = "/api/content/testapp.newsitem"
+
+
+def news_studio():
+    return admin_site._registry[NewsItem]
+
+
+def news_check_ids(**overrides):
+    studio_ = news_studio()
+
+    with mock.patch.multiple(studio_, **overrides) if overrides else nullcontext():
+        return [
+            check_id
+            for function in (
+                table_column_errors,
+                edit_form_config_errors,
+                list_query_errors,
+                edit_field_warnings,
+                translation_errors,
+                translation_warnings,
+            )
+            for check_id, _ in function(studio_)
+        ]
+
+
+def test_all_columns_layout_resolves_base_names_in_the_checks():
+    # edit_main, table_display and search_fields name "title", which
+    # only exists as title_en, title_nl and title_de.
+    assert news_check_ids() == []
+
+
+def test_all_columns_default_layout_covers_required_columns():
+    assert news_check_ids(edit_main=None) == []
+
+
+def test_required_column_left_off_the_form_is_still_w001():
+    # Naming one column puts only that column on the form.
+    ids = news_check_ids(edit_main=[FormSet(fields=["title_nl", "body"])])
+
+    assert ids == ["content_studio.W001"]
+
+
+def test_unknown_names_are_still_errors_with_translations():
+    ids = news_check_ids(
+        edit_main=[FormSet(fields=["title", "subtitle"])],
+        table_display=["subtitle"],
+        search_fields=["subtitle"],
+    )
+
+    assert sorted(ids) == [
+        "content_studio.E006",
+        "content_studio.E010",
+        "content_studio.E011",
+    ]
+
+
+@pytest.mark.django_db
+def test_all_columns_layout_writes_lists_and_searches(client):
+    response = client.post(
+        NEWS, {"title_en": "Hello", "title_nl": "Hallo"}, format="json"
+    )
+
+    assert response.status_code == 201, response.data
+
+    item = NewsItem.objects.get(pk=response.data["id"])
+    assert (item.title_en, item.title_nl) == ("Hello", "Hallo")
+
+    rows = client.get(NEWS, {"search": "Hallo"}).data["results"]
+
+    assert [row["id"] for row in rows] == [item.pk]
+    assert rows[0]["title_nl"] == "Hallo"
+
+
+def test_all_columns_layout_labels_use_the_field_name():
+    fields = ModelSerializer(NewsItem).serialize()["fields"]
+
+    assert fields["title"]["verbose_name"] == "title"
+    assert fields["title"]["required"] is True
+    assert fields["title_en"]["verbose_name"] == "title (English)"
+    assert fields["title_nl"]["verbose_name"] == "title (Dutch)"

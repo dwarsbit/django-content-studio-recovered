@@ -4,6 +4,12 @@ from content_studio.admin import InlineModelStudio, ModelStudio
 from content_studio.form import FormSet, TableColumn
 
 from content_studio.publishing import Publishing
+from content_studio.translations import (
+    ColumnsAdapter,
+    Translations,
+    column_suffix,
+    get_content_languages,
+)
 
 from .models import (
     Feature,
@@ -17,6 +23,7 @@ from .models import (
     Guide,
     Label,
     LandingPage,
+    NewsItem,
     Note,
     Page,
     Part,
@@ -249,6 +256,26 @@ class GuideAdmin(ModelStudio):
     search_fields = ["title"]
     translations = ["title", "slug", "body"]
     prepopulated_fields = {"slug": ["title"]}
+
+
+class SuffixedColumnsAdapter(ColumnsAdapter):
+    """A column for every language, the default one too: title_en."""
+
+    def column(self, field, code, default):
+        return f"{field}_{column_suffix(code)}"
+
+    def model_field(self, field):
+        default = get_content_languages()[0][0]
+
+        return super().model_field(self.column(field, default, default))
+
+
+@register(NewsItem)
+class NewsItemAdmin(ModelStudio):
+    translations = Translations(["title", "body"], adapter=SuffixedColumnsAdapter)
+    edit_main = [FormSet(fields=["title", "body"])]
+    table_display = ["title"]
+    search_fields = ["title"]
 
 
 @register(Feature)

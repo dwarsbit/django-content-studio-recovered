@@ -122,6 +122,7 @@ def table_column_errors(studio) -> list[tuple[str, str]]:
             {field.name for field in model._meta.get_fields()}
             | model_property_names(model)
             | translated_attribute_names(model)
+            | set(translation_columns(owner))
         )
         seen = set()
 
@@ -189,6 +190,24 @@ def table_column_errors(studio) -> list[tuple[str, str]]:
     return errors
 
 
+def translation_columns(owner) -> dict[str, dict[str, str]]:
+    """
+    {translated field: {code: column}} of a studio's translations, so
+    the checks accept a translated field's name where the model has no
+    column by that name (a column for every language, title_en and
+    title_nl). Empty without translations, or when they are malformed
+    (E055 reports those).
+    """
+    from .translations import build_translation_config
+
+    try:
+        config = build_translation_config(owner)
+    except Exception:
+        return {}
+
+    return config.columns() if config is not None else {}
+
+
 def ignored_edit_field_names(model) -> set[str]:
     """
     Model field names the edit form never has to carry: the
@@ -254,6 +273,12 @@ def edit_field_warnings(studio) -> list[tuple[str, str]]:
 
     form_fields = edit_form_field_names(studio)
     ignored = ignored_edit_field_names(model)
+
+    # A translated field on the form writes every language's column,
+    # as with_translation_columns() does for the API.
+    for field, per_language in translation_columns(studio).items():
+        if field in form_fields:
+            form_fields |= set(per_language.values())
 
     warnings = []
 
@@ -1642,6 +1667,7 @@ def edit_form_config_errors(studio) -> list[tuple[str, str]]:
         model_field_names(model)
         | model_property_names(model)
         | translated_attribute_names(model)
+        | set(translation_columns(studio))
     )
 
     for field in iter_edit_fields(studio):
@@ -1682,7 +1708,9 @@ def list_query_errors(studio) -> list[tuple[str, str]]:
         if model is None:
             return
 
-        translated = translated_attribute_names(model)
+        # get_search_fields() expands a translated field into its
+        # languages' columns.
+        translated = translated_attribute_names(model) | set(translation_columns(owner))
 
         for entry in getattr(owner, "search_fields", None) or []:
             if entry.lstrip("^=@$") in translated:

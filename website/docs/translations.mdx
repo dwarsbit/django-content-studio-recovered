@@ -54,10 +54,13 @@ write German.
        translations = ["title", "body"]
    ```
 
-Put the translated fields in your edit layout as usual, by their own name
-(`title`, not `title_nl`): the edit page shows the column of the language
-the editor picked. The default layout leaves the other languages' columns
-out.
+Put the translated fields in your edit layout, `table_display` and
+`search_fields` as usual, by their own name (`title`, not `title_nl`): the
+edit page shows the column of the language the editor picked, the table
+shows it in the picked language and search looks in every language. This
+holds when the model has no column by that name too (see
+[A column for every language](#a-column-for-every-language)). The default
+layout leaves the other languages' columns out.
 
 ### django-modeltranslation and django-parler
 
@@ -180,6 +183,43 @@ class ArticleStudio(ModelStudio):
     translations = Translations(["title"], adapter=PrefixedColumns)
 ```
 
+### A column for every language
+
+When the default language has its own column too (`title_en`,
+`title_nl`, with no `title`), as django-modeltranslation lays out a
+model, but without modeltranslation, name the columns in `column()` and
+let the default language's column describe the field in `model_field()`:
+
+```python
+from content_studio.translations import (
+    ColumnsAdapter,
+    Translations,
+    column_suffix,
+    get_content_languages,
+)
+
+class SuffixedColumns(ColumnsAdapter):
+    """title_en, title_nl: a column for every language."""
+
+    def column(self, field, code, default):
+        return f"{field}_{column_suffix(code)}"
+
+    def model_field(self, field):
+        default = get_content_languages()[0][0]
+
+        return super().model_field(self.column(field, default, default))
+
+class NewsItemStudio(ModelStudio):
+    translations = Translations(["title", "body"], adapter=SuffixedColumns)
+    edit_main = [FormSet(fields=["title", "body"])]
+    table_display = ["title"]
+    search_fields = ["title"]
+```
+
+Name the field (`title`) in the layout, `table_display` and
+`search_fields`, as with any translated field: the checks accept it, and
+the label is the field's name with the language, "title (Dutch)".
+
 ## Checks
 
 - `content_studio.E055`: `translations` names a field that does not exist,
@@ -187,6 +227,12 @@ class ArticleStudio(ModelStudio):
   does not have, or an unknown adapter.
 - `content_studio.W030`: a translated field has no column for one of the
   languages, so editors cannot translate it into that language.
+
+The other checks know the translated fields: `table_display` (E006), the
+edit layout (E010) and `search_fields` (E011) may name a translated field
+the model has no column for, and a translated field on the edit form counts
+as all of its languages' columns for W001 (required fields missing from the
+form).
 
 ## Not yet supported
 
