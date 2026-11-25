@@ -49,6 +49,7 @@ const COMPONENTS = {
   Avatar: "avatar",
   UserAvatar: "user-avatar",
   Separator: "separator",
+  Skeleton: "skeleton",
   Spinner: "spinner",
   Table: "table",
   Tabs: "tabs",

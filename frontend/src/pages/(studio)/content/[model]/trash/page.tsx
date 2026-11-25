@@ -13,6 +13,7 @@ import { useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { ExportMenu } from "@/components/export-menu";
+import { TrashSkeleton } from "@/components/skeletons/list-skeleton";
 import { Button } from "@/components/ui/button";
 import { PageBody, PageHeader } from "@/components/ui/page-header";
 import { Pagination } from "@/components/ui/pagination";
@@ -21,6 +22,7 @@ import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useDiscover } from "@/hooks/use-discover";
 import { useExport } from "@/hooks/use-export";
 import { useHttp } from "@/hooks/use-http";
+import { useSkeleton } from "@/hooks/use-skeleton";
 import { getDownloadErrorMessage } from "@/lib/download";
 import { getErrorMessage } from "@/lib/utils";
 import type { ExportFormat, Model, PaginatedResponse, Resource } from "@/types";
@@ -129,6 +131,9 @@ function TrashView({ model }: { model: Model }) {
     }
   }
 
+  // A quick load skips the skeleton, a slow one keeps it a moment.
+  const showSkeleton = useSkeleton(hasTrash && !data);
+
   const canRestore = model.admin.permissions.change_permission;
   const canDestroy = model.admin.permissions.delete_permission;
 
@@ -167,11 +172,9 @@ function TrashView({ model }: { model: Model }) {
       <PageBody className="space-y-4">
         {!hasTrash ? (
           <div className="text-muted-foreground">{t("trash.unavailable")}</div>
-        ) : !data ? (
-          <div className="py-12 flex items-center justify-center">
-            <Spinner />
-          </div>
-        ) : R.isEmpty(data.results) ? (
+        ) : showSkeleton ? (
+          <TrashSkeleton />
+        ) : !data ? null : R.isEmpty(data.results) ? (
           <div className="text-muted-foreground">{t("trash.empty")}</div>
         ) : (
           <table className="w-full border">

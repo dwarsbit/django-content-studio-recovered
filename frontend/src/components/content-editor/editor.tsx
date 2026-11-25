@@ -9,10 +9,10 @@ import { toast } from "sonner";
 import type { z } from "zod";
 
 import { PublishingProvider } from "@/components/publishing/publishing-controls";
+import { EditorSkeleton } from "@/components/skeletons/editor-skeleton";
 import { TenantInfo } from "@/components/tenant-info";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Form } from "@/components/ui/form";
-import { Spinner } from "@/components/ui/spinner";
 import useConfirmDialog from "@/hooks/use-confirm-dialog";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
@@ -20,6 +20,7 @@ import { usePresence } from "@/hooks/use-presence";
 import { usePreferences } from "@/hooks/use-profile";
 import { useRecovery } from "@/hooks/use-recovery";
 import { useShowResult } from "@/hooks/use-show-result";
+import { useSkeleton } from "@/hooks/use-skeleton";
 import {
   columnLanguage,
   useContentLanguageState,
@@ -580,7 +581,10 @@ function EditorForm({
       : null,
   );
 
-  return model && initialized ? (
+  // The skeleton waits a moment before it shows, then stays a moment.
+  const showSkeleton = useSkeleton(!initialized);
+
+  return model && initialized && !showSkeleton ? (
     <Form {...form}>
       <ContentLanguageProvider model={model} value={contentLanguage}>
         <ResourcePathContext value={resourcePath}>
@@ -712,9 +716,16 @@ function EditorForm({
         </ResourcePathContext>
       </ContentLanguageProvider>
     </Form>
+  ) : showSkeleton ? (
+    <EditorSkeleton
+      model={model}
+      id={id}
+      dialog={dialog}
+      inline={!!inlineOf}
+      width={width}
+    />
   ) : (
-    <div className="py-12 sm:py-24 md:py-48 flex items-center justify-center">
-      <Spinner />
-    </div>
+    // A quick load shows nothing before the form.
+    <div className="flex-1" />
   );
 }

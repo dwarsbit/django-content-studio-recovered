@@ -116,6 +116,24 @@ describe("ContentTrashPage", () => {
     httpMock.get.mockResolvedValue({ data: makePaginated(trashed) });
   });
 
+  it("shows a skeleton of the rows while a slow load runs", async () => {
+    let resolve!: (value: unknown) => void;
+    httpMock.get.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    renderTrashPage(makeModel());
+
+    expect(screen.getByRole("heading", { name: "Notes" })).toBeInTheDocument();
+    expect(await screen.findByTestId("trash-skeleton")).toBeInTheDocument();
+
+    resolve({ data: makePaginated(trashed) });
+
+    expect(await screen.findByText("First note")).toBeInTheDocument();
+    expect(screen.queryByTestId("trash-skeleton")).not.toBeInTheDocument();
+  });
+
   it("lists trashed rows with their removal time and actions", async () => {
     renderTrashPage(makeModel());
 

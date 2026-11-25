@@ -1,5 +1,11 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import {
+  fireEvent,
+  render,
+  screen,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { MemoryRouter, Route, Routes, useLocation } from "react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -254,6 +260,41 @@ describe("ModelListPage", () => {
     httpGetMock.mockResolvedValue({ data: makePaginated(articles) });
     useAdminInfoMock.mockReturnValue({ data: undefined });
     localStorage.clear();
+  });
+
+  it("shows the page at once and a skeleton of the table while the rows load", async () => {
+    let resolve!: (value: unknown) => void;
+    httpGetMock.mockReturnValue(
+      new Promise((r) => {
+        resolve = r;
+      }),
+    );
+    renderListPage(makeModel());
+
+    // The header and the toolbar do not wait for the rows.
+    expect(
+      screen.getByRole("heading", { name: "Articles" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByTestId("table-skeleton")).not.toBeInTheDocument();
+
+    // A slow load shows the table's own columns over placeholder rows.
+    const skeleton = await screen.findByTestId("table-skeleton");
+    expect(within(skeleton).getByText("Title")).toBeInTheDocument();
+    expect(within(skeleton).getByText("Status")).toBeInTheDocument();
+
+    resolve({ data: makePaginated(articles) });
+
+    expect(await screen.findByText("First Article")).toBeInTheDocument();
+    expect(screen.queryByTestId("table-skeleton")).not.toBeInTheDocument();
+  });
+
+  it("skips the skeleton when the rows load quickly", async () => {
+    renderListPage(makeModel());
+
+    await screen.findByText("First Article");
+    await new Promise((r) => setTimeout(r, 300));
+
+    expect(screen.queryByTestId("table-skeleton")).not.toBeInTheDocument();
   });
 
   it("renders a row per result with the configured list columns", async () => {
@@ -1056,6 +1097,11 @@ describe("ModelListPage", () => {
         popularity__gte: "1",
       }),
     );
+    // The filters show with the page, before its rows: the custom
+    // filter's selected value asks for its options.
+    httpGetMock.mockImplementation(async (url: string) => ({
+      data: url.endsWith("/options") ? [] : makePaginated(articles),
+    }));
     renderListPage(
       makeModel({
         list: {

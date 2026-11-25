@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.22.0 (unreleased)
+
+### Features
+
+- **Skeleton loaders instead of spinners.** The list page shows its header,
+  tabs, search, filters and view toggles at once, and while the first page
+  loads, the table shows its own column names over placeholder rows (the
+  list, gallery and media library views have their own). The edit page,
+  in a dialog too, shows its tabs, card titles and field labels with a
+  placeholder for each value, sized by its widget, and the trash list does
+  the same for its rows. A load quicker than 200 ms skips the skeleton, so
+  a fast page goes straight to its content. The pulse stops when the system
+  asks for reduced motion. Nothing to configure.
+
 ## 1.21.2 (2026-11-25)
 
 ### Fixes

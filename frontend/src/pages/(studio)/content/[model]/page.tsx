@@ -21,6 +21,11 @@ import {
 } from "@/components/content-editor/content-language";
 import { HeaderTabs } from "@/components/header-tabs";
 import { ImportDialog } from "@/components/import-dialog";
+import {
+  GallerySkeleton,
+  ListRowsSkeleton,
+  TableSkeleton,
+} from "@/components/skeletons/list-skeleton";
 import { buttonVariants } from "@/components/ui/button";
 import { PageBody, PageHeader } from "@/components/ui/page-header";
 import { ListPagination } from "@/components/ui/pagination";
@@ -32,6 +37,7 @@ import { useHttp } from "@/hooks/use-http";
 import { useImportDownload } from "@/hooks/use-import";
 import { useMoveResource } from "@/hooks/use-move-resource";
 import { usePresenceList } from "@/hooks/use-presence";
+import { useSkeleton } from "@/hooks/use-skeleton";
 import { useTableEdit } from "@/hooks/use-table-edit";
 import { getDownloadErrorMessage } from "@/lib/download";
 import { formatNumber } from "@/lib/format-number";
@@ -370,7 +376,11 @@ export function ModelListPage() {
       }
     : undefined;
 
-  return model && data ? (
+  // The page shows at once; its rows wait for the first page. A quick
+  // load skips the skeleton, a slow one keeps it a moment.
+  const showSkeleton = useSkeleton(!data);
+
+  return model ? (
     <ContentLanguageProvider model={model}>
       <div className="flex flex-col flex-1 min-h-0 overflow-hidden">
         <PageHeader
@@ -437,7 +447,7 @@ export function ModelListPage() {
                     <span aria-hidden className="h-5 w-px bg-border mx-1" />
                   </>
                 )}
-                {data.pagination.count !== null && (
+                {data && data.pagination.count !== null && (
                   <span
                     className="mr-2 text-muted-foreground text-sm tabular-nums select-none"
                     title={
@@ -602,6 +612,17 @@ export function ModelListPage() {
                 selected={actions.length > 0 ? selected : undefined}
                 onToggle={actions.length > 0 ? toggle : undefined}
               />
+            ) : showSkeleton ? (
+              view === "gallery" ? (
+                <GallerySkeleton size={gallerySize} />
+              ) : view === "list" ? (
+                <ListRowsSkeleton />
+              ) : (
+                <TableSkeleton model={model} />
+              )
+            ) : !data ? (
+              // A quick first load shows nothing before the rows.
+              <div className="min-h-24" />
             ) : view === "gallery" ? (
               <GalleryView
                 items={data.results}
@@ -643,22 +664,26 @@ export function ModelListPage() {
               />
             )}
           </div>
-          {data.results.length > 0 && !calendar && !board && (
-            <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
-              <span className="tabular-nums select-none">
-                <ListCount model={model} pagination={data.pagination} />
-              </span>
-              <ListPagination
-                pagination={data.pagination}
-                onPageChange={(page) =>
-                  setSearchParams((searchParams) => {
-                    searchParams.set("page", `${page}`);
-                    return searchParams;
-                  })
-                }
-              />
-            </div>
-          )}
+          {data &&
+            !showSkeleton &&
+            data.results.length > 0 &&
+            !calendar &&
+            !board && (
+              <div className="flex items-center justify-between gap-4 text-sm text-muted-foreground">
+                <span className="tabular-nums select-none">
+                  <ListCount model={model} pagination={data.pagination} />
+                </span>
+                <ListPagination
+                  pagination={data.pagination}
+                  onPageChange={(page) =>
+                    setSearchParams((searchParams) => {
+                      searchParams.set("page", `${page}`);
+                      return searchParams;
+                    })
+                  }
+                />
+              </div>
+            )}
         </PageBody>
 
         {selected.size > 0 && actions.length > 0 && (

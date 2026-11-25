@@ -16,6 +16,7 @@ import { FolderPath } from "@/components/media-library/folder-path";
 import { FolderPicker } from "@/components/media-library/folder-picker";
 import { Folders } from "@/components/media-library/folders";
 import { ItemEdit } from "@/components/media-library/item-edit";
+import { MediaSkeleton } from "@/components/skeletons/list-skeleton";
 import { TenantInfo } from "@/components/tenant-info";
 import { Button } from "@/components/ui/button";
 import { PageBody, PageHeader, Toolbar } from "@/components/ui/page-header";
@@ -26,6 +27,7 @@ import { useDiscover } from "@/hooks/use-discover";
 import { useFolderPath } from "@/hooks/use-folder-path";
 import { useListMedia } from "@/hooks/use-list-media";
 import { useMediaUpload } from "@/hooks/use-media-upload";
+import { useSkeleton } from "@/hooks/use-skeleton";
 import { safeStorage } from "@/lib/safe-storage";
 import { cn } from "@/lib/utils";
 import type { MediaItem } from "@/types";
@@ -234,6 +236,8 @@ function MediaLibrary() {
   });
 
   const items = data?.results ?? [];
+  // A quick load skips the skeleton, a slow one keeps it a moment.
+  const showSkeleton = useSkeleton(!data);
   const selectedIds = items
     .map((item) => String(item.id))
     .filter((id) => selected.has(id));
@@ -358,7 +362,9 @@ function MediaLibrary() {
               </div>
             )}
 
-            {data && items.length === 0 ? (
+            {showSkeleton ? (
+              <MediaSkeleton view={view} />
+            ) : !data ? null : items.length === 0 ? (
               <MediaEmptyState
                 filtered={filtered}
                 onClear={clearAll}
@@ -396,7 +402,7 @@ function MediaLibrary() {
               </>
             )}
 
-            {data && items.length > 0 && (
+            {data && !showSkeleton && items.length > 0 && (
               <div
                 className={cn(
                   "flex items-center justify-between gap-4 text-sm text-muted-foreground",
