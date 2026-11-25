@@ -26,6 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Separator } from "@/components/ui/separator";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Spinner } from "@/components/ui/spinner";
 import { Switch } from "@/components/ui/switch";
 import {
@@ -686,7 +687,7 @@ export function UIPage() {
 
           <ShowcaseSection
             title="Feedback"
-            description="Alerts, badges and the spinner."
+            description="Alerts, badges, the spinner and loading skeletons."
           >
             <div className="space-y-3">
               <Alert>
@@ -704,6 +705,13 @@ export function UIPage() {
                 <Badge variant="outline">Outline</Badge>
                 <Badge variant="destructive">Destructive</Badge>
                 <Spinner />
+              </div>
+              <div className="flex gap-3 items-center max-w-sm">
+                <Skeleton className="size-10 rounded-md shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-3.5 w-3/4" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
               </div>
             </div>
           </ShowcaseSection>

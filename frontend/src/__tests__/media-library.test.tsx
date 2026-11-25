@@ -141,6 +141,24 @@ describe("MediaLibraryPage", () => {
     localStorage.clear();
   });
 
+  it("shows a skeleton of the grid while a slow load runs", async () => {
+    let resolve!: (value: unknown) => void;
+    httpGetMock.mockImplementation(
+      () =>
+        new Promise((r) => {
+          resolve = r;
+        }),
+    );
+    renderMediaLibrary();
+
+    expect(await screen.findByTestId("media-skeleton")).toBeInTheDocument();
+
+    resolve({ data: makePaginated(items) });
+
+    expect(await screen.findByText("photo.jpg")).toBeInTheDocument();
+    expect(screen.queryByTestId("media-skeleton")).not.toBeInTheDocument();
+  });
+
   it("renders the grid by default and remembers a view switch", async () => {
     const user = userEvent.setup();
     renderMediaLibrary();
