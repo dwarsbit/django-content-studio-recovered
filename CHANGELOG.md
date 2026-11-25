@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.21.2 (unreleased)
+
+### Fixes
+
+- **Translated fields with a column for every language pass the checks.**
+  For a model whose default language has its own column too (`title_en`,
+  `title_nl`, no `title`), declared with a `TranslationAdapter` subclass,
+  naming `title` in the edit layout, `table_display` or `search_fields`
+  failed `manage.py check` (E010, E006, E011), and W001 warned that the
+  required columns were missing from the form. The checks now resolve
+  translated fields through the studio's translations, and a translated
+  field on the form covers all of its columns. The list no longer fails
+  on such a field in `table_display`, and its labels read "title" and
+  "title (Dutch)" instead of the default column's "title en".
 ## 1.21.1 (2026-11-22)
 
 ### Fixes

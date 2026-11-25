@@ -408,6 +408,23 @@ class Guide(models.Model):
         return self.title
 
 
+class NewsItem(models.Model):
+    """
+    Translated content with a column for every language and no base
+    column (title_en, title_nl, title_de); see test_translations.
+    """
+
+    title_en = models.CharField(max_length=100)
+    title_nl = models.CharField(max_length=100)
+    title_de = models.CharField(max_length=100, blank=True)
+    body_en = models.TextField(blank=True)
+    body_nl = models.TextField(blank=True)
+    body_de = models.TextField(blank=True)
+
+    def __str__(self):
+        return self.title_en
+
+
 class Feature(models.Model):
     """Publishing with unpublished changes; see test_pending_changes."""
 

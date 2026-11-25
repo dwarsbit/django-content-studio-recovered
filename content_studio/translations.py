@@ -511,7 +511,13 @@ def translated_label(model, name: str, label) -> Any:
 
     field, code = found
     base = config.adapter.model_field(field)
-    base_label = base.verbose_name if base is not None else field
+    # With a column for every language (title_en) the field has no
+    # model field of its own to take a label from.
+    base_label = (
+        base.verbose_name
+        if base is not None and base.name == field
+        else field.replace("_", " ")
+    )
 
     return f"{base_label} ({config.language_name(code)})"
 

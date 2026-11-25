@@ -778,8 +778,17 @@ class ModelSerializer:
             if model_field is None:
                 continue
 
+            # With a column for every language (title_en, title_nl) the
+            # default language's column describes the field, but its
+            # label is the field's own.
+            label = (
+                model_field.verbose_name
+                if model_field.name == name
+                else name.replace("_", " ")
+            )
+
             if name not in fields:
-                fields[name] = self.get_field(model_field)
+                fields[name] = {**self.get_field(model_field), "verbose_name": label}
 
             for code, column in per_language.items():
                 data = dict(fields.get(column) or self.get_field(model_field))
@@ -791,9 +800,7 @@ class ModelSerializer:
                 # The field itself keeps its own label: the editor shows
                 # it with a language badge.
                 if column != name:
-                    data["verbose_name"] = (
-                        f"{model_field.verbose_name} ({config.language_name(code)})"
-                    )
+                    data["verbose_name"] = f"{label} ({config.language_name(code)})"
                 # Only the required languages must be complete.
                 data["required"] = code in config.required and not model_field.blank
 

@@ -282,6 +282,11 @@ class DjangoContentStudioConfig(AppConfig):
                                     for column in per_language.values()
                                     if column not in available_fields
                                 )
+                                # With a column for every language
+                                # (title_en, title_nl) the field itself
+                                # is no attribute to serialize.
+                                if not hasattr(model, name):
+                                    available_fields.remove(name)
                 # For the user model we exclude the password and the username field.
                 elif model is user_model:
                     available_fields = None
