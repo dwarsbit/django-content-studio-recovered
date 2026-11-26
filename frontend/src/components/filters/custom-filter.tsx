@@ -72,7 +72,7 @@ export function CustomFilter({
       <DropdownMenuTrigger asChild>
         <FilterTrigger
           label={label}
-          value={selected.map((v) => labels[v] ?? v).join(", ")}
+          value={selected.map((v) => labels[v] ?? v)}
           onClear={() => onChange({ "": null })}
         />
       </DropdownMenuTrigger>

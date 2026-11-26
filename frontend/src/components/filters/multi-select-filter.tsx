@@ -25,10 +25,7 @@ export function MultiSelectFilter({
       <DropdownMenuTrigger asChild>
         <FilterTrigger
           label={field.verbose_name}
-          value={valueArray
-            .filter(Boolean)
-            .map((value) => choices[value])
-            .join(", ")}
+          value={valueArray.map((value) => choices[value] ?? value)}
           onClear={() => onChange({ "": null })}
         />
       </DropdownMenuTrigger>

@@ -6,9 +6,10 @@ import { cn } from "@/lib/utils";
 
 /**
  * The button a filter opens from: a quiet label while it is unset, a
- * "Field is value" chip with an inline clear once it has a value. Radix
- * triggers render it through `asChild`, so every prop reaches the
- * button.
+ * "Field is value" chip with an inline clear once it has a value. A
+ * list of values shows its first and "+N more", so the chip keeps a
+ * maximum width. Radix triggers render it through `asChild`, so every
+ * prop reaches the button.
  */
 export function FilterTrigger({
   label,
@@ -18,19 +19,23 @@ export function FilterTrigger({
   ...props
 }: Omit<ComponentProps<"button">, "value"> & {
   label: ReactNode;
-  // The chosen value, empty or absent while the filter is unset.
-  value?: ReactNode;
+  // The chosen value (or values), empty or absent while the filter is
+  // unset.
+  value?: ReactNode | ReactNode[];
   onClear?(): void;
 }) {
   const { t } = useTranslation();
-  const active = value !== undefined && value !== null && value !== "";
+  const values = (Array.isArray(value) ? value : [value]).filter(
+    (item) => item !== undefined && item !== null && item !== "",
+  );
+  const active = values.length > 0;
 
   return (
     <button
       type="button"
       {...props}
       className={cn(
-        "h-7 max-w-full inline-flex items-center gap-1.5 text-sm font-medium whitespace-nowrap cursor-pointer select-none",
+        "h-7 max-w-[min(100%,22rem)] inline-flex items-center gap-1.5 text-sm font-medium whitespace-nowrap cursor-pointer select-none",
         "outline-none focus-visible:ring-3 focus-visible:ring-ring",
         active
           ? "px-3 rounded-full bg-secondary text-secondary-foreground"
@@ -44,7 +49,12 @@ export function FilterTrigger({
           <span className="font-normal text-muted-foreground">
             {t("list_view.filters.is")}
           </span>
-          <span className="truncate min-w-0">{value}</span>
+          <span className="truncate min-w-0">{values[0]}</span>
+          {values.length > 1 && (
+            <span className="shrink-0 font-normal text-muted-foreground">
+              {t("list_view.filters.more", { count: values.length - 1 })}
+            </span>
+          )}
           {onClear && (
             <span
               role="button"

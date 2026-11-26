@@ -96,7 +96,7 @@ export function ForeignKeyFilter({
         />
       </PopoverTrigger>
       <PopoverContent
-        className="max-h-[400px] w-[var(--radix-popover-trigger-width)] overflow-hidden p-0 flex flex-col"
+        className="max-h-[400px] w-[var(--radix-popover-trigger-width)] min-w-72 max-w-[min(24rem,calc(100vw-2rem))] overflow-hidden p-0 flex flex-col"
         align="start"
       >
         <div className="border-b border-border">

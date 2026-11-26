@@ -184,7 +184,9 @@
       "max": "Max",
       "is": "est",
       "clear": "Effacer {{field}}",
-      "more_values": "Les 100 premières valeurs. Recherchez pour en trouver d’autres."
+      "more_values": "Les 100 premières valeurs. Recherchez pour en trouver d’autres.",
+      "remove": "Retirer {{field}}",
+      "more": "+{{count}} de plus"
     },
     "tabs_all": "Tous : {{model}}",
     "count_one": "{{count, number}} {{singular}}",

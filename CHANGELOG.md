@@ -14,6 +14,14 @@
   page has no filter for (JSON, files, media) is left out of the menu, and
   `manage.py check` warns about it as `content_studio.W034`. Filter values
   may now contain commas, in custom filter options too.
+- **Filter chips stay compact.** A filter with several values shows the
+  first and "+2 more", so its chip no longer runs across the toolbar.
+- **Remove a filter picked without a value.** A filter added from the
+  Filter menu now has an X next to it until it gets a value, so a date
+  range (or any other filter) picked by mistake can be taken away again.
+- **Wider pickers.** The search pickers of relation and text filters are
+  at least 18rem and at most 24rem wide, so short filter names no longer
+  squeeze their options.
 
 ## 1.22.0 (2026-11-25)
 
