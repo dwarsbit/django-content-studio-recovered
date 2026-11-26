@@ -494,7 +494,8 @@ def test_every_filter_says_its_control():
     )
 
     controls = {
-        entry["name"]: entry["control"] for entry in serialize_list_filters(studio, None)
+        entry["name"]: entry["control"]
+        for entry in serialize_list_filters(studio, None)
     }
 
     assert controls == {
@@ -530,12 +531,8 @@ def test_text_filter_values_endpoint(monkeypatch, articles):
     client = superuser_client()
 
     response = client.get("/api/content/testapp.article/filters/title/values")
-    searched = client.get(
-        "/api/content/testapp.article/filters/title/values?search=IR"
-    )
-    across = client.get(
-        "/api/content/testapp.article/filters/author__username/values"
-    )
+    searched = client.get("/api/content/testapp.article/filters/title/values?search=IR")
+    across = client.get("/api/content/testapp.article/filters/author__username/values")
     choices = client.get("/api/content/testapp.article/filters/status/values")
     undeclared = client.get("/api/content/testapp.article/filters/body/values")
 

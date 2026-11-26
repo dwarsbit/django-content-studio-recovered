@@ -276,7 +276,9 @@ def get_filter_control(field) -> Optional[str]:
     if widget in ("ManyToManyWidget", "PermissionMatrixWidget"):
         return "many"
 
-    if not field.is_relation and isinstance(field, (models.CharField, models.TextField)):
+    if not field.is_relation and isinstance(
+        field, (models.CharField, models.TextField)
+    ):
         return "distinct"
 
     return None
