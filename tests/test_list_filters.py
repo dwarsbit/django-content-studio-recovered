@@ -570,11 +570,11 @@ def test_text_filter_values_leave_out_what_the_list_leaves_out(monkeypatch):
     Article.objects.create(title="Hidden")
     studio = admin_site._registry[Article]
     monkeypatch.setattr(studio, "list_filter", ["title"])
+    # On the class: an instance attribute would outlive the test.
     monkeypatch.setattr(
-        studio,
+        type(studio),
         "get_queryset",
-        lambda request: Article.objects.exclude(title="Hidden"),
-        raising=False,
+        lambda self, request: Article.objects.exclude(title="Hidden"),
     )
     client = superuser_client()
 
