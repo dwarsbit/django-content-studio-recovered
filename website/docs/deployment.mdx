@@ -209,6 +209,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W031` | The [`content_studio.previews`](/docs/previews#keep-preview-pages-private) app is installed but `MIDDLEWARE` has no `PreviewMiddleware`, so pages opened with a shared draft link may be cached or indexed. |
 | `content_studio.W032` | A studio's `list_editable`, the Django admin's name for [`table_edit`](/docs/list-page#editing-in-the-table), or `table_edit` on a studio whose `list_views` has no table view. |
 | `content_studio.W033` | `"gallery"` in [`list_views`](/docs/list-page#gallery) while `list_item_display` has no `thumbnail`, so every tile shows a placeholder. |
+| `content_studio.W034` | A field in [`list_filter`](/docs/list-page#filters) that the list page has no filter for, such as a JSON, file or media field, so the list leaves it out. |
 
 ## Reporting a vulnerability
 

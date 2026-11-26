@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Spinner } from "@/components/ui/spinner";
 import { useHttp } from "@/hooks/use-http";
+import { joinFilterValues, splitFilterValues } from "@/lib/list-filters";
 import type { Model } from "@/types";
 
 import { FilterTrigger } from "./filter-trigger";
@@ -27,7 +28,7 @@ interface FilterOption {
  * options the server builds for this request. They are fetched when the
  * dropdown opens, or while a value needs its label. Single choice
  * filters pick one option, multiple choice filters any number, sent as
- * a comma-joined list.
+ * a comma-joined list (joinFilterValues).
  */
 export function CustomFilter({
   name,
@@ -49,8 +50,8 @@ export function CustomFilter({
   const { t } = useTranslation();
   const http = useHttp();
   const [open, setOpen] = useState(!!defaultOpen);
-  const value = values[""] ?? "";
-  const selected = value.split(",").filter(Boolean);
+  const selected = splitFilterValues(values[""] ?? "");
+  const value = selected[0] ?? "";
 
   const { data: options = [], isLoading } = useQuery({
     enabled: open || selected.length > 0,
@@ -95,7 +96,7 @@ export function CustomFilter({
                   ? selected.filter((v) => v !== option.value)
                   : [...selected, option.value];
 
-                onChange({ "": next.join(",") || null });
+                onChange({ "": joinFilterValues(next) || null });
               }}
             >
               {option.label}
@@ -105,7 +106,9 @@ export function CustomFilter({
           <DropdownMenuRadioGroup
             value={value}
             onValueChange={(next) =>
-              onChange({ "": next === value ? null : next })
+              onChange({
+                "": next === value ? null : joinFilterValues([next]) || null,
+              })
             }
           >
             <DropdownMenuRadioItem value="">

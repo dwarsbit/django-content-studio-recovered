@@ -376,10 +376,20 @@ export interface UniqueSet {
  * the path's last field), or a custom filter whose options the server
  * builds when the filter opens.
  */
+/**
+ * The control a field filter shows, as the server picks it for the
+ * field: its choices, Yes and No, a date or number range, a picker of
+ * one or several related objects, or the distinct values in the table
+ * (text without choices).
+ */
+export type FilterControl =
+  "choices" | "boolean" | "date" | "number" | "relation" | "many" | "distinct";
+
 export interface ListFilter {
   name: string;
   label: string;
   field?: ModelField;
+  control?: FilterControl;
   custom?: boolean;
   multiple?: boolean;
 }

@@ -2941,13 +2941,42 @@ def list_filter_entry_warnings(studio) -> list[tuple[str, str]]:
     message) pairs. Field paths, ListFilter classes and Django's
     SimpleListFilter classes are filters; a (field, class) tuple filters
     on its field with the default control, without the class; anything
-    else (such as Django's field list filter classes) is ignored.
+    else (such as Django's field list filter classes) is ignored. W034:
+    a field (or path) the list page has no filter control for, such as
+    a JSON, file or media field; the list leaves it out.
     """
-    from .filters import is_django_simple_list_filter, is_list_filter_class
+    from .filters import (
+        FilterPathError,
+        get_filter_control,
+        is_django_simple_list_filter,
+        is_list_filter_class,
+        resolve_filter_path,
+    )
 
     warnings = []
+    model = getattr(studio, "model", None)
 
     for entry in getattr(studio, "list_filter", None) or []:
+        path = entry[0] if isinstance(entry, (tuple, list)) and entry else entry
+
+        if isinstance(path, str) and model is not None:
+            try:
+                fields = resolve_filter_path(model, path, studio)
+            except (FilterPathError, FieldDoesNotExist):
+                # E011 and E042 report it.
+                fields = None
+
+            if fields and get_filter_control(fields[-1]) is None:
+                warnings.append(
+                    (
+                        "content_studio.W034",
+                        f"{config_name(studio)}.list_filter contains "
+                        f"{path!r}, a {fields[-1].__class__.__name__}, which "
+                        "the list page cannot filter on, so it is left out. "
+                        "Remove it, or use a ListFilter class.",
+                    )
+                )
+
         if isinstance(entry, str):
             continue
 

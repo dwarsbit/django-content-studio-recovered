@@ -111,6 +111,7 @@ export function Filters({
           <FilterRenderer
             key={filter.name}
             field={{ ...filter.field, verbose_name: filter.label }}
+            control={filter.control}
             name={filter.name}
             model={model}
             values={valuesOf(filter.name)}

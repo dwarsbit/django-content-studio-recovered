@@ -179,7 +179,8 @@
       "min": "Min",
       "max": "Max",
       "is": "is",
-      "clear": "Clear {{field}}"
+      "clear": "Clear {{field}}",
+      "more_values": "Showing the first 100 values. Search to find others."
     },
     "tabs_all": "All {{model}}",
     "count_one": "{{count, number}} {{singular}}",

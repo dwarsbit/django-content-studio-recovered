@@ -39,6 +39,8 @@ from .export import export_response, get_export_formats, is_exportable
 from .filters import (
     LookupFilter,
     get_custom_filter,
+    get_distinct_values,
+    get_filter_control,
     get_filter_field_path,
     serialize_options,
 )
@@ -2352,6 +2354,28 @@ class BaseModelViewSet(ModelViewSet):
                 for value, label in serialize_options(list_filter.get_options(request))
             ]
         )
+
+    @action(
+        methods=["get"],
+        detail=False,
+        url_path="filters/(?P<filter_path>[^/]+)/values",
+    )
+    def filter_values(self, request, filter_path):
+        """
+        The values a text field filter offers (a field or path in
+        list_filter without choices): the distinct values in the list,
+        which leaves out other tenants and trashed objects, narrowed by
+        ?search=. At most DISTINCT_VALUES_LIMIT, with "more" when the
+        editor should search for the rest.
+        """
+        spec = get_filter_field_path(self._admin_model, filter_path)
+
+        if spec is None or get_filter_control(spec.field) != "distinct":
+            raise NotFound("Filter not found.")
+
+        search = request.query_params.get("search", "").strip()
+
+        return Response(get_distinct_values(self.get_queryset(), filter_path, search))
 
     @action(methods=["post"], detail=False, url_path="relations/(?P<field_name>[^/]+)")
     def get_related_objects(self, request, field_name):

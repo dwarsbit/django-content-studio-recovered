@@ -179,7 +179,8 @@
       "min": "Min",
       "max": "Max",
       "is": "is",
-      "clear": "{{field}} wissen"
+      "clear": "{{field}} wissen",
+      "more_values": "De eerste 100 waarden. Zoek om andere te vinden."
     },
     "tabs_all": "Alle {{model}}",
     "count_one": "{{count, number}} {{singular}}",

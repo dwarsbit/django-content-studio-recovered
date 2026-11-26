@@ -6,6 +6,7 @@ import {
   DropdownMenuContent,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { joinFilterValues, splitFilterValues } from "@/lib/list-filters";
 
 import { FilterTrigger } from "./filter-trigger";
 import type { FilterComponentProps } from "./types";
@@ -16,8 +17,7 @@ export function MultiSelectFilter({
   onChange,
   defaultOpen,
 }: FilterComponentProps) {
-  const value = values[""] ?? "";
-  const valueArray = value.split(",");
+  const valueArray = splitFilterValues(values[""] ?? "");
   const choices = R.fromPairs(field.choices ?? []);
 
   return (
@@ -46,12 +46,11 @@ export function MultiSelectFilter({
                 e.preventDefault();
                 onChange({
                   "":
-                    (valueArray.includes(key)
-                      ? valueArray.filter((i) => i !== key)
-                      : [...valueArray, key]
-                    )
-                      .filter(Boolean)
-                      .join(",") || null,
+                    joinFilterValues(
+                      valueArray.includes(key)
+                        ? valueArray.filter((i) => i !== key)
+                        : [...valueArray, key],
+                    ) || null,
                 });
               }}
             >
