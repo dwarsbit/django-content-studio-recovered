@@ -17,8 +17,9 @@
 - **Filter chips stay compact.** A filter with several values shows the
   first and "+2 more", so its chip no longer runs across the toolbar.
 - **Remove a filter picked without a value.** A filter added from the
-  Filter menu now has an X next to it until it gets a value, so a date
-  range (or any other filter) picked by mistake can be taken away again.
+  Filter menu now sits in a bordered chip with an X until it gets a
+  value, so a date range (or any other filter) picked by mistake can be
+  taken away again.
 - **Wider pickers.** The search pickers of relation and text filters are
   at least 18rem and at most 24rem wide, so short filter names no longer
   squeeze their options.

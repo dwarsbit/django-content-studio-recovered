@@ -39,7 +39,7 @@ export function FilterTrigger({
         "outline-none focus-visible:ring-3 focus-visible:ring-ring",
         active
           ? "px-3 rounded-full bg-secondary text-secondary-foreground"
-          : "px-2 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted",
+          : "px-2.5 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted",
         className,
       )}
     >
