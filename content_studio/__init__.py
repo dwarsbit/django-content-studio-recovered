@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 __title__ = "Django Content Studio"
-__version__ = "1.22.0"
+__version__ = "1.22.1"
 __author__ = "Leon van der Grient"
 __license__ = "MIT"
 
