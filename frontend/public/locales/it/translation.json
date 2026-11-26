@@ -183,7 +183,10 @@
       "min": "Min",
       "max": "Max",
       "is": "è",
-      "clear": "Rimuovi {{field}}"
+      "clear": "Rimuovi {{field}}",
+      "more_values": "I primi 100 valori. Cerca per trovarne altri.",
+      "remove": "Rimuovi {{field}}",
+      "more": "+{{count}} altri"
     },
     "tabs_all": "Tutti: {{model}}",
     "count_one": "{{count, number}} {{singular}}",

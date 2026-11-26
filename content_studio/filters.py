@@ -215,6 +215,109 @@ def filter_path_label(fields) -> str:
     return capfirst(" ".join(names[:1] + [n.lower() for n in names[1:]]))
 
 
+# The most distinct values a text field's filter offers at once; past
+# that the editor searches for the rest.
+DISTINCT_VALUES_LIMIT = 100
+
+NUMBER_FIELD_TYPES = ("IntegerField", "DecimalField", "FloatField")
+
+
+def get_filter_control(field) -> Optional[str]:
+    """
+    The control the list page filters a field with: "choices" (its
+    choices), "boolean", "date" (a date range), "number" (a number
+    range), "relation" (a picker of one related object), "many" (a
+    picker of several), "distinct" (a dropdown of the values in the
+    table, for text without choices) or None, for a field the list page
+    cannot filter on (such as JSON, files or media). The frontend
+    renders the control by this name (components/filters/renderer.tsx).
+    """
+    from .permission_matrix import is_permission_field
+    from .settings import cs_settings
+
+    if not isinstance(field, models.Field):
+        # A reverse relation filters like a many-to-many field.
+        return "many"
+
+    if getattr(field, "choices", None):
+        return "choices"
+
+    # The widget the admin shows the field with, by the same rules as
+    # the model info (ModelSerializer.get_field and the widget mapping).
+    if hasattr(field, "widget_class"):
+        widget = field.widget_class.__name__
+    elif is_permission_field(field):
+        widget = "PermissionMatrixWidget"
+    else:
+        site = getattr(cs_settings, "ADMIN_SITE", None)
+        mapping = getattr(site, "default_widget_mapping", None) or {}
+        mapped = mapping.get(field.__class__) or mapping.get(field.__class__.__name__)
+        widget = getattr(mapped, "__name__", None) or (
+            mapped.__class__.__name__ if mapped is not None else None
+        )
+
+    type_name = field.__class__.__name__
+
+    if widget == "MultiSelectWidget":
+        return "choices"
+
+    if type_name == "BooleanField":
+        return "boolean"
+
+    if type_name in ("DateField", "DateTimeField"):
+        return "date"
+
+    if type_name in NUMBER_FIELD_TYPES or type_name.endswith("IntegerField"):
+        return "number"
+
+    if widget == "ForeignKeyWidget":
+        return "relation"
+
+    if widget in ("ManyToManyWidget", "PermissionMatrixWidget"):
+        return "many"
+
+    if not field.is_relation and isinstance(
+        field, (models.CharField, models.TextField)
+    ):
+        return "distinct"
+
+    return None
+
+
+def get_distinct_values(queryset, path: str, search: str = "") -> dict[str, Any]:
+    """
+    The values of a text field (or a path such as "author__city") in the
+    queryset, for its list filter: distinct, sorted, without empty ones,
+    narrowed to those containing `search`. At most
+    DISTINCT_VALUES_LIMIT; "more" tells whether others exist.
+    """
+    values = (
+        queryset.exclude(**{f"{path}__isnull": True})
+        .exclude(**{path: ""})
+        .order_by(path)
+        .values_list(path, flat=True)
+        .distinct()
+    )
+
+    if search:
+        values = values.filter(**{f"{path}__icontains": search})
+
+    found = list(values[: DISTINCT_VALUES_LIMIT + 1])
+
+    return {
+        "values": [str(value) for value in found[:DISTINCT_VALUES_LIMIT]],
+        "more": len(found) > DISTINCT_VALUES_LIMIT,
+    }
+
+
+def split_values(raw: str) -> list[str]:
+    r"""
+    A query parameter's comma-separated values. A comma escaped with a
+    backslash ("Amsterdam\, NL") belongs to its value.
+    """
+    return [part.replace("\\,", ",") for part in re.split(r"(?<!\\),", raw)]
+
+
 @dataclass
 class FieldFilterSpec:
     path: str
@@ -324,6 +427,12 @@ def serialize_list_filters(studio, request) -> list[dict[str, Any]]:
             continue
 
         field = spec.field
+        control = get_filter_control(field)
+
+        # A field the list page has no control for is left out of the
+        # Filter menu; check W034 reports it.
+        if control is None:
+            continue
 
         if isinstance(field, models.Field):
             data = ModelSerializer(field.model).get_field(field)
@@ -337,7 +446,12 @@ def serialize_list_filters(studio, request) -> list[dict[str, Any]]:
         data["verbose_name"] = filter_path_label(spec.fields)
 
         serialized.append(
-            {"name": spec.path, "label": data["verbose_name"], "field": data}
+            {
+                "name": spec.path,
+                "label": data["verbose_name"],
+                "field": data,
+                "control": control,
+            }
         )
 
     return serialized
@@ -473,7 +587,7 @@ class LookupFilter(BaseFilterBackend):
         the filter's options are refused.
         """
         name = list_filter.parameter_name
-        values = [v for v in flatten([r.split(",") for r in raw_values]) if v]
+        values = [v for v in flatten([split_values(r) for r in raw_values]) if v]
 
         if not values:
             return queryset
@@ -531,8 +645,9 @@ class LookupFilter(BaseFilterBackend):
                 # resolves normally.
                 key = key[len(self.EXCLUDE_SYMBOL) :]
             # By default Django supports repeated multi-values (e.g. `a=1&a=2`)
-            # but we allow for comma-seperated multi-values as well (e.g. `a=1,2`).
-            value = flatten([param.split(",") for param in value])
+            # but we allow for comma-seperated multi-values as well (e.g. `a=1,2`);
+            # a value's own comma is escaped (`a=1\,5`).
+            value = flatten([split_values(param) for param in value])
 
             path, rest = self.match_path(key, allowed_fields)
 

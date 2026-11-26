@@ -650,6 +650,8 @@ Each is optional and has its own page:
   but cards cannot be dragged.
 - `"gallery"` without a `thumbnail` role in `list_item_display` (`W033`):
   every tile is a placeholder.
+- A JSON, file or media field in `list_filter` (`W034`): the list page has
+  no filter for it and leaves it out; use a `ListFilter` class.
 - A required field missing from `edit_main`/`edit_sidebar` (`W001`), or
   read-only (`W002`): saving fails.
 - Writing a custom `BaseWidget`, `BaseFormat`, `Component` or

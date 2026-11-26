@@ -1,10 +1,17 @@
 import { type ComponentType, useMemo } from "react";
 
 import { useAdminInfo } from "@/hooks/use-admin-info";
-import { FieldType, FieldWidget, type Model, type ModelField } from "@/types";
+import {
+  FieldType,
+  FieldWidget,
+  type FilterControl,
+  type Model,
+  type ModelField,
+} from "@/types";
 
 import { BooleanFilter } from "./boolean-filter";
 import { DateRangeFilter } from "./date-range-filter";
+import { DistinctValuesFilter } from "./distinct-values-filter";
 import { ForeignKeyFilter } from "./foreign-key-filter";
 import { ManyToManyFilter } from "./many-to-many-filter";
 import { MultiSelectFilter } from "./multi-select-filter";
@@ -29,8 +36,19 @@ function isNumberType(type: string) {
   return NUMBER_TYPES.includes(type) || type.endsWith("IntegerField");
 }
 
+const CONTROLS: Record<FilterControl, FilterComponent> = {
+  choices: MultiSelectFilter,
+  boolean: BooleanFilter,
+  date: DateRangeFilter,
+  number: NumberFilter,
+  relation: ForeignKeyFilter,
+  many: ManyToManyFilter,
+  distinct: DistinctValuesFilter,
+};
+
 export function FilterRenderer({
   field,
+  control,
   name,
   model,
   values,
@@ -38,6 +56,9 @@ export function FilterRenderer({
   defaultOpen,
 }: {
   field: ModelField;
+  // The control the server picked for the field (get_filter_control);
+  // without it the field's type and widget decide.
+  control?: FilterControl;
   name: string;
   model: Model;
   values: FilterValues;
@@ -48,6 +69,9 @@ export function FilterRenderer({
   const widgetClass = field.widget_class ?? info?.widgets[field.type]?.name;
 
   const FilterComp = useMemo<FilterComponent | null>(() => {
+    if (control) {
+      return CONTROLS[control] ?? null;
+    }
     if (widgetClass === FieldWidget.InputWidget && field.choices) {
       return MultiSelectFilter;
     }
@@ -76,7 +100,7 @@ export function FilterRenderer({
       return ManyToManyFilter;
     }
     return null;
-  }, [field, widgetClass]);
+  }, [control, field, widgetClass]);
 
   return (
     FilterComp && (

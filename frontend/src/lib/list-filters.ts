@@ -1,11 +1,17 @@
-import type { ListFilter, Model, ModelField } from "@/types";
+import type { FilterControl, ListFilter, Model, ModelField } from "@/types";
 
 /**
  * One filter of the list page: a field (or a path across relations,
  * such as "author__country"), or a custom filter with its own options.
  */
 export type ResolvedFilter =
-  | { kind: "field"; name: string; label: string; field: ModelField }
+  | {
+      kind: "field";
+      name: string;
+      label: string;
+      field: ModelField;
+      control?: FilterControl;
+    }
   | { kind: "custom"; name: string; label: string; multiple: boolean };
 
 /**
@@ -42,6 +48,7 @@ export function getListFilters(model: Model): ResolvedFilter[] {
           name: entry.name,
           label: entry.label,
           field,
+          control: entry.control,
         });
       }
     }
@@ -87,4 +94,20 @@ export function matchFilter(
   }
 
   return match;
+}
+
+/**
+ * A filter's values as one query parameter, comma-joined. A value's own
+ * comma is escaped with a backslash, which the server reads back.
+ */
+export function joinFilterValues(values: string[]): string {
+  return values.map((value) => value.replace(/,/g, "\\,")).join(",");
+}
+
+/** The values of a comma-joined filter parameter (joinFilterValues). */
+export function splitFilterValues(value: string): string[] {
+  return value
+    .split(/(?<!\\),/)
+    .map((part) => part.replace(/\\,/g, ","))
+    .filter(Boolean);
 }

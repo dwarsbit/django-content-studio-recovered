@@ -384,7 +384,15 @@ Each field gets the control that fits it:
 - Yes and No for booleans;
 - a date range for dates;
 - a minimum and maximum for numbers;
-- a searchable picker for foreign keys and many-to-many fields.
+- a searchable picker for foreign keys and many-to-many fields;
+- for text without choices (a `CharField`, `TextField`, `SlugField`,
+  `EmailField` or `URLField`), a searchable list of the values in the
+  table, like the classic admin's `AllValuesFieldListFilter`. It shows the
+  first 100 values; searching finds the others. Editors can pick several.
+
+Fields the list page cannot filter on, such as JSON, file and media
+fields, are left out. `manage.py check` warns about them as
+`content_studio.W034`; filter on them with a [custom filter](#custom-filters).
 
 ### Filters across relations
 
@@ -444,8 +452,7 @@ class ArticleStudio(ModelStudio):
 
 Inside the filter, `self.studio` is the model's studio. The admin only
 passes values that are among the options, so `queryset` never has to deal
-with unknown values. Keep commas out of option values: a multiple choice
-filter joins the chosen values with commas.
+with unknown values. Option values may contain commas.
 
 The options can come from the database. This filter offers the tags in
 use and lets editors pick several:

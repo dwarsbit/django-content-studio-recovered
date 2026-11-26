@@ -179,7 +179,10 @@
       "min": "Min.",
       "max": "Max.",
       "is": "ist",
-      "clear": "{{field}} zurücksetzen"
+      "clear": "{{field}} zurücksetzen",
+      "more_values": "Die ersten 100 Werte. Suche, um weitere zu finden.",
+      "remove": "{{field}} entfernen",
+      "more": "+{{count}} weitere"
     },
     "tabs_all": "Alle {{model}}",
     "count_one": "{{count, number}} {{singular}}",

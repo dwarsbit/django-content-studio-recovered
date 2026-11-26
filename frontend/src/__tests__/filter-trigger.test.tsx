@@ -125,3 +125,28 @@ describe("FilterTrigger clear button", () => {
     expect(screen.queryByRole("menu")).not.toBeInTheDocument();
   });
 });
+
+describe("FilterTrigger with several values", () => {
+  it("shows the first value and how many more", async () => {
+    const { FilterTrigger } =
+      await import("@/components/filters/filter-trigger");
+    render(
+      <FilterTrigger label="Artists" value={["Quintus", "Theo", "Pleun"]} />,
+    );
+
+    const chip = screen.getByRole("button", { name: /Artists/ });
+    expect(chip).toHaveTextContent("Quintus");
+    expect(chip).not.toHaveTextContent("Theo");
+    expect(chip).toHaveTextContent("list_view.filters.more");
+  });
+
+  it("is unset with an empty list", async () => {
+    const { FilterTrigger } =
+      await import("@/components/filters/filter-trigger");
+    render(<FilterTrigger label="Artists" value={[]} />);
+
+    expect(
+      screen.getByRole("button", { name: "Artists" }),
+    ).not.toHaveTextContent("list_view.filters.is");
+  });
+});

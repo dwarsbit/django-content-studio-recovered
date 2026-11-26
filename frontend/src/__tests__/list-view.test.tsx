@@ -495,6 +495,30 @@ describe("ModelListPage", () => {
     );
   });
 
+  it("takes away a filter picked from the menu that has no value", async () => {
+    const user = userEvent.setup();
+    renderListPage(
+      makeModel({
+        list: { filter: ["status"], sortable_by: ["title"] },
+        fields: filteredArticleFields,
+      }),
+    );
+
+    await screen.findByText("First Article");
+    await openFilter(user, "Status");
+    await user.keyboard("{Escape}");
+    await user.click(
+      await screen.findByRole("button", { name: "list_view.filters.remove" }),
+    );
+
+    expect(
+      screen.queryByRole("button", { name: /^Status/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "list_view.filters.add" }),
+    ).toBeInTheDocument();
+  });
+
   it("returns to the first page when the search term changes", async () => {
     const user = userEvent.setup();
     renderListPage(makeModel(), "/content/testapp.article?page=2");
@@ -950,9 +974,10 @@ describe("ModelListPage", () => {
     // While the modal popover is open the trigger is hidden from the
     // accessibility tree; close it to assert the resolved labels.
     await user.keyboard("{Escape}");
+    // The chip shows the first and how many more.
     expect(
       await screen.findByRole("button", {
-        name: /Category 1, Category 2/,
+        name: /Category 1.*list_view\.filters\.more/,
       }),
     ).toBeInTheDocument();
   });

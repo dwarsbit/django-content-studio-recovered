@@ -472,3 +472,151 @@ def test_ignored_entries_warn():
     assert len(warnings) == 2
     assert "default filter" in str(warnings[0])
     assert "ignored" in str(warnings[1])
+
+
+# Text fields without choices
+
+
+def test_every_filter_says_its_control():
+    studio = StubStudio(
+        Article,
+        [
+            "status",
+            "published_at",
+            "views",
+            "author",
+            "categories",
+            "review",
+            "title",
+            "body",
+            "author__username",
+        ],
+    )
+
+    controls = {
+        entry["name"]: entry["control"]
+        for entry in serialize_list_filters(studio, None)
+    }
+
+    assert controls == {
+        "status": "choices",
+        "published_at": "date",
+        "views": "number",
+        "author": "relation",
+        "categories": "many",
+        "review": "many",
+        "title": "distinct",
+        "body": "distinct",
+        "author__username": "distinct",
+    }
+
+
+def test_fields_without_a_control_are_left_out():
+    from tests.testapp.models import Product
+
+    studio = StubStudio(Product, ["title", "details", "manual"])
+
+    assert [e["name"] for e in serialize_list_filters(studio, None)] == ["title"]
+
+
+@pytest.mark.django_db
+def test_text_filter_values_endpoint(monkeypatch, articles):
+    Article.objects.create(title="Fourth, with a comma")
+    Article.objects.create(title="")
+    monkeypatch.setattr(
+        admin_site._registry[Article],
+        "list_filter",
+        ["status", "title", "author__username"],
+    )
+    client = superuser_client()
+
+    response = client.get("/api/content/testapp.article/filters/title/values")
+    searched = client.get("/api/content/testapp.article/filters/title/values?search=IR")
+    across = client.get("/api/content/testapp.article/filters/author__username/values")
+    choices = client.get("/api/content/testapp.article/filters/status/values")
+    undeclared = client.get("/api/content/testapp.article/filters/body/values")
+
+    assert response.status_code == 200, response.content
+    # Distinct, sorted, without empty values.
+    assert response.data == {
+        "values": ["First", "Fourth, with a comma", "Second", "Third"],
+        "more": False,
+    }
+    assert searched.data["values"] == ["First", "Third"]
+    assert across.data["values"] == ["ann", "bob"]
+    assert choices.status_code == 404
+    assert undeclared.status_code == 404
+
+
+@pytest.mark.django_db
+def test_text_filter_values_are_capped(monkeypatch):
+    from content_studio import filters
+
+    monkeypatch.setattr(filters, "DISTINCT_VALUES_LIMIT", 2)
+    for title in ["A", "B", "C"]:
+        Article.objects.create(title=title)
+
+    result = filters.get_distinct_values(Article.objects.all(), "title")
+
+    assert result == {"values": ["A", "B"], "more": True}
+
+
+@pytest.mark.django_db
+def test_text_filter_values_leave_out_what_the_list_leaves_out(monkeypatch):
+    Article.objects.create(title="Visible")
+    Article.objects.create(title="Hidden")
+    studio = admin_site._registry[Article]
+    monkeypatch.setattr(studio, "list_filter", ["title"])
+    # On the class: an instance attribute would outlive the test.
+    monkeypatch.setattr(
+        type(studio),
+        "get_queryset",
+        lambda self, request: Article.objects.exclude(title="Hidden"),
+    )
+    client = superuser_client()
+
+    response = client.get("/api/content/testapp.article/filters/title/values")
+
+    assert response.status_code == 200, response.content
+    assert response.data["values"] == ["Visible"]
+
+
+@pytest.mark.django_db
+def test_text_filter_matches_any_picked_value(articles):
+    Article.objects.create(title="Fourth, with a comma")
+
+    result = run(Article, r"title=First,Fourth\, with a comma", ["title"])
+
+    assert titles(result) == {"First", "Fourth, with a comma"}
+
+
+@pytest.mark.django_db
+def test_escaped_commas_reach_custom_filters(articles):
+    class CommaFilter(ListFilter):
+        title = "Comma"
+        parameter_name = "comma"
+        options = [("a,b", "A and B"), ("c", "C")]
+        multiple = True
+
+        def queryset(self, request, queryset, value):
+            assert value == ["a,b", "c"]
+            return queryset.filter(title="First")
+
+    result = run(Article, r"comma=a\,b,c", [CommaFilter])
+
+    assert titles(result) == {"First"}
+
+
+def test_fields_the_list_cannot_filter_on_warn():
+    from tests.testapp.models import Product
+
+    class Unfilterable(ModelStudio):
+        list_filter = ["title", "details", ("manual", django_admin.FieldListFilter)]
+
+    warnings = [
+        m for m in checks_for(Unfilterable, Product) if m.id == "content_studio.W034"
+    ]
+
+    assert len(warnings) == 2
+    assert "'details', a JSONField" in str(warnings[0])
+    assert "'manual', a FileField" in str(warnings[1])

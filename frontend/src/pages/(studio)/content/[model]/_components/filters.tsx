@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { PiPlusBold } from "react-icons/pi";
+import { PiPlusBold, PiXBold } from "react-icons/pi";
 
 import { CustomFilter } from "@/components/filters/custom-filter";
 import { FilterRenderer } from "@/components/filters/renderer";
@@ -85,6 +85,8 @@ export function Filters({
       filter.name === added || Object.keys(valuesOf(filter.name)).length > 0,
   );
   const hidden = filters.filter((filter) => !shown.includes(filter));
+  const isEmptyPick = (name: string) =>
+    name === added && Object.keys(valuesOf(name)).length === 0;
 
   return (
     <div className="flex flex-1 items-center flex-wrap gap-x-1.5 gap-y-2 min-w-0">
@@ -95,30 +97,55 @@ export function Filters({
           className="hidden sm:block h-5 w-px bg-border mx-1.5"
         />
       )}
-      {shown.map((filter) =>
-        filter.kind === "custom" ? (
-          <CustomFilter
-            key={filter.name}
-            name={filter.name}
-            label={filter.label}
-            multiple={filter.multiple}
-            model={model}
-            values={valuesOf(filter.name)}
-            onChange={(changes) => change(filter.name, changes)}
-            defaultOpen={filter.name === added}
-          />
-        ) : (
-          <FilterRenderer
-            key={filter.name}
-            field={{ ...filter.field, verbose_name: filter.label }}
-            name={filter.name}
-            model={model}
-            values={valuesOf(filter.name)}
-            onValueChange={(changes) => change(filter.name, changes)}
-            defaultOpen={filter.name === added}
-          />
-        ),
-      )}
+      {shown.map((filter) => (
+        <span
+          key={filter.name}
+          className={
+            // A picked filter without a value is framed with its X, so
+            // the two read as one chip.
+            isEmptyPick(filter.name)
+              ? "inline-flex items-center min-w-0 h-8 pl-0.5 pr-1 gap-0.5 rounded-full border border-border"
+              : "inline-flex items-center min-w-0"
+          }
+        >
+          {filter.kind === "custom" ? (
+            <CustomFilter
+              name={filter.name}
+              label={filter.label}
+              multiple={filter.multiple}
+              model={model}
+              values={valuesOf(filter.name)}
+              onChange={(changes) => change(filter.name, changes)}
+              defaultOpen={filter.name === added}
+            />
+          ) : (
+            <FilterRenderer
+              field={{ ...filter.field, verbose_name: filter.label }}
+              control={filter.control}
+              name={filter.name}
+              model={model}
+              values={valuesOf(filter.name)}
+              onValueChange={(changes) => change(filter.name, changes)}
+              defaultOpen={filter.name === added}
+            />
+          )}
+          {/* A filter picked from the menu shows until it has a value;
+              without one, this takes it away again. */}
+          {isEmptyPick(filter.name) && (
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-6 rounded-full text-muted-foreground"
+              aria-label={t("list_view.filters.remove", {
+                field: filter.label,
+              })}
+              onClick={() => setAdded(null)}
+            >
+              <PiXBold className="size-3" />
+            </Button>
+          )}
+        </span>
+      ))}
       {hidden.length > 0 && (
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

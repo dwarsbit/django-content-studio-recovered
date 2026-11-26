@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.22.1 (unreleased)
+
+### Fixes
+
+- **Filters on text fields without choices.** A `CharField` or `TextField`
+  without `choices` in `list_filter` (`"city"`, `"author__username"`) was
+  listed in the Filter menu but showed nothing when picked. It now gets a
+  searchable list of the values in the table, like the classic admin's
+  `AllValuesFieldListFilter`: the first 100, with search to find the
+  others, and editors can pick several. The values come from the list
+  itself, so other tenants and trashed objects stay out. A field the list
+  page has no filter for (JSON, files, media) is left out of the menu, and
+  `manage.py check` warns about it as `content_studio.W034`. Filter values
+  may now contain commas, in custom filter options too.
+- **Filter chips stay compact.** A filter with several values shows the
+  first and "+2 more", so its chip no longer runs across the toolbar.
+- **Remove a filter picked without a value.** A filter added from the
+  Filter menu now sits in a bordered chip with an X until it gets a
+  value, so a date range (or any other filter) picked by mistake can be
+  taken away again.
+- **Wider pickers.** The search pickers of relation and text filters are
+  at least 18rem and at most 24rem wide, so short filter names no longer
+  squeeze their options.
+
 ## 1.22.0 (2026-11-25)
 
 ### Features
