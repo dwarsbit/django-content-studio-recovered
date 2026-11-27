@@ -1,6 +1,6 @@
 # Changelog
 
-## 1.25.0 (2026-11-27)
+## 1.26.0 (unreleased)
 
 ### Features
 
@@ -26,6 +26,10 @@
   with `content_studio.E066`, and the app's URLs missing with
   `content_studio.W043`. The widget (`@cap.js/widget` 0.1.58) and solver
   (`@cap.js/wasm` 0.0.8) are vendored under the Apache License 2.0.
+
+## 1.25.0 (2026-11-27)
+
+### Features
 
 - **Environment settings.** `content_studio.contrib.settings.configure()`
   builds a project's settings from environment variables with one call near
