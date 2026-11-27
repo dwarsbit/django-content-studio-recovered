@@ -261,7 +261,7 @@ def test_a_slow_storage_is_degraded():
 
 
 def test_a_local_email_backend_is_not_checked():
-    result = builtin.check_email()
+    result = builtin.check_email_backend()
 
     assert result.status == "unknown"
     assert mail.outbox == []
@@ -277,7 +277,7 @@ def test_an_smtp_backend_is_opened_and_closed():
         mock.patch("django.core.mail.backends.smtp.EmailBackend.open") as open_,
         mock.patch("django.core.mail.backends.smtp.EmailBackend.close") as close,
     ):
-        result = builtin.check_email()
+        result = builtin.check_email_backend()
 
     assert result.status == "ok"
     assert result.detail == "SMTP · smtp.example.com:587"

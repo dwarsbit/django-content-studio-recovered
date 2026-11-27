@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.23.0 (unreleased)
+
+### Features
+
+- **Email activity.** The new `content_studio.contrib.email_activity` app
+  logs every email the site sends: from, to, cc, bcc, subject, status,
+  timestamps, duration, size, attachment names and the error of a failed
+  send. The body is never stored. Set `EMAIL_BACKEND` to
+  `content_studio.contrib.email_activity.backends.EmailBackend` (or use it
+  as a `MAILERS` backend on Django 6.1) and it delivers through
+  `EMAIL_DELIVERY_BACKEND`, Django's SMTP backend by default. Superusers
+  open the Email activity page from the Email row on the system status
+  page, filter by status and kind, search, open an email's details and
+  **Send test email** to their own address or another. The Email row now
+  shows the emails sent in the last 24 hours and is degraded when any
+  failed. Content Studio's own emails carry a kind (invite, password
+  link, password reset, two-factor reset, email changed, notification
+  digest, test); tag yours with `email_kind()` or the
+  `X-Content-Studio-Kind` header. Emails are kept for
+  `EMAIL_ACTIVITY_KEEP_DAYS` (30) and pruned after sending or with
+  `content_studio_prune_emails`; `EMAIL_ACTIVITY_MASK` stores addresses as
+  `s***@example.com` without subjects. `has_email_activity_permission()`
+  on the admin site decides who sees the page. `manage.py check` reports
+  a bad setup as `content_studio.E062`, and warns with
+  `content_studio.W035` when the app is installed but email does not go
+  through the logging backend.
+
+### Fixes
+
+- **Backup and restore messages translated.** The backup and restore
+  strings added in 1.18.0 are now translated into every language.
+
 ## 1.22.1 (2026-11-26)
 
 ### Fixes

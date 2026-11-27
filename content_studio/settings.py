@@ -184,6 +184,13 @@ DEFAULTS = {
     # The largest file a superuser may upload on the Backups page to
     # restore, in bytes; None has no limit (the web server may have one).
     "BACKUP_UPLOAD_MAX_SIZE": 1024**3,
+    # Email activity (content_studio.contrib.email_activity): the backend
+    # that delivers each email after the logging backend recorded it.
+    "EMAIL_DELIVERY_BACKEND": "django.core.mail.backends.smtp.EmailBackend",
+    # Days sent emails stay in the log; None keeps them.
+    "EMAIL_ACTIVITY_KEEP_DAYS": 30,
+    # Store recipients masked (s***@example.com) and leave out subjects.
+    "EMAIL_ACTIVITY_MASK": False,
     # Days read notifications are kept; None keeps them.
     "NOTIFICATION_RETENTION": 90,
     # Days unread notifications are kept; None (the default) keeps them.

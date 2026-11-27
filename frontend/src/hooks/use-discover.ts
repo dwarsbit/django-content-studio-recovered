@@ -45,6 +45,9 @@ export function useDiscover() {
         // The Backups page, when the user may open it; absent from
         // older servers.
         backups?: { enabled: boolean };
+        // The Email activity page, when the user may open it; absent
+        // from older servers.
+        email_activity?: { enabled: boolean };
         multitenancy: {
           enabled: boolean;
           tenant_model: string | null;

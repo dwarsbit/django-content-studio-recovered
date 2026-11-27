@@ -24,6 +24,7 @@ from django.template.loader import render_to_string
 from django.utils import timezone, translation
 from django.utils.translation import gettext as _, ngettext
 
+from ..contrib.email_activity.kinds import NOTIFICATION_DIGEST, email_kind
 from ..settings import cs_settings
 from .models import Notification, NotificationSubscription
 from .permissions import get_studio, load_objects, recipient_request
@@ -349,7 +350,8 @@ def send_digests(delay: int = DEFAULT_DELAY, now=None) -> tuple[int, int]:
                 if not notifications:
                     continue
 
-                build_message(user, notifications).send()
+                with email_kind(NOTIFICATION_DIGEST):
+                    build_message(user, notifications).send()
             except Exception:
                 logger.exception("Could not send the notification digest to %s", user)
                 continue

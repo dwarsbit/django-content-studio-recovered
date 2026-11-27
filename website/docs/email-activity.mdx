@@ -1,0 +1,168 @@
+# ✉️ Email activity
+
+The email activity app logs every email your site sends: who it was from and
+to, the subject, when it was sent, how long it took and, when sending
+failed, why. The body is never stored. Superusers open the log from the
+Email row on the [system status page](/docs/system-status), and send a test
+email from it to check that email is delivered.
+
+## Setup
+
+Add the app to `INSTALLED_APPS` and migrate. It keeps the log in its own
+table.
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    # ...
+    "content_studio",
+    "content_studio.contrib.status",
+    "content_studio.contrib.email_activity",
+]
+```
+
+```bash
+python manage.py migrate
+```
+
+Then send your email through the logging backend. It logs each email and
+hands it to the backend that delivers it,
+[`EMAIL_DELIVERY_BACKEND`](/docs/settings#email_delivery_backend), which is
+Django's SMTP backend by default:
+
+```python
+# settings.py
+EMAIL_BACKEND = "content_studio.contrib.email_activity.backends.EmailBackend"
+
+CONTENT_STUDIO = {
+    # ...
+    # Only needed when you deliver with something other than SMTP.
+    "EMAIL_DELIVERY_BACKEND": "anymail.backends.postmark.EmailBackend",
+}
+```
+
+The `EMAIL_HOST`, `EMAIL_PORT` and other email settings keep working: the
+delivering backend reads them as before.
+
+With Django's `MAILERS` (Django 6.1 and later), make the logging backend the
+mailer's `BACKEND`. Its `OPTIONS` go to the delivering backend:
+
+```python
+MAILERS = {
+    "default": {
+        "BACKEND": "content_studio.contrib.email_activity.backends.EmailBackend",
+        "OPTIONS": {"host": "smtp.postmark.com", "port": 587, "use_tls": True},
+    },
+}
+```
+
+`manage.py check` warns with `content_studio.W035` while the app is
+installed but email does not go through the logging backend, and the page
+shows the settings to add.
+
+## What is logged
+
+For each email:
+
+- From, To, Cc, Bcc and Reply-To.
+- The subject.
+- The status: **Sent** when the delivering backend accepted it, **Failed**
+  with the error when it raised or did not send it.
+- When it was created and finished, and how long sending took.
+- The Message-ID, the size, and each attachment's name, type and size.
+- Its kind, and who sent it when a person did (a test email).
+
+The body and the attachments' content are not stored.
+
+A failure is logged and then raised, as it would be without the app, so
+your code still sees it. With `fail_silently=True` the failure is logged
+and not raised. If the log cannot be written, the email is sent anyway.
+
+### Kinds
+
+The emails Content Studio sends carry a kind, so the page can filter on
+them: Invite, Password link, Password reset, Two-factor reset, Email address
+changed, Notification digest and Test email. Every other email is Other.
+
+Give your own emails a kind with `email_kind()`, or with the
+`X-Content-Studio-Kind` header, which is removed before the email is sent:
+
+```python
+from django.core.mail import EmailMessage, send_mail
+
+from content_studio.contrib.email_activity import KIND_HEADER, email_kind
+
+with email_kind("order_shipped"):
+    send_mail("Your order has shipped", body, None, [order.email])
+
+EmailMessage(
+    "Your invoice",
+    body,
+    to=[order.email],
+    headers={KIND_HEADER: "invoice"},
+).send()
+```
+
+The page shows a kind it does not know with its first letter in capitals
+and underscores as spaces: "Order shipped".
+
+## Keeping and masking
+
+Emails are kept for 30 days. Older ones are deleted after a send, at most
+once an hour, and by the prune command, which you can run from cron:
+
+```bash
+python manage.py content_studio_prune_emails
+```
+
+[`EMAIL_ACTIVITY_KEEP_DAYS`](/docs/settings#email_activity_keep_days) sets
+the days; `None` keeps every email.
+
+Email addresses are personal data. To keep the log without them, turn on
+[`EMAIL_ACTIVITY_MASK`](/docs/settings#email_activity_mask): addresses are
+stored as `s***@example.com` and subjects are not stored. Only emails sent
+after the change are masked.
+
+## The Email activity page
+
+The page lists the logged emails, newest first, 50 at a time. Above the
+list it shows how email is sent, how many emails were sent and failed in
+the last 24 hours, and how long they are kept. Filter the list by status
+and kind, or search the recipients, sender and subject. Click an email for
+all its details and its error.
+
+**Send test email** sends a short email through the site's email setup,
+to your own address unless you change it. A failure shows its error in the
+dialog. Test emails are logged like any other.
+
+Only superusers see the page. Override `has_email_activity_permission(request)`
+on your admin site ([`ADMIN_SITE`](/docs/settings#admin_site)) to decide
+otherwise:
+
+```python
+from content_studio.admin import ContentStudioSite
+
+
+class BlogStudioSite(ContentStudioSite):
+    def has_email_activity_permission(self, request):
+        return request.user.groups.filter(name="Operations").exists()
+```
+
+## On the status page
+
+With the app installed, the Email row on the
+[system status page](/docs/system-status) links to the page and adds the
+number of emails sent in the last 24 hours. When any of those failed, the
+row is degraded, with the number that failed.
+
+## Settings
+
+| Setting | Default | |
+|---------|---------|---|
+| [`EMAIL_DELIVERY_BACKEND`](/docs/settings#email_delivery_backend) | `"django.core.mail.backends.smtp.EmailBackend"` | The backend that delivers the logged emails. |
+| [`EMAIL_ACTIVITY_KEEP_DAYS`](/docs/settings#email_activity_keep_days) | `30` | Days emails are kept. |
+| [`EMAIL_ACTIVITY_MASK`](/docs/settings#email_activity_mask) | `False` | Mask addresses and leave subjects out. |
+
+`manage.py check` reports settings that cannot work as
+`content_studio.E062`: a delivery backend that cannot be imported or is the
+logging backend itself, or an `EMAIL_ACTIVITY_KEEP_DAYS` below 1.

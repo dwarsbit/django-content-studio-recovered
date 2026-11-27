@@ -265,6 +265,12 @@ class AdminApiViewSet(ViewSet):
             and bool(self.admin_site.has_backup_permission(request)),
         }
 
+        # The Email activity page (content_studio.contrib.email_activity).
+        data["email_activity"] = {
+            "enabled": apps.is_installed("content_studio.contrib.email_activity")
+            and bool(self.admin_site.has_email_activity_permission(request)),
+        }
+
         # What MapWidget's map shows and searches with.
         data["map"] = {
             "tile_url": cs_settings.MAP_TILE_URL,

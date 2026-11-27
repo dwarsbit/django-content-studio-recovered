@@ -92,6 +92,7 @@ content_studio/
 ├── contrib/
 │   ├── huey.py          # HueyAdapter: the task dashboard for a Huey queue
 │   ├── backups/         # Optional automatic backups: the Backup and Restore records (models.py), dumping/pruning/restoring fixtures (backup.py), reading dumpdata files for a restore (fixtures.py), BACKUP_SCHEDULE cron parsing (schedule.py), Huey's periodic task (huey.py), the status page rows (status.py), the Backups page endpoints (views.py), content_studio_backup/content_studio_restore
+│   ├── email_activity/  # Optional email log: the logging EmailBackend that records each email (no body) and delivers it with EMAIL_DELIVERY_BACKEND (backends.py), SentEmail (models.py), writing/masking/pruning and the status row summary (log.py), kinds and email_kind() (kinds.py), the Email activity page and Send test email endpoints (views.py), content_studio_prune_emails
 │   ├── status/          # Optional system status page: register_service/register_task_adapter/register_recurring_task (registry.py), the built-in checks (builtin.py), running and caching the checks (runner.py), the task lists from the task adapters (tasks.py), the endpoints (views.py)
 │   └── password_reset/  # Password reset functionality
 ├── static/              # Static files (compiled frontend)

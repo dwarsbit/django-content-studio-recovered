@@ -29,6 +29,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.two_factor",
     "content_studio.contrib.status",
     "content_studio.contrib.backups",
+    "content_studio.contrib.email_activity",
     "content_studio.notifications",
     "content_studio.history",
     "content_studio.preferences",
@@ -102,7 +103,8 @@ STORAGES = {
 SILENCED_SYSTEM_CHECKS = ["content_studio.W028"]
 
 # Keep demo emails out of SMTP; password reset codes land in the console.
-EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
+# They are logged on the Email activity page, then printed.
+EMAIL_BACKEND = "content_studio.contrib.email_activity.backends.EmailBackend"
 
 CONTENT_STUDIO = {
     # The languages content is written in (ArticleStudio.translations).
@@ -111,6 +113,7 @@ CONTENT_STUDIO = {
     "MEDIA_LIBRARY_MODEL": "demo.blog.models.MediaItem",
     "MEDIA_LIBRARY_FOLDER_MODEL": "demo.blog.models.MediaFolder",
     "BACKUP_STORAGE": "backups",
+    "EMAIL_DELIVERY_BACKEND": "django.core.mail.backends.console.EmailBackend",
     # The default per-IP rate (10/min) is fine for humans; the e2e suite
     # drives several parallel browser contexts through the same login form.
     "LOGIN_THROTTLE_RATE": "60/min",

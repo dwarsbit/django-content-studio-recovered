@@ -490,6 +490,29 @@ on top of content types, permissions and sessions. Default: `[]`.
 The largest file, in bytes, a superuser can upload on the Backups page to
 restore. `None` sets no limit. Default: `1024 ** 3` (1 GB).
 
+## Email activity
+
+These settings take effect with
+[`content_studio.contrib.email_activity`](/docs/email-activity) in
+`INSTALLED_APPS`.
+
+### EMAIL_DELIVERY_BACKEND {#email_delivery_backend}
+
+The email backend that delivers the emails the logging backend logs, as a
+dotted path. Default: `"django.core.mail.backends.smtp.EmailBackend"`. It
+cannot be the logging backend itself (`content_studio.E062`).
+
+### EMAIL_ACTIVITY_KEEP_DAYS {#email_activity_keep_days}
+
+How many days logged emails are kept. Older ones are deleted after a send,
+at most once an hour, and by `content_studio_prune_emails`. Default: `30`.
+`None` keeps every email.
+
+### EMAIL_ACTIVITY_MASK {#email_activity_mask}
+
+Store email addresses masked (`s***@example.com`) and leave subjects out.
+Default: `False`.
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}

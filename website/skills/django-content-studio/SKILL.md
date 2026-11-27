@@ -621,6 +621,14 @@ Each is optional and has its own page:
   keep the storage private, `manage.py check` errors with E052 if it may
   be public):
   https://djangocontentstudio.org/docs/backups.md
+- Email activity (`content_studio.contrib.email_activity`: set
+  `EMAIL_BACKEND` to its logging backend and the real one in
+  `EMAIL_DELIVERY_BACKEND`; every email is logged without its body, kept
+  `EMAIL_ACTIVITY_KEEP_DAYS`, masked with `EMAIL_ACTIVITY_MASK`; tag your
+  own emails with `email_kind("...")`; superusers see the log and send a
+  test email from the status page's Email row,
+  `has_email_activity_permission`):
+  https://djangocontentstudio.org/docs/email-activity.md
 - Languages (English, Dutch, German, French, Spanish, Italian, Brazilian
   Portuguese; each editor gets their own: the user menu's Language choice,
   then the browser, then `LANGUAGE_CODE`; no `LocaleMiddleware` needed;

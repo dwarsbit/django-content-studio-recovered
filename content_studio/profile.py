@@ -179,20 +179,23 @@ def send_email_changed_mail(old_email, name, language=None):
     from django.utils import translation
     from django.utils.translation import gettext
 
+    from .contrib.email_activity.kinds import EMAIL_CHANGED, email_kind
+
     with translation.override(language):
         site_title = str(getattr(cs_settings.ADMIN_SITE, "site_title", "") or "")
 
         try:
-            send_mail(
-                from_email=None,
-                subject=gettext("Your email address for %(site)s was changed")
-                % {"site": site_title},
-                message=render_to_string(
-                    "content_studio/users/email_changed.txt",
-                    {"name": name, "site_title": site_title, "email": old_email},
-                ),
-                recipient_list=[old_email],
-            )
+            with email_kind(EMAIL_CHANGED):
+                send_mail(
+                    from_email=None,
+                    subject=gettext("Your email address for %(site)s was changed")
+                    % {"site": site_title},
+                    message=render_to_string(
+                        "content_studio/users/email_changed.txt",
+                        {"name": name, "site_title": site_title, "email": old_email},
+                    ),
+                    recipient_list=[old_email],
+                )
         except Exception:
             logging.getLogger("content_studio.users").exception(
                 "Could not send the email change notice to the old address."

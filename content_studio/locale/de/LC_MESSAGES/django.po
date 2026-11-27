@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-20 15:06+0000\n"
+"POT-Creation-Date: 2026-11-27 10:22+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: de\n"
 "MIME-Version: 1.0\n"
@@ -16,15 +16,15 @@ msgstr ""
 msgid "This field is required."
 msgstr "Dieses Feld ist erforderlich."
 
-#: actions.py:190
+#: actions.py:197
 msgid "Delete"
 msgstr "Löschen"
 
-#: actions.py:192
+#: actions.py:199
 msgid "Are you sure you want to delete the selected items?"
 msgstr "Möchten Sie die ausgewählten Elemente wirklich löschen?"
 
-#: actions.py:201
+#: actions.py:208
 msgid ""
 "The selected items will be moved to the trash, where they can be restored. "
 "Are you sure you want to delete?"
@@ -32,15 +32,15 @@ msgstr ""
 "Die ausgewählten Elemente werden in den Papierkorb verschoben, wo sie "
 "wiederhergestellt werden können. Möchten Sie sie wirklich löschen?"
 
-#: actions.py:230
+#: actions.py:237
 msgid "Export"
 msgstr "Exportieren"
 
-#: actions.py:241
+#: actions.py:248
 msgid "Are you sure you want to delete this item?"
 msgstr "Möchten Sie dieses Element wirklich löschen?"
 
-#: actions.py:250
+#: actions.py:257
 msgid ""
 "The item will be moved to the trash, where it can be restored. Are you sure "
 "you want to delete it?"
@@ -48,14 +48,66 @@ msgstr ""
 "Das Element wird in den Papierkorb verschoben, wo es wiederhergestellt "
 "werden kann. Möchten Sie es wirklich löschen?"
 
-#: actions.py:258
+#: actions.py:265
 msgid "Duplicate"
 msgstr "Duplizieren"
 
-#: admin.py:641 admin.py:642 contrib/backups/status.py:21
-#: contrib/status/builtin.py:24
+#: actions.py:289
+msgid "Publish now"
+msgstr "Jetzt veröffentlichen"
+
+#: actions.py:291
+msgid "Publish the selected items now?"
+msgstr "Die ausgewählten Einträge jetzt veröffentlichen?"
+
+#: actions.py:297
+msgid "Unpublish"
+msgstr "Zurückziehen"
+
+#: actions.py:300
+msgid ""
+"The selected items go back to being drafts and leave the site. Unpublish "
+"them?"
+msgstr ""
+"Die ausgewählten Einträge werden wieder zu Entwürfen und verschwinden von "
+"der Website. Zurückziehen?"
+
+#: actions.py:363
+#, python-format
+msgid "Published %(count)s items."
+msgstr "%(count)s Einträge veröffentlicht."
+
+#: actions.py:371
+#, python-format
+msgid "Unpublished %(count)s items."
+msgstr "%(count)s Einträge zurückgezogen."
+
+#: actions.py:379
+msgid "Publish on"
+msgstr "Veröffentlichen am"
+
+#: actions.py:388
+msgid "Unpublish on"
+msgstr "Zurückziehen am"
+
+#: actions.py:394
+msgid "Schedule…"
+msgstr "Planen…"
+
+#: actions.py:409
+#, python-format
+msgid "Scheduled %(count)s items."
+msgstr "%(count)s Einträge geplant."
+
+#: admin.py:825 admin.py:826 contrib/backups/status.py:21
+#: contrib/status/builtin.py:25 publishing.py:725
 msgid "Content Studio"
 msgstr "Content Studio"
+
+#: admin.py:2010 publishing.py:733 review/models.py:45 user_studios.py:296
+#: webhooks/models.py:140
+msgid "Status"
+msgstr "Status"
 
 #: analytics/components.py:35 analytics/extensions.py:185
 #: analytics/extensions.py:233
@@ -209,90 +261,217 @@ msgid_plural "Use at most %(num)d blocks."
 msgstr[0] "Verwenden Sie höchstens %(num)d Block."
 msgstr[1] "Verwenden Sie höchstens %(num)d Blöcke."
 
+#: comments/apps.py:11
+msgid "Comments"
+msgstr "Kommentare"
+
+#: comments/models.py:15
+msgid "comment"
+msgstr "Kommentar"
+
+#: comments/models.py:16
+msgid "comments"
+msgstr "Kommentare"
+
+#: comments/models.py:26 notifications/models.py:74 notifications/models.py:169
+#: notifications/models.py:214 review/models.py:39
+msgid "Model"
+msgstr "Modell"
+
+#: comments/models.py:42
+msgid "Author"
+msgstr "Autor"
+
+#: comments/models.py:44
+msgid "Comment"
+msgstr "Kommentar"
+
+#: comments/notifying.py:32
+msgid "Mentions in comments"
+msgstr "Erwähnungen in Kommentaren"
+
+#: comments/notifying.py:33
+msgid "Someone mentions you in a comment."
+msgstr "Jemand erwähnt Sie in einem Kommentar."
+
+#: comments/notifying.py:37
+msgid "Replies to comments"
+msgstr "Antworten auf Kommentare"
+
+#: comments/notifying.py:38
+msgid "Someone replies in a comment thread you are in."
+msgstr ""
+"Jemand antwortet in einem Kommentar-Thread, in dem Sie geschrieben haben."
+
+#: comments/notifying.py:42
+msgid "Comments on content you follow"
+msgstr "Kommentare zu Inhalten, denen Sie folgen"
+
+#: comments/notifying.py:43
+msgid "Someone comments on an object you follow."
+msgstr "Jemand kommentiert ein Objekt, dem Sie folgen."
+
+#: comments/notifying.py:100
+#, python-format
+msgid "%(actor)s mentioned you on %(object)s"
+msgstr "%(actor)s hat Sie bei %(object)s erwähnt"
+
+#: comments/notifying.py:101
+#, python-format
+msgid "%(actor)s replied to a comment on %(object)s"
+msgstr "%(actor)s hat auf einen Kommentar zu %(object)s geantwortet"
+
+#: comments/notifying.py:102
+#, python-format
+msgid "%(actor)s commented on %(object)s"
+msgstr "%(actor)s hat %(object)s kommentiert"
+
 #: contrib/backups/apps.py:8
 msgid "Backups"
 msgstr "Backups"
 
-#: contrib/backups/models.py:18 dashboard/tasks.py:95
+#: contrib/backups/models.py:18 contrib/backups/models.py:94
+#: dashboard/tasks.py:95
 msgid "Queued"
 msgstr "In der Warteschlange"
 
-#: contrib/backups/models.py:19 dashboard/tasks.py:97
+#: contrib/backups/models.py:19 contrib/backups/models.py:95
+#: dashboard/tasks.py:97
 msgid "Running"
 msgstr "Läuft"
 
-#: contrib/backups/models.py:20
+#: contrib/backups/models.py:20 contrib/backups/models.py:96
 msgid "Done"
 msgstr "Fertig"
 
-#: contrib/backups/models.py:21 contrib/huey.py:39 dashboard/tasks.py:99
-#: webhooks/models.py:124
+#: contrib/backups/models.py:21 contrib/backups/models.py:97
+#: contrib/email_activity/models.py:18 contrib/huey.py:39 dashboard/tasks.py:99
+#: webhooks/models.py:126
 msgid "Failed"
 msgstr "Fehlgeschlagen"
 
-#: contrib/backups/models.py:29 dashboard/tasks.py:96
+#: contrib/backups/models.py:30 dashboard/tasks.py:96 publishing.py:72
 msgid "Scheduled"
 msgstr "Geplant"
 
-#: contrib/backups/models.py:30
+#: contrib/backups/models.py:31
 msgid "Back up now"
 msgstr "Jetzt sichern"
 
-#: contrib/backups/models.py:31
+#: contrib/backups/models.py:32
 msgid "Command"
 msgstr "Befehl"
 
-#: contrib/backups/models.py:34
+#: contrib/backups/models.py:33
+msgid "Before restore"
+msgstr "Vor der Wiederherstellung"
+
+#: contrib/backups/models.py:36 contrib/backups/models.py:108
 msgid "database"
 msgstr "Datenbank"
 
-#: contrib/backups/models.py:36
+#: contrib/backups/models.py:38 contrib/backups/models.py:110
+#: contrib/email_activity/models.py:31
 msgid "status"
 msgstr "Status"
 
-#: contrib/backups/models.py:39
+#: contrib/backups/models.py:41
 msgid "trigger"
 msgstr "Auslöser"
 
-#: contrib/backups/models.py:42
+#: contrib/backups/models.py:44 contrib/backups/models.py:124
 msgid "file"
 msgstr "Datei"
 
-#: contrib/backups/models.py:44
+#: contrib/backups/models.py:46 contrib/backups/models.py:127
+#: contrib/email_activity/models.py:39
 msgid "size"
 msgstr "Größe"
 
-#: contrib/backups/models.py:46
+#: contrib/backups/models.py:48
 msgid "manifest"
 msgstr "Manifest"
 
-#: contrib/backups/models.py:47
+#: contrib/backups/models.py:49 contrib/backups/models.py:141
+#: contrib/email_activity/models.py:32
 msgid "error"
 msgstr "Fehler"
 
-#: contrib/backups/models.py:50
+#: contrib/backups/models.py:52 contrib/backups/models.py:144
+#: previews/models.py:28
 msgid "created by"
 msgstr "erstellt von"
 
-#: contrib/backups/models.py:56 contrib/two_factor/models.py:31
+#: contrib/backups/models.py:58 contrib/backups/models.py:150
+#: contrib/email_activity/models.py:49 contrib/two_factor/models.py:31
+#: previews/models.py:30
 msgid "created at"
 msgstr "erstellt am"
 
-#: contrib/backups/models.py:57
+#: contrib/backups/models.py:59 contrib/backups/models.py:151
 msgid "started at"
 msgstr "gestartet am"
 
-#: contrib/backups/models.py:58
+#: contrib/backups/models.py:60 contrib/backups/models.py:152
+#: contrib/email_activity/models.py:50
 msgid "finished at"
 msgstr "beendet am"
 
-#: contrib/backups/models.py:61
+#: contrib/backups/models.py:63 contrib/backups/models.py:117
 msgid "backup"
 msgstr "Backup"
 
-#: contrib/backups/models.py:62
+#: contrib/backups/models.py:64
 msgid "backups"
 msgstr "Backups"
+
+#: contrib/backups/models.py:93
+msgid "Uploaded"
+msgstr "Hochgeladen"
+
+#: contrib/backups/models.py:104
+msgid "Backup"
+msgstr "Backup"
+
+#: contrib/backups/models.py:105
+msgid "Uploaded file"
+msgstr "Hochgeladene Datei"
+
+#: contrib/backups/models.py:113
+msgid "source"
+msgstr "Quelle"
+
+#: contrib/backups/models.py:125
+msgid "name"
+msgstr "Name"
+
+#: contrib/backups/models.py:129
+msgid "preview"
+msgstr "Vorschau"
+
+#: contrib/backups/models.py:130
+msgid "back up first"
+msgstr "zuerst sichern"
+
+#: contrib/backups/models.py:131
+msgid "ignore migrations"
+msgstr "Migrationen ignorieren"
+
+#: contrib/backups/models.py:134
+msgid "safety backup"
+msgstr "Sicherheitsbackup"
+
+#: contrib/backups/models.py:140
+msgid "rows"
+msgstr "Zeilen"
+
+#: contrib/backups/models.py:155
+msgid "restore"
+msgstr "Wiederherstellung"
+
+#: contrib/backups/models.py:156
+msgid "restores"
+msgstr "Wiederherstellungen"
 
 #: contrib/backups/schedule.py:149
 #, python-format
@@ -367,17 +546,211 @@ msgstr "Backups sind nicht geplant."
 msgid "Database backups"
 msgstr "Datenbank-Backups"
 
-#: contrib/backups/views.py:101
+#: contrib/backups/views.py:167
 msgid "A backup is already queued or running."
 msgstr "Ein Backup ist bereits in der Warteschlange oder läuft."
 
-#: contrib/backups/views.py:115
+#: contrib/backups/views.py:181 contrib/backups/views.py:213
+#: contrib/backups/views.py:388
 msgid "There is no such backup."
 msgstr "Dieses Backup gibt es nicht."
 
-#: contrib/backups/views.py:121
+#: contrib/backups/views.py:187
 msgid "The backup's file is no longer in the storage."
 msgstr "Die Datei des Backups ist nicht mehr im Speicher."
+
+#: contrib/backups/views.py:202
+msgid "You may not restore backups here."
+msgstr "Du darfst hier keine Backups wiederherstellen."
+
+#: contrib/backups/views.py:244
+msgid "Choose a file to restore."
+msgstr "Wähle eine Datei zum Wiederherstellen."
+
+#: contrib/backups/views.py:254
+#, python-format
+msgid "Only JSON fixtures can be restored: %(suffixes)s."
+msgstr "Nur JSON-Fixtures können wiederhergestellt werden: %(suffixes)s."
+
+#: contrib/backups/views.py:267 media_library/serializers.py:59 uploads.py:77
+#, python-format
+msgid "The file is larger than %(size)s."
+msgstr "Die Datei ist größer als %(size)s."
+
+#: contrib/backups/views.py:279
+msgid "Choose a database that is backed up."
+msgstr "Wähle eine Datenbank, die gesichert wird."
+
+#: contrib/backups/views.py:344
+msgid "There is no such upload."
+msgstr "Diesen Upload gibt es nicht."
+
+#: contrib/backups/views.py:380
+msgid "The upload is gone. Upload the file again."
+msgstr "Der Upload ist nicht mehr vorhanden. Lade die Datei erneut hoch."
+
+#: contrib/backups/views.py:400
+msgid "Choose a backup or upload a file to restore."
+msgstr "Wähle ein Backup oder lade eine Datei zum Wiederherstellen hoch."
+
+#: contrib/backups/views.py:407
+#, python-format
+msgid "The database %(alias)s is not configured."
+msgstr "Die Datenbank %(alias)s ist nicht konfiguriert."
+
+#: contrib/backups/views.py:417
+#, python-format
+msgid "Type %(name)s to confirm."
+msgstr "Gib %(name)s zur Bestätigung ein."
+
+#: contrib/backups/views.py:425
+msgid "Your password is not correct."
+msgstr "Dein Passwort ist nicht korrekt."
+
+#: contrib/backups/views.py:432
+#, python-format
+msgid "The file holds models that are not installed: %(models)s."
+msgstr "Die Datei enthält Modelle, die nicht installiert sind: %(models)s."
+
+#: contrib/backups/views.py:437
+msgid "The migrations differ or cannot be checked. Confirm to restore anyway."
+msgstr ""
+"Die Migrationen unterscheiden sich oder können nicht geprüft werden. "
+"Bestätige, um trotzdem wiederherzustellen."
+
+#: contrib/backups/views.py:446
+msgid "A backup or restore of this database is running."
+msgstr "Ein Backup oder eine Wiederherstellung dieser Datenbank läuft."
+
+#: contrib/email_activity/apps.py:8
+msgid "Email activity"
+msgstr "E-Mail-Aktivität"
+
+#: contrib/email_activity/backends.py:172 contrib/email_activity/views.py:191
+msgid "The email backend did not send it."
+msgstr "Das E-Mail-Backend hat sie nicht gesendet."
+
+#: contrib/email_activity/kinds.py:28
+msgid "Invite"
+msgstr "Einladung"
+
+#: contrib/email_activity/kinds.py:29
+msgid "Password link"
+msgstr "Passwort-Link"
+
+#: contrib/email_activity/kinds.py:30
+msgid "Password reset"
+msgstr "Passwort zurücksetzen"
+
+#: contrib/email_activity/kinds.py:31
+msgid "Two-factor reset"
+msgstr "Zwei-Faktor-Zurücksetzung"
+
+#: contrib/email_activity/kinds.py:32
+msgid "Email address changed"
+msgstr "E-Mail-Adresse geändert"
+
+#: contrib/email_activity/kinds.py:33
+msgid "Notification digest"
+msgstr "Benachrichtigungsübersicht"
+
+#: contrib/email_activity/kinds.py:34
+msgid "Test email"
+msgstr "Test-E-Mail"
+
+#: contrib/email_activity/kinds.py:73
+msgid "Other"
+msgstr "Sonstige"
+
+#: contrib/email_activity/log.py:258
+#, python-format
+msgid "%(count)s sent in 24 hours"
+msgstr "%(count)s gesendet in 24 Stunden"
+
+#: contrib/email_activity/log.py:264
+#, python-format
+msgid "%(failed)s of %(total)s emails failed in the last 24 hours."
+msgstr ""
+"%(failed)s von %(total)s E-Mails sind in den letzten 24 Stunden "
+"fehlgeschlagen."
+
+#: contrib/email_activity/models.py:17
+msgid "Sent"
+msgstr "Gesendet"
+
+#: contrib/email_activity/models.py:21
+msgid "from"
+msgstr "von"
+
+#: contrib/email_activity/models.py:22
+msgid "to"
+msgstr "an"
+
+#: contrib/email_activity/models.py:23
+msgid "cc"
+msgstr "Cc"
+
+#: contrib/email_activity/models.py:24
+msgid "bcc"
+msgstr "Bcc"
+
+#: contrib/email_activity/models.py:25
+msgid "reply to"
+msgstr "Antwort an"
+
+#: contrib/email_activity/models.py:27
+msgid "recipients"
+msgstr "Empfänger"
+
+#: contrib/email_activity/models.py:28
+msgid "subject"
+msgstr "Betreff"
+
+#: contrib/email_activity/models.py:30
+msgid "kind"
+msgstr "Art"
+
+#: contrib/email_activity/models.py:34
+msgid "backend"
+msgstr "Backend"
+
+#: contrib/email_activity/models.py:35
+msgid "message ID"
+msgstr "Message-ID"
+
+#: contrib/email_activity/models.py:37
+msgid "attachments"
+msgstr "Anhänge"
+
+#: contrib/email_activity/models.py:42
+msgid "sent by"
+msgstr "gesendet von"
+
+#: contrib/email_activity/models.py:52
+msgid "duration"
+msgstr "Dauer"
+
+#: contrib/email_activity/models.py:55
+msgid "sent email"
+msgstr "gesendete E-Mail"
+
+#: contrib/email_activity/models.py:56
+msgid "sent emails"
+msgstr "gesendete E-Mails"
+
+#: contrib/email_activity/views.py:162
+msgid "Enter a valid email address."
+msgstr "Gib eine gültige E-Mail-Adresse ein."
+
+#: contrib/email_activity/views.py:174
+#, python-format
+msgid "Test email from %(site)s"
+msgstr "Test-E-Mail von %(site)s"
+
+#: contrib/email_activity/views.py:198
+#, python-format
+msgid "Test email sent to %(email)s."
+msgstr "Test-E-Mail an %(email)s gesendet."
 
 #: contrib/huey.py:40
 msgid "Timed out"
@@ -395,7 +768,7 @@ msgstr "Abgebrochen"
 msgid "Revoked"
 msgstr "Widerrufen"
 
-#: contrib/huey.py:44
+#: contrib/huey.py:44 publishing.py:74
 msgid "Expired"
 msgstr "Abgelaufen"
 
@@ -415,25 +788,25 @@ msgstr "Huey · %(count)s in der Warteschlange"
 #: contrib/huey.py:194
 #, python-format
 msgid ""
-"Tasks have been waiting for %(minutes)s minutes and no worker picked one up."
-" Is the consumer running?"
+"Tasks have been waiting for %(minutes)s minutes and no worker picked one up. "
+"Is the consumer running?"
 msgstr ""
 "Aufgaben warten seit %(minutes)s Minuten, und kein Worker hat eine "
 "übernommen. Läuft der Consumer?"
 
-#: contrib/password_reset/tasks.py:65
+#: contrib/password_reset/tasks.py:68
 msgid "Your password reset code"
 msgstr "Ihr Code zum Zurücksetzen des Passworts"
 
-#: contrib/password_reset/tasks.py:66
+#: contrib/password_reset/tasks.py:69
 msgid "Your password reset code is: "
 msgstr "Ihr Code zum Zurücksetzen des Passworts lautet: "
 
-#: contrib/password_reset/tasks.py:84
+#: contrib/password_reset/tasks.py:88
 msgid "Your password has been reset"
 msgstr "Ihr Passwort wurde zurückgesetzt"
 
-#: contrib/password_reset/tasks.py:86
+#: contrib/password_reset/tasks.py:90
 msgid ""
 "Your password has been reset. If you did not do this, please contact your "
 "administrator."
@@ -445,111 +818,111 @@ msgstr ""
 msgid "System status"
 msgstr "Systemstatus"
 
-#: contrib/status/builtin.py:34
+#: contrib/status/builtin.py:35
 msgid "Database cache"
 msgstr "Datenbank-Cache"
 
-#: contrib/status/builtin.py:35
+#: contrib/status/builtin.py:36
 msgid "File cache"
 msgstr "Datei-Cache"
 
-#: contrib/status/builtin.py:36 contrib/status/builtin.py:47
+#: contrib/status/builtin.py:37 contrib/status/builtin.py:48
 msgid "Local memory"
 msgstr "Lokaler Speicher"
 
-#: contrib/status/builtin.py:40
+#: contrib/status/builtin.py:41
 msgid "File system"
 msgstr "Dateisystem"
 
-#: contrib/status/builtin.py:41
+#: contrib/status/builtin.py:42
 msgid "Memory"
 msgstr "Arbeitsspeicher"
 
-#: contrib/status/builtin.py:46
+#: contrib/status/builtin.py:47
 msgid "Console"
 msgstr "Konsole"
 
-#: contrib/status/builtin.py:48
+#: contrib/status/builtin.py:49
 msgid "Files"
 msgstr "Dateien"
 
-#: contrib/status/builtin.py:49
+#: contrib/status/builtin.py:50
 msgid "Dummy"
 msgstr "Dummy"
 
-#: contrib/status/builtin.py:54
+#: contrib/status/builtin.py:55
 #, python-format
 msgid "Answered in %(seconds).1f seconds."
 msgstr "Antwort in %(seconds).1f Sekunden."
 
-#: contrib/status/builtin.py:65
+#: contrib/status/builtin.py:66
 msgid "The connection is not usable."
 msgstr "Die Verbindung ist nicht nutzbar."
 
-#: contrib/status/builtin.py:90
+#: contrib/status/builtin.py:91
 msgid "Dummy cache"
 msgstr "Dummy-Cache"
 
-#: contrib/status/builtin.py:90
+#: contrib/status/builtin.py:91
 msgid "Nothing is cached."
 msgstr "Es wird nichts zwischengespeichert."
 
-#: contrib/status/builtin.py:98
+#: contrib/status/builtin.py:99
 msgid "A value that was stored could not be read back."
 msgstr "Ein gespeicherter Wert konnte nicht wieder gelesen werden."
 
-#: contrib/status/builtin.py:123
+#: contrib/status/builtin.py:124
 msgid "No task backend connected"
 msgstr "Kein Aufgaben-Backend verbunden"
 
-#: contrib/status/builtin.py:170
+#: contrib/status/builtin.py:197
 #, python-format
 msgid "%(backend)s backend"
 msgstr "%(backend)s-Backend"
 
-#: contrib/status/builtin.py:171
+#: contrib/status/builtin.py:198
 msgid "Emails are not sent from this backend."
 msgstr "Mit diesem Backend werden keine E-Mails versendet."
 
-#: contrib/status/builtin.py:198
+#: contrib/status/builtin.py:225
 #, python-format
 msgid "%(count)s not applied"
 msgstr "%(count)s nicht angewendet"
 
-#: contrib/status/builtin.py:199
+#: contrib/status/builtin.py:226
 msgid "Run manage.py migrate."
 msgstr "Führen Sie manage.py migrate aus."
 
-#: contrib/status/builtin.py:201
+#: contrib/status/builtin.py:228
 msgid "Up to date"
 msgstr "Aktuell"
 
-#: contrib/status/builtin.py:214
+#: contrib/status/builtin.py:241
 msgid "Database"
 msgstr "Datenbank"
 
-#: contrib/status/builtin.py:214
+#: contrib/status/builtin.py:241
 #, python-format
 msgid "Database (%(alias)s)"
 msgstr "Datenbank (%(alias)s)"
 
-#: contrib/status/builtin.py:222
+#: contrib/status/builtin.py:249
 msgid "Cache"
 msgstr "Cache"
 
-#: contrib/status/builtin.py:229
+#: contrib/status/builtin.py:256
 msgid "Media storage"
 msgstr "Medienspeicher"
 
-#: contrib/status/builtin.py:236
+#: contrib/status/builtin.py:263
 msgid "Task queue"
 msgstr "Aufgabenwarteschlange"
 
-#: contrib/status/builtin.py:243
+#: contrib/status/builtin.py:270
 msgid "Email"
 msgstr "E-Mail"
 
-#: contrib/status/builtin.py:251
+#: contrib/status/builtin.py:284
 msgid "Migrations"
 msgstr "Migrationen"
 
@@ -594,7 +967,7 @@ msgstr "Wiederherstellungscode"
 msgid "recovery codes"
 msgstr "Wiederherstellungscodes"
 
-#: contrib/two_factor/service.py:195
+#: contrib/two_factor/service.py:197
 #, python-format
 msgid "Your two-factor login for %(site)s was reset"
 msgstr "Ihre Zwei-Faktor-Anmeldung für %(site)s wurde zurückgesetzt"
@@ -699,21 +1072,29 @@ msgstr ""
 msgid "Consecutive slashes are not allowed."
 msgstr "Aufeinanderfolgende Schrägstriche sind nicht erlaubt."
 
-#: form.py:473
+#: form.py:474
 msgid "Activity"
 msgstr "Aktivität"
+
+#: form.py:498
+msgid "Translations"
+msgstr "Übersetzungen"
 
 #: history/apps.py:11
 msgid "History"
 msgstr "Verlauf"
 
-#: history/models.py:30
+#: history/models.py:31
 msgid "version"
 msgstr "Version"
 
-#: history/models.py:31
+#: history/models.py:32
 msgid "versions"
 msgstr "Versionen"
+
+#: history/models.py:86 history/models.py:87
+msgid "unpublished changes"
+msgstr "unveröffentlichte Änderungen"
 
 #: importing.py:514
 msgid "Excel files cannot be imported on this site."
@@ -823,8 +1204,8 @@ msgstr "Dieses Modell kann nicht importiert werden."
 #: importing.py:1585
 msgid "The import failed. Try again, or ask a developer to check the logs."
 msgstr ""
-"Der Import ist fehlgeschlagen. Versuchen Sie es erneut oder bitten Sie einen"
-" Entwickler, die Logs zu prüfen."
+"Der Import ist fehlgeschlagen. Versuchen Sie es erneut oder bitten Sie einen "
+"Entwickler, die Logs zu prüfen."
 
 #: importing.py:1642
 msgid "Import from a file"
@@ -848,8 +1229,7 @@ msgstr "Medien"
 msgid "File"
 msgstr "Datei"
 
-#: media_library/models.py:31 media_library/models.py:133
-#: webhooks/models.py:53
+#: media_library/models.py:31 media_library/models.py:133 webhooks/models.py:55
 msgid "Name"
 msgstr "Name"
 
@@ -915,38 +1295,41 @@ msgstr "Ordner"
 msgid "Files of this type cannot be uploaded."
 msgstr "Dateien dieses Typs können nicht hochgeladen werden."
 
-#: media_library/serializers.py:59 uploads.py:77
-#, python-format
-msgid "The file is larger than %(size)s."
-msgstr "Die Datei ist größer als %(size)s."
-
 #: media_library/serializers.py:201
 msgid "A folder cannot be moved into itself or its subfolders."
 msgstr ""
 "Ein Ordner kann nicht in sich selbst oder einen seiner Unterordner "
 "verschoben werden."
 
-#: models.py:40
+#: models.py:42
 msgid "Created at"
 msgstr "Erstellt am"
 
-#: models.py:42
+#: models.py:44
 msgid "Modified at"
 msgstr "Geändert am"
 
-#: models.py:55
+#: models.py:57
 msgid "Edited by"
 msgstr "Bearbeitet von"
 
-#: models.py:65
+#: models.py:67
 msgid "Order key"
 msgstr "Sortierschlüssel"
 
-#: models.py:97
+#: models.py:99
 msgid "Removed at"
 msgstr "Entfernt am"
 
 #: models.py:137
+msgid "Published at"
+msgstr "Veröffentlicht am"
+
+#: models.py:140
+msgid "Unpublish at"
+msgstr "Zurückziehen am"
+
+#: models.py:181
 msgid "Singleton"
 msgstr "Singleton"
 
@@ -959,85 +1342,109 @@ msgstr "Benachrichtigungen"
 msgid "Your latest notifications"
 msgstr "Ihre neuesten Benachrichtigungen"
 
-#: notifications/digest.py:123
+#: notifications/digest.py:124
 msgid "Someone"
 msgstr "Jemand"
 
-#: notifications/digest.py:137
+#: notifications/digest.py:138
 #, python-format
 msgid "%(actor)s created the %(model)s %(object)s"
 msgstr "%(actor)s hat %(object)s (%(model)s) erstellt"
 
-#: notifications/digest.py:138
+#: notifications/digest.py:139
 #, python-format
 msgid "%(actor)s updated the %(model)s %(object)s"
 msgstr "%(actor)s hat %(object)s (%(model)s) aktualisiert"
 
-#: notifications/digest.py:139
+#: notifications/digest.py:140
 #, python-format
 msgid "%(actor)s deleted the %(model)s %(object)s"
 msgstr "%(actor)s hat %(object)s (%(model)s) gelöscht"
 
-#: notifications/digest.py:140
+#: notifications/digest.py:141
 #, python-format
 msgid "%(actor)s restored the %(model)s %(object)s"
 msgstr "%(actor)s hat %(object)s (%(model)s) wiederhergestellt"
 
-#: notifications/digest.py:141
+#: notifications/digest.py:142
 #, python-format
 msgid "%(actor)s moved the %(model)s %(object)s"
 msgstr "%(actor)s hat %(object)s (%(model)s) verschoben"
 
-#: notifications/digest.py:146
+#: notifications/digest.py:143
+#, python-format
+msgid "%(actor)s published the %(model)s %(object)s"
+msgstr "%(actor)s hat %(object)s (%(model)s) veröffentlicht"
+
+#: notifications/digest.py:144
+#, python-format
+msgid "%(actor)s unpublished the %(model)s %(object)s"
+msgstr "%(actor)s hat %(object)s (%(model)s) zurückgezogen"
+
+#: notifications/digest.py:149
 #, python-format
 msgid "%(actor)s created %(count)s %(models)s"
 msgid_plural "%(actor)s created %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s erstellt"
 msgstr[1] "%(actor)s hat %(count)s %(models)s erstellt"
 
-#: notifications/digest.py:151
+#: notifications/digest.py:154
 #, python-format
 msgid "%(actor)s updated %(count)s %(models)s"
 msgid_plural "%(actor)s updated %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s aktualisiert"
 msgstr[1] "%(actor)s hat %(count)s %(models)s aktualisiert"
 
-#: notifications/digest.py:156
+#: notifications/digest.py:159
 #, python-format
 msgid "%(actor)s deleted %(count)s %(models)s"
 msgid_plural "%(actor)s deleted %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s gelöscht"
 msgstr[1] "%(actor)s hat %(count)s %(models)s gelöscht"
 
-#: notifications/digest.py:161
+#: notifications/digest.py:164
 #, python-format
 msgid "%(actor)s restored %(count)s %(models)s"
 msgid_plural "%(actor)s restored %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s wiederhergestellt"
 msgstr[1] "%(actor)s hat %(count)s %(models)s wiederhergestellt"
 
-#: notifications/digest.py:166
+#: notifications/digest.py:169
 #, python-format
 msgid "%(actor)s reordered %(count)s %(models)s"
 msgid_plural "%(actor)s reordered %(count)s %(models)s"
 msgstr[0] "%(actor)s hat %(count)s %(models)s neu sortiert"
 msgstr[1] "%(actor)s hat %(count)s %(models)s neu sortiert"
 
-#: notifications/digest.py:235
+#: notifications/digest.py:174
+#, python-format
+msgid "%(actor)s published %(count)s %(models)s"
+msgid_plural "%(actor)s published %(count)s %(models)s"
+msgstr[0] "%(actor)s hat %(count)s %(models)s veröffentlicht"
+msgstr[1] "%(actor)s hat %(count)s %(models)s veröffentlicht"
+
+#: notifications/digest.py:179
+#, python-format
+msgid "%(actor)s unpublished %(count)s %(models)s"
+msgid_plural "%(actor)s unpublished %(count)s %(models)s"
+msgstr[0] "%(actor)s hat %(count)s %(models)s zurückgezogen"
+msgstr[1] "%(actor)s hat %(count)s %(models)s zurückgezogen"
+
+#: notifications/digest.py:248
 #, python-format
 msgid "%(count)s change"
 msgid_plural "%(count)s changes"
 msgstr[0] "%(count)s Änderung"
 msgstr[1] "%(count)s Änderungen"
 
-#: notifications/digest.py:255
+#: notifications/digest.py:268
 #, python-format
 msgid "and %(count)s more"
 msgid_plural "and %(count)s more"
 msgstr[0] "und %(count)s weitere"
 msgstr[1] "und %(count)s weitere"
 
-#: notifications/digest.py:283
+#: notifications/digest.py:296
 #: templates/content_studio/notifications/digest.html:12
 #, python-format
 msgid "You have %(count)s unread notification"
@@ -1053,7 +1460,7 @@ msgstr "Benachrichtigung"
 msgid "Info"
 msgstr "Info"
 
-#: notifications/models.py:39 webhooks/models.py:123
+#: notifications/models.py:39 webhooks/models.py:125
 msgid "Success"
 msgstr "Erfolg"
 
@@ -1061,7 +1468,7 @@ msgstr "Erfolg"
 msgid "Warning"
 msgstr "Warnung"
 
-#: notifications/models.py:41 webhooks/models.py:146
+#: notifications/models.py:41 webhooks/models.py:148
 msgid "Error"
 msgstr "Fehler"
 
@@ -1080,11 +1487,6 @@ msgstr "Stufe"
 #: notifications/models.py:64
 msgid "Actor"
 msgstr "Akteur"
-
-#: notifications/models.py:74 notifications/models.py:169
-#: notifications/models.py:214
-msgid "Model"
-msgstr "Modell"
 
 #: notifications/models.py:136
 msgid "Notification subscription"
@@ -1139,31 +1541,31 @@ msgstr "Der Anbieter hat keine Vorschau für diese Adresse."
 msgid "The provider did not answer."
 msgstr "Der Anbieter hat nicht geantwortet."
 
-#: password_links.py:175
+#: password_links.py:177
 #, python-format
 msgid "%(count)d day"
 msgid_plural "%(count)d days"
 msgstr[0] "%(count)d Tag"
 msgstr[1] "%(count)d Tagen"
 
-#: password_links.py:177
+#: password_links.py:179
 #, python-format
 msgid "%(count)d hour"
 msgid_plural "%(count)d hours"
 msgstr[0] "%(count)d Stunde"
 msgstr[1] "%(count)d Stunden"
 
-#: password_links.py:198
+#: password_links.py:200
 #, python-format
 msgid "You are invited to %(site)s"
 msgstr "Sie sind zu %(site)s eingeladen"
 
-#: password_links.py:201
+#: password_links.py:203
 #, python-format
 msgid "Set a new password for %(site)s"
 msgstr "Neues Passwort für %(site)s festlegen"
 
-#: password_links.py:238
+#: password_links.py:241
 msgid "This link is no longer valid."
 msgstr "Dieser Link ist nicht mehr gültig."
 
@@ -1173,8 +1575,8 @@ msgid ""
 "You can only grant or revoke permissions you have yourself. Not allowed: "
 "%(permissions)s."
 msgstr ""
-"Sie können nur Berechtigungen vergeben oder entziehen, die Sie selbst haben."
-" Nicht erlaubt: %(permissions)s."
+"Sie können nur Berechtigungen vergeben oder entziehen, die Sie selbst haben. "
+"Nicht erlaubt: %(permissions)s."
 
 #: permission_matrix.py:217
 #, python-format
@@ -1209,26 +1611,235 @@ msgstr "Standard-Speicheraktion"
 msgid "user preferences"
 msgstr "Benutzereinstellungen"
 
+#: previews/apps.py:16
+msgid "Previews"
+msgstr "Vorschauen"
+
+#: previews/models.py:16
+msgid "content type"
+msgstr "Inhaltstyp"
+
+#: previews/models.py:18
+msgid "object id"
+msgstr "Objekt-ID"
+
+#: previews/models.py:20
+msgid "language"
+msgstr "Sprache"
+
+#: previews/models.py:21
+msgid "key hash"
+msgstr "Schlüssel-Hash"
+
+#: previews/models.py:22
+msgid "note"
+msgstr "Notiz"
+
+#: previews/models.py:31
+msgid "expires at"
+msgstr "läuft ab am"
+
+#: previews/models.py:32
+msgid "opens"
+msgstr "Aufrufe"
+
+#: previews/models.py:33
+msgid "last opened at"
+msgstr "zuletzt geöffnet am"
+
+#: previews/models.py:36
+msgid "shared draft link"
+msgstr "geteilter Entwurfslink"
+
+#: previews/models.py:37
+msgid "shared draft links"
+msgstr "geteilte Entwurfslinks"
+
 #: profile.py:145
 msgid "Enter your current password to confirm."
 msgstr "Gib zur Bestätigung dein aktuelles Passwort ein."
 
-#: profile.py:151 profile.py:450
+#: profile.py:151 profile.py:453
 msgid "Your current password is not correct."
 msgstr "Ihr aktuelles Passwort ist nicht korrekt."
 
-#: profile.py:188
+#: profile.py:191
 #, python-format
 msgid "Your email address for %(site)s was changed"
 msgstr "Deine E-Mail-Adresse für %(site)s wurde geändert"
 
-#: profile.py:456
+#: profile.py:459
 msgid "Enter a new password."
 msgstr "Geben Sie ein neues Passwort ein."
+
+#: publishing.py:71
+msgid "Draft"
+msgstr "Entwurf"
+
+#: publishing.py:73 webhooks/models.py:39
+msgid "Published"
+msgstr "Veröffentlicht"
+
+#: publishing.py:345
+msgid "Enter a valid date and time."
+msgstr "Geben Sie ein gültiges Datum mit Uhrzeit ein."
+
+#: publishing.py:395
+msgid "Pick when to publish."
+msgstr "Wählen Sie, wann veröffentlicht wird."
+
+#: publishing.py:398
+msgid "Pick a time in the future."
+msgstr "Wählen Sie eine Zeit in der Zukunft."
+
+#: publishing.py:418
+msgid "This model has no unpublish date."
+msgstr "Dieses Modell hat kein Datum zum Zurückziehen."
+
+#: publishing.py:422
+msgid "Publish or schedule the object before setting an unpublish date."
+msgstr ""
+"Veröffentlichen oder planen Sie das Objekt, bevor Sie ein Datum zum "
+"Zurückziehen festlegen."
+
+#: publishing.py:438
+#, python-format
+msgid "Unknown publishing action %(action)s."
+msgstr "Unbekannte Veröffentlichungsaktion %(action)s."
+
+#: publishing.py:478
+msgid "The unpublish date must be after the publish date."
+msgstr ""
+"Das Datum zum Zurückziehen muss nach dem Veröffentlichungsdatum liegen."
+
+#: publishing.py:722
+msgid "Scheduled publishing"
+msgstr "Geplante Veröffentlichung"
+
+#: publishing.py:723
+msgid "Every minute"
+msgstr "Jede Minute"
+
+#: publishing.py:746
+msgid "Unpublished changes"
+msgstr "Unveröffentlichte Änderungen"
+
+#: publishing.py:752 review/models.py:21
+msgid "In review"
+msgstr "In Prüfung"
+
+#: publishing.py:753 review/models.py:23 review/notifying.py:41
+msgid "Changes requested"
+msgstr "Änderungen angefordert"
+
+#: publishing.py:754
+msgid "Waiting for my review"
+msgstr "Wartet auf meine Prüfung"
+
+#: review/apps.py:11
+msgid "Review"
+msgstr "Prüfung"
+
+#: review/core.py:293
+msgid "This object is already in review."
+msgstr "Dieses Objekt ist bereits in Prüfung."
+
+#: review/dashboard.py:88
+msgid "Waiting for your review"
+msgstr "Wartet auf deine Prüfung"
+
+#: review/dashboard.py:89
+msgid "Submitted for review, oldest first"
+msgstr "Zur Prüfung eingereicht, älteste zuerst"
+
+#: review/dashboard.py:92
+msgid "Your review requests"
+msgstr "Deine Prüfanfragen"
+
+#: review/dashboard.py:93
+msgid "In review or with changes requested"
+msgstr "In Prüfung oder mit angeforderten Änderungen"
+
+#: review/models.py:22
+msgid "Approved"
+msgstr "Freigegeben"
+
+#: review/models.py:24
+msgid "Withdrawn"
+msgstr "Zurückgezogen"
+
+#: review/models.py:27
+msgid "review request"
+msgstr "Prüfanfrage"
+
+#: review/models.py:28
+msgid "review requests"
+msgstr "Prüfanfragen"
+
+#: review/models.py:55
+msgid "Submitted by"
+msgstr "Eingereicht von"
+
+#: review/models.py:65
+msgid "Reviewer"
+msgstr "Prüfer"
+
+#: review/notifying.py:31
+msgid "Review requests"
+msgstr "Prüfanfragen"
+
+#: review/notifying.py:32
+msgid "Someone submits content for you to review."
+msgstr "Jemand reicht Inhalte zur Prüfung durch dich ein."
+
+#: review/notifying.py:36
+msgid "Approved reviews"
+msgstr "Freigegebene Prüfungen"
+
+#: review/notifying.py:37
+msgid "Content you submitted for review is approved."
+msgstr "Von dir eingereichte Inhalte wurden freigegeben."
+
+#: review/notifying.py:42
+msgid "A reviewer asks for changes to content you submitted."
+msgstr "Ein Prüfer fordert Änderungen an von dir eingereichten Inhalten an."
+
+#: review/notifying.py:90
+#, python-format
+msgid "%(actor)s asked you to review %(object)s"
+msgstr "%(actor)s bittet dich, %(object)s zu prüfen"
+
+#: review/notifying.py:92
+#, python-format
+msgid "%(actor)s submitted %(object)s for review"
+msgstr "%(actor)s hat %(object)s zur Prüfung eingereicht"
+
+#: review/notifying.py:96
+#, python-format
+msgid "%(actor)s approved %(object)s"
+msgstr "%(actor)s hat %(object)s freigegeben"
+
+#: review/notifying.py:99
+#, python-format
+msgid "%(actor)s requested changes to %(object)s"
+msgstr "%(actor)s fordert Änderungen an %(object)s an"
 
 #: rich_text.py:345 rich_text.py:374
 msgid "A link points to something you cannot link to."
 msgstr "Ein Link verweist auf etwas, auf das du nicht verlinken kannst."
+
+#: templates/content_studio/email_activity/test.txt:1
+#, python-format
+msgid ""
+"This is a test email from %(site_title)s, sent by %(sender)s from the Email "
+"activity page."
+msgstr ""
+"Dies ist eine Test-E-Mail von %(site_title)s, gesendet von %(sender)s über "
+"die Seite E-Mail-Aktivität."
+
+#: templates/content_studio/email_activity/test.txt:3
+msgid "If you can read this, email from the site is delivered."
+msgstr "Wenn du dies lesen kannst, werden E-Mails der Website zugestellt."
 
 #: templates/content_studio/notifications/digest.html:13
 #: templates/content_studio/notifications/digest.txt:1
@@ -1263,8 +1874,7 @@ msgstr ""
 msgid "You have %(count)s unread notification in %(site_name)s:"
 msgid_plural "You have %(count)s unread notifications in %(site_name)s:"
 msgstr[0] "Sie haben %(count)s ungelesene Benachrichtigung in %(site_name)s:"
-msgstr[1] ""
-"Sie haben %(count)s ungelesene Benachrichtigungen in %(site_name)s:"
+msgstr[1] "Sie haben %(count)s ungelesene Benachrichtigungen in %(site_name)s:"
 
 #: templates/content_studio/notifications/digest.txt:11
 msgid "See all notifications:"
@@ -1272,22 +1882,53 @@ msgstr "Alle Benachrichtigungen ansehen:"
 
 #: templates/content_studio/notifications/digest.txt:13
 msgid ""
-"You get this email because these notifications are unread. Turn these emails"
-" off in your notification settings:"
+"You get this email because these notifications are unread. Turn these emails "
+"off in your notification settings:"
 msgstr ""
-"Sie erhalten diese E-Mail, weil diese Benachrichtigungen ungelesen sind. Sie"
-" können diese E-Mails in Ihren Benachrichtigungseinstellungen abschalten:"
+"Sie erhalten diese E-Mail, weil diese Benachrichtigungen ungelesen sind. Sie "
+"können diese E-Mails in Ihren Benachrichtigungseinstellungen abschalten:"
+
+#: templates/content_studio/previews/banner.html:11
+msgid "Draft preview"
+msgstr "Entwurfsvorschau"
+
+#: templates/content_studio/previews/banner.html:11
+msgid "Not public"
+msgstr "Nicht öffentlich"
+
+#: templates/content_studio/previews/banner.html:11
+#, python-format
+msgid "This link stops working at %(time)s"
+msgstr "Dieser Link gilt bis %(time)s"
+
+#: templates/content_studio/previews/banner.html:11
+#, python-format
+msgid "Shared by %(name)s"
+msgstr "Geteilt von %(name)s"
+
+#: templates/content_studio/previews/banner.html:11
+#, python-format
+msgid "Link expires %(date)s"
+msgstr "Link läuft ab am %(date)s"
+
+#: templates/content_studio/previews/banner.html:13
+msgid "Edit"
+msgstr "Bearbeiten"
 
 #: templates/content_studio/users/email_changed.txt:1
 #, python-format
 msgid ""
 "Hi %(name)s,\n"
 "\n"
-"The email address of your account for %(site_title)s was changed from %(email)s to another address. Password links and notifications now go to the new address."
+"The email address of your account for %(site_title)s was changed from "
+"%(email)s to another address. Password links and notifications now go to the "
+"new address."
 msgstr ""
 "Hallo %(name)s,\n"
 "\n"
-"die E-Mail-Adresse deines Kontos für %(site_title)s wurde von %(email)s in eine andere Adresse geändert. Passwort-Links und Benachrichtigungen gehen jetzt an die neue Adresse."
+"die E-Mail-Adresse deines Kontos für %(site_title)s wurde von %(email)s in "
+"eine andere Adresse geändert. Passwort-Links und Benachrichtigungen gehen "
+"jetzt an die neue Adresse."
 
 #: templates/content_studio/users/email_changed.txt:5
 msgid "If you did not change it, contact your administrator right away."
@@ -1303,7 +1944,8 @@ msgid ""
 msgstr ""
 "Hallo %(name)s,\n"
 "\n"
-"%(sender)s hat Sie zu %(site_title)s eingeladen. Legen Sie Ihr Passwort fest, um sich anzumelden:"
+"%(sender)s hat Sie zu %(site_title)s eingeladen. Legen Sie Ihr Passwort "
+"fest, um sich anzumelden:"
 
 #: templates/content_studio/users/invite.txt:7
 #, python-format
@@ -1311,8 +1953,8 @@ msgid ""
 "Your username is %(username)s. The link works once and expires in "
 "%(expires)s. If it has expired, ask %(sender)s for a new one."
 msgstr ""
-"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in"
-" %(expires)s ab. Ist er abgelaufen, bitten Sie %(sender)s um einen neuen."
+"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in "
+"%(expires)s ab. Ist er abgelaufen, bitten Sie %(sender)s um einen neuen."
 
 #: templates/content_studio/users/password_link.txt:1
 #, python-format
@@ -1323,7 +1965,8 @@ msgid ""
 msgstr ""
 "Hallo %(name)s,\n"
 "\n"
-"%(sender)s hat Ihnen einen Link geschickt, um ein neues Passwort für %(site_title)s festzulegen:"
+"%(sender)s hat Ihnen einen Link geschickt, um ein neues Passwort für "
+"%(site_title)s festzulegen:"
 
 #: templates/content_studio/users/password_link.txt:7
 #, python-format
@@ -1331,26 +1974,34 @@ msgid ""
 "Your username is %(username)s. The link works once and expires in "
 "%(expires)s. If you did not expect this email, contact your administrator."
 msgstr ""
-"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in"
-" %(expires)s ab. Wenn Sie diese E-Mail nicht erwartet haben, wenden Sie sich"
-" an Ihren Administrator."
+"Ihr Benutzername ist %(username)s. Der Link funktioniert einmal und läuft in "
+"%(expires)s ab. Wenn Sie diese E-Mail nicht erwartet haben, wenden Sie sich "
+"an Ihren Administrator."
 
 #: templates/content_studio/users/two_factor_reset.txt:1
 #, python-format
 msgid ""
 "Hi %(name)s,\n"
 "\n"
-"%(sender)s reset your two-factor login for %(site_title)s. You log in with your password alone now, and your old recovery codes no longer work. If two-factor login is required, you set it up again the next time you log in."
+"%(sender)s reset your two-factor login for %(site_title)s. You log in with "
+"your password alone now, and your old recovery codes no longer work. If two-"
+"factor login is required, you set it up again the next time you log in."
 msgstr ""
 "Hallo %(name)s,\n"
 "\n"
-"%(sender)s hat Ihre Zwei-Faktor-Anmeldung für %(site_title)s zurückgesetzt. Sie melden sich jetzt nur mit Ihrem Passwort an, und Ihre alten Wiederherstellungscodes funktionieren nicht mehr. Ist die Zwei-Faktor-Anmeldung Pflicht, richten Sie sie bei der nächsten Anmeldung neu ein."
+"%(sender)s hat Ihre Zwei-Faktor-Anmeldung für %(site_title)s zurückgesetzt. "
+"Sie melden sich jetzt nur mit Ihrem Passwort an, und Ihre alten "
+"Wiederherstellungscodes funktionieren nicht mehr. Ist die Zwei-Faktor-"
+"Anmeldung Pflicht, richten Sie sie bei der nächsten Anmeldung neu ein."
 
 #: templates/content_studio/users/two_factor_reset.txt:5
 msgid "If you did not ask for this, contact your administrator."
 msgstr ""
-"Wenn Sie das nicht angefordert haben, wenden Sie sich an Ihren "
-"Administrator."
+"Wenn Sie das nicht angefordert haben, wenden Sie sich an Ihren Administrator."
+
+#: translations.py:532
+msgid "Missing translation"
+msgstr "Fehlende Übersetzung"
 
 #: uploads.py:124 uploads.py:136
 msgid "The upload has expired. Choose the file again."
@@ -1381,8 +2032,7 @@ msgstr ""
 "mit weiteren Aktionen."
 
 #: user_studios.py:122
-msgid ""
-"Two-factor login is required: this user sets it up at their next login."
+msgid "Two-factor login is required: this user sets it up at their next login."
 msgstr ""
 "Die Zwei-Faktor-Anmeldung ist Pflicht: Dieser Benutzer richtet sie bei der "
 "nächsten Anmeldung ein."
@@ -1422,10 +2072,6 @@ msgstr "Inaktive Benutzer können sich nicht anmelden."
 #: user_studios.py:284
 msgid "Only staff users can log in to the admin."
 msgstr "Nur Mitarbeiter können sich in der Administration anmelden."
-
-#: user_studios.py:296 webhooks/models.py:138
-msgid "Status"
-msgstr "Status"
 
 #: user_studios.py:307
 msgid "Important dates"
@@ -1474,30 +2120,30 @@ msgstr "Geben Sie eine gültige Farbe ein."
 msgid "Transparent colors are not allowed."
 msgstr "Transparente Farben sind nicht erlaubt."
 
-#: views.py:295
+#: views.py:303
 msgid "Pass the address to preview as url."
 msgstr "Übergeben Sie die Adresse für die Vorschau als url."
 
-#: views.py:365
+#: views.py:373
 msgid "This language is not available."
 msgstr "Diese Sprache ist nicht verfügbar."
 
-#: views.py:450
+#: views.py:458
 msgid "Content"
 msgstr "Inhalte"
 
-#: viewsets.py:306
+#: viewsets.py:309
 msgid "The object could not be saved: it conflicts with an existing object."
 msgstr ""
 "Das Objekt konnte nicht gespeichert werden: Es steht im Konflikt mit einem "
 "vorhandenen Objekt."
 
-#: viewsets.py:507
+#: viewsets.py:737
 #, python-format
 msgid "The file is too large; it can be %(size)s at most."
 msgstr "Die Datei ist zu groß; sie darf höchstens %(size)s groß sein."
 
-#: viewsets.py:546
+#: viewsets.py:776
 #, python-format
 msgid ""
 "The file has %(count)s rows; at most %(max)s can be imported at once. Split "
@@ -1506,12 +2152,72 @@ msgstr ""
 "Die Datei hat %(count)s Zeilen; höchstens %(max)s können auf einmal "
 "importiert werden. Teilen Sie sie in kleinere Dateien auf."
 
-#: viewsets.py:642
-msgid ""
-"The object could not be restored: it conflicts with an existing object."
+#: viewsets.py:872
+msgid "The object could not be restored: it conflicts with an existing object."
 msgstr ""
 "Das Objekt konnte nicht wiederhergestellt werden: Es steht im Konflikt mit "
 "einem vorhandenen Objekt."
+
+#: viewsets.py:941
+msgid "This model is published after review: submit it for review."
+msgstr ""
+"Dieses Modell wird nach einer Prüfung veröffentlicht: reiche es zur Prüfung "
+"ein."
+
+#: viewsets.py:962
+msgid "There are no unpublished changes."
+msgstr "Es gibt keine unveröffentlichten Änderungen."
+
+#: viewsets.py:1152
+msgid "There are no unpublished changes to review."
+msgstr "Es gibt keine unveröffentlichten Änderungen zu prüfen."
+
+#: viewsets.py:1171
+msgid "This person cannot review it."
+msgstr "Diese Person kann es nicht prüfen."
+
+#: viewsets.py:1187
+msgid "This object is not in review."
+msgstr "Dieses Objekt ist nicht in Prüfung."
+
+#: viewsets.py:1199
+#, python-format
+msgid "Unknown review action %(action)s."
+msgstr "Unbekannte Prüfaktion %(action)s."
+
+#: viewsets.py:1207
+msgid "Say what to change."
+msgstr "Sag, was geändert werden soll."
+
+#: viewsets.py:1222
+msgid "It changed since you opened it. Look at the changes again."
+msgstr ""
+"Es wurde geändert, seit du es geöffnet hast. Sieh dir die Änderungen erneut "
+"an."
+
+#: viewsets.py:1235
+msgid "Live content is approved to publish now."
+msgstr "Live-Inhalte werden zur sofortigen Veröffentlichung freigegeben."
+
+#: viewsets.py:1296
+msgid "Unknown language."
+msgstr "Unbekannte Sprache."
+
+#: viewsets.py:1339
+msgid "This is live: copy its link instead of sharing a draft link."
+msgstr "Das ist live: Kopiere den Link, statt einen Entwurfslink zu teilen."
+
+#: viewsets.py:1358
+msgid "Enter a valid date."
+msgstr "Gib ein gültiges Datum ein."
+
+#: viewsets.py:1365
+msgid "Pick a date in the future."
+msgstr "Wähle ein Datum in der Zukunft."
+
+#: viewsets.py:2035
+msgid "Changed by someone else since you loaded the list."
+msgstr "Seit dem Laden der Liste von jemand anderem geändert."
 
 #: webhooks/admin.py:29
 #, python-format
@@ -1563,7 +2269,7 @@ msgstr ""
 "Der Webhook wurde erstellt. Kopieren Sie jetzt sein Secret: Es wird nicht "
 "noch einmal angezeigt."
 
-#: webhooks/apps.py:11 webhooks/dashboard.py:30 webhooks/models.py:50
+#: webhooks/apps.py:11 webhooks/dashboard.py:30 webhooks/models.py:52
 msgid "Webhooks"
 msgstr "Webhooks"
 
@@ -1593,8 +2299,8 @@ msgid "Triggered %(count)d webhook. Its delivery log shows how it responded."
 msgid_plural ""
 "Triggered %(count)d webhooks. Their delivery logs show how they responded."
 msgstr[0] ""
-"%(count)d Webhook ausgelöst. Sein Zustellprotokoll zeigt, wie er geantwortet"
-" hat."
+"%(count)d Webhook ausgelöst. Sein Zustellprotokoll zeigt, wie er geantwortet "
+"hat."
 msgstr[1] ""
 "%(count)d Webhooks ausgelöst. Ihre Zustellprotokolle zeigen, wie sie "
 "geantwortet haben."
@@ -1641,484 +2347,79 @@ msgstr "Wiederhergestellt"
 msgid "Reordered"
 msgstr "Neu sortiert"
 
-#: webhooks/models.py:49 webhooks/models.py:131
+#: webhooks/models.py:40
+msgid "Unpublished"
+msgstr "Zurückgezogen"
+
+#: webhooks/models.py:51 webhooks/models.py:133
 msgid "Webhook"
 msgstr "Webhook"
 
-#: webhooks/models.py:55
+#: webhooks/models.py:57
 msgid "URL"
 msgstr "URL"
 
-#: webhooks/models.py:60
+#: webhooks/models.py:62
 msgid "Secret"
 msgstr "Secret"
 
-#: webhooks/models.py:61
+#: webhooks/models.py:63
 msgid "Signs every request, so the receiver can verify it."
 msgstr "Signiert jede Anfrage, damit der Empfänger sie prüfen kann."
 
-#: webhooks/models.py:65
+#: webhooks/models.py:67
 msgid "Events"
 msgstr "Ereignisse"
 
-#: webhooks/models.py:66
+#: webhooks/models.py:68
 msgid "The changes that trigger the webhook; empty for all."
 msgstr "Die Änderungen, die den Webhook auslösen; leer für alle."
 
-#: webhooks/models.py:72
+#: webhooks/models.py:74
 msgid "Models"
 msgstr "Modelle"
 
-#: webhooks/models.py:73
+#: webhooks/models.py:75
 msgid "The models whose changes trigger the webhook; empty for all."
 msgstr "Die Modelle, deren Änderungen den Webhook auslösen; leer für alle."
 
-#: webhooks/models.py:81
+#: webhooks/models.py:83
 msgid "Tenant"
 msgstr "Mandant"
 
-#: webhooks/models.py:82
+#: webhooks/models.py:84
 msgid "Only changes in this tenant trigger the webhook; empty for all."
 msgstr ""
 "Nur Änderungen in diesem Mandanten lösen den Webhook aus; leer für alle."
 
-#: webhooks/models.py:84
+#: webhooks/models.py:86
 msgid "Active"
 msgstr "Aktiv"
 
-#: webhooks/models.py:116
+#: webhooks/models.py:118
 msgid "Webhook delivery"
 msgstr "Webhook-Zustellung"
 
-#: webhooks/models.py:117
+#: webhooks/models.py:119
 msgid "Webhook deliveries"
 msgstr "Webhook-Zustellungen"
 
-#: webhooks/models.py:122
+#: webhooks/models.py:124
 msgid "Pending"
 msgstr "Ausstehend"
 
-#: webhooks/models.py:133
+#: webhooks/models.py:135
 msgid "Payload"
 msgstr "Nutzdaten"
 
-#: webhooks/models.py:140
+#: webhooks/models.py:142
 msgid "Attempts"
 msgstr "Versuche"
 
-#: webhooks/models.py:143
+#: webhooks/models.py:145
 msgid "Response status"
 msgstr "Antwortstatus"
 
-#: webhooks/models.py:145
+#: webhooks/models.py:147
 msgid "Response"
 msgstr "Antwort"
-
-#: publishing.py
-msgid "Draft"
-msgstr "Entwurf"
-
-#: webhooks/models.py
-msgid "Published"
-msgstr "Veröffentlicht"
-
-#: webhooks/models.py
-msgid "Unpublished"
-msgstr "Zurückgezogen"
-
-#: publishing.py
-msgid "Scheduled publishing"
-msgstr "Geplante Veröffentlichung"
-
-#: publishing.py
-msgid "Every minute"
-msgstr "Jede Minute"
-
-#: publishing.py
-msgid "Enter a valid date and time."
-msgstr "Geben Sie ein gültiges Datum mit Uhrzeit ein."
-
-#: publishing.py
-msgid "The unpublish date must be after the publish date."
-msgstr ""
-"Das Datum zum Zurückziehen muss nach dem Veröffentlichungsdatum liegen."
-
-#: publishing.py
-msgid "Pick when to publish."
-msgstr "Wählen Sie, wann veröffentlicht wird."
-
-#: publishing.py
-msgid "Pick a time in the future."
-msgstr "Wählen Sie eine Zeit in der Zukunft."
-
-#: publishing.py
-msgid "This model has no unpublish date."
-msgstr "Dieses Modell hat kein Datum zum Zurückziehen."
-
-#: publishing.py
-msgid "Publish or schedule the object before setting an unpublish date."
-msgstr ""
-"Veröffentlichen oder planen Sie das Objekt, bevor Sie ein Datum zum "
-"Zurückziehen festlegen."
-
-#: publishing.py
-#, python-format
-msgid "Unknown publishing action %(action)s."
-msgstr "Unbekannte Veröffentlichungsaktion %(action)s."
-
-#: actions.py
-msgid "Publish now"
-msgstr "Jetzt veröffentlichen"
-
-#: actions.py
-msgid "Publish the selected items now?"
-msgstr "Die ausgewählten Einträge jetzt veröffentlichen?"
-
-#: actions.py
-msgid "Unpublish"
-msgstr "Zurückziehen"
-
-#: actions.py
-msgid ""
-"The selected items go back to being drafts and leave the site. Unpublish "
-"them?"
-msgstr ""
-"Die ausgewählten Einträge werden wieder zu Entwürfen und verschwinden von "
-"der Website. Zurückziehen?"
-
-#: actions.py
-msgid "Schedule…"
-msgstr "Planen…"
-
-#: actions.py
-#, python-format
-msgid "Published %(count)s items."
-msgstr "%(count)s Einträge veröffentlicht."
-
-#: actions.py
-#, python-format
-msgid "Unpublished %(count)s items."
-msgstr "%(count)s Einträge zurückgezogen."
-
-#: actions.py
-#, python-format
-msgid "Scheduled %(count)s items."
-msgstr "%(count)s Einträge geplant."
-
-#: actions.py
-msgid "Publish on"
-msgstr "Veröffentlichen am"
-
-#: actions.py
-msgid "Unpublish on"
-msgstr "Zurückziehen am"
-
-#: notifications/digest.py
-#, python-format
-msgid "%(actor)s published the %(model)s %(object)s"
-msgstr "%(actor)s hat %(object)s (%(model)s) veröffentlicht"
-
-#: notifications/digest.py
-#, python-format
-msgid "%(actor)s unpublished the %(model)s %(object)s"
-msgstr "%(actor)s hat %(object)s (%(model)s) zurückgezogen"
-
-#: models.py
-msgid "Published at"
-msgstr "Veröffentlicht am"
-
-#: models.py
-msgid "Unpublish at"
-msgstr "Zurückziehen am"
-
-#: notifications/digest.py
-#, python-format
-msgid "%(actor)s published %(count)s %(models)s"
-msgid_plural "%(actor)s published %(count)s %(models)s"
-msgstr[0] "%(actor)s hat %(count)s %(models)s veröffentlicht"
-msgstr[1] "%(actor)s hat %(count)s %(models)s veröffentlicht"
-
-#: notifications/digest.py
-#, python-format
-msgid "%(actor)s unpublished %(count)s %(models)s"
-msgid_plural "%(actor)s unpublished %(count)s %(models)s"
-msgstr[0] "%(actor)s hat %(count)s %(models)s zurückgezogen"
-msgstr[1] "%(actor)s hat %(count)s %(models)s zurückgezogen"
-
-#: translations.py
-msgid "Missing translation"
-msgstr "Fehlende Übersetzung"
-
-#: form.py
-msgid "Translations"
-msgstr "Übersetzungen"
-
-msgid "Changed by someone else since you loaded the list."
-msgstr "Seit dem Laden der Liste von jemand anderem geändert."
-
-msgid "Previews"
-msgstr "Vorschauen"
-
-msgid "content type"
-msgstr "Inhaltstyp"
-
-msgid "object id"
-msgstr "Objekt-ID"
-
-msgid "language"
-msgstr "Sprache"
-
-msgid "key hash"
-msgstr "Schlüssel-Hash"
-
-msgid "note"
-msgstr "Notiz"
-
-msgid "expires at"
-msgstr "läuft ab am"
-
-msgid "opens"
-msgstr "Aufrufe"
-
-msgid "last opened at"
-msgstr "zuletzt geöffnet am"
-
-msgid "shared draft link"
-msgstr "geteilter Entwurfslink"
-
-msgid "shared draft links"
-msgstr "geteilte Entwurfslinks"
-
-msgid "Unknown language."
-msgstr "Unbekannte Sprache."
-
-msgid "This is live: copy its link instead of sharing a draft link."
-msgstr "Das ist live: Kopiere den Link, statt einen Entwurfslink zu teilen."
-
-msgid "Enter a valid date."
-msgstr "Gib ein gültiges Datum ein."
-
-msgid "Pick a date in the future."
-msgstr "Wähle ein Datum in der Zukunft."
-
-msgid "Draft preview"
-msgstr "Entwurfsvorschau"
-
-msgid "Not public"
-msgstr "Nicht öffentlich"
-
-msgid "This link stops working at %(time)s"
-msgstr "Dieser Link gilt bis %(time)s"
-
-msgid "Shared by %(name)s"
-msgstr "Geteilt von %(name)s"
-
-msgid "Link expires %(date)s"
-msgstr "Link läuft ab am %(date)s"
-
-msgid "Edit"
-msgstr "Bearbeiten"
-
-#: content_studio/publishing.py
-msgid "Unpublished changes"
-msgstr "Unveröffentlichte Änderungen"
-
-#: content_studio/viewsets.py
-msgid "There are no unpublished changes."
-msgstr "Es gibt keine unveröffentlichten Änderungen."
-
-#: content_studio/history/models.py
-msgid "unpublished changes"
-msgstr "unveröffentlichte Änderungen"
-
-#: content_studio/comments/apps.py
-msgid "Comments"
-msgstr "Kommentare"
-
-#: content_studio/comments/models.py
-msgid "comment"
-msgstr "Kommentar"
-
-#: content_studio/comments/models.py
-msgid "comments"
-msgstr "Kommentare"
-
-#: content_studio/comments/models.py
-msgid "Author"
-msgstr "Autor"
-
-#: content_studio/comments/models.py
-msgid "Comment"
-msgstr "Kommentar"
-
-#: content_studio/comments/notifying.py
-msgid "Mentions in comments"
-msgstr "Erwähnungen in Kommentaren"
-
-#: content_studio/comments/notifying.py
-msgid "Someone mentions you in a comment."
-msgstr "Jemand erwähnt Sie in einem Kommentar."
-
-#: content_studio/comments/notifying.py
-msgid "Replies to comments"
-msgstr "Antworten auf Kommentare"
-
-#: content_studio/comments/notifying.py
-msgid "Someone replies in a comment thread you are in."
-msgstr "Jemand antwortet in einem Kommentar-Thread, in dem Sie geschrieben haben."
-
-#: content_studio/comments/notifying.py
-msgid "Comments on content you follow"
-msgstr "Kommentare zu Inhalten, denen Sie folgen"
-
-#: content_studio/comments/notifying.py
-msgid "Someone comments on an object you follow."
-msgstr "Jemand kommentiert ein Objekt, dem Sie folgen."
-
-#: content_studio/comments/notifying.py
-#, python-format
-msgid "%(actor)s mentioned you on %(object)s"
-msgstr "%(actor)s hat Sie bei %(object)s erwähnt"
-
-#: content_studio/comments/notifying.py
-#, python-format
-msgid "%(actor)s replied to a comment on %(object)s"
-msgstr "%(actor)s hat auf einen Kommentar zu %(object)s geantwortet"
-
-#: content_studio/comments/notifying.py
-#, python-format
-msgid "%(actor)s commented on %(object)s"
-msgstr "%(actor)s hat %(object)s kommentiert"
-
-#: content_studio/review
-#, python-format
-msgid "%(actor)s asked you to review %(object)s"
-msgstr "%(actor)s bittet dich, %(object)s zu prüfen"
-
-#: content_studio/review
-#, python-format
-msgid "%(actor)s submitted %(object)s for review"
-msgstr "%(actor)s hat %(object)s zur Prüfung eingereicht"
-
-#: content_studio/review
-#, python-format
-msgid "%(actor)s approved %(object)s"
-msgstr "%(actor)s hat %(object)s freigegeben"
-
-#: content_studio/review
-#, python-format
-msgid "%(actor)s requested changes to %(object)s"
-msgstr "%(actor)s fordert Änderungen an %(object)s an"
-
-#: content_studio/review
-msgid "Review requests"
-msgstr "Prüfanfragen"
-
-#: content_studio/review
-msgid "Someone submits content for you to review."
-msgstr "Jemand reicht Inhalte zur Prüfung durch dich ein."
-
-#: content_studio/review
-msgid "Approved reviews"
-msgstr "Freigegebene Prüfungen"
-
-#: content_studio/review
-msgid "Content you submitted for review is approved."
-msgstr "Von dir eingereichte Inhalte wurden freigegeben."
-
-#: content_studio/review
-msgid "Changes requested"
-msgstr "Änderungen angefordert"
-
-#: content_studio/review
-msgid "A reviewer asks for changes to content you submitted."
-msgstr "Ein Prüfer fordert Änderungen an von dir eingereichten Inhalten an."
-
-#: content_studio/review
-msgid "review request"
-msgstr "Prüfanfrage"
-
-#: content_studio/review
-msgid "review requests"
-msgstr "Prüfanfragen"
-
-#: content_studio/review
-msgid "In review"
-msgstr "In Prüfung"
-
-#: content_studio/review
-msgid "Approved"
-msgstr "Freigegeben"
-
-#: content_studio/review
-msgid "Withdrawn"
-msgstr "Zurückgezogen"
-
-#: content_studio/review
-msgid "Submitted by"
-msgstr "Eingereicht von"
-
-#: content_studio/review
-msgid "Reviewer"
-msgstr "Prüfer"
-
-#: content_studio/review
-msgid "Review"
-msgstr "Prüfung"
-
-#: content_studio/review
-msgid "Waiting for your review"
-msgstr "Wartet auf deine Prüfung"
-
-#: content_studio/review
-msgid "Submitted for review, oldest first"
-msgstr "Zur Prüfung eingereicht, älteste zuerst"
-
-#: content_studio/review
-msgid "Your review requests"
-msgstr "Deine Prüfanfragen"
-
-#: content_studio/review
-msgid "In review or with changes requested"
-msgstr "In Prüfung oder mit angeforderten Änderungen"
-
-#: content_studio/review
-msgid "Waiting for my review"
-msgstr "Wartet auf meine Prüfung"
-
-#: content_studio/review
-msgid "This object is already in review."
-msgstr "Dieses Objekt ist bereits in Prüfung."
-
-#: content_studio/review
-msgid "This object is not in review."
-msgstr "Dieses Objekt ist nicht in Prüfung."
-
-#: content_studio/review
-msgid "There are no unpublished changes to review."
-msgstr "Es gibt keine unveröffentlichten Änderungen zu prüfen."
-
-#: content_studio/review
-msgid "This person cannot review it."
-msgstr "Diese Person kann es nicht prüfen."
-
-#: content_studio/review
-#, python-format
-msgid "Unknown review action %(action)s."
-msgstr "Unbekannte Prüfaktion %(action)s."
-
-#: content_studio/review
-msgid "Say what to change."
-msgstr "Sag, was geändert werden soll."
-
-#: content_studio/review
-msgid "It changed since you opened it. Look at the changes again."
-msgstr "Es wurde geändert, seit du es geöffnet hast. Sieh dir die Änderungen erneut an."
-
-#: content_studio/review
-msgid "Live content is approved to publish now."
-msgstr "Live-Inhalte werden zur sofortigen Veröffentlichung freigegeben."
-
-#: content_studio/review
-msgid "This model is published after review: submit it for review."
-msgstr "Dieses Modell wird nach einer Prüfung veröffentlicht: reiche es zur Prüfung ein."

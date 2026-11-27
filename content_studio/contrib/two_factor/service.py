@@ -175,6 +175,7 @@ def send_reset_mail(pk, sender, language=None):
     from django.utils.translation import gettext as _
 
     from ...password_links import _display_name, get_email
+    from ..email_activity.kinds import TWO_FACTOR_RESET, email_kind
 
     with translation.override(language):
         user = get_user_model()._default_manager.filter(pk=pk).first()
@@ -190,15 +191,16 @@ def send_reset_mail(pk, sender, language=None):
         }
 
         try:
-            send_mail(
-                from_email=None,
-                subject=_("Your two-factor login for %(site)s was reset")
-                % {"site": site_title},
-                message=render_to_string(
-                    "content_studio/users/two_factor_reset.txt", context
-                ),
-                recipient_list=[get_email(user)],
-            )
+            with email_kind(TWO_FACTOR_RESET):
+                send_mail(
+                    from_email=None,
+                    subject=_("Your two-factor login for %(site)s was reset")
+                    % {"site": site_title},
+                    message=render_to_string(
+                        "content_studio/users/two_factor_reset.txt", context
+                    ),
+                    recipient_list=[get_email(user)],
+                )
         except Exception:
             logging.getLogger("content_studio.users").exception(
                 "Could not send the two-factor reset email to user %s", pk
