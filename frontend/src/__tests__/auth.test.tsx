@@ -191,6 +191,46 @@ describe("AuthProvider", () => {
     ]);
   });
 
+  it("refreshes while holding a lock the browser's other tabs share", async () => {
+    // Tabs share the refresh cookie, and each refresh replaces it: a tab
+    // refreshing at the same moment as another would present the cookie
+    // the other one just used.
+    let held = false;
+    const request = vi.fn(
+      async (name: string, callback: () => Promise<unknown>) => {
+        held = true;
+        try {
+          return await callback();
+        } finally {
+          held = false;
+        }
+      },
+    );
+    vi.stubGlobal("navigator", { ...navigator, locks: { request } });
+
+    const heldDuring: boolean[] = [];
+    respond = (url) => {
+      if (url === REFRESH_URL) {
+        heldDuring.push(held);
+        return { data: { access: "locked-token" }, status: 200 };
+      }
+      return { data: {} };
+    };
+
+    try {
+      renderApp();
+      expect(await screen.findByText("token:locked-token")).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(request).toHaveBeenCalledWith(
+      "content-studio:token-refresh",
+      expect.any(Function),
+    );
+    expect(heldDuring).toEqual([true]);
+  });
+
   it("shares a single refresh between concurrent 401s", async () => {
     respond = (url, config, call) => {
       if (url === REFRESH_URL) {

@@ -86,6 +86,14 @@ short lifetime does not log anyone out.
 How long a session can go unused before the editor has to log in again, in
 seconds. Default: `604800` (seven days).
 
+### REFRESH_TOKEN_REUSE_INTERVAL {#refresh_token_reuse_interval}
+
+How long, in seconds, a session cookie that was just renewed still renews
+the session when it is presented again. Default: `10`. This happens when
+two tabs renew at the same moment, or when a renewal's response never
+reached the browser. Presented again later, the cookie was copied, and the
+session ends. `0` or `None` ends the session on any reuse.
+
 ### MAX_SESSION_LIFETIME {#max_session_lifetime}
 
 How long a session can last after logging in, however active the editor

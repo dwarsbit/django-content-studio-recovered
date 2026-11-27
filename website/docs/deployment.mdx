@@ -73,7 +73,8 @@ of the box, and the system checks that catch configuration mistakes.
 - **Logging out ends the session on the server.** A copy of the session
   cookie stops working at logout, and each renewal invalidates the previous
   cookie. A cookie presented again after its renewal was copied, so
-  Content Studio ends that session.
+  Content Studio ends that session, unless it comes back within seconds
+  ([`REFRESH_TOKEN_REUSE_INTERVAL`](/docs/settings#refresh_token_reuse_interval)).
 - **Limited login and password reset attempts**, per IP address
   ([`LOGIN_THROTTLE_RATE`](/docs/settings#login_throttle_rate),
   [`PASSWORD_RESET_THROTTLE_RATE`](/docs/settings#password_reset_throttle_rate)),
@@ -173,6 +174,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E060` | A [calendar](/docs/list-page#calendar) whose field or end is not a `DateField` or `DateTimeField` of the model, or two calendars of the same field. |
 | `content_studio.E061` | A [board](/docs/list-page#board) whose field has no choices and is not a `ForeignKey`, whose `columns` are not choices of the field, or two boards of the same field. |
 | `content_studio.E062` | An [`EMAIL_DELIVERY_BACKEND`](/docs/email-activity#setup) that cannot be imported or is the logging backend itself, or an `EMAIL_ACTIVITY_KEEP_DAYS` below 1. |
+| `content_studio.E063` | A [`REFRESH_TOKEN_REUSE_INTERVAL`](/docs/settings#refresh_token_reuse_interval) that is not `None` or a number of seconds of at least 0. |
 
 ### Warnings
 

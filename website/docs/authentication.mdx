@@ -31,7 +31,12 @@ immediately. What an editor may see and do is decided by the
   continued afterwards, not even with a copy of its cookie.
 - **A copied session ends.** Each renewal replaces the session cookie and
   the old one stops working. When an old cookie is presented again, it was
-  copied, and Content Studio ends the session for both.
+  copied, and Content Studio ends the session for both. Only within a few
+  seconds of its renewal does an old cookie still work, as when two tabs
+  renew at once
+  ([`REFRESH_TOKEN_REUSE_INTERVAL`](/docs/settings#refresh_token_reuse_interval)).
+- **Tabs renew in turn.** Tabs of the same browser share the session and
+  take turns renewing it, so several open tabs never end it.
 
 Sessions are signed with your `SECRET_KEY`, or with
 [`TOKEN_SIGNING_KEY`](/docs/settings#token_signing_key) when you set one.

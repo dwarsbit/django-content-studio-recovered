@@ -20,6 +20,19 @@ import { type AuthState } from "@/types";
 
 const REFRESH_URL = "/tokens/jsonwebtoken/refresh";
 const LOGOUT_URL = "/tokens/jsonwebtoken/logout";
+const REFRESH_LOCK = "content-studio:token-refresh";
+
+/**
+ * Runs a refresh while no other tab of this browser refreshes. Tabs share
+ * the refresh cookie and each refresh replaces it, so tabs that refresh
+ * one after the other each present the cookie the previous one got.
+ */
+function withRefreshLock<T>(refresh: () => Promise<T>): Promise<T> {
+  if (typeof navigator === "undefined" || !navigator.locks) {
+    return refresh();
+  }
+  return navigator.locks.request(REFRESH_LOCK, refresh);
+}
 
 // axios merges the config of every request into a new object, so a retry
 // is marked on the config itself rather than tracked by identity.
@@ -58,9 +71,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // The refresh cookie is the credential. Most refreshes happen
       // because the access token expired, so it is left out: servers
       // that check the header would refuse the refresh for it.
-      const { data } = await http.post<{ access: string }>(REFRESH_URL, null, {
-        headers: { Authorization: false },
-      });
+      const { data } = await withRefreshLock(() =>
+        http.post<{ access: string }>(REFRESH_URL, null, {
+          headers: { Authorization: false },
+        }),
+      );
       setToken(data.access);
       return data.access;
     } catch {

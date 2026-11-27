@@ -37,6 +37,16 @@
   happened most often when coming back to a tab after a while. The
   refresh endpoint now ignores the `Authorization` header and the admin
   no longer sends it there.
+- **Logged out by two tabs renewing at once.** Each renewal replaces the
+  session cookie, and a cookie presented again ends the session as
+  copied. Two tabs renewing at the same moment both presented the same
+  cookie, so the second one ended the session in every tab. Tabs of a
+  browser now take turns renewing, and a cookie presented again within
+  10 seconds of its renewal still renews the session, which also covers
+  a renewal whose response was lost. The new
+  `REFRESH_TOKEN_REUSE_INTERVAL` setting sets the window (`0` or `None`
+  for none); `manage.py check` reports a malformed value as
+  `content_studio.E063`.
 - **Backup and restore messages translated.** The backup and restore
   strings added in 1.18.0 are now translated into every language.
 

@@ -4021,6 +4021,28 @@ def check_two_factor(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
     ]
 
 
+@checks.register(checks.Tags.security)
+def check_refresh_token_reuse_interval(
+    app_configs=None, **kwargs
+) -> list[checks.CheckMessage]:
+    """
+    REFRESH_TOKEN_REUSE_INTERVAL (E063) is None or a number of seconds
+    of at least 0; anything else would fail every reused refresh.
+    """
+    interval = cs_settings.REFRESH_TOKEN_REUSE_INTERVAL
+
+    if interval is None or interval == 0 or _is_positive_number(interval):
+        return []
+
+    return [
+        checks.Error(
+            "REFRESH_TOKEN_REUSE_INTERVAL must be None or a number of seconds "
+            f"of at least 0, not {interval!r}.",
+            id="content_studio.E063",
+        )
+    ]
+
+
 def login_throttle_errors() -> list[str]:
     """
     Login rate limits that cannot be read, which would fail every login:
