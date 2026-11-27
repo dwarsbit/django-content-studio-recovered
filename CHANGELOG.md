@@ -1,5 +1,29 @@
 # Changelog
 
+## 1.25.0 (unreleased)
+
+### Features
+
+- **Captcha.** A self-hosted captcha for your site's public forms,
+  `content_studio.contrib.captcha`: the visitor's browser solves a small
+  proof of work (the Cap protocol), with no third party and no tracking.
+  Include `content_studio.contrib.captcha.urls` outside the admin, at any
+  path (`api/cap/` in the docs), and add `CaptchaField` to a Django form
+  (`content_studio.contrib.captcha.forms`, rendered with `{{ form.media }}`)
+  or to a serializer (`content_studio.contrib.captcha.fields`), or call
+  `verify_captcha(token)`. A token is valid once and for 20 minutes.
+  `CAPTCHA_CSP` lists what the page's Content-Security-Policy must allow.
+  New settings `CAPTCHA` (off passes every check and renders no widget),
+  `CAPTCHA_CHALLENGES` (50), `CAPTCHA_DIFFICULTY` (4) and
+  `CAPTCHA_THROTTLE_RATE` (`"30/minute"` per IP address); `configure()`
+  reads the `CAPTCHA` (`on`/`off`) and `CAPTCHA_THROTTLE_RATE` environment
+  variables. `captcha_token()` from `content_studio.contrib.captcha.testing`
+  gives your tests a valid token. Backups leave captcha challenges and
+  tokens out. `manage.py check` reports a captcha setting that cannot work
+  with `content_studio.E066`, and the app's URLs missing with
+  `content_studio.W043`. The widget (`@cap.js/widget` 0.1.58) and solver
+  (`@cap.js/wasm` 0.0.8) are vendored under the Apache License 2.0.
+
 ## 1.24.0 (2026-11-27)
 
 ### Features

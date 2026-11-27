@@ -112,6 +112,8 @@ Left out:
 - Sessions: everyone signs in again after a restore.
 - Password reset codes ([`content_studio.contrib.password_reset`](/docs/authentication#password-reset)):
   they are short-lived, and a backup should not hold codes that still work.
+- Captcha challenges and tokens ([`content_studio.contrib.captcha`](/docs/captcha)),
+  for the same reason.
 - The backup records themselves.
 - Whatever you list in [`BACKUP_EXCLUDE`](/docs/settings#backup_exclude),
   as app labels (`"analytics"`) or models (`"shop.Cart"`).

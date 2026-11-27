@@ -1,0 +1,266 @@
+# 🛂 Captcha
+
+Content Studio ships a captcha for your site's public forms, such as a
+contact or signup form. The visitor's browser solves a small proof of work
+when they tick the box, so there are no images to pick and no third party:
+the widget, its solver and the check all come from your own site, and
+nothing tracks the visitor. It speaks the [Cap](https://capjs.js.org)
+protocol.
+
+## Setup
+
+1. Add the app to `INSTALLED_APPS` and run `manage.py migrate`.
+
+   ```python
+   # mysite/settings.py
+   INSTALLED_APPS = [
+       # ...
+       "content_studio",
+       "content_studio.contrib.captcha",
+   ]
+   ```
+
+2. Include its URLs outside the admin. The widget finds them by name, so
+   the path is yours to choose; `api/cap/` is the usual one.
+
+   ```python
+   # mysite/urls.py
+   from django.urls import include, path
+
+   urlpatterns = [
+       path("api/cap/", include("content_studio.contrib.captcha.urls")),
+       path("admin/", include("content_studio.urls")),
+   ]
+   ```
+
+   Put them before `content_studio.urls` when you include that at the root:
+   its catch-all route serves the admin's pages.
+
+3. Configure a shared cache, such as Redis, Memcached or the database
+   cache. The rate limit counts in the cache, and with a per-process cache
+   every worker counts on its own.
+
+## In a Django form
+
+Add a `CaptchaField` to the form. It renders the widget, and the form is
+only valid with a token the widget earned.
+
+```python
+# blog/forms.py
+from django import forms
+
+from content_studio.contrib.captcha.forms import CaptchaField
+
+
+class ContactForm(forms.Form):
+    email = forms.EmailField()
+    message = forms.CharField(widget=forms.Textarea)
+    captcha = CaptchaField()
+```
+
+```python
+# blog/views.py
+from django.shortcuts import redirect, render
+
+from .forms import ContactForm
+
+
+def contact(request):
+    form = ContactForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        # Send the message.
+        return redirect("contact")
+
+    return render(request, "blog/contact.html", {"form": form})
+```
+
+Render `{{ form.media }}` in the page's `<head>`. It loads the widget and
+tells it where to find its solver.
+
+```html
+<!-- blog/templates/blog/contact.html -->
+<head>
+  {{ form.media }}
+</head>
+<body>
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Send</button>
+  </form>
+</body>
+```
+
+A form without a token shows "Verify that you are human." A token is valid
+once: a form that fails validation for another reason needs a new one, which
+the widget gets when the visitor ticks the box again.
+
+## Content-Security-Policy
+
+With a Content-Security-Policy on the page, allow what the widget needs.
+`CAPTCHA_CSP` lists it by directive:
+
+| Directive | Value | For |
+|---|---|---|
+| `script-src` | `'wasm-unsafe-eval'` | The solver, which is WebAssembly. |
+| `style-src` | The hash of the widget's style | The widget's own styles. |
+| `worker-src` | `'self' blob:` | The workers that solve the puzzles. |
+| `img-src` | `data:` | The widget's icons. |
+
+On Django 6.0 or later, with Django's
+[Content-Security-Policy support](https://docs.djangoproject.com/en/stable/ref/csp/),
+add the values to the policy of the pages with the form. On Django 5.2,
+add them wherever you set the header.
+
+```python
+# blog/views.py
+from django.shortcuts import redirect, render
+from django.utils.csp import CSP
+from django.views.decorators.csp import csp_override
+
+from content_studio.contrib.captcha.forms import CAPTCHA_CSP
+
+from .forms import ContactForm
+
+
+@csp_override(
+    {
+        "default-src": [CSP.SELF],
+        "script-src": [CSP.SELF, *CAPTCHA_CSP["script-src"]],
+        "style-src": [CSP.SELF, *CAPTCHA_CSP["style-src"]],
+        "worker-src": [*CAPTCHA_CSP["worker-src"]],
+        "img-src": [CSP.SELF, *CAPTCHA_CSP["img-src"]],
+    }
+)
+def contact(request):
+    form = ContactForm(request.POST or None)
+
+    if request.method == "POST" and form.is_valid():
+        return redirect("contact")
+
+    return render(request, "blog/contact.html", {"form": form})
+```
+
+The style hash changes with the widget's version. Read it from
+`CAPTCHA_CSP` rather than copying it, so an upgrade of Content Studio keeps
+your policy right.
+
+## In a serializer
+
+For a form your own frontend sends to your API, add the Django REST
+Framework field to the serializer. It is write-only, and its validated value
+is the token, which `create()` leaves out.
+
+```python
+# blog/serializers.py
+from rest_framework import serializers
+
+from content_studio.contrib.captcha.fields import CaptchaField
+
+from .models import Review
+
+
+class ReviewSerializer(serializers.ModelSerializer):
+    captcha = CaptchaField()
+
+    class Meta:
+        model = Review
+        fields = ["article", "name", "text", "captcha"]
+
+    def create(self, validated_data):
+        validated_data.pop("captcha")
+        return super().create(validated_data)
+```
+
+Your frontend renders the `<cap-widget>` element with
+`data-cap-api-endpoint` set to the path you included the URLs at, such as
+`/api/cap/`, and sends the token it gets as `captcha`.
+
+## In any other view
+
+`verify_captcha(token)` checks a token and uses it up. It returns `False`
+for anything that is not a token the widget earned, has expired (after 20
+minutes) or was already used.
+
+```python
+# blog/views.py
+from django.http import HttpResponseBadRequest
+
+from content_studio.contrib.captcha import verify_captcha
+
+
+def subscribe(request):
+    if not verify_captcha(request.POST.get("captcha")):
+        return HttpResponseBadRequest("Verify that you are human.")
+    # ...
+```
+
+## Turning it off
+
+Set [`CAPTCHA`](/docs/settings#captcha) to `False`, or the `CAPTCHA`
+environment variable to `off` with [environment settings](/docs/environment-settings).
+Every check then passes and the field renders no widget, which suits local
+development and end-to-end tests.
+
+## In your tests
+
+`captcha_token()` returns a valid token, as if a visitor solved the
+captcha. Like every token it works once.
+
+```python
+# blog/tests.py
+from django.test import TestCase
+
+from content_studio.contrib.captcha.testing import captcha_token
+
+
+class ContactTests(TestCase):
+    def test_contact_form_sends(self):
+        response = self.client.post(
+            "/contact/",
+            {"email": "reader@example.com", "message": "Hello", "captcha": captcha_token()},
+        )
+        self.assertEqual(response.status_code, 302)
+```
+
+## How it works
+
+When the visitor ticks the box, the widget asks your site for a challenge:
+[`CAPTCHA_CHALLENGES`](/docs/settings#captcha_challenges) puzzles, each a
+search for a number whose SHA-256 hash starts with a given string of
+[`CAPTCHA_DIFFICULTY`](/docs/settings#captcha_difficulty) hex characters.
+The browser solves them in the background and sends the numbers back; your
+site checks them and gives the widget a token, which goes into the form in a
+hidden input. A challenge is good for 10 minutes and can be answered once,
+right or wrong.
+
+Each step of difficulty makes a puzzle 16 times as much work. The defaults
+take a desktop browser about half a second. Challenges and answers together are
+limited to [`CAPTCHA_THROTTLE_RATE`](/docs/settings#captcha_throttle_rate)
+per IP address. Behind a proxy, set Django REST Framework's
+[`NUM_PROXIES`](https://www.django-rest-framework.org/api-guide/throttling/#how-clients-are-identified)
+so the limit sees the visitor's address.
+
+Expired challenges and tokens are deleted whenever a new challenge is made,
+and [backups](/docs/backups) leave them out.
+
+The widget (`@cap.js/widget`) and its solver (`@cap.js/wasm`) are part of
+[Cap](https://github.com/tiagozip/cap), under the Apache License 2.0. The
+app's `NOTICE` file lists them.
+
+## Settings
+
+| Setting | Default | |
+|---|---|---|
+| [`CAPTCHA`](/docs/settings#captcha) | `True` | `False` passes every check and renders no widget. |
+| [`CAPTCHA_CHALLENGES`](/docs/settings#captcha_challenges) | `50` | Puzzles in a challenge, 1 to 500. |
+| [`CAPTCHA_DIFFICULTY`](/docs/settings#captcha_difficulty) | `4` | Hex characters each puzzle's hash must start with, 1 to 8. |
+| [`CAPTCHA_THROTTLE_RATE`](/docs/settings#captcha_throttle_rate) | `"30/minute"` | Challenges and answers per IP address; `None` turns the limit off. |
+
+## System checks
+
+| ID | Reports |
+|---|---|
+| `content_studio.E066` | A captcha setting that cannot work: `CAPTCHA` that is not `True` or `False`, `CAPTCHA_CHALLENGES` or `CAPTCHA_DIFFICULTY` out of range, or a `CAPTCHA_THROTTLE_RATE` that is not a rate or `None`. |
+| `content_studio.W043` | The app is installed, but its URLs are not included, so the widget cannot get a challenge. |

@@ -653,6 +653,15 @@ Each is optional and has its own page:
   notifications app; `"sentry"` needs the `[sentry]` extra and
   `SENTRY_DSN`; only while `DEBUG` is off; checks E064, W038, W039):
   https://djangocontentstudio.org/docs/error-reports.md
+- Captcha for your site's public forms (`content_studio.contrib.captcha`:
+  include `content_studio.contrib.captcha.urls` outside the admin, such as
+  at `api/cap/`; `CaptchaField` from `.forms` in a Django form with
+  `{{ form.media }}` on the page, or from `.fields` in a serializer;
+  `verify_captcha(token)` elsewhere; a token works once; the page's CSP
+  must allow `CAPTCHA_CSP`; `CAPTCHA = False` in development and
+  end-to-end tests, `captcha_token()` from `.testing` in unit tests;
+  checks E066, W043):
+  https://djangocontentstudio.org/docs/captcha.md
 - Logging (`content_studio.logs`: `RequestIdMiddleware` first in
   `MIDDLEWARE` for request IDs and an access log, `LOGGING =
   logging_settings("json")`, `get_request_id()`):

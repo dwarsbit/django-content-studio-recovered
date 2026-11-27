@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.status",
     "content_studio.contrib.backups",
     "content_studio.contrib.email_activity",
+    "content_studio.contrib.captcha",
     "content_studio.notifications",
     "content_studio.history",
     "content_studio.preferences",
@@ -48,6 +49,9 @@ MIDDLEWARE = [
     "django.contrib.messages.middleware.MessageMiddleware",
     "content_studio.previews.middleware.PreviewMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
+    # Django's Content-Security-Policy: only the site's contact page sets
+    # one (csp_override), with what the captcha widget needs.
+    "django.middleware.csp.ContentSecurityPolicyMiddleware",
 ]
 
 ROOT_URLCONF = "demo.urls"
@@ -63,6 +67,7 @@ TEMPLATES = [
                 "django.template.context_processors.request",
                 "django.contrib.auth.context_processors.auth",
                 "django.contrib.messages.context_processors.messages",
+                "django.template.context_processors.csp",
             ],
         },
     },
