@@ -11,7 +11,9 @@ which must be shared across processes and servers):
 
 - Refreshing rotates the refresh token and marks the presented one as
   used. A used refresh token presented again is a sign it leaked, so the
-  whole session (every token sharing its ``sid``) is revoked.
+  whole session (every token sharing its ``sid``) is revoked — unless it
+  comes back within ``REFRESH_TOKEN_REUSE_INTERVAL`` of its first use, as
+  it does when two tabs refresh at once or a response was lost.
 - Logging out revokes the session, the presented refresh token and the
   current access token, each for the rest of its lifetime.
 - Every refresh token carries the moment the user logged in
@@ -247,15 +249,29 @@ def _check_not_revoked(payload, check_jti=True):
 
 def _consume_refresh_token(payload):
     """
-    Marks a refresh token as used. ``cache.add`` only writes a missing
-    key, so of two requests presenting the same token only one wins;
-    the other is treated as reuse and ends the session.
+    Marks a refresh token as used, recording when. ``cache.add`` only
+    writes a missing key, so of two requests presenting the same token
+    only one consumes it. The other is let through when it comes within
+    ``REFRESH_TOKEN_REUSE_INTERVAL`` of that first use: two tabs
+    refreshing at once, or a refresh whose response never arrived. Any
+    later reuse means the token was copied, and ends the session.
     """
-    if not _token_cache().add(
-        _revoked_key("jti", payload["jti"]), True, _remaining(payload["exp"])
-    ):
-        _revoke_session(payload)
-        raise AuthenticationFailed("Invalid or expired token.")
+    key = _revoked_key("jti", payload["jti"])
+    now = time.time()
+
+    if _token_cache().add(key, now, _remaining(payload["exp"])):
+        return
+
+    # Logging out records True rather than the moment of use, and
+    # never has a grace.
+    used_at = _token_cache().get(key)
+    interval = cs_settings.REFRESH_TOKEN_REUSE_INTERVAL
+
+    if interval and type(used_at) is float and 0 <= now - used_at <= interval:
+        return
+
+    _revoke_session(payload)
+    raise AuthenticationFailed("Invalid or expired token.")
 
 
 def _check_session_age(payload):
@@ -344,10 +360,12 @@ class JsonWebTokenViewSet(ViewSet):
     renderer_classes = [JSONRenderer]
 
     def perform_authentication(self, request):
-        # Logging out with an expired access token must still revoke the
-        # refresh token and clear the cookie; logout reads the tokens
-        # itself and never needs request.user.
-        if self.action != "logout":
+        # Neither endpoint needs request.user, and both run when the
+        # access token may have expired: refreshing is how an expired
+        # access token is replaced, and logging out with one must still
+        # revoke the refresh token and clear the cookie. Authenticating
+        # the Authorization header would refuse them both with a 401.
+        if self.action not in ("refresh", "logout"):
             super().perform_authentication(request)
 
     @action(detail=False, methods=["post"], url_path="refresh")

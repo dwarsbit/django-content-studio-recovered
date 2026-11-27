@@ -337,6 +337,24 @@ class LoginAndRefreshFlowTests(TestCase):
         assert "refresh" not in login.json()
         assert login.cookies[REFRESH_COOKIE_NAME]["httponly"]
 
+    def test_refresh_ignores_an_expired_access_token_in_the_header(self):
+        # The admin refreshes because its access token expired; the
+        # refresh must not be refused for carrying that token.
+        from django.conf import settings
+
+        login = self.login()
+        payload = decode(login.json()["access"])
+        payload["exp"] = int(time.time()) - 10
+        expired = pyjwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
+        client = APIClient()
+        client.cookies[REFRESH_COOKIE_NAME] = login.cookies[REFRESH_COOKIE_NAME].value
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {expired}")
+        refreshed = client.post(REFRESH_URL)
+
+        assert refreshed.status_code == 200
+        assert refreshed.json().keys() == {"access"}
+
     def test_refresh_without_a_cookie_is_rejected(self):
         assert APIClient().post(REFRESH_URL).status_code == 401
 
@@ -402,11 +420,17 @@ class RevocationTests(TestCase):
         client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
         return client.get(ME_URL)
 
+    def past_the_reuse_interval(self):
+        """The clock, moved past REFRESH_TOKEN_REUSE_INTERVAL from now."""
+        later = time.time() + cs_settings.REFRESH_TOKEN_REUSE_INTERVAL + 1
+        return patch("time.time", return_value=later)
+
     def test_a_used_refresh_token_cannot_be_reused(self):
         _, cookie = self.login()
 
         assert self.refresh(cookie).status_code == 200
-        assert self.refresh(cookie).status_code == 401
+        with self.past_the_reuse_interval():
+            assert self.refresh(cookie).status_code == 401
 
     def test_reuse_revokes_the_whole_session(self):
         _, cookie = self.login()
@@ -415,9 +439,51 @@ class RevocationTests(TestCase):
         new_cookie = rotated.cookies[REFRESH_COOKIE_NAME].value
 
         # The old cookie comes back: it leaked. Neither copy goes on.
+        with self.past_the_reuse_interval():
+            assert self.refresh(cookie).status_code == 401
+            assert self.refresh(new_cookie).status_code == 401
+            assert self.me_with(new_access).status_code == 401
+
+    def test_reuse_right_after_use_continues_the_session(self):
+        # Two tabs refreshing at once present the same cookie; the
+        # second must not end the session.
+        _, cookie = self.login()
+        first = self.refresh(cookie)
+        second = self.refresh(cookie)
+
+        assert first.status_code == 200
+        assert second.status_code == 200
+        for response in (first, second):
+            rotated = response.cookies[REFRESH_COOKIE_NAME].value
+            assert decode(rotated)["sid"] == decode(cookie)["sid"]
+            assert self.me_with(response.json()["access"]).status_code == 200
+            assert self.refresh(rotated).status_code == 200
+
+    def test_reuse_has_no_grace_when_the_interval_is_off(self):
+        for interval in (0, None):
+            with (
+                self.subTest(interval=interval),
+                override_settings(
+                    CONTENT_STUDIO={
+                        "ADMIN_SITE": "content_studio.admin.admin_site",
+                        "REFRESH_TOKEN_REUSE_INTERVAL": interval,
+                    }
+                ),
+            ):
+                access, cookie = self.login()
+
+                assert self.refresh(cookie).status_code == 200
+                assert self.refresh(cookie).status_code == 401
+                assert self.me_with(access).status_code == 401
+
+    def test_a_logged_out_token_gets_no_grace(self):
+        access, cookie = self.login()
+        client = APIClient()
+        client.cookies[REFRESH_COOKIE_NAME] = cookie
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {access}")
+        assert client.post(LOGOUT_URL).status_code == 204
+
         assert self.refresh(cookie).status_code == 401
-        assert self.refresh(new_cookie).status_code == 401
-        assert self.me_with(new_access).status_code == 401
 
     def test_reuse_leaves_other_sessions_alone(self):
         _, cookie = self.login()
@@ -531,7 +597,8 @@ class RevocationTests(TestCase):
         rotated = decode(response.cookies[REFRESH_COOKIE_NAME].value)
         assert rotated["sid"]
         assert rotated["auth_time"] == int(now.timestamp())
-        assert self.refresh(legacy).status_code == 401
+        with self.past_the_reuse_interval():
+            assert self.refresh(legacy).status_code == 401
 
 
 class CustomBackend(JsonWebTokenBackend):
@@ -643,3 +710,21 @@ class StaffOnlyTests(TestCase):
         )
 
         assert self.me_with(legacy).status_code == 401
+
+
+@pytest.mark.parametrize("interval", [None, 0, 10, 2.5])
+def test_a_valid_reuse_interval_passes_the_check(interval):
+    from content_studio.checks import check_refresh_token_reuse_interval
+
+    with patch.object(cs_settings, "REFRESH_TOKEN_REUSE_INTERVAL", interval):
+        assert check_refresh_token_reuse_interval() == []
+
+
+@pytest.mark.parametrize("interval", [-1, "10", True])
+def test_a_malformed_reuse_interval_is_a_check_error(interval):
+    from content_studio.checks import check_refresh_token_reuse_interval
+
+    with patch.object(cs_settings, "REFRESH_TOKEN_REUSE_INTERVAL", interval):
+        errors = check_refresh_token_reuse_interval()
+
+    assert [error.id for error in errors] == ["content_studio.E063"]

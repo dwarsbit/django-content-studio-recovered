@@ -235,6 +235,11 @@ DEFAULTS = {
     "TOKEN_LIFETIME": 60 * 60,
     # Refresh token lifetime in seconds; the token lives in an httpOnly cookie.
     "REFRESH_TOKEN_LIFETIME": 7 * 24 * 60 * 60,
+    # Seconds during which a refresh token that was just used may be
+    # presented again, as two tabs refreshing at once or a lost response
+    # do, and renew the session. Presented again after that, it is
+    # treated as copied and ends the session. 0 or None for no grace.
+    "REFRESH_TOKEN_REUSE_INTERVAL": 10,
     # Seconds after login past which a session can no longer be renewed
     # and the user has to log in again; None for no maximum.
     "MAX_SESSION_LIFETIME": 30 * 24 * 60 * 60,

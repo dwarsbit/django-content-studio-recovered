@@ -160,6 +160,77 @@ describe("AuthProvider", () => {
     );
   });
 
+  it("leaves the expired access token out of the refresh request", async () => {
+    // The headers each request was sent with, read when it is sent: the
+    // retry reuses and updates the config of the original request.
+    const sent: { url: string; authorization: unknown }[] = [];
+    respond = (url, config, call) => {
+      sent.push({ url, authorization: config.headers.toJSON().Authorization });
+      if (url === REFRESH_URL) {
+        return { data: { access: `token-${call}` }, status: 200 };
+      }
+      if (url === "/content/x" && call === 1) {
+        return makeError(401, config);
+      }
+      return { data: { ok: true }, status: 200 };
+    };
+
+    renderApp();
+    await screen.findByText("token:token-1");
+
+    const response = await http.get("/content/x");
+
+    expect(response.data).toEqual({ ok: true });
+    // The refresh after the 401 carries the cookie only, never the
+    // access token that just expired.
+    expect(sent).toEqual([
+      { url: REFRESH_URL, authorization: undefined },
+      { url: "/content/x", authorization: "Bearer token-1" },
+      { url: REFRESH_URL, authorization: undefined },
+      { url: "/content/x", authorization: "Bearer token-2" },
+    ]);
+  });
+
+  it("refreshes while holding a lock the browser's other tabs share", async () => {
+    // Tabs share the refresh cookie, and each refresh replaces it: a tab
+    // refreshing at the same moment as another would present the cookie
+    // the other one just used.
+    let held = false;
+    const request = vi.fn(
+      async (name: string, callback: () => Promise<unknown>) => {
+        held = true;
+        try {
+          return await callback();
+        } finally {
+          held = false;
+        }
+      },
+    );
+    vi.stubGlobal("navigator", { ...navigator, locks: { request } });
+
+    const heldDuring: boolean[] = [];
+    respond = (url) => {
+      if (url === REFRESH_URL) {
+        heldDuring.push(held);
+        return { data: { access: "locked-token" }, status: 200 };
+      }
+      return { data: {} };
+    };
+
+    try {
+      renderApp();
+      expect(await screen.findByText("token:locked-token")).toBeInTheDocument();
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(request).toHaveBeenCalledWith(
+      "content-studio:token-refresh",
+      expect.any(Function),
+    );
+    expect(heldDuring).toEqual([true]);
+  });
+
   it("shares a single refresh between concurrent 401s", async () => {
     respond = (url, config, call) => {
       if (url === REFRESH_URL) {
