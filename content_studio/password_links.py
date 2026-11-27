@@ -39,6 +39,8 @@ from rest_framework.response import Response
 from rest_framework.throttling import AnonRateThrottle
 from rest_framework.views import APIView
 
+from .contrib.email_activity import kinds
+from .contrib.email_activity.kinds import email_kind
 from .settings import cs_settings
 from .throttling import ClientIPMixin
 
@@ -202,12 +204,13 @@ def _send_link_mail(pk, kind, link, sender):
         template = "content_studio/users/password_link.txt"
 
     try:
-        send_mail(
-            from_email=None,
-            subject=subject,
-            message=render_to_string(template, context),
-            recipient_list=[get_email(user)],
-        )
+        with email_kind(kinds.INVITE if kind == INVITE else kinds.PASSWORD_LINK):
+            send_mail(
+                from_email=None,
+                subject=subject,
+                message=render_to_string(template, context),
+                recipient_list=[get_email(user)],
+            )
     except Exception:
         logger.exception("Could not send the %s email to user %s", kind, pk)
 

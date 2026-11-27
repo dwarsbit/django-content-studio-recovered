@@ -17,6 +17,8 @@ from django.core.mail import send_mail
 from django.utils import translation
 from django.utils.translation import gettext as _
 
+from ..email_activity.kinds import PASSWORD_RESET, email_kind
+
 try:
     from django.tasks import task
 except ImportError:  # Django < 6.0
@@ -60,12 +62,13 @@ def _send_reset_code_mail(reset_id):
         return
 
     try:
-        send_mail(
-            from_email=None,
-            subject=_("Your password reset code"),
-            message=_("Your password reset code is: ") + reset.code,
-            recipient_list=[reset.email],
-        )
+        with email_kind(PASSWORD_RESET):
+            send_mail(
+                from_email=None,
+                subject=_("Your password reset code"),
+                message=_("Your password reset code is: ") + reset.code,
+                recipient_list=[reset.email],
+            )
     except Exception:
         logger.exception("Could not send password reset email to %s", reset.email)
         # A code nobody received cannot be used; a new request issues one.
@@ -79,14 +82,15 @@ def send_reset_confirmation(email, language=None):
 
 def _send_reset_confirmation_mail(email):
     try:
-        send_mail(
-            from_email=None,
-            subject=_("Your password has been reset"),
-            message=_(
-                "Your password has been reset. If you did not do this, please contact your administrator."
-            ),
-            recipient_list=[email],
-        )
+        with email_kind(PASSWORD_RESET):
+            send_mail(
+                from_email=None,
+                subject=_("Your password has been reset"),
+                message=_(
+                    "Your password has been reset. If you did not do this, please contact your administrator."
+                ),
+                recipient_list=[email],
+            )
     except Exception:
         logger.exception("Could not send password reset confirmation to %s", email)
 

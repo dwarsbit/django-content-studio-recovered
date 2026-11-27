@@ -18,6 +18,7 @@ SHIPPED_APPS = [
     "content_studio_media_library",
     "content_studio_notifications",
     "content_studio_preferences",
+    "content_studio_email_activity",
     "content_studio_webhooks",
     "password_reset",
 ]

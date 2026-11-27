@@ -1493,6 +1493,72 @@ def backup_warnings() -> list[tuple[str, str]]:
     return warnings
 
 
+def email_activity_errors() -> list[tuple[str, str]]:
+    """
+    Email activity settings that cannot work (E062): an
+    EMAIL_DELIVERY_BACKEND that cannot be imported or is the logging
+    backend itself, or an EMAIL_ACTIVITY_KEEP_DAYS below 1.
+    """
+    from django.apps import apps
+    from django.core.exceptions import ImproperlyConfigured
+
+    if not apps.is_installed("content_studio.contrib.email_activity"):
+        return []
+
+    from .contrib.email_activity.backends import get_delivery_backend_class
+
+    errors = []
+
+    try:
+        get_delivery_backend_class()
+    except ImproperlyConfigured as exc:
+        errors.append(str(exc))
+
+    days = cs_settings.EMAIL_ACTIVITY_KEEP_DAYS
+
+    if days is not None and (
+        not isinstance(days, int) or isinstance(days, bool) or days < 1
+    ):
+        errors.append(
+            "EMAIL_ACTIVITY_KEEP_DAYS must be a whole number of 1 or more, or None."
+        )
+
+    return [("content_studio.E062", error) for error in errors]
+
+
+def email_activity_warnings() -> list[tuple[str, str]]:
+    """
+    The email activity app installed while the site sends without the
+    logging backend, so nothing is logged (W035).
+    """
+    from django.apps import apps
+
+    if not apps.is_installed("content_studio.contrib.email_activity"):
+        return []
+
+    from .contrib.email_activity.log import (
+        LOGGING_BACKEND,
+        default_backend_path,
+        is_logging,
+    )
+
+    path = default_backend_path()
+
+    # Django's test runner swaps in the local memory backend.
+    if is_logging() or path == "django.core.mail.backends.locmem.EmailBackend":
+        return []
+
+    return [
+        (
+            "content_studio.W035",
+            f"content_studio.contrib.email_activity is installed, but emails are "
+            f"sent with {path!r}, so none are logged. Set "
+            f"EMAIL_BACKEND to {LOGGING_BACKEND!r} and put the backend that "
+            "delivers them in CONTENT_STUDIO['EMAIL_DELIVERY_BACKEND'].",
+        )
+    ]
+
+
 def media_json_attr_errors(
     setting, check_id, purpose, explicit_only=False
 ) -> list[tuple[str, str]]:
@@ -4827,6 +4893,14 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, warning in backup_warnings():
+        messages.append(
+            checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
+        )
+
+    for check_id, error in email_activity_errors():
+        messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
+
+    for check_id, warning in email_activity_warnings():
         messages.append(
             checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
         )

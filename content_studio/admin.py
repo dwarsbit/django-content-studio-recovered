@@ -1072,6 +1072,14 @@ class ContentStudioSite:
 
             set_up_backup_router()
 
+        # The Email activity page, with the optional app installed.
+        if apps.is_installed("content_studio.contrib.email_activity"):
+            from .contrib.email_activity.views import (
+                set_up_router as set_up_email_activity_router,
+            )
+
+            set_up_email_activity_router()
+
         # Comments on objects, with the optional app installed.
         if apps.is_installed("content_studio.comments"):
             from .comments.viewsets import CommentViewSet
@@ -1101,6 +1109,14 @@ class ContentStudioSite:
         """
         Who may open the Backups page (content_studio.contrib.backups),
         download backups and back up now: superusers, unless overridden.
+        """
+        return bool(request.user.is_active and request.user.is_superuser)
+
+    def has_email_activity_permission(self, request: HttpRequest) -> bool:
+        """
+        Who may open the Email activity page
+        (content_studio.contrib.email_activity) and send test emails:
+        superusers, unless overridden.
         """
         return bool(request.user.is_active and request.user.is_superuser)
 

@@ -19,6 +19,7 @@ import { ContentEditorPage } from "@/pages/(studio)/content/[model]/[id]/page";
 import { ModelListLayout } from "@/pages/(studio)/content/[model]/layout";
 import { ContentIndexPage } from "@/pages/(studio)/content/[model]/page";
 import { ContentTrashPage } from "@/pages/(studio)/content/[model]/trash/page";
+import { EmailActivityPage } from "@/pages/(studio)/email-activity/page";
 import { StudioLayout } from "@/pages/(studio)/layout";
 import { MediaLibraryPage } from "@/pages/(studio)/media-library/[model]/page";
 import { NotificationsPage } from "@/pages/(studio)/notifications/page";
@@ -71,6 +72,10 @@ const router = createBrowserRouter(
                 {
                   path: "backups",
                   element: <BackupsPage />,
+                },
+                {
+                  path: "email-activity",
+                  element: <EmailActivityPage />,
                 },
                 {
                   path: "content/:model",

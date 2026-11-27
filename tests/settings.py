@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.two_factor",
     "content_studio.contrib.status",
     "content_studio.contrib.backups",
+    "content_studio.contrib.email_activity",
     "content_studio.media_library",
     "content_studio.webhooks",
     "content_studio.notifications",

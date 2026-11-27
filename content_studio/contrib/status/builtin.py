@@ -8,6 +8,7 @@ import time
 import uuid
 import warnings
 
+from django.apps import apps
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 
@@ -159,9 +160,35 @@ def get_email_connection():
 
 
 def check_email() -> ServiceResult:
+    result = check_email_backend()
+
+    if not apps.is_installed("content_studio.contrib.email_activity"):
+        return result
+
+    # The emails logged in the last day: a count, and Degraded on failures.
+    from ..email_activity.log import status_summary
+
+    sent, message = status_summary()
+    detail = " · ".join(part for part in (str(result.detail), sent) if part)
+
+    if message and result.status != ServiceStatus.DOWN:
+        return degraded(detail, message)
+
+    return ServiceResult(result.status, detail, result.message)
+
+
+def check_email_backend() -> ServiceResult:
     from django.core.mail.backends.smtp import EmailBackend as SMTPBackend
 
     connection = get_email_connection()
+
+    if apps.is_installed("content_studio.contrib.email_activity"):
+        from ..email_activity.backends import EmailBackend as LoggingBackend
+
+        if isinstance(connection, LoggingBackend):
+            # The backend the logging backend delivers with.
+            connection = connection.delivery
+
     path = f"{type(connection).__module__}.{type(connection).__name__}"
     local = LOCAL_EMAIL_BACKENDS.get(path)
 
@@ -245,6 +272,12 @@ def register_builtin_services():
         icon="ph-bold ph-envelope-simple",
         group=GROUP,
         timeout=10,
+        # The Email activity page, with the optional app installed.
+        url=(
+            "email-activity"
+            if apps.is_installed("content_studio.contrib.email_activity")
+            else None
+        ),
     )
     register_service(
         "content_studio.migrations",
