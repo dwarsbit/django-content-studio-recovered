@@ -17,7 +17,9 @@ Then:
   a Django form and checks its token;
 - ``content_studio.contrib.captcha.fields.CaptchaField`` checks a token in
   a Django REST Framework serializer;
-- ``verify_captcha(token)`` checks one anywhere else.
+- ``verify_captcha(token)`` checks one anywhere else;
+- ``content_studio.contrib.captcha.dashboard.CaptchaStatisticWidget``
+  shows the solved and failed challenges on the dashboard.
 
 A token is valid once. ``CONTENT_STUDIO["CAPTCHA"] = False`` turns the
 check off.

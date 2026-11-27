@@ -203,6 +203,28 @@ environment variable to `off` with [environment settings](/docs/environment-sett
 Every check then passes and the field renders no widget, which suits local
 development and end-to-end tests.
 
+## On the dashboard
+
+`CaptchaStatisticWidget` shows how many challenges visitors solved over the
+last 7, 30 or 90 days (`range="7d"`, `"30d"` or `"90d"`; default `"30d"`,
+shown after the title), the change against the period before and a line per
+day. The footnote counts the failed attempts and their share, such as
+"12 failed (3%)": wrong answers, and challenges that were unknown or had
+expired.
+
+```python
+# mysite/studio.py
+from content_studio.admin import ContentStudioSite
+from content_studio.contrib.captcha.dashboard import CaptchaStatisticWidget
+from content_studio.dashboard import Dashboard
+
+
+class BlogStudioSite(ContentStudioSite):
+    dashboard = Dashboard(widgets=[CaptchaStatisticWidget(range="7d")])
+```
+
+Pass `title` to name the card; the range still follows it. The counts are kept per day for a year.
+
 ## In your tests
 
 `captcha_token()` returns a valid token, as if a visitor solved the

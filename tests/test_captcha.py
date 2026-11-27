@@ -496,3 +496,83 @@ def test_daily_fills_missing_days():
     counts.count("solved", today)
     counts.count("solved", today)
     assert counts.daily("solved", today - timedelta(days=3), today) == [0, 1, 0, 2]
+
+
+# The dashboard widget.
+
+
+def widget_data(**kwargs):
+    from content_studio.contrib.captcha.dashboard import CaptchaStatisticWidget
+
+    data = CaptchaStatisticWidget(**kwargs).get_data(None)
+    data.is_valid(raise_exception=True)
+    return data.data
+
+
+def test_widget_shows_solved_with_failed_in_the_footnote():
+    from content_studio.contrib.captcha import counts
+
+    today = timezone.localdate()
+    for _ in range(3):
+        counts.count("solved", today)
+    counts.count("solved", today - timedelta(days=2))
+    counts.count("failed", today)
+    # Outside the range, before the period before.
+    counts.count("solved", today - timedelta(days=20))
+    counts.count("failed", today - timedelta(days=20))
+
+    data = widget_data(range="7d")
+    assert data["title"] == "Captcha solves (7d)"
+    assert data["value"] == 4
+    assert data["series"] == [0, 0, 0, 0, 1, 0, 3]
+    assert data["footnote"] == "1 failed (20%)"
+    assert data["trend"] is None
+    assert data["trend_sentiment"] == "default"
+
+
+def test_widget_trend_against_the_period_before():
+    from content_studio.contrib.captcha import counts
+
+    today = timezone.localdate()
+    for _ in range(3):
+        counts.count("solved", today)
+    counts.count("solved", today - timedelta(days=8))
+    counts.count("solved", today - timedelta(days=13))
+
+    data = widget_data(range="7d", title="Contact form")
+    assert data["title"] == "Contact form (7d)"
+    assert data["value"] == 3
+    assert data["trend"] == "50.0"
+    assert data["trend_label"] == "vs. the period before"
+    assert data["footnote"] == "0 failed"
+
+
+def test_widget_without_counts():
+    data = widget_data()
+    assert data["value"] == 0
+    assert len(data["series"]) == 30
+    assert data["footnote"] == "0 failed"
+
+
+def test_widget_rejects_an_unknown_range():
+    from content_studio.contrib.captcha.dashboard import CaptchaStatisticWidget
+
+    with pytest.raises(ValueError, match="Unknown captcha range"):
+        CaptchaStatisticWidget(range="12mo")
+
+
+def test_widget_ids_follow_the_range():
+    from content_studio.contrib.captcha.dashboard import CaptchaStatisticWidget
+
+    assert CaptchaStatisticWidget().widget_id == CaptchaStatisticWidget().widget_id
+    assert CaptchaStatisticWidget().widget_id != CaptchaStatisticWidget("7d").widget_id
+
+
+def test_strings_are_translated():
+    from django.utils import translation
+
+    with translation.override("nl"):
+        form = ContactForm(data={"email": "a@example.com"})
+        assert form.errors["captcha"] == ["Bevestig dat je een mens bent."]
+        assert widget_data(range="7d")["title"] == "Opgeloste captcha's (7d)"
+        assert widget_data(range="7d")["footnote"] == "0 mislukt"

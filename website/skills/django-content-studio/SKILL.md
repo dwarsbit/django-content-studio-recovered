@@ -660,6 +660,8 @@ Each is optional and has its own page:
   `verify_captcha(token)` elsewhere; a token works once; the page's CSP
   must allow `CAPTCHA_CSP`; `CAPTCHA = False` in development and
   end-to-end tests, `captcha_token()` from `.testing` in unit tests;
+  `CaptchaStatisticWidget(range="30d")` from `.dashboard` for solved and
+  failed challenges;
   checks E066, W043):
   https://djangocontentstudio.org/docs/captcha.md
 - Logging (`content_studio.logs`: `RequestIdMiddleware` first in

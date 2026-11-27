@@ -27,6 +27,7 @@ PUBLIC_MODULES = [
     "content_studio.dashboard.tasks",
     "content_studio.contrib.captcha",
     "content_studio.contrib.captcha.forms",
+    "content_studio.contrib.captcha.dashboard",
     "content_studio.contrib.captcha.fields",
     "content_studio.contrib.captcha.testing",
     "content_studio.contrib.huey",

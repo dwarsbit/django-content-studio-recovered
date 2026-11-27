@@ -18,7 +18,10 @@
   `CAPTCHA_THROTTLE_RATE` (`"30/minute"` per IP address); `configure()`
   reads the `CAPTCHA` (`on`/`off`) and `CAPTCHA_THROTTLE_RATE` environment
   variables. `captcha_token()` from `content_studio.contrib.captcha.testing`
-  gives your tests a valid token. Backups leave captcha challenges and
+  gives your tests a valid token. `CaptchaStatisticWidget`
+  (`content_studio.contrib.captcha.dashboard`) shows on the dashboard how
+  many challenges visitors solved over 7, 30 or 90 days, with the trend, a
+  sparkline and the failed attempts in the footnote. Backups leave captcha challenges and
   tokens out. `manage.py check` reports a captcha setting that cannot work
   with `content_studio.E066`, and the app's URLs missing with
   `content_studio.W043`. The widget (`@cap.js/widget` 0.1.58) and solver
