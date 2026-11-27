@@ -1186,6 +1186,13 @@
       "FAILURE": "Échouée",
       "SCHEDULED": "Planifiée"
     },
+    "errors": {
+      "title": "Erreurs récentes",
+      "description": "Erreurs du serveur, chacune envoyée par e-mail au plus une fois par heure",
+      "empty": "Aucune erreur signalée",
+      "count": "×{{count}}",
+      "all": "Toutes les notifications d’erreur"
+    },
     "tasks": {
       "title": "Tâches récentes",
       "description": "Les tâches en attente, en cours ou terminées",

@@ -32,6 +32,8 @@ const sidebars: SidebarsConfig = {
     "health-checks",
     "backups",
     "email-activity",
+    "error-reports",
+    "logging",
     "languages",
     "command-palette",
     "deployment",

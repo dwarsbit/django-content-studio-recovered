@@ -1186,6 +1186,13 @@
       "FAILURE": "Fallida",
       "SCHEDULED": "Programada"
     },
+    "errors": {
+      "title": "Errores recientes",
+      "description": "Errores del servidor, cada uno enviado por correo como mucho una vez por hora",
+      "empty": "No se han notificado errores",
+      "count": "×{{count}}",
+      "all": "Todas las notificaciones de errores"
+    },
     "tasks": {
       "title": "Tareas recientes",
       "description": "Tareas en espera, en ejecución o terminadas",

@@ -4,7 +4,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: django-content-studio\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-11-27 10:22+0000\n"
+"POT-Creation-Date: 2026-11-27 13:40+0000\n"
 "PO-Revision-Date: 2026-11-15 22:00+0100\n"
 "Language: es\n"
 "MIME-Version: 1.0\n"
@@ -628,39 +628,43 @@ msgstr "Hay una copia o restauración de esta base de datos en curso."
 msgid "Email activity"
 msgstr "Actividad de correo"
 
-#: contrib/email_activity/backends.py:172 contrib/email_activity/views.py:191
+#: contrib/email_activity/backends.py:170 contrib/email_activity/views.py:189
 msgid "The email backend did not send it."
 msgstr "El backend de correo no lo envió."
 
-#: contrib/email_activity/kinds.py:28
+#: contrib/email_activity/kinds.py:29
 msgid "Invite"
 msgstr "Invitación"
 
-#: contrib/email_activity/kinds.py:29
+#: contrib/email_activity/kinds.py:30
 msgid "Password link"
 msgstr "Enlace de contraseña"
 
-#: contrib/email_activity/kinds.py:30
+#: contrib/email_activity/kinds.py:31
 msgid "Password reset"
 msgstr "Restablecer contraseña"
 
-#: contrib/email_activity/kinds.py:31
+#: contrib/email_activity/kinds.py:32
 msgid "Two-factor reset"
 msgstr "Restablecimiento de dos factores"
 
-#: contrib/email_activity/kinds.py:32
+#: contrib/email_activity/kinds.py:33
 msgid "Email address changed"
 msgstr "Dirección de correo cambiada"
 
-#: contrib/email_activity/kinds.py:33
+#: contrib/email_activity/kinds.py:34
 msgid "Notification digest"
 msgstr "Resumen de notificaciones"
 
-#: contrib/email_activity/kinds.py:34
+#: contrib/email_activity/kinds.py:35
 msgid "Test email"
 msgstr "Correo de prueba"
 
-#: contrib/email_activity/kinds.py:73
+#: contrib/email_activity/kinds.py:36
+msgid "Error report"
+msgstr "Informe de error"
+
+#: contrib/email_activity/kinds.py:75
 msgid "Other"
 msgstr "Otro"
 
@@ -669,7 +673,7 @@ msgstr "Otro"
 msgid "%(count)s sent in 24 hours"
 msgstr "%(count)s enviados en 24 horas"
 
-#: contrib/email_activity/log.py:264
+#: contrib/email_activity/log.py:263
 #, python-format
 msgid "%(failed)s of %(total)s emails failed in the last 24 hours."
 msgstr "%(failed)s de %(total)s correos fallaron en las últimas 24 horas."
@@ -738,16 +742,16 @@ msgstr "correo enviado"
 msgid "sent emails"
 msgstr "correos enviados"
 
-#: contrib/email_activity/views.py:162
+#: contrib/email_activity/views.py:160
 msgid "Enter a valid email address."
 msgstr "Introduce una dirección de correo válida."
 
-#: contrib/email_activity/views.py:174
+#: contrib/email_activity/views.py:172
 #, python-format
 msgid "Test email from %(site)s"
 msgstr "Correo de prueba de %(site)s"
 
-#: contrib/email_activity/views.py:198
+#: contrib/email_activity/views.py:195
 #, python-format
 msgid "Test email sent to %(email)s."
 msgstr "Correo de prueba enviado a %(email)s."
@@ -918,7 +922,7 @@ msgstr "Almacenamiento de medios"
 msgid "Task queue"
 msgstr "Cola de tareas"
 
-#: contrib/status/builtin.py:270
+#: contrib/status/builtin.py:270 error_reports/status.py:45
 msgid "Email"
 msgstr "Correo electrónico"
 
@@ -1053,6 +1057,63 @@ msgstr "Las últimas tareas que ejecutaron los workers"
 #: dashboard/tasks.py:302
 msgid "Tasks"
 msgstr "Tareas"
+
+#: error_reports/notifying.py:30
+msgid "Server errors"
+msgstr "Errores del servidor"
+
+#: error_reports/notifying.py:32
+msgid ""
+"An error on the server, such as a failed request or task. Only superusers "
+"are notified."
+msgstr ""
+"Un error en el servidor, como una solicitud o una tarea fallida. Solo se "
+"notifica a los superusuarios."
+
+#: error_reports/status.py:24
+msgid "Unknown mode."
+msgstr "Modo desconocido."
+
+#: error_reports/status.py:28 error_reports/status.py:31
+#: error_reports/status.py:33
+msgid "Sentry"
+msgstr "Sentry"
+
+#: error_reports/status.py:28
+msgid "The Sentry SDK is not installed."
+msgstr "El SDK de Sentry no está instalado."
+
+#: error_reports/status.py:31
+msgid "SENTRY_DSN is empty."
+msgstr "SENTRY_DSN está vacío."
+
+#: error_reports/status.py:47
+msgid ""
+"Nobody gets the emails: set ERROR_EMAIL or give a superuser an email address."
+msgstr ""
+"Nadie recibe los correos: define ERROR_EMAIL o da a un superusuario una "
+"dirección de correo."
+
+#: error_reports/status.py:53
+#, python-format
+msgid "Email to %(count)s recipient"
+msgid_plural "Email to %(count)s recipients"
+msgstr[0] "Correo a %(count)s destinatario"
+msgstr[1] "Correo a %(count)s destinatarios"
+msgstr[2] "Correo a %(count)s destinatarios"
+
+#: error_reports/status.py:57
+msgid "Nothing is reported while DEBUG is on."
+msgstr "No se notifica nada mientras DEBUG está activado."
+
+#: error_reports/status.py:72
+msgid "Error reports"
+msgstr "Informes de errores"
+
+#: error_reports/status.py:103 notifications/models.py:41
+#: webhooks/models.py:148
+msgid "Error"
+msgstr "Error"
 
 #: export.py:202 importing.py:954
 msgid "Yes"
@@ -1476,10 +1537,6 @@ msgstr "Éxito"
 #: notifications/models.py:40
 msgid "Warning"
 msgstr "Advertencia"
-
-#: notifications/models.py:41 webhooks/models.py:148
-msgid "Error"
-msgstr "Error"
 
 #: notifications/models.py:47
 msgid "Recipient"

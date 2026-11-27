@@ -1,0 +1,101 @@
+# 🪵 Logging
+
+Content Studio ships the pieces for production logging: a request ID on
+every log line, one access log line per request, and log lines as JSON for
+a log collector or as plain text for a terminal. Nothing changes until you
+add them to your settings.
+
+## Setup
+
+Add `RequestIdMiddleware` first in `MIDDLEWARE`, and build `LOGGING` with
+`logging_settings()`:
+
+```python
+# mysite/settings.py
+from content_studio.logs import logging_settings
+
+MIDDLEWARE = [
+    "content_studio.logs.RequestIdMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    # ...
+]
+
+LOGGING = logging_settings("plain" if DEBUG else "json", "INFO")
+```
+
+`logging_settings(log_format="json", level="INFO", access=True)` returns a
+complete `LOGGING` dictionary:
+
+- every line goes to the console (standard error), as `"json"` or
+  `"plain"`, with the request ID;
+- `level` is the level of the root logger, and Django's own loggers log at
+  `INFO`;
+- `access=False` leaves out the access log;
+- requests for a host that is not in `ALLOWED_HOSTS` are logged but never
+  [reported as errors](/docs/error-reports).
+
+[Error reports](/docs/error-reports) add their own handler, so they work
+with this `LOGGING` and with your own.
+
+## Request IDs
+
+`RequestIdMiddleware` gives every request an ID. It keeps the
+`X-Request-ID` header your proxy or load balancer sends, when the ID is at
+most 128 letters, digits, dots, colons, dashes or underscores, and makes a
+new one otherwise. The response carries the ID in its own `X-Request-ID`
+header, so a user can quote it and you can find the request's log lines.
+
+Every line logged while the request runs gets the ID, through the
+`content_studio.logs.RequestIdFilter` log filter. Your own code reads it
+with `get_request_id()`:
+
+```python
+# blog/views.py
+from django.http import JsonResponse
+
+from content_studio.logs import get_request_id
+
+
+def subscribe(request):
+    return JsonResponse({"ok": True, "request_id": get_request_id()})
+```
+
+Outside a request, `get_request_id()` returns `None`.
+
+## The access log
+
+The middleware writes one line per request on the `content_studio.access`
+logger, at `INFO`: `GET /blog/?page=2 200`, with the method, path, status,
+duration in milliseconds and the user's ID as fields of the line. Successful
+requests to the [health check](/docs/health-checks) paths `/healthz`,
+`/readyz` and `/statusz` are left out, so they do not bury the rest; failing ones are logged.
+
+## Log formats
+
+`content_studio.logs.JsonFormatter` writes one JSON object per line:
+
+```json
+{"time": "2026-11-27T13:05:12.481+00:00", "level": "ERROR", "logger": "django.request", "message": "Internal Server Error: /blog/", "request_id": "8f0c2a1e5b7d4c3a9e6f1b2d3c4a5b6e", "status_code": 500, "exception": "Traceback (most recent call last): ..."}
+```
+
+Fields passed with `extra=` become fields of the object.
+`content_studio.logs.PlainFormatter` writes `LEVEL logger message`, with the
+request ID in brackets. Both work in a `LOGGING` of your own:
+
+```python
+# mysite/settings.py
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "filters": {"request_id": {"()": "content_studio.logs.RequestIdFilter"}},
+    "formatters": {"json": {"()": "content_studio.logs.JsonFormatter"}},
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "json",
+            "filters": ["request_id"],
+        },
+    },
+    "root": {"handlers": ["console"], "level": "INFO"},
+}
+```

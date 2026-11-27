@@ -1143,6 +1143,13 @@
       "FAILURE": "Mislukt",
       "SCHEDULED": "Gepland"
     },
+    "errors": {
+      "title": "Recente fouten",
+      "description": "Serverfouten, elk hooguit eens per uur gemaild",
+      "empty": "Geen fouten gemeld",
+      "count": "×{{count}}",
+      "all": "Alle foutmeldingen"
+    },
     "tasks": {
       "title": "Recente taken",
       "description": "Taken die wachten, bezig zijn of zijn afgerond",

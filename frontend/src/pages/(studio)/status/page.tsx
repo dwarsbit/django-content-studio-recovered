@@ -3,7 +3,9 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import { type ReactNode, useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
+  PiArrowRightBold,
   PiArrowsClockwiseBold,
+  PiBugBold,
   PiCheckCircleBold,
   PiClockBold,
   PiCubeBold,
@@ -22,12 +24,15 @@ import { EmptyState } from "@/components/ui/empty-state";
 import { PageBody, PageHeader } from "@/components/ui/page-header";
 import { Spinner } from "@/components/ui/spinner";
 import {
+  type RecentError,
+  type RecentErrors as RecentErrorsData,
   type RecurringTask,
   type ServiceStatus,
   type StatusService,
   type StatusTask,
   type StatusTasks,
   type SystemStatus,
+  useRecentErrors,
   useRefreshStatus,
   useStatusEnabled,
   useStatusTasks,
@@ -94,6 +99,7 @@ export function StatusPage() {
   const enabled = useStatusEnabled();
   const { data: status, isError } = useSystemStatus();
   const { data: tasks } = useStatusTasks();
+  const { data: errors } = useRecentErrors();
   const refresh = useRefreshStatus();
   const now = useNow();
 
@@ -135,7 +141,10 @@ export function StatusPage() {
           <>
             <Overview status={status} tasks={tasks} />
             <div className="grid gap-5 lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)] items-start">
-              <Services status={status} />
+              <div className="space-y-5 min-w-0">
+                <Services status={status} />
+                <RecentErrors errors={errors} now={now} />
+              </div>
               <div className="space-y-5 min-w-0">
                 <RecentTasks tasks={tasks} now={now} />
                 <RecurringTasks tasks={tasks} now={now} />
@@ -425,6 +434,85 @@ function ServiceLabel({ service }: { service: StatusService }) {
     <Link to={`/${service.url.replace(/^\//, "")}`} className={className}>
       {service.label}
     </Link>
+  );
+}
+
+/** The viewer's latest error reports (email mode with notifications). */
+function RecentErrors({
+  errors,
+  now,
+}: {
+  errors?: RecentErrorsData;
+  now: number;
+}) {
+  const { t } = useTranslation();
+
+  if (!errors?.enabled) {
+    return null;
+  }
+
+  return (
+    <Card
+      title={t("status.errors.title")}
+      description={t("status.errors.description")}
+    >
+      {errors.errors.length === 0 ? (
+        <div className="border-t px-4 py-8 text-center text-sm text-muted-foreground">
+          {t("status.errors.empty")}
+        </div>
+      ) : (
+        <ul>
+          {errors.errors.map((error) => (
+            <RecentErrorRow key={error.id} error={error} now={now} />
+          ))}
+        </ul>
+      )}
+      <div className="border-t px-4 py-2.5 text-xs">
+        <Link
+          to={`/notifications?event=${encodeURIComponent("error_reports.server_error")}`}
+          className="inline-flex items-center gap-1 text-muted-foreground underline-offset-4 hover:underline hover:text-foreground"
+        >
+          {t("status.errors.all")}
+          <PiArrowRightBold />
+        </Link>
+      </div>
+    </Card>
+  );
+}
+
+function RecentErrorRow({ error, now }: { error: RecentError; now: number }) {
+  const { t } = useTranslation();
+
+  return (
+    <li
+      data-read={error.read || undefined}
+      className="border-t px-4 py-3 flex items-start gap-3"
+    >
+      <span
+        aria-hidden
+        className="size-8 shrink-0 rounded-md border bg-destructive/10 text-destructive flex items-center justify-center [&_svg]:size-4"
+      >
+        <PiBugBold />
+      </span>
+      <div className="flex-1 min-w-0">
+        <div className={cn("break-words", !error.read && "font-semibold")}>
+          {error.title}
+        </div>
+        <div className="text-xs text-muted-foreground break-all">
+          {error.logger}
+        </div>
+      </div>
+      <div className="text-right shrink-0 space-y-1">
+        <div className="text-xs text-muted-foreground">
+          {dayjs(error.last_seen).from(dayjs(now))}
+        </div>
+        {error.count > 1 && (
+          <Badge variant="secondary" className="tabular-nums">
+            {t("status.errors.count", { count: error.count })}
+          </Badge>
+        )}
+      </div>
+    </li>
   );
 }
 

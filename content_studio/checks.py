@@ -4043,6 +4043,66 @@ def check_refresh_token_reuse_interval(
     ]
 
 
+def mails_admins_on_errors() -> bool:
+    """Whether Django's mail_admins handler (AdminEmailHandler) gets the
+    errors of requests, as in Django's default logging."""
+    import logging
+
+    from django.utils.log import AdminEmailHandler
+
+    log = logging.getLogger("django.request")
+
+    while log is not None:
+        if any(isinstance(handler, AdminEmailHandler) for handler in log.handlers):
+            return True
+
+        if not log.propagate:
+            return False
+
+        log = log.parent
+
+    return False
+
+
+@checks.register()
+def check_error_reports(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
+    """
+    Error report settings that cannot work (E064); in email mode, Django
+    also mailing ADMINS about every server error (W038); in Sentry mode,
+    no SENTRY_DSN (W039).
+    """
+    from .error_reports import config
+
+    messages: list[checks.CheckMessage] = [
+        checks.Error(error, id="content_studio.E064")
+        for error in config.setting_errors()
+    ]
+    mode = config.get_mode()
+
+    if mode == config.EMAIL and settings.ADMINS and mails_admins_on_errors():
+        messages.append(
+            checks.Warning(
+                'ERROR_REPORTS is "email" and Django\'s mail_admins handler '
+                "also mails ADMINS about every server error, so each is mailed "
+                "twice.",
+                hint="Leave ADMINS empty, or drop the mail_admins handler from "
+                "LOGGING.",
+                id="content_studio.W038",
+            )
+        )
+
+    if mode == config.SENTRY and not config.get_dsn():
+        messages.append(
+            checks.Warning(
+                'ERROR_REPORTS is "sentry" but SENTRY_DSN is empty, so errors '
+                "are only logged.",
+                id="content_studio.W039",
+            )
+        )
+
+    return messages
+
+
 def login_throttle_errors() -> list[str]:
     """
     Login rate limits that cannot be read, which would fail every login:

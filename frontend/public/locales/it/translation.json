@@ -1186,6 +1186,13 @@
       "FAILURE": "Non riuscita",
       "SCHEDULED": "Pianificata"
     },
+    "errors": {
+      "title": "Errori recenti",
+      "description": "Errori del server, ciascuno inviato per email al massimo una volta all’ora",
+      "empty": "Nessun errore segnalato",
+      "count": "×{{count}}",
+      "all": "Tutte le notifiche di errore"
+    },
     "tasks": {
       "title": "Attività recenti",
       "description": "Attività in attesa, in esecuzione o terminate",

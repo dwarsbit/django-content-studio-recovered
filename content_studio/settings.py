@@ -195,6 +195,20 @@ DEFAULTS = {
     "EMAIL_ACTIVITY_KEEP_DAYS": 30,
     # Store recipients masked (s***@example.com) and leave out subjects.
     "EMAIL_ACTIVITY_MASK": False,
+    # Error reports (content_studio.error_reports), only while DEBUG is
+    # off: "email" mails each new error to ERROR_EMAIL (or the active
+    # superusers) and notifies the superusers, "sentry" sends errors to
+    # Sentry (the [sentry] extra), "off" reports nothing.
+    "ERROR_REPORTS": "off",
+    # Who gets the error emails: a list of addresses or a comma-separated
+    # string; empty sends them to the active superusers with an address.
+    "ERROR_EMAIL": [],
+    # Sentry: the project's DSN, the environment and release events are
+    # tagged with, and the share of requests traced (0 to 1).
+    "SENTRY_DSN": "",
+    "SENTRY_ENVIRONMENT": "production",
+    "SENTRY_RELEASE": "",
+    "SENTRY_TRACES_SAMPLE_RATE": 0,
     # Days read notifications are kept; None keeps them.
     "NOTIFICATION_RETENTION": 90,
     # Days unread notifications are kept; None (the default) keeps them.

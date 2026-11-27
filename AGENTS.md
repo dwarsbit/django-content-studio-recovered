@@ -47,7 +47,7 @@ content_studio/
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E057, W001-W032)
+├── checks.py            # System checks (content_studio.E001-E064, W001-W039)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
@@ -69,6 +69,8 @@ content_studio/
 ├── table_edit.py        # Inline editing of the table: ModelStudio.table_edit (alias list_editable), get_table_edit's default, the field kinds a cell edits; the save is ContentViewSet.table_edit (api/content/<model>/<id>/table-edit)
 ├── translations.py      # Translated content: ModelStudio.translations, Translations, the adapters (columns, modeltranslation, parler), CONTENT_LANGUAGES, the Missing translation filter and the search expansion
 ├── languages.py         # The admin's languages (LANGUAGES), and the per-request pick: language cookie, Accept-Language, LANGUAGE_CODE; urls.py wraps every view with admin_language
+├── logs.py              # Logging: RequestIdMiddleware (X-Request-ID, the access log on content_studio.access, quiet health check paths), RequestIdFilter, get_request_id(), JsonFormatter/PlainFormatter and logging_settings()
+├── error_reports/       # Error reports (ERROR_REPORTS, off by default, only with DEBUG off): reading the settings and E064's errors (config.py), ErrorReportHandler with signature/hourly dedup/recipients and install_handler() (handler.py), the error_reports.server_error notification (notifying.py), Sentry init and before_send (sentry.py), the status page's Error reports row and Recent errors card data (status.py); set_up() runs in ready()
 ├── dashboard/
 │   ├── __init__.py
 │   ├── content_list.py  # Dashboard content list component

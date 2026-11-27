@@ -1,0 +1,124 @@
+# 🐞 Error reports
+
+Content Studio can tell you about errors on your server: every new error is
+mailed to the people you choose and shows as a notification in the admin,
+or it goes to [Sentry](https://sentry.io). Error reports are off until you
+turn them on, and they only run while `DEBUG` is off.
+
+## Setup
+
+Pick a mode with [`ERROR_REPORTS`](/docs/settings#error_reports):
+
+- **`"email"`** mails each new error and, with the
+  [notifications app](/docs/notifications) installed, notifies the
+  superusers in the admin.
+- **`"sentry"`** sends errors to Sentry.
+- **`"off"`** (the default) reports nothing.
+
+```python
+# mysite/settings.py
+import os
+
+CONTENT_STUDIO = {
+    # ...
+    "ERROR_REPORTS": os.environ.get("ERROR_REPORTS", "email"),
+    "ERROR_EMAIL": os.environ.get("ERROR_EMAIL", ""),
+}
+```
+
+Every error report setting accepts the plain string an environment variable
+gives: `ERROR_EMAIL` takes a list or a comma-separated string, and
+`SENTRY_TRACES_SAMPLE_RATE` a number or a numeric string. `manage.py check`
+reports a setting that cannot work as `content_studio.E064`, and no error
+is reported until it is fixed.
+
+## By email
+
+In email mode, every line logged at `ERROR` or above is reported: a server
+error (500), a failed task in your worker, and anything your own code logs
+with `logger.error()` or `logger.exception()`.
+
+- **Who gets it:** the addresses in
+  [`ERROR_EMAIL`](/docs/settings#error_email), or, when that is empty, every
+  active superuser with an email address.
+- **The email:** the subject is `[<site title>] ERROR: <the first line>`,
+  with the site's `site_title`. The body holds the error with its
+  traceback, the logger that reported it and the
+  [request ID](/docs/logging#request-ids) when there is one. It holds no
+  request headers, cookies or form data.
+- **Once an hour:** an error is recognized by its logger, the type of the
+  exception and the line it was raised at (or, without an exception, the
+  logger and the message). The same error is reported at most once an hour.
+  The record of what was sent is kept in Django's cache: configure a shared
+  cache so every worker counts together.
+- **In the admin:** with the notifications app installed, each report is a
+  "Server errors" notification of the active superusers. An error that
+  happens again while its notification is unread counts up on that
+  notification instead of adding one.
+- **Never in the way:** a report that cannot be sent is logged as a warning
+  on the `content_studio.error_reports` logger and never breaks the request.
+
+The handler is added to the root logger, and to every logger in your
+`LOGGING` that does not pass its lines on to the root logger (such as
+`django`, with `"propagate": False`), so each error is reported once. When
+your `LOGGING` names `content_studio.error_reports.ErrorReportHandler`
+itself, Content Studio leaves your setup as it is. Requests for a host that
+is not in `ALLOWED_HOSTS` come from bots and are never reported.
+
+Django's own `mail_admins` handler also mails `ADMINS` about every server
+error. Leave `ADMINS` empty, or remove that handler from `LOGGING`, so each
+error is mailed once: `manage.py check` warns with `content_studio.W038`
+when both would mail.
+
+With the [email activity app](/docs/email-activity) installed, the reports
+are logged with the kind "Error report".
+
+## To Sentry
+
+Install the Sentry extra and set your project's DSN:
+
+```bash
+pip install "django-content-studio[sentry]"
+```
+
+```python
+# mysite/settings.py
+import os
+
+CONTENT_STUDIO = {
+    # ...
+    "ERROR_REPORTS": "sentry",
+    "SENTRY_DSN": os.environ.get("SENTRY_DSN", ""),
+    "SENTRY_ENVIRONMENT": os.environ.get("SENTRY_ENVIRONMENT", "production"),
+    "SENTRY_RELEASE": os.environ.get("SENTRY_RELEASE", ""),
+    "SENTRY_TRACES_SAMPLE_RATE": os.environ.get("SENTRY_TRACES_SAMPLE_RATE", "0"),
+}
+```
+
+Content Studio starts Sentry when Django starts. Sentry receives the errors
+of your requests, of a Huey worker, and every line logged at `ERROR`; lower
+lines are kept as breadcrumbs. Each event is tagged with the
+[request ID](/docs/logging#request-ids). No personal data is sent: no user
+details, cookies, `Authorization` headers or request bodies. Requests for a
+host that is not allowed are ignored.
+
+If your project starts Sentry itself with `sentry_sdk.init()`, Content
+Studio leaves it alone. Without `SENTRY_DSN`, nothing is sent and
+`manage.py check` warns with `content_studio.W039`; Sentry mode without the
+extra installed is `content_studio.E064`.
+
+## On the system status page
+
+With the [system status page](/docs/system-status) installed, an
+**Error reports** row shows where errors go: "Email to 3 recipients" or
+"Sentry · production". It is degraded when nobody would get the emails, and
+down when Sentry is missing its DSN or its SDK.
+
+In email mode with the notifications app, a **Recent errors** card lists
+the viewer's latest 8 error notifications, with how often each happened,
+and links to all of them on the notifications page.
+
+## See also
+
+- [Logging](/docs/logging): request IDs, an access log and JSON log lines.
+- [Settings reference](/docs/settings#error-reports).

@@ -315,3 +315,8 @@ def register_builtin_services():
         icon="ph-bold ph-git-branch",
         group=GROUP,
     )
+
+    # Error reports, unless ERROR_REPORTS is off.
+    from ...error_reports.status import register_status as register_error_reports
+
+    register_error_reports()

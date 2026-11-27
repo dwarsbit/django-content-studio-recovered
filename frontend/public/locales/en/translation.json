@@ -1143,6 +1143,13 @@
       "FAILURE": "Failed",
       "SCHEDULED": "Scheduled"
     },
+    "errors": {
+      "title": "Recent errors",
+      "description": "Server errors, each mailed once an hour at most",
+      "empty": "No errors reported",
+      "count": "×{{count}}",
+      "all": "All error notifications"
+    },
     "tasks": {
       "title": "Recent tasks",
       "description": "Tasks that are waiting, running or finished",
