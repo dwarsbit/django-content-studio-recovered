@@ -8,6 +8,7 @@ like) adds a section here, or a project passes its own to configure().
 from __future__ import annotations
 
 import importlib.util
+import logging
 from copy import deepcopy
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
@@ -35,6 +36,7 @@ __all__ = [
     "content_studio",
     "core",
     "database",
+    "logs",
     "mail",
     "security",
     "storage",
@@ -433,6 +435,43 @@ def content_studio(ctx: Context) -> dict[str, Any]:
     return {"CONTENT_STUDIO": defaults}
 
 
+LOG_FORMATS = ("json", "plain")
+
+
+def logs(ctx: Context) -> dict[str, Any]:
+    """
+    LOGGING from LOG_FORMAT ("plain" with DEBUG on, "json" otherwise),
+    LOG_LEVEL ("INFO") and LOG_ACCESS (on with DEBUG off); see
+    content_studio.logs. The project adds RequestIdMiddleware itself.
+    """
+    from content_studio.logs import logging_settings
+
+    log_format = (
+        ctx.env.str("LOG_FORMAT", "plain" if ctx.debug else "json") or ""
+    ).lower()
+
+    if log_format not in LOG_FORMATS:
+        raise ImproperlyConfigured(
+            f'LOG_FORMAT must be "json" or "plain", not {log_format!r}.'
+        )
+
+    level = (ctx.env.str("LOG_LEVEL", "INFO") or "").upper()
+
+    if level not in logging.getLevelNamesMapping():
+        raise ImproperlyConfigured(
+            f"LOG_LEVEL must be DEBUG, INFO, WARNING, ERROR or CRITICAL, "
+            f"not {level!r}."
+        )
+
+    return {
+        "LOGGING": logging_settings(
+            log_format,
+            level,
+            access=ctx.env.bool("LOG_ACCESS", not ctx.debug),
+        )
+    }
+
+
 # The built-in sections, in the order configure() runs them.
 SECTIONS: list[Section] = [
     core,
@@ -443,4 +482,5 @@ SECTIONS: list[Section] = [
     storage,
     security,
     content_studio,
+    logs,
 ]

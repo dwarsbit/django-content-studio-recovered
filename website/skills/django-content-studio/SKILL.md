@@ -616,8 +616,8 @@ Each is optional and has its own page:
   content_studio.contrib.settings import configure`, then
   `configure(globals(), base_dir=BASE_DIR)` near the top of `settings.py`;
   `DJANGO_SECRET_KEY` is required; `DATABASE_URL`, `CACHE_URL`,
-  `TASKS_URL`, `EMAIL_URL`, `SITE_URL`, `NUM_PROXIES`, `S3_BUCKET` and
-  more; dicts like `CONTENT_STUDIO` assigned before the call are merged one
+  `TASKS_URL`, `EMAIL_URL`, `SITE_URL`, `NUM_PROXIES`, `S3_BUCKET`,
+  `LOG_FORMAT` and more; dicts like `CONTENT_STUDIO` assigned before the call are merged one
   level deep, settings after it override; `sections=[...]` for your own
   variables; the `"content_studio.contrib.settings"` app adds deploy checks
   E065, W040-W042 and creates `db://` cache and queue tables on migrate;
@@ -664,7 +664,9 @@ Each is optional and has its own page:
   https://djangocontentstudio.org/docs/captcha.md
 - Logging (`content_studio.logs`: `RequestIdMiddleware` first in
   `MIDDLEWARE` for request IDs and an access log, `LOGGING =
-  logging_settings("json")`, `get_request_id()`):
+  logging_settings("json")`, `get_request_id()`; `configure()` reads
+  `LOG_FORMAT`, `LOG_LEVEL`, `LOG_ACCESS`; Huey's lines about hidden tasks
+  like the heartbeat are left out):
   https://djangocontentstudio.org/docs/logging.md
 - Languages (English, Dutch, German, French, Spanish, Italian, Brazilian
   Portuguese; each editor gets their own: the user menu's Language choice,
