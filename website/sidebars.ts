@@ -29,6 +29,7 @@ const sidebars: SidebarsConfig = {
     "history",
     "presence",
     "system-status",
+    "health-checks",
     "backups",
     "email-activity",
     "error-reports",

@@ -1,0 +1,150 @@
+# 💓 Health checks
+
+Content Studio ships the endpoints a container orchestrator calls to know
+whether your site is up: `/healthz`, `/readyz` and `/statusz`. A worker
+heartbeat tells whether the task worker still runs, and
+`manage.py content_studio_worker_alive` is the worker container's
+healthcheck. The [system status page](/docs/system-status) runs the same
+checks.
+
+## Setup
+
+1. Include the health URLs at the root of your site. Their paths are fixed,
+   so healthchecks can hardcode them.
+
+   ```python
+   # urls.py
+   from django.urls import include, path
+
+   urlpatterns = [
+       path("", include("content_studio.health.urls")),
+       path("admin/", include("content_studio.urls")),
+   ]
+   ```
+
+   Put them before `content_studio.urls` when you include that at the root
+   too: its catch-all route serves the admin's pages.
+
+2. Add the middleware above `SecurityMiddleware`. It answers `/healthz` and
+   `/readyz` before Django checks the Host header (see
+   [Why the middleware](#why-the-middleware)).
+
+   ```python
+   # settings.py
+   MIDDLEWARE = [
+       "content_studio.health.middleware.HealthCheckMiddleware",
+       "django.middleware.security.SecurityMiddleware",
+       # ...
+   ]
+   ```
+
+   With a request-ID middleware, put it right after that one, so health
+   requests still get an ID.
+
+3. Configure a shared cache, such as Redis, Memcached or the database
+   cache, so the web process can read the heartbeat the worker writes.
+
+## The endpoints
+
+| Path | Checks | Healthy | Unhealthy |
+|------|--------|---------|-----------|
+| `/healthz` | None: the process answers. | `200` | No answer. |
+| `/readyz` | The database and the cache. | `200` | `503` |
+| `/statusz` | The database, the cache and the worker. | `200` | `503` |
+
+`/healthz` answers `{"status": "ok"}`. The other two list their checks:
+
+```json
+{"status": "ok", "checks": {"database": "ok", "cache": "ok", "worker": "off"}}
+```
+
+Each check answers `ok`, `error` or `off`. Only `error` makes the answer
+`503` with `"status": "error"`; `off` means there is nothing to check. The
+answers carry no details, so the endpoints need no login. Errors are logged
+on the `content_studio.health.checks` logger.
+
+The endpoints answer `GET` and `HEAD` only, and are never cached.
+
+## The checks
+
+| Check | `ok` | `error` | `off` |
+|-------|------|---------|-------|
+| `database` | `SELECT 1` on the default database works. | The query fails. | |
+| `cache` | A value stored in the default cache can be read back. | Storing or reading fails. | The cache is Django's dummy cache. |
+| `worker` | A worker beat less than [`HEALTH_WORKER_STALE_AFTER`](/docs/settings#health_worker_stale_after) seconds ago (3 minutes). | No heartbeat, or an older one. | Tasks run in the request (Huey's immediate mode), no task backend is connected, or the cache is per process (`LocMemCache`, `DummyCache`). |
+
+## Worker heartbeat
+
+With [Huey](/docs/dashboard#huey) installed, Content Studio runs a periodic
+task on Huey's consumer that stamps the time in the default cache every
+minute, and once when a worker starts. The worker check, the status page's
+Worker row and `content_studio_worker_alive` read that stamp.
+
+The heartbeat runs every minute, so it is left out of the recent runs on
+the [task dashboard](/docs/dashboard#task-dashboard) and the status page,
+and out of the periodic tasks there. Huey's stats app doesn't record it
+either, so it keeps its 2000 events for your own tasks.
+
+### Other task backends
+
+The heartbeat runs through the task adapter. A `TaskAdapter` that
+implements `register_periodic_task()`, `on_worker_startup()` and
+`runs_in_request()` gets it the same way; see
+[Task adapters](/docs/dashboard#task-dashboard).
+
+Without such an adapter, call `beat()` from your worker every minute, for
+example from Celery beat. The worker check turns on with the first beat.
+
+```python
+from content_studio.health import beat
+
+
+@app.task
+def content_studio_heartbeat():
+    beat()
+```
+
+## Docker Compose
+
+```yaml
+services:
+  web:
+    # ...
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8000/readyz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  worker:
+    # ...
+    command: python manage.py run_huey
+    healthcheck:
+      test: ["CMD", "python", "manage.py", "content_studio_worker_alive"]
+      interval: 60s
+      timeout: 30s
+      start_period: 60s
+      retries: 3
+```
+
+`content_studio_worker_alive` exits with `1` when the heartbeat is missing
+or stale, and with `0` when it is fresh or when the worker check is off.
+It only reads the cache, so it is cheap to run often.
+
+Use `/readyz` for the web container: a stopped worker shouldn't take the
+site out of the load balancer. Point an uptime monitor at `/statusz` to
+hear about the worker too.
+
+## Why the middleware
+
+A platform's healthcheck calls the container on its internal IP address,
+such as `10.0.3.7`, which isn't in `ALLOWED_HOSTS`. `SecurityMiddleware` and
+`CommonMiddleware` read the Host header and answer such a request with a
+`400`. `HealthCheckMiddleware` answers `/healthz` and `/readyz` before
+they do, and lets every other request through untouched. `/statusz` keeps
+the Host check, so call it on your site's own host.
+
+`manage.py check` warns with `content_studio.W036` when the middleware
+comes after `SecurityMiddleware` or `CommonMiddleware`, and with
+`content_studio.W037` when tasks run on workers but the default cache is
+per process, so the heartbeat can never be seen.

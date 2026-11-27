@@ -612,6 +612,13 @@ Each is optional and has its own page:
   recent and recurring tasks; apps add theirs with
   `status.register_service()` in `AppConfig.ready()`):
   https://djangocontentstudio.org/docs/system-status.md
+- Health checks for containers (`path("", include("content_studio.health.urls"))`
+  at the site root: `/healthz`, `/readyz` (database, cache), `/statusz`
+  (plus the worker); `HealthCheckMiddleware` above `SecurityMiddleware`
+  answers the first two before the Host check; a worker heartbeat on
+  Huey, or `content_studio.health.beat()` from another scheduler;
+  `manage.py content_studio_worker_alive` for the worker container):
+  https://djangocontentstudio.org/docs/health-checks.md
 - Automatic database backups (`content_studio.contrib.backups`: a gzipped
   fixture per database in `BACKUP_STORAGE` on `BACKUP_SCHEDULE`, a cron
   expression run by Huey or by `content_studio_backup` from cron; the

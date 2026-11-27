@@ -67,8 +67,8 @@ Outside a request, `get_request_id()` returns `None`.
 The middleware writes one line per request on the `content_studio.access`
 logger, at `INFO`: `GET /blog/?page=2 200`, with the method, path, status,
 duration in milliseconds and the user's ID as fields of the line. Successful
-requests to the health check paths `/healthz`, `/readyz` and `/statusz` are
-left out, so they do not bury the rest; failing ones are logged.
+requests to the [health check](/docs/health-checks) paths `/healthz`,
+`/readyz` and `/statusz` are left out, so they do not bury the rest; failing ones are logged.
 
 ## Log formats
 

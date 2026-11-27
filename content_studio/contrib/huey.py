@@ -9,6 +9,7 @@ scheduled counts and the periodic tasks without their runs, and a
 system check warns.
 """
 
+import logging
 from datetime import UTC, datetime, timedelta
 from types import SimpleNamespace
 from typing import Optional
@@ -22,11 +23,16 @@ from ..dashboard.tasks import (
     TaskRow,
     TaskStatistic,
     TaskStatus,
+    hidden_tasks,
+    hide_task,
+    without_hidden,
 )
 
 __all__ = [
     "HueyAdapter",
 ]
+
+logger = logging.getLogger(__name__)
 
 STATS_APP = "huey.contrib.djhuey.stats"
 
@@ -63,6 +69,37 @@ ALL_STATISTICS = ("queued", "scheduled", "running", "succeeded", "failed", "retr
 
 # How far ahead the next run of a periodic task is looked for.
 NEXT_RUN_HORIZON = timedelta(days=7)
+
+
+def unrecorded_signal(original):
+    """
+    A copy of a Huey's Signal that keeps the hidden tasks from the stats
+    app: its recorder keeps at most max_events (2000) events, and a task
+    every minute would leave room for only hours of real runs. Other
+    receivers still get every signal.
+    """
+    from huey.contrib.stats import HueyStats
+    from huey.signals import Signal
+
+    class UnrecordedSignal(Signal):
+        __slots__ = ()
+
+        def send(self, signal, task, *args, **kwargs):
+            t = type(task)
+            if f"{t.__module__}.{t.__name__}" not in hidden_tasks():
+                return super().send(signal, task, *args, **kwargs)
+
+            for receiver in [*self.receivers.get(signal, ()), *self.receivers["any"]]:
+                if isinstance(getattr(receiver, "__self__", None), HueyStats):
+                    continue
+                try:
+                    receiver(signal, task, *args, **kwargs)
+                except Exception:
+                    logger.exception("Error in Huey signal receiver %r.", receiver)
+
+    copy = UnrecordedSignal()
+    copy.receivers = original.receivers
+    return copy
 
 
 def stats_app_installed() -> bool:
@@ -144,6 +181,59 @@ class HueyAdapter(TaskAdapter):
         if method == "get_recent_tasks" and not self.has_stats():
             return False
         return super().implements(method)
+
+    # Content Studio's own tasks
+
+    def register_periodic_task(
+        self, key: str, func, minutes: int = 1, hidden: bool = False
+    ) -> None:
+        """
+        A Huey periodic task named `key` ("module.name"), running func()
+        with fresh database connections every `minutes` minutes.
+        Registering a key twice on the same queue does nothing.
+        """
+        from huey import crontab
+
+        from .backups.huey import close_db
+
+        if hidden:
+            hide_task(key)
+            self.keep_hidden_from_stats()
+
+        if key in self.huey._registry._registry:
+            return
+
+        module, _sep, name = key.rpartition(".")
+
+        def run():
+            return func()
+
+        run.__module__ = module
+        run.__doc__ = func.__doc__
+        minute = "*" if minutes == 1 else f"*/{minutes}"
+        self.huey.periodic_task(crontab(minute=minute), name=name)(close_db(run))
+
+    def keep_hidden_from_stats(self) -> None:
+        """
+        Keep the hidden tasks out of the stats app's records, whether it
+        connects to the queue before or after this.
+        """
+        from huey.signals import Signal
+
+        huey = self.huey
+        signal = getattr(huey, "_signal", None)
+
+        if type(signal) is Signal:
+            huey._signal = unrecorded_signal(signal)
+
+    def on_worker_startup(self, key: str, func) -> None:
+        """Run func() whenever a Huey consumer's worker starts."""
+        from .backups.huey import close_db
+
+        self.huey.on_startup(name=key)(close_db(func))
+
+    def runs_in_request(self) -> bool:
+        return bool(self.huey.immediate)
 
     # Health
 
@@ -288,8 +378,14 @@ class HueyAdapter(TaskAdapter):
                 inflight.setdefault(row.task, row.started)
 
         rows = []
+        hidden = hidden_tasks()
+
         for task_class in sorted(registry._periodic_tasks, key=lambda t: t.__name__):
             full_name = registry.task_to_string(task_class)
+
+            if full_name in hidden:
+                continue
+
             last = self.get_last_outcome(full_name) if stats is not None else None
             row = TaskRow(
                 title=task_class.__name__,
@@ -402,7 +498,7 @@ class HueyAdapter(TaskAdapter):
                 )
             )
 
-        return rows
+        return without_hidden(rows)
 
     def get_recent_tasks(self, request, limit: int) -> list[TaskRow]:
         if self.stats is None:
@@ -410,15 +506,17 @@ class HueyAdapter(TaskAdapter):
 
         from huey.contrib.stats import HueyEvent
 
-        events = (
-            HueyEvent.select()
-            .where(
-                HueyEvent.queue == self.stats.name,
-                HueyEvent.signal.in_(list(OUTCOMES)),
-            )
-            .order_by(HueyEvent.ts.desc(), HueyEvent.id.desc())
-            .limit(limit)
+        events = HueyEvent.select().where(
+            HueyEvent.queue == self.stats.name,
+            HueyEvent.signal.in_(list(OUTCOMES)),
         )
+        hidden = hidden_tasks()
+
+        if hidden:
+            # In the query, so `limit` still counts real runs.
+            events = events.where(HueyEvent.task.not_in(list(hidden)))
+
+        events = events.order_by(HueyEvent.ts.desc(), HueyEvent.id.desc()).limit(limit)
         rows = []
 
         for event in events:

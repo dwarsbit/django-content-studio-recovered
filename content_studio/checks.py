@@ -5051,3 +5051,84 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         )
 
     return messages
+
+
+HEALTH_MIDDLEWARE = "content_studio.health.middleware.HealthCheckMiddleware"
+HOST_CHECKING_MIDDLEWARE = (
+    "django.middleware.security.SecurityMiddleware",
+    "django.middleware.common.CommonMiddleware",
+)
+
+
+@checks.register()
+def check_health_middleware(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
+    """
+    HealthCheckMiddleware after a middleware that reads the Host header
+    (W036): a healthcheck on the container's internal IP gets a 400.
+    """
+    middleware = list(getattr(settings, "MIDDLEWARE", None) or [])
+
+    if HEALTH_MIDDLEWARE not in middleware:
+        return []
+
+    position = middleware.index(HEALTH_MIDDLEWARE)
+    before = [
+        path for path in middleware[:position] if path in HOST_CHECKING_MIDDLEWARE
+    ]
+
+    if not before:
+        return []
+
+    return [
+        checks.Warning(
+            f"{HEALTH_MIDDLEWARE} comes after {before[0]}, which checks the "
+            "Host header first, so a healthcheck on a host that isn't in "
+            "ALLOWED_HOSTS (such as the container's internal IP) gets a 400.",
+            hint=f"Move it above {before[0]} in MIDDLEWARE.",
+            id="content_studio.W036",
+        )
+    ]
+
+
+@checks.register(checks.Tags.caches)
+def check_worker_heartbeat_cache(
+    app_configs=None, **kwargs
+) -> list[checks.CheckMessage]:
+    """
+    A task backend with workers while the default cache is per process
+    (W037): the heartbeat the workers write is never seen, and the worker
+    check stays off.
+    """
+    from .health.checks import unshared_cache
+    from .health.heartbeat import get_adapters, runs_in_request
+
+    name = unshared_cache()
+
+    if not name:
+        return []
+
+    try:
+        adapters = get_adapters()
+        workers = [
+            adapter
+            for adapter in adapters
+            if adapter.implements("register_periodic_task")
+            and not runs_in_request(adapter)
+        ]
+    except Exception:
+        return []
+
+    if not workers:
+        return []
+
+    return [
+        checks.Warning(
+            f"Tasks run on workers ({type(workers[0]).__name__}), but the "
+            f"default cache ({name}) isn't shared between processes, so the "
+            "worker heartbeat can't be seen and /statusz and the status "
+            "page don't watch the worker.",
+            hint="Configure a shared cache (Redis, Memcached or the database "
+            "cache) as CACHES['default'].",
+            id="content_studio.W037",
+        )
+    ]

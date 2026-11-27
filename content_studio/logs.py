@@ -57,10 +57,6 @@ HEADER = "X-Request-ID"
 # break a log line.
 VALID_ID = re.compile(r"[A-Za-z0-9._:-]{1,128}")
 
-# The health check endpoints, whose successful requests would bury the
-# rest of the access log; content_studio.health lists them when present.
-DEFAULT_QUIET_PATHS = ("/healthz", "/readyz", "/statusz")
-
 # The attributes every LogRecord has; anything else came from `extra`.
 _RECORD_ATTRS = frozenset(vars(logging.LogRecord("", 0, "", 0, "", None, None))) | {
     "message",
@@ -77,10 +73,9 @@ def get_request_id() -> str | None:
 
 
 def quiet_paths() -> tuple[str, ...]:
-    try:
-        from .health import HEALTH_PATHS  # type: ignore[attr-defined]
-    except ImportError:
-        return DEFAULT_QUIET_PATHS
+    """The health check endpoints: their successful requests would bury
+    the rest of the access log."""
+    from .health import HEALTH_PATHS
 
     return tuple(HEALTH_PATHS)
 

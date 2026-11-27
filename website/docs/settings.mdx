@@ -453,6 +453,15 @@ How many seconds the [system status page](/docs/system-status) remembers the
 results of its checks before it runs them again. Default: `60`. `0` runs the
 checks on every request.
 
+## Health checks
+
+### HEALTH_WORKER_STALE_AFTER {#health_worker_stale_after}
+
+How many seconds after the worker's last heartbeat the
+[health checks](/docs/health-checks) report the worker as down: `/statusz`,
+the status page's Worker row and `content_studio_worker_alive`. Default:
+`180`. The heartbeat beats every minute.
+
 ## Backups
 
 These settings take effect with

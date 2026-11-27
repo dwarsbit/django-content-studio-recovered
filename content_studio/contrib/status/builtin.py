@@ -1,17 +1,22 @@
 """
 The services the status page checks out of the box: the databases, the
-cache, the media storage, the task queue, outgoing email and the
-migrations.
+cache, the media storage, the task queue, the worker, outgoing email and
+the migrations. The database, cache and worker rows run the health
+checks of content_studio.health, as /readyz and /statusz do.
 """
 
 import time
-import uuid
 import warnings
+from datetime import timedelta
 
 from django.apps import apps
 from django.conf import settings
+from django.utils import timezone
+from django.utils.timesince import timesince
 from django.utils.translation import gettext_lazy as _
 
+from ...health import checks as health
+from ...health.heartbeat import get_last_beat
 from .registry import (
     ServiceResult,
     ServiceStatus,
@@ -60,13 +65,12 @@ def check_database(alias: str = "default") -> ServiceResult:
 
     connection = connections[alias]
     started = time.monotonic()
-    connection.ensure_connection()
-
-    if not connection.is_usable():
-        return down(connection.display_name, _("The connection is not usable."))
-
+    result = health.check_database(alias)
     elapsed = time.monotonic() - started
     detail = connection.display_name
+
+    if result.status == health.ERROR:
+        return down(detail, result.message)
 
     try:
         version = ".".join(str(part) for part in connection.get_database_version())
@@ -80,23 +84,41 @@ def check_database(alias: str = "default") -> ServiceResult:
 
 
 def check_cache() -> ServiceResult:
-    from django.core.cache import DEFAULT_CACHE_ALIAS, cache, caches
-    from django.core.cache.backends.dummy import DummyCache
+    from django.core.cache import DEFAULT_CACHE_ALIAS, caches
 
-    backend = caches[DEFAULT_CACHE_ALIAS]
-    name = type(backend).__name__
+    name = type(caches[DEFAULT_CACHE_ALIAS]).__name__
     detail = CACHE_NAMES.get(name, name)
+    result = health.check_cache()
 
-    if isinstance(backend, DummyCache):
+    if result.status == health.OFF:
         return unknown(_("Dummy cache"), _("Nothing is cached."))
+    if result.status == health.ERROR:
+        return down(detail, result.message)
+    return ok(detail)
 
-    key = f"content_studio.status.check.{uuid.uuid4().hex}"
-    cache.set(key, "1", 30)
-    stored = cache.get(key)
-    cache.delete(key)
 
-    if stored != "1":
-        return down(detail, _("A value that was stored could not be read back."))
+def check_worker() -> ServiceResult:
+    """The worker heartbeat: when a worker last beat."""
+    result = health.check_worker()
+
+    if result.status == health.OFF:
+        return unknown(_("Not watched"), result.message)
+
+    try:
+        last = get_last_beat()
+    except Exception:
+        # The cache is down: the cache row says so.
+        last = None
+
+    if last is None:
+        detail = _("No heartbeat")
+    elif timezone.now() - last < timedelta(minutes=1):
+        detail = _("Last heartbeat just now")
+    else:
+        detail = _("Last heartbeat %(time)s ago") % {"time": timesince(last)}
+
+    if result.status == health.ERROR:
+        return down(detail, result.message)
     return ok(detail)
 
 
@@ -263,6 +285,13 @@ def register_builtin_services():
         _("Task queue"),
         check_task_queue,
         icon="ph-bold ph-queue",
+        group=GROUP,
+    )
+    register_service(
+        "content_studio.worker",
+        _("Worker"),
+        check_worker,
+        icon="ph-bold ph-heartbeat",
         group=GROUP,
     )
     register_service(
