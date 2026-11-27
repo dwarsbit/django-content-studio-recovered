@@ -723,3 +723,44 @@ def test_checks_run_only_in_a_deploy_check():
         "check_proxy",
     }
     assert ours(False) == set()
+
+
+# Logging
+
+
+def test_logging_follows_debug():
+    production = run({})["LOGGING"]
+    assert production["handlers"]["console"]["formatter"] == "json"
+    assert production["root"]["level"] == "INFO"
+    assert production["loggers"]["content_studio.access"]["level"] == "INFO"
+
+    development = run({"DJANGO_DEBUG": "1"})["LOGGING"]
+    assert development["handlers"]["console"]["formatter"] == "plain"
+    assert development["loggers"]["content_studio.access"]["level"] == "WARNING"
+
+
+def test_logging_variables():
+    config = run({"LOG_FORMAT": "plain", "LOG_LEVEL": "warning", "LOG_ACCESS": "0"})[
+        "LOGGING"
+    ]
+    assert config["handlers"]["console"]["formatter"] == "plain"
+    assert config["root"]["level"] == "WARNING"
+    assert config["loggers"]["content_studio.access"]["level"] == "WARNING"
+
+    config = run({"DJANGO_DEBUG": "1", "LOG_FORMAT": "JSON", "LOG_ACCESS": "1"})[
+        "LOGGING"
+    ]
+    assert config["handlers"]["console"]["formatter"] == "json"
+    assert config["loggers"]["content_studio.access"]["level"] == "INFO"
+
+
+@pytest.mark.parametrize(
+    "env, message",
+    [
+        ({"LOG_FORMAT": "xml"}, "LOG_FORMAT must be"),
+        ({"LOG_LEVEL": "LOUD"}, "LOG_LEVEL must be"),
+    ],
+)
+def test_logging_refuses_unknown_values(env, message):
+    with pytest.raises(ImproperlyConfigured, match=message):
+        run(env)

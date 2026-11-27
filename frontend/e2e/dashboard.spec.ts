@@ -8,14 +8,17 @@ test("the dashboard shows the configured widgets", async ({ page }) => {
   // Statistic widget
   await expect(page.getByText("Articles", { exact: true })).toBeVisible();
 
-  // Content list widget with the seeded article. The analytics top pages
-  // widget links it too, so look inside the widget.
+  // Content list widget with the newest articles. Tests running in
+  // parallel create articles, which can push the seeded ones out of its
+  // five, so check for an article link rather than a given title. The
+  // analytics top pages widget links articles too, so look inside the
+  // widget.
   const latest = page.locator("section", {
     has: page.getByRole("heading", { name: "Latest articles" }),
   });
   await expect(latest).toBeVisible();
   await expect(
-    latest.getByRole("link", { name: /^Hello, Content Studio/ }),
+    latest.locator('a[href*="/content/demo_blog.article/"]').first(),
   ).toBeVisible();
 
   // Analytics widgets, from the demo's made-up provider

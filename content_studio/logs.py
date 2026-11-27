@@ -19,7 +19,9 @@ LOGGING setting that uses them::
     ]
     LOGGING = logging_settings("json" if not DEBUG else "plain")
 
-Nothing here is on until a project adds the middleware or the setting.
+configure() in content_studio.contrib.settings sets LOGGING this way from
+LOG_FORMAT, LOG_LEVEL and LOG_ACCESS. Nothing here is on until a project
+adds the middleware or the setting.
 """
 
 from __future__ import annotations
@@ -27,6 +29,7 @@ from __future__ import annotations
 import json
 import logging
 import re
+import sys
 import time
 import uuid
 from contextvars import ContextVar
@@ -39,6 +42,7 @@ __all__ = [
     "HEADER",
     "JsonFormatter",
     "PlainFormatter",
+    "QuietTasksFilter",
     "RequestIdFilter",
     "RequestIdMiddleware",
     "get_request_id",
@@ -87,6 +91,35 @@ class RequestIdFilter(logging.Filter):
         if not hasattr(record, "request_id"):
             record.request_id = _request_id.get()
         return True
+
+
+class QuietTasksFilter(logging.Filter):
+    """
+    Drops Huey's INFO lines about hidden tasks, such as the worker
+    heartbeat: Huey writes three for every run ("Enqueueing periodic
+    task", "Executing", "executed in"), every minute. Warnings and errors
+    about them still go through.
+    """
+
+    def filter(self, record: logging.LogRecord) -> bool:
+        if record.levelno > logging.INFO or not record.name.startswith("huey"):
+            return True
+
+        # Tasks are hidden through content_studio.dashboard.tasks; until
+        # something imported it, no task is hidden.
+        registry = sys.modules.get("content_studio.dashboard.tasks")
+
+        if registry is None:
+            return True
+
+        hidden = registry.hidden_tasks()
+
+        if not hidden:
+            return True
+
+        # Huey names a task "module.name: id" in its lines.
+        message = record.getMessage()
+        return not any(f"{key}: " in message for key in hidden)
 
 
 class JsonFormatter(logging.Formatter):
@@ -226,8 +259,9 @@ def logging_settings(
     plain text ("plain"), with the request ID. level is the root logger's
     level; access=False leaves out the access log of RequestIdMiddleware.
     Requests for a host that is not allowed (bots) are logged but never
-    reported as errors. Error reports (ERROR_REPORTS) add their handler
-    themselves.
+    reported as errors, and Huey's lines about hidden tasks (the worker
+    heartbeat) are left out. Error reports (ERROR_REPORTS) add their
+    handler themselves.
     """
     if log_format not in ("json", "plain"):
         raise ValueError(f'log_format must be "json" or "plain", not {log_format!r}.')
@@ -237,6 +271,7 @@ def logging_settings(
         "disable_existing_loggers": False,
         "filters": {
             "request_id": {"()": "content_studio.logs.RequestIdFilter"},
+            "quiet_tasks": {"()": "content_studio.logs.QuietTasksFilter"},
         },
         "formatters": {
             "plain": {"()": "content_studio.logs.PlainFormatter"},
@@ -246,7 +281,9 @@ def logging_settings(
             "console": {
                 "class": "logging.StreamHandler",
                 "formatter": log_format,
-                "filters": ["request_id"],
+                # On the handler, not the huey logger: a logger's filters
+                # miss the lines of its children (huey.consumer).
+                "filters": ["request_id", "quiet_tasks"],
             },
         },
         "root": {"handlers": ["console"], "level": level},
