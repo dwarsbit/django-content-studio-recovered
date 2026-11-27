@@ -6,6 +6,12 @@ of the box, and the system checks that catch configuration mistakes.
 
 ## Deployment checklist
 
+- **Configure from environment variables.** With
+  [environment settings](/docs/environment-settings), one `configure()` call
+  sets the database, cache, task queue, mail, storage, hosts and the HTTPS
+  settings below from the environment, and `manage.py check --deploy`
+  reports a debug mode, a weak secret key, a per-process cache or a missing
+  `NUM_PROXIES`.
 - **Serve the admin over HTTPS.** The session cookie is marked `Secure`
   whenever `DEBUG` is off
   ([`REFRESH_COOKIE_SECURE`](/docs/settings#refresh_cookie_secure)). Behind a
@@ -182,6 +188,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E062` | An [`EMAIL_DELIVERY_BACKEND`](/docs/email-activity#setup) that cannot be imported or is the logging backend itself, or an `EMAIL_ACTIVITY_KEEP_DAYS` below 1. |
 | `content_studio.E063` | A [`REFRESH_TOKEN_REUSE_INTERVAL`](/docs/settings#refresh_token_reuse_interval) that is not `None` or a number of seconds of at least 0. |
 | `content_studio.E064` | An [error report](/docs/error-reports) setting that cannot work: an unknown `ERROR_REPORTS` mode, an invalid address in `ERROR_EMAIL`, a `SENTRY_TRACES_SAMPLE_RATE` outside 0 to 1, or Sentry mode without the `[sentry]` extra. Nothing is reported until it is fixed. |
+| `content_studio.E065` | `DEBUG` is on in a deployment check (`manage.py check --deploy`), with [environment settings](/docs/environment-settings#system-checks) installed. |
 
 ### Warnings
 
@@ -225,6 +232,9 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W037` | Tasks run on workers, but the default cache is per process, so the [worker heartbeat](/docs/health-checks#worker-heartbeat) can't be seen. |
 | `content_studio.W038` | Error reports by email while Django's `mail_admins` handler also mails `ADMINS`, so every server error is mailed twice. Leave `ADMINS` empty or drop that handler from `LOGGING`. |
 | `content_studio.W039` | `ERROR_REPORTS` is `"sentry"` but [`SENTRY_DSN`](/docs/settings#sentry_dsn) is empty, so errors are only logged. |
+| `content_studio.W040` | A `SECRET_KEY` that looks like a placeholder, is shorter than 50 characters or has fewer than 5 different characters. A deployment check of [environment settings](/docs/environment-settings#system-checks). |
+| `content_studio.W041` | A per-process default cache (`LocMemCache` or `DummyCache`), so login limits, ended sessions and presence are not shared. A deployment check of [environment settings](/docs/environment-settings#system-checks). |
+| `content_studio.W042` | `SITE_URL` is `https`, but Django does not trust the proxy's `X-Forwarded-Proto` header (`NUM_PROXIES` is not set). A deployment check of [environment settings](/docs/environment-settings#system-checks). |
 
 ## Reporting a vulnerability
 

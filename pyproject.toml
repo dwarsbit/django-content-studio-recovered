@@ -57,6 +57,15 @@ excel = ["openpyxl (>=3.1,<4)"]
 images = ["pillow (>=10)"]
 huey = ["huey[stats] (>=3.5,<4)"]
 sentry = ["sentry-sdk[django] (>=2,<3)"]
+# What content_studio.contrib.settings turns on by itself: Postgres with
+# DATABASE_POOL, a redis:// or valkey:// cache or queue, and WhiteNoise
+# for static files.
+server = [
+    "psycopg[binary,pool] (>=3.2)",
+    "redis (>=5)",
+    "whitenoise (>=6.9)",
+]
+s3 = ["django-storages[s3] (>=1.14)"]
 
 [tool.poetry]
 packages = [{include = "content_studio"}]
