@@ -337,6 +337,24 @@ class LoginAndRefreshFlowTests(TestCase):
         assert "refresh" not in login.json()
         assert login.cookies[REFRESH_COOKIE_NAME]["httponly"]
 
+    def test_refresh_ignores_an_expired_access_token_in_the_header(self):
+        # The admin refreshes because its access token expired; the
+        # refresh must not be refused for carrying that token.
+        from django.conf import settings
+
+        login = self.login()
+        payload = decode(login.json()["access"])
+        payload["exp"] = int(time.time()) - 10
+        expired = pyjwt.encode(payload, settings.SECRET_KEY, algorithm="HS256")
+
+        client = APIClient()
+        client.cookies[REFRESH_COOKIE_NAME] = login.cookies[REFRESH_COOKIE_NAME].value
+        client.credentials(HTTP_AUTHORIZATION=f"Bearer {expired}")
+        refreshed = client.post(REFRESH_URL)
+
+        assert refreshed.status_code == 200
+        assert refreshed.json().keys() == {"access"}
+
     def test_refresh_without_a_cookie_is_rejected(self):
         assert APIClient().post(REFRESH_URL).status_code == 401
 

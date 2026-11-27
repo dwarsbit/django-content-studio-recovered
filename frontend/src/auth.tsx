@@ -55,7 +55,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const refresh = useCallback(async (): Promise<string | null> => {
     try {
-      const { data } = await http.post<{ access: string }>(REFRESH_URL);
+      // The refresh cookie is the credential. Most refreshes happen
+      // because the access token expired, so it is left out: servers
+      // that check the header would refuse the refresh for it.
+      const { data } = await http.post<{ access: string }>(REFRESH_URL, null, {
+        headers: { Authorization: false },
+      });
       setToken(data.access);
       return data.access;
     } catch {

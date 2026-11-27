@@ -29,6 +29,14 @@
 
 ### Fixes
 
+- **Logged out after an hour away.** Once the access token expired
+  (`TOKEN_LIFETIME`, an hour by default), the admin's next request
+  refreshed it, but the refresh still carried the expired token in its
+  `Authorization` header and the refresh endpoint refused it, so the
+  admin signed the user out although the session was still valid. This
+  happened most often when coming back to a tab after a while. The
+  refresh endpoint now ignores the `Authorization` header and the admin
+  no longer sends it there.
 - **Backup and restore messages translated.** The backup and restore
   strings added in 1.18.0 are now translated into every language.
 

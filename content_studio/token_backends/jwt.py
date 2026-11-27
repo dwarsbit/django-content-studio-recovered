@@ -344,10 +344,12 @@ class JsonWebTokenViewSet(ViewSet):
     renderer_classes = [JSONRenderer]
 
     def perform_authentication(self, request):
-        # Logging out with an expired access token must still revoke the
-        # refresh token and clear the cookie; logout reads the tokens
-        # itself and never needs request.user.
-        if self.action != "logout":
+        # Neither endpoint needs request.user, and both run when the
+        # access token may have expired: refreshing is how an expired
+        # access token is replaced, and logging out with one must still
+        # revoke the refresh token and clear the cookie. Authenticating
+        # the Authorization header would refuse them both with a 401.
+        if self.action not in ("refresh", "logout"):
             super().perform_authentication(request)
 
     @action(detail=False, methods=["post"], url_path="refresh")
