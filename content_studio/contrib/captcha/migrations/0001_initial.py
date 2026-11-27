@@ -33,4 +33,12 @@ class Migration(migrations.Migration):
                 ("expires_at", models.DateTimeField(db_index=True)),
             ],
         ),
+        migrations.CreateModel(
+            name="DailyCount",
+            fields=[
+                ("date", models.DateField(primary_key=True, serialize=False)),
+                ("solved", models.PositiveIntegerField(default=0)),
+                ("failed", models.PositiveIntegerField(default=0)),
+            ],
+        ),
     ]

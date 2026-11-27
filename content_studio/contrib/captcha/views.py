@@ -26,7 +26,7 @@ from rest_framework.views import APIView
 from content_studio.settings import cs_settings
 from content_studio.throttling import ClientIPMixin
 
-from . import pow
+from . import counts, pow
 from .models import Challenge, Token
 from .tokens import issue_token
 
@@ -75,6 +75,7 @@ class ChallengeView(CapView):
         # Expired challenges and tokens go with every new challenge.
         Challenge.objects.filter(expires_at__lte=now).delete()
         Token.objects.filter(expires_at__lte=now).delete()
+        counts.prune()
 
         challenge = Challenge.objects.create(
             token=secrets.token_hex(25),
@@ -101,6 +102,7 @@ class RedeemView(CapView):
         data = request.data if isinstance(request.data, dict) else {}
         token, solutions = data.get("token"), data.get("solutions")
         if not isinstance(token, str) or not isinstance(solutions, list):
+            counts.count("failed")
             return Response({"success": False, "error": "Invalid body"}, status=400)
 
         challenge = Challenge.objects.filter(
@@ -109,15 +111,18 @@ class RedeemView(CapView):
         # A challenge is redeemed once, solved or not; the delete decides
         # between two requests with the same token.
         if challenge is None or Challenge.objects.filter(pk=token).delete()[0] == 0:
+            counts.count("failed")
             return Response(
                 {"success": False, "error": "Challenge invalid or expired"}, status=400
             )
         if not pow.check(
             token, challenge.count, challenge.size, challenge.difficulty, solutions
         ):
+            counts.count("failed")
             return Response({"success": False, "error": "Invalid solution"}, status=400)
 
         value, expires = issue_token()
+        counts.count("solved")
         return Response({"success": True, "token": value, "expires": expires})
 
 

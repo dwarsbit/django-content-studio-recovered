@@ -427,3 +427,72 @@ def test_check_urls():
     with override_settings(ROOT_URLCONF="content_studio.urls"):
         messages = captcha_checks.check_captcha_urls()
     assert [m.id for m in messages] == ["content_studio.W043"]
+
+
+# Daily counts of solved and failed challenges, for the dashboard.
+
+
+def counted():
+    from content_studio.contrib.captcha.models import DailyCount
+
+    row = DailyCount.objects.filter(date=timezone.localdate()).first()
+    return (row.solved, row.failed) if row else (0, 0)
+
+
+def test_redeems_are_counted(client):
+    redeem(client)
+    redeem(client)
+    assert counted() == (2, 0)
+
+    client.post("/api/cap/redeem", {"token": "gone", "solutions": [1]}, format="json")
+    client.post("/api/cap/redeem", {}, format="json")
+    challenge = client.post("/api/cap/challenge").json()
+    client.post(
+        "/api/cap/redeem",
+        {"token": challenge["token"], "solutions": [-1, -1, -1]},
+        format="json",
+    )
+    assert counted() == (2, 3)
+
+
+def test_challenges_and_throttled_requests_are_not_counted(client, settings):
+    studio_settings(settings, CAPTCHA_THROTTLE_RATE="1/minute")
+    client.post("/api/cap/challenge")
+    assert client.post("/api/cap/redeem", {}, format="json").status_code == 429
+    assert counted() == (0, 0)
+
+
+def test_count_creates_the_row_once():
+    from content_studio.contrib.captcha import counts
+    from content_studio.contrib.captcha.models import DailyCount
+
+    counts.count("failed")
+    counts.count("failed")
+    counts.count("solved")
+    assert DailyCount.objects.count() == 1
+    assert counted() == (1, 2)
+    with pytest.raises(ValueError):
+        counts.count("accepted")
+
+
+def test_old_counts_are_pruned(client):
+    from content_studio.contrib.captcha import counts
+    from content_studio.contrib.captcha.models import DailyCount
+
+    today = timezone.localdate()
+    counts.count("solved", today - timedelta(days=counts.KEEP_DAYS + 1))
+    counts.count("solved", today - timedelta(days=counts.KEEP_DAYS - 1))
+    client.post("/api/cap/challenge")
+    assert list(DailyCount.objects.values_list("date", flat=True)) == [
+        today - timedelta(days=counts.KEEP_DAYS - 1)
+    ]
+
+
+def test_daily_fills_missing_days():
+    from content_studio.contrib.captcha import counts
+
+    today = timezone.localdate()
+    counts.count("solved", today - timedelta(days=2))
+    counts.count("solved", today)
+    counts.count("solved", today)
+    assert counts.daily("solved", today - timedelta(days=3), today) == [0, 1, 0, 2]

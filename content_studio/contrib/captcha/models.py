@@ -24,3 +24,14 @@ class Token(models.Model):
 
     def __str__(self):
         return self.id
+
+
+class DailyCount(models.Model):
+    """How many challenges the widget solved and failed on a day, for the dashboard."""
+
+    date = models.DateField(primary_key=True)
+    solved = models.PositiveIntegerField(default=0)
+    failed = models.PositiveIntegerField(default=0)
+
+    def __str__(self):
+        return self.date.isoformat()
