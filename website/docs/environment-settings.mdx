@@ -204,6 +204,18 @@ are a choice for the whole domain), `security.W008` behind a proxy with
 `SECURE_SSL_REDIRECT` off, and `security.W009`, which
 [`content_studio.W040`](#system-checks) replaces.
 
+### Logging
+
+| Variable | Default | Sets |
+|---|---|---|
+| `LOG_FORMAT` | `plain` with `DJANGO_DEBUG` on, `json` otherwise | `LOGGING`: every line as `json` or `plain`, with the request ID. |
+| `LOG_LEVEL` | `INFO` | The root logger's level. |
+| `LOG_ACCESS` | on while `DEBUG` is off | One access log line per request. |
+
+`LOGGING` comes from [`logging_settings()`](/docs/logging). Add
+`"content_studio.logs.RequestIdMiddleware"` first in `MIDDLEWARE` for the
+request IDs and the access log.
+
 ### Content Studio defaults
 
 `configure()` sets these keys of `CONTENT_STUDIO`; set any of them before the

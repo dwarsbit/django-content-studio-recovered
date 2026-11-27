@@ -23,6 +23,10 @@ MIDDLEWARE = [
 LOGGING = logging_settings("plain" if DEBUG else "json", "INFO")
 ```
 
+With [environment settings](/docs/environment-settings), `configure()`
+builds `LOGGING` for you from `LOG_FORMAT`, `LOG_LEVEL` and `LOG_ACCESS`
+(see [below](#from-environment-variables)); add the middleware yourself.
+
 `logging_settings(log_format="json", level="INFO", access=True)` returns a
 complete `LOGGING` dictionary:
 
@@ -32,7 +36,25 @@ complete `LOGGING` dictionary:
   `INFO`;
 - `access=False` leaves out the access log;
 - requests for a host that is not in `ALLOWED_HOSTS` are logged but never
-  [reported as errors](/docs/error-reports).
+  [reported as errors](/docs/error-reports);
+- Huey's `INFO` lines about hidden tasks, such as the
+  [worker heartbeat](/docs/health-checks), are left out: Huey writes three
+  for every run, every minute. Their warnings and errors still show.
+
+## From environment variables
+
+`configure()` from `content_studio.contrib.settings` sets `LOGGING` with
+`logging_settings()`:
+
+| Variable | Default | Sets |
+|---|---|---|
+| `LOG_FORMAT` | `plain` with `DJANGO_DEBUG` on, `json` otherwise | The format of every line: `json` or `plain`. |
+| `LOG_LEVEL` | `INFO` | The root logger's level: `DEBUG`, `INFO`, `WARNING`, `ERROR` or `CRITICAL`. |
+| `LOG_ACCESS` | on while `DEBUG` is off | The access log of `RequestIdMiddleware`. In development, runserver writes its own. |
+
+Any other format or level stops Django at startup with an
+`ImproperlyConfigured` error that names the variable. A `LOGGING` assigned
+after `configure()` replaces it.
 
 [Error reports](/docs/error-reports) add their own handler, so they work
 with this `LOGGING` and with your own.
@@ -80,20 +102,24 @@ requests to the [health check](/docs/health-checks) paths `/healthz`,
 
 Fields passed with `extra=` become fields of the object.
 `content_studio.logs.PlainFormatter` writes `LEVEL logger message`, with the
-request ID in brackets. Both work in a `LOGGING` of your own:
+request ID in brackets. Both work in a `LOGGING` of your own, as do
+`RequestIdFilter` and `QuietTasksFilter` (Huey's lines about hidden tasks):
 
 ```python
 # mysite/settings.py
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
-    "filters": {"request_id": {"()": "content_studio.logs.RequestIdFilter"}},
+    "filters": {
+        "request_id": {"()": "content_studio.logs.RequestIdFilter"},
+        "quiet_tasks": {"()": "content_studio.logs.QuietTasksFilter"},
+    },
     "formatters": {"json": {"()": "content_studio.logs.JsonFormatter"}},
     "handlers": {
         "console": {
             "class": "logging.StreamHandler",
             "formatter": "json",
-            "filters": ["request_id"],
+            "filters": ["request_id", "quiet_tasks"],
         },
     },
     "root": {"handlers": ["console"], "level": "INFO"},

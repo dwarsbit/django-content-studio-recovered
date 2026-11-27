@@ -138,3 +138,79 @@ def test_logging_settings_configure():
 
     with pytest.raises(ValueError):
         logs.logging_settings("xml")
+
+
+# Hidden tasks (the worker heartbeat) in Huey's lines
+
+
+def huey_record(message, *args, name="huey", level=logging.INFO):
+    return logging.LogRecord(name, level, __file__, 1, message, args, None)
+
+
+def test_quiet_tasks_filter_drops_hidden_task_lines():
+    from content_studio.dashboard.tasks import hide_task
+    from content_studio.health.heartbeat import HEARTBEAT_TASK
+
+    hide_task(HEARTBEAT_TASK)
+    quiet = logs.QuietTasksFilter()
+    heartbeat = f"{HEARTBEAT_TASK}: 1f2e3d"
+
+    # Huey's three lines for every run.
+    assert not quiet.filter(huey_record("Executing %s", heartbeat))
+    assert not quiet.filter(huey_record("%s executed in %0.3fs", heartbeat, 0.01))
+    assert not quiet.filter(
+        huey_record("Enqueueing periodic task %s.", heartbeat, name="huey.consumer")
+    )
+
+    # Other tasks, other loggers and warnings go through.
+    assert quiet.filter(huey_record("Executing %s", "blog.tasks.publish: 1f2e3d"))
+    assert quiet.filter(huey_record("Executing %s", heartbeat, name="shop"))
+    assert quiet.filter(
+        huey_record("Unhandled exception in task %s.", heartbeat, level=logging.ERROR)
+    )
+
+
+def test_logging_settings_leave_out_hidden_task_lines(capsys):
+    from content_studio.dashboard.tasks import hide_task
+    from content_studio.health.heartbeat import HEARTBEAT_TASK
+
+    hide_task(HEARTBEAT_TASK)
+    previous = logging.root.manager.loggerDict.copy()
+    logging.config.dictConfig(logs.logging_settings("plain"))
+
+    try:
+        logging.getLogger("huey.consumer").info(
+            "Enqueueing periodic task %s.", f"{HEARTBEAT_TASK}: 1f2e3d"
+        )
+        logging.getLogger("huey").info("Executing %s", "blog.tasks.publish: 4a5b")
+    finally:
+        logging.config.dictConfig({"version": 1, "disable_existing_loggers": False})
+        for name in set(logging.root.manager.loggerDict) - set(previous):
+            logging.root.manager.loggerDict.pop(name, None)
+
+    err = capsys.readouterr().err
+    assert "blog.tasks.publish" in err
+    assert HEARTBEAT_TASK not in err
+
+
+# Through the test client
+
+
+@pytest.mark.django_db
+@pytest.mark.urls("tests.health_urls")
+def test_middleware_in_the_request_cycle(client, settings, caplog):
+    settings.MIDDLEWARE = [
+        "content_studio.logs.RequestIdMiddleware",
+        *settings.MIDDLEWARE,
+    ]
+
+    with caplog.at_level(logging.INFO, logger="content_studio.access"):
+        response = client.get("/healthz", HTTP_X_REQUEST_ID="proxy-1")
+        assert response[logs.HEADER] == "proxy-1"
+        assert caplog.records == []
+
+        response = client.get("/no-such-page/", HTTP_X_REQUEST_ID="bad id")
+
+    assert len(response[logs.HEADER]) == 32
+    [record] = [r for r in caplog.records if r.name == "content_studio.access"]
+    assert record.getMessage() == "GET /no-such-page/ 404"
