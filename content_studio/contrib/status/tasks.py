@@ -11,7 +11,7 @@ from typing import Any, Optional
 from django.apps import apps
 from django.utils import timezone
 
-from ...dashboard.tasks import TaskRow, TaskStatus
+from ...dashboard.tasks import TaskRow, TaskStatus, without_hidden
 from .registry import (
     Run,
     get_recurring_tasks,
@@ -214,6 +214,10 @@ def get_tasks(request) -> dict:
                 "Task adapter %s failed.", type(adapter).__name__, exc_info=True
             )
             errors.append(f"{type(adapter).__name__}: {type(exc).__name__}: {exc}")
+
+    # Leave out the hidden tasks, such as the worker heartbeat.
+    pending, finished = without_hidden(pending), without_hidden(finished)
+    periodic = without_hidden(periodic)
 
     # Running before queued, then the latest finished first.
     pending.sort(key=lambda row: row.status != TaskStatus.RUNNING)

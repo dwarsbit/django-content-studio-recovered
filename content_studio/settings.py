@@ -167,6 +167,10 @@ DEFAULTS = {
     # the services' results before checking them again; 0 checks on
     # every request.
     "STATUS_CACHE_TIMEOUT": 60,
+    # Seconds after the worker's last heartbeat before the health checks
+    # (content_studio.health) and content_studio_worker_alive report it
+    # as stale. The heartbeat beats every minute.
+    "HEALTH_WORKER_STALE_AFTER": 180,
     # Automatic backups (content_studio.contrib.backups): the alias in
     # Django's STORAGES the backups are saved in, and the folder there.
     "BACKUP_STORAGE": "default",

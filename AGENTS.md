@@ -77,6 +77,7 @@ content_studio/
 │   ├── scheduled_tasks.py
 │   └── tasks.py         # Task dashboard: TaskAdapter, its widgets and the TaskDashboard page
 ├── analytics/           # Analytics: AnalyticsProvider interface (providers.py), UmamiProvider, AnalyticsExtension/AnalyticsPage/links, the Analytics component, dashboard widgets, report building and the api/analytics endpoint
+├── health/              # Health checks for containers: checks (database, cache, worker: ok/error/off), the heartbeat (scheduled through the task adapters, hidden from the task lists), the /healthz /readyz /statusz views and urls, HealthCheckMiddleware (answers the probes before the Host check); the status page's Database, Cache and Worker rows use the same checks
 ├── snapshots.py         # Snapshots of an object's values around an admin save: the changed fields in the activity log (LogEntry change_message) and the history app's versions
 ├── history/             # Optional history app: Version (an object's values after a change, kept with its LogEntry), save_version/trim_versions (HISTORY_MAX_VERSIONS), the prune command; the activity/<entry_id> endpoint and the frontend's VersionDialog show and restore versions
 ├── notifications/       # Optional notifications app: models, the content_changed fan-out, register_event/notify, read filter, prune command, the admin endpoints (viewsets.py, with the page's filters and search), site defaults (defaults.py), the dashboard widget, the email digest (digest.py, templates in templates/content_studio/notifications)

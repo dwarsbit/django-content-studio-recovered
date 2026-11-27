@@ -262,6 +262,18 @@ A `TaskRow` has a `title` and a `status` (a `TaskStatus`), and optionally a
 The same adapter feeds the [system status page](/docs/system-status#tasks),
 which also uses its optional `get_pending_tasks()` and `get_health()`.
 
+Three more optional methods let Content Studio run its own tasks on your
+workers, such as the [worker heartbeat](/docs/health-checks#worker-heartbeat):
+
+- **`register_periodic_task(key, func, minutes=1, hidden=False)`**: run
+  `func()` on a worker every `minutes` minutes, as the task `key`. With
+  `hidden=True`, call `hide_task(key)` from `content_studio.dashboard.tasks`
+  and leave the task out of the lists the adapter returns; the task lists
+  leave it out too.
+- **`on_worker_startup(key, func)`**: run `func()` whenever a worker starts.
+- **`runs_in_request()`**: `True` when tasks run in the request that
+  enqueues them, so there is no worker to watch.
+
 :::caution
 Task names and error messages can reveal how your project works. Only
 superusers see the task dashboard; override `is_visible(request)` on a

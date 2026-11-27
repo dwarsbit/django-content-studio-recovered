@@ -49,6 +49,9 @@ of the box, and the system checks that catch configuration mistakes.
   reset emails are then sent outside the request, so its duration does not
   reveal whether an address has an account
   ([password reset](/docs/authentication#password-reset)).
+- **Give your containers healthchecks.** Point the web container's at
+  [`/readyz`](/docs/health-checks) and the worker's at
+  `manage.py content_studio_worker_alive`.
 - **Keep `DEBUG` off** in production, and keep Django, Content Studio and
   your other dependencies up to date.
 - **Use Django's security middleware and settings:** `SecurityMiddleware`
@@ -214,6 +217,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W033` | `"gallery"` in [`list_views`](/docs/list-page#gallery) while `list_item_display` has no `thumbnail`, so every tile shows a placeholder. |
 | `content_studio.W034` | A field in [`list_filter`](/docs/list-page#filters) that the list page has no filter for, such as a JSON, file or media field, so the list leaves it out. |
 | `content_studio.W035` | The [email activity app](/docs/email-activity) is installed, but email is not sent through its logging backend, so nothing is logged. |
+| `content_studio.W036` | [`HealthCheckMiddleware`](/docs/health-checks#why-the-middleware) comes after `SecurityMiddleware` or `CommonMiddleware`, so a healthcheck on the container's internal IP gets a `400`. |
+| `content_studio.W037` | Tasks run on workers, but the default cache is per process, so the [worker heartbeat](/docs/health-checks#worker-heartbeat) can't be seen. |
 
 ## Reporting a vulnerability
 
