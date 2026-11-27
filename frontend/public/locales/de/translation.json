@@ -1143,6 +1143,13 @@
       "FAILURE": "Fehlgeschlagen",
       "SCHEDULED": "Geplant"
     },
+    "errors": {
+      "title": "Letzte Fehler",
+      "description": "Serverfehler, jeder höchstens einmal pro Stunde per E-Mail gemeldet",
+      "empty": "Keine Fehler gemeldet",
+      "count": "×{{count}}",
+      "all": "Alle Fehlerbenachrichtigungen"
+    },
     "tasks": {
       "title": "Letzte Aufgaben",
       "description": "Aufgaben, die warten, laufen oder fertig sind",

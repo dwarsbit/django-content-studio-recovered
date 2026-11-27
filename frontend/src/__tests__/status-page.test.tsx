@@ -260,6 +260,60 @@ describe("StatusPage", () => {
     ).not.toBeInTheDocument();
   });
 
+  it("lists the recent errors in email mode", async () => {
+    respond({
+      "/status/errors": {
+        enabled: true,
+        errors: [
+          {
+            id: 1,
+            title: "Internal Server Error: /shop/",
+            logger: "django.request",
+            count: 3,
+            first_seen: now,
+            last_seen: now,
+            read: false,
+          },
+          {
+            id: 2,
+            title: "Sync failed",
+            logger: "shop.tasks",
+            count: 1,
+            first_seen: now,
+            last_seen: now,
+            read: true,
+          },
+        ],
+      },
+    });
+    renderPage();
+
+    const row = (
+      await screen.findByText("Internal Server Error: /shop/")
+    ).closest("li")!;
+
+    expect(row).toHaveTextContent("django.request");
+    expect(row).toHaveTextContent('status.errors.count {"count":3}');
+    expect(screen.getByText("Sync failed").closest("li")).toHaveAttribute(
+      "data-read",
+      "true",
+    );
+    expect(
+      screen.getByRole("link", { name: "status.errors.all" }),
+    ).toHaveAttribute(
+      "href",
+      "/notifications?event=error_reports.server_error",
+    );
+  });
+
+  it("leaves the recent errors out outside email mode", async () => {
+    respond({ "/status/errors": { enabled: false, errors: [] } });
+    renderPage();
+
+    await screen.findByRole("group", { name: "Shop" });
+    expect(screen.queryByText("status.errors.title")).not.toBeInTheDocument();
+  });
+
   it("says so when the page is not available", async () => {
     useDiscoverMock.mockReturnValue({ data: { status: { enabled: false } } });
     renderPage();

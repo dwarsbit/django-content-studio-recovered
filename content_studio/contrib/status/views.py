@@ -49,6 +49,13 @@ class StatusViewSet(ViewSet):
             {"status": status["status"], "checked_at": status["checked_at"]}
         )
 
+    @action(methods=["get"], detail=False, url_path="errors")
+    def errors(self, request):
+        """The viewer's latest error reports, for the Recent errors card."""
+        from ...error_reports.status import get_recent_errors
+
+        return Response(get_recent_errors(request))
+
     @action(methods=["get"], detail=False, url_path="tasks")
     def tasks(self, request):
         """The pending, finished and recurring tasks."""

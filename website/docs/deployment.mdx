@@ -49,6 +49,9 @@ of the box, and the system checks that catch configuration mistakes.
   reset emails are then sent outside the request, so its duration does not
   reveal whether an address has an account
   ([password reset](/docs/authentication#password-reset)).
+- **Hear about errors.** Turn on [error reports](/docs/error-reports) by
+  email or to Sentry with `ERROR_REPORTS`, and add a request ID to your
+  [log lines](/docs/logging) to find what happened.
 - **Keep `DEBUG` off** in production, and keep Django, Content Studio and
   your other dependencies up to date.
 - **Use Django's security middleware and settings:** `SecurityMiddleware`
@@ -175,6 +178,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E061` | A [board](/docs/list-page#board) whose field has no choices and is not a `ForeignKey`, whose `columns` are not choices of the field, or two boards of the same field. |
 | `content_studio.E062` | An [`EMAIL_DELIVERY_BACKEND`](/docs/email-activity#setup) that cannot be imported or is the logging backend itself, or an `EMAIL_ACTIVITY_KEEP_DAYS` below 1. |
 | `content_studio.E063` | A [`REFRESH_TOKEN_REUSE_INTERVAL`](/docs/settings#refresh_token_reuse_interval) that is not `None` or a number of seconds of at least 0. |
+| `content_studio.E064` | An [error report](/docs/error-reports) setting that cannot work: an unknown `ERROR_REPORTS` mode, an invalid address in `ERROR_EMAIL`, a `SENTRY_TRACES_SAMPLE_RATE` outside 0 to 1, or Sentry mode without the `[sentry]` extra. Nothing is reported until it is fixed. |
 
 ### Warnings
 
@@ -214,6 +218,8 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.W033` | `"gallery"` in [`list_views`](/docs/list-page#gallery) while `list_item_display` has no `thumbnail`, so every tile shows a placeholder. |
 | `content_studio.W034` | A field in [`list_filter`](/docs/list-page#filters) that the list page has no filter for, such as a JSON, file or media field, so the list leaves it out. |
 | `content_studio.W035` | The [email activity app](/docs/email-activity) is installed, but email is not sent through its logging backend, so nothing is logged. |
+| `content_studio.W038` | Error reports by email while Django's `mail_admins` handler also mails `ADMINS`, so every server error is mailed twice. Leave `ADMINS` empty or drop that handler from `LOGGING`. |
+| `content_studio.W039` | `ERROR_REPORTS` is `"sentry"` but [`SENTRY_DSN`](/docs/settings#sentry_dsn) is empty, so errors are only logged. |
 
 ## Reporting a vulnerability
 

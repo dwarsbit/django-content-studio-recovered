@@ -22,6 +22,7 @@ TWO_FACTOR_RESET = "two_factor_reset"
 EMAIL_CHANGED = "email_changed"
 NOTIFICATION_DIGEST = "notification_digest"
 TEST = "test"
+ERROR_REPORT = "error_report"
 
 # Content Studio's own kinds; other kinds are shown as they are written.
 LABELS = {
@@ -32,6 +33,7 @@ LABELS = {
     EMAIL_CHANGED: _("Email address changed"),
     NOTIFICATION_DIGEST: _("Notification digest"),
     TEST: _("Test email"),
+    ERROR_REPORT: _("Error report"),
 }
 
 # The kind of the emails sent in this context, and who sent them.

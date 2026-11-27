@@ -1,5 +1,35 @@
 # Changelog
 
+## 1.24.0 (unreleased)
+
+### Features
+
+- **Error reports.** Content Studio can report server errors while `DEBUG`
+  is off. Off by default; set `ERROR_REPORTS` to `"email"` and every new
+  line logged at `ERROR` or above (a 500, a failed task, your own
+  `logger.error()`) is mailed to `ERROR_EMAIL`, or the active superusers,
+  and with the notifications app is a "Server errors" notification of the
+  superusers. The same error (logger, exception type and line) is reported
+  at most once an hour, and its unread notification counts up instead of
+  repeating. Set it to `"sentry"` and errors go to Sentry with
+  `SENTRY_DSN`, `SENTRY_ENVIRONMENT`, `SENTRY_RELEASE` and
+  `SENTRY_TRACES_SAMPLE_RATE`, tagged with the request ID and without
+  personal data; install `django-content-studio[sentry]`. Every setting
+  takes the plain string an environment variable gives. The system status
+  page shows an Error reports row and, in email mode, a Recent errors card
+  with the viewer's latest 8 error notifications. `manage.py check` reports
+  a setting that cannot work as `content_studio.E064`, warns with
+  `content_studio.W038` when Django's `mail_admins` would mail every error
+  too, and with `content_studio.W039` for Sentry mode without a DSN.
+- **Logging.** `content_studio.logs` adds `RequestIdMiddleware`, which
+  gives each request an ID (a plain forwarded `X-Request-ID`, or a new one),
+  returns it in the response, puts it on every log line and writes one
+  access log line per request on `content_studio.access` (successful health
+  checks left out). `logging_settings("json")` builds a `LOGGING` setting
+  with JSON or plain lines and the request ID; `JsonFormatter`,
+  `PlainFormatter`, `RequestIdFilter` and `get_request_id()` work in your
+  own.
+
 ## 1.23.0 (2026-11-27)
 
 ### Features

@@ -73,6 +73,26 @@ export interface StatusTasks {
   errors: string[];
 }
 
+export interface RecentError {
+  id: number;
+  // The first line of the error.
+  title: string;
+  // The logger that reported it.
+  logger: string;
+  // How often it happened while the notification was unread.
+  count: number;
+  first_seen: DateTimeString;
+  last_seen: DateTimeString;
+  read: boolean;
+}
+
+export interface RecentErrors {
+  // Error reports by email with the notifications app: otherwise there
+  // is nothing to show.
+  enabled: boolean;
+  errors: RecentError[];
+}
+
 /** Whether the signed-in user has the status page. */
 export function useStatusEnabled() {
   const { data: discover } = useDiscover();
@@ -113,6 +133,22 @@ export function useRefreshStatus() {
         checked_at: data.checked_at,
       });
       void queryClient.invalidateQueries({ queryKey: ["status", "tasks"] });
+      void queryClient.invalidateQueries({ queryKey: ["status", "errors"] });
+    },
+  });
+}
+
+/** The viewer's latest error reports, for the Recent errors card. */
+export function useRecentErrors() {
+  const http = useHttp();
+
+  return useQuery({
+    retry: false,
+    queryKey: ["status", "errors"],
+    async queryFn() {
+      const { data } = await http.get<RecentErrors>("/status/errors");
+
+      return data;
     },
   });
 }

@@ -31,6 +31,8 @@ const sidebars: SidebarsConfig = {
     "system-status",
     "backups",
     "email-activity",
+    "error-reports",
+    "logging",
     "languages",
     "command-palette",
     "deployment",

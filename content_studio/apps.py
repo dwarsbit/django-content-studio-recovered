@@ -101,6 +101,12 @@ class DjangoContentStudioConfig(AppConfig):
         # developer tools while they are on.
         install_log_handler()
 
+        # Error reports (ERROR_REPORTS): the handler or Sentry, while
+        # DEBUG is off.
+        from .error_reports import set_up as set_up_error_reports
+
+        set_up_error_reports()
+
         # The boot log and PyPI version check are decorative: show them
         # in interactive server mode only.
         if not is_runserver() or self.initialized:

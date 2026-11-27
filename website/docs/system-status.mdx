@@ -33,6 +33,9 @@ their name.
   finished ones, with their duration and the error of a failed task.
 - **Recurring tasks**: the tasks that run on a schedule, with their latest
   run and their next. A task that is past its time shows as due.
+- **Recent errors**: with [error reports](/docs/error-reports#on-the-system-status-page)
+  by email and the notifications app, the viewer's latest error
+  notifications and how often each happened.
 
 The services are checked when someone opens the page or presses Refresh.
 The results are remembered for a minute
@@ -62,6 +65,7 @@ service.
 | Email | The SMTP server accepts a connection and the login. No email is sent. With the [email activity app](/docs/email-activity#on-the-status-page) installed, the row links to the sent emails and is degraded when any failed in the last 24 hours. | The email backend is not SMTP. |
 | Migrations | Every migration is applied. Unapplied migrations are degraded. | |
 | Database backups | With the [backups app](/docs/backups#on-the-status-page) installed: the latest backup is not overdue and did not fail. | `BACKUP_SCHEDULE` is `None`. |
+| Error reports | Where [error reports](/docs/error-reports#on-the-system-status-page) go: someone gets the emails, or Sentry has its DSN and SDK. | `ERROR_REPORTS` is `"off"` (no row), or `DEBUG` is on. |
 
 ## Add a service
 

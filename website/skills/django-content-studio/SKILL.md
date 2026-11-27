@@ -629,6 +629,16 @@ Each is optional and has its own page:
   test email from the status page's Email row,
   `has_email_activity_permission`):
   https://djangocontentstudio.org/docs/email-activity.md
+- Error reports (off by default; `ERROR_REPORTS = "email"` mails each new
+  error at `ERROR` or above to `ERROR_EMAIL` or the active superusers, at
+  most once an hour per error, and notifies the superusers with the
+  notifications app; `"sentry"` needs the `[sentry]` extra and
+  `SENTRY_DSN`; only while `DEBUG` is off; checks E064, W038, W039):
+  https://djangocontentstudio.org/docs/error-reports.md
+- Logging (`content_studio.logs`: `RequestIdMiddleware` first in
+  `MIDDLEWARE` for request IDs and an access log, `LOGGING =
+  logging_settings("json")`, `get_request_id()`):
+  https://djangocontentstudio.org/docs/logging.md
 - Languages (English, Dutch, German, French, Spanish, Italian, Brazilian
   Portuguese; each editor gets their own: the user menu's Language choice,
   then the browser, then `LANGUAGE_CODE`; no `LocaleMiddleware` needed;

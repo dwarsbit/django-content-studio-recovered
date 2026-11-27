@@ -521,6 +521,43 @@ at most once an hour, and by `content_studio_prune_emails`. Default: `30`.
 Store email addresses masked (`s***@example.com`) and leave subjects out.
 Default: `False`.
 
+## Error reports
+
+See [Error reports](/docs/error-reports). Each of these settings accepts the
+plain string an environment variable gives.
+
+### ERROR_REPORTS {#error_reports}
+
+Where server errors are reported while `DEBUG` is off: `"email"` (by email
+and as a notification of the superusers), `"sentry"` (to Sentry, with the
+`[sentry]` extra) or `"off"`. Default: `"off"`. Any other value is
+`content_studio.E064`.
+
+### ERROR_EMAIL {#error_email}
+
+Who gets the error emails: a list of addresses, or a comma-separated string
+such as `"ops@example.com, dev@example.com"`. Default: `[]`, every active
+superuser with an email address.
+
+### SENTRY_DSN {#sentry_dsn}
+
+The DSN of your Sentry project. Default: `""`. Without it, Sentry mode sends
+nothing (`content_studio.W039`).
+
+### SENTRY_ENVIRONMENT {#sentry_environment}
+
+The environment Sentry files the events under. Default: `"production"`.
+
+### SENTRY_RELEASE {#sentry_release}
+
+The release events are tagged with, such as a git commit. Default: `""`,
+which leaves it to Sentry.
+
+### SENTRY_TRACES_SAMPLE_RATE {#sentry_traces_sample_rate}
+
+The share of requests Sentry traces for performance, from `0` to `1`.
+Default: `0`, none.
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}
