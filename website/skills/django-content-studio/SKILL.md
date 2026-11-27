@@ -612,6 +612,17 @@ Each is optional and has its own page:
   recent and recurring tasks; apps add theirs with
   `status.register_service()` in `AppConfig.ready()`):
   https://djangocontentstudio.org/docs/system-status.md
+- Settings from environment variables (`from
+  content_studio.contrib.settings import configure`, then
+  `configure(globals(), base_dir=BASE_DIR)` near the top of `settings.py`;
+  `DJANGO_SECRET_KEY` is required; `DATABASE_URL`, `CACHE_URL`,
+  `TASKS_URL`, `EMAIL_URL`, `SITE_URL`, `NUM_PROXIES`, `S3_BUCKET` and
+  more; dicts like `CONTENT_STUDIO` assigned before the call are merged one
+  level deep, settings after it override; `sections=[...]` for your own
+  variables; the `"content_studio.contrib.settings"` app adds deploy checks
+  E065, W040-W042 and creates `db://` cache and queue tables on migrate;
+  extras `[server]` and `[s3]`):
+  https://djangocontentstudio.org/docs/environment-settings.md
 - Health checks for containers (`path("", include("content_studio.health.urls"))`
   at the site root: `/healthz`, `/readyz` (database, cache), `/statusz`
   (plus the worker); `HealthCheckMiddleware` above `SecurityMiddleware`

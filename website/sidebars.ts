@@ -36,6 +36,7 @@ const sidebars: SidebarsConfig = {
     "logging",
     "languages",
     "command-palette",
+    "environment-settings",
     "deployment",
     "developer-tools",
     "settings",

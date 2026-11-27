@@ -1,0 +1,279 @@
+# 🌱 Environment settings
+
+`content_studio.contrib.settings` builds your Django settings from
+environment variables, so the same code runs in development and production
+and only the environment changes. One call sets the secret key, the
+database, the cache, the task queue, mail, storage, hosts and the security
+settings, and gives Content Studio its defaults.
+
+## Setup
+
+1. Call `configure()` near the top of your settings module.
+
+   ```python
+   # config/settings.py
+   from pathlib import Path
+
+   from content_studio.contrib.settings import configure
+
+   BASE_DIR = Path(__file__).resolve().parent.parent
+
+   # Assigned before the call: merged over the defaults.
+   CONTENT_STUDIO = {
+       "ADMIN_SITE": "config.studio.admin_site",
+   }
+
+   configure(globals(), base_dir=BASE_DIR)
+
+   # Assigned after the call: overrides it.
+   INSTALLED_APPS = [
+       "django.contrib.admin",
+       "django.contrib.auth",
+       "django.contrib.contenttypes",
+       "django.contrib.sessions",
+       "django.contrib.messages",
+       "django.contrib.staticfiles",
+       "rest_framework",
+       "content_studio",
+       "content_studio.media_library",
+       "content_studio.contrib.settings",
+       "blog",
+   ]
+   TIME_ZONE = "Europe/Amsterdam"
+   ```
+
+2. Add `content_studio.contrib.settings` to `INSTALLED_APPS`, as above. It
+   adds the [deploy checks](#system-checks), and `migrate` then creates the
+   tables of a `db://` cache and a `db://` task queue.
+
+3. Install the extras for what your environment uses:
+
+   ```bash
+   pip install "django-content-studio[server,huey,images]"
+   pip install "django-content-studio[s3]"   # with S3_BUCKET
+   ```
+
+   `[server]` installs psycopg with its connection pool, the Redis client
+   (which also talks to Valkey) and WhiteNoise. `[huey]` runs tasks on a
+   worker, `[images]` makes the image sizes and `[s3]` stores media in an
+   S3 bucket.
+
+4. Set `DJANGO_SECRET_KEY`, the only required variable, and the others you
+   need. For development, an `.env` file your process manager or IDE loads
+   is enough:
+
+   ```bash
+   # .env
+   DJANGO_SECRET_KEY=a-long-random-value
+   DJANGO_DEBUG=1
+   ```
+
+A production environment behind one reverse proxy that ends TLS might look
+like this:
+
+```bash
+DJANGO_SECRET_KEY=...
+SITE_URL=https://example.com
+DATABASE_URL=postgres://blog:secret@db:5432/blog
+DATABASE_POOL=1
+CACHE_URL=redis://cache:6379/0
+TASKS_URL=db://
+EMAIL_URL=smtp+tls://apikey:secret@smtp.example.com
+DEFAULT_FROM_EMAIL="Blog <hello@example.com>"
+NUM_PROXIES=1
+```
+
+## How settings combine
+
+- **Settings assigned after the call override it.** `configure()` writes into
+  the module's `globals()`, so a later assignment wins.
+- **Dictionaries assigned before the call are merged over the defaults.** For
+  `CONTENT_STUDIO`, `REST_FRAMEWORK` and `HEADLESS`, the keys you set replace
+  the default's keys and the other defaults stay. The merge is one level
+  deep: your `IMAGE_SIZES` replaces the default sizes whole.
+- **`SILENCED_SYSTEM_CHECKS`** assigned before the call is kept, and the
+  checks `configure()` silences are added to it.
+
+## Variables
+
+Every variable is optional except `DJANGO_SECRET_KEY`. An empty value counts
+as unset. Booleans take `1`, `true`, `yes` or `on`, and `0`, `false`, `no`,
+`off` or an empty value. Lists are comma separated. A value that cannot be
+read, such as `DJANGO_DEBUG=maybe`, stops Django at startup with an
+`ImproperlyConfigured` error that names the variable.
+
+### Core
+
+| Variable | Default | Sets |
+|---|---|---|
+| `DJANGO_SECRET_KEY` | required | `SECRET_KEY`. Without it, startup fails with "Set the DJANGO_SECRET_KEY environment variable." |
+| `DJANGO_DEBUG` | `0` | `DEBUG`. |
+| `PROJECT_NAME` | `content-studio` | `PROJECT_NAME`, the cache's key prefix, the Huey queue's name and the name in `DEFAULT_FROM_EMAIL`. |
+| `SITE_URL` | `http://localhost:8000` | `SITE_URL`: the public URL of your site. An `https` URL turns on the [HTTPS settings](#security). |
+| `BACKEND_URL` | `SITE_URL` | `BACKEND_URL`: the public URL of Django, when your site's pages are served by another application. |
+| `ALLOWED_HOSTS` | empty | Extra hosts. `ALLOWED_HOSTS` always holds the hosts of `SITE_URL` and `BACKEND_URL`, `backend` (the name a container network often gives the Django container), `localhost` and `127.0.0.1`. |
+
+`CSRF_TRUSTED_ORIGINS` holds the origins of `SITE_URL` and `BACKEND_URL`,
+and `DEFAULT_AUTO_FIELD` is `BigAutoField`.
+
+### Database
+
+| Variable | Default | Sets |
+|---|---|---|
+| `DATABASE_URL` | `sqlite:///<base_dir>/db.sqlite3` | `DATABASES["default"]`: `postgres://user:password@host:5432/name` (also `postgresql://`, `pgsql://` and `postgis://` for PostGIS), or `sqlite:///relative.db` and `sqlite:////absolute/path.db`. Query parameters, such as `?sslmode=require`, become `OPTIONS`. |
+| `DATABASE_POOL` | `0` | psycopg's connection pool for Postgres. Ignored for SQLite. Needs the `[server]` extra; without `psycopg_pool`, startup fails with a message that says so. |
+| `DATABASE_POOL_SIZE` | `4` | The pool's maximum number of connections (at least 1). |
+
+`CONN_MAX_AGE` is always `0` and `CONN_HEALTH_CHECKS` is on. Under ASGI
+every request runs in a new thread, so a connection kept open is never
+reused and they pile up until Postgres refuses more. Use `DATABASE_POOL` to
+reuse connections.
+
+### Cache
+
+| Variable | Default | Sets |
+|---|---|---|
+| `CACHE_URL` | `locmem://` | `CACHES["default"]`: `locmem://` (per process), `db://` (a `django_cache` table that `migrate` creates), `redis://host:6379/0` or `valkey://host:6379/0` (also `rediss://` and `valkeys://` with TLS), or `dummy://` (keeps nothing). The key prefix is `PROJECT_NAME`. |
+
+Login limits, ended sessions and [presence](/docs/presence) are kept in the
+cache. In production, use `db://` or Redis so every process shares them.
+
+### Tasks
+
+| Variable | Default | Sets |
+|---|---|---|
+| `TASKS_URL` | a Redis `CACHE_URL`, else `immediate://` | `HUEY` and Django's `TASKS`: `db://` (a queue in the database), `redis://` or `valkey://`, or `immediate://` (no worker: tasks run in the request). |
+| `HUEY_WORKERS` | `2` | The worker's number of threads. |
+
+With `db://`, the queue's tables are named `huey_*` and `migrate` creates
+them; the web process never creates tables on import. It needs a Postgres or
+SQLite `DATABASE_URL`. Without Huey installed (the `[huey]` extra), tasks run
+in the request whatever `TASKS_URL` says.
+
+With a Postgres database, `HUEY_STATS` stores Huey's task statistics there,
+so the web and worker processes share them, unless you set `HUEY_STATS`
+before the call.
+
+### Mail
+
+| Variable | Default | Sets |
+|---|---|---|
+| `EMAIL_URL` | `console://` | The mail backend: `console://` (prints mail), `locmem://` (for tests), `smtp://user:password@host:25`, `smtp+tls://...` (STARTTLS, port 587) or `smtps://...` (TLS, port 465). On Django 6.1 and later it sets `MAILERS`, before that the `EMAIL_*` settings. |
+| `DEFAULT_FROM_EMAIL` | `<PROJECT_NAME> <noreply@<site host>>` | `DEFAULT_FROM_EMAIL` and `SERVER_EMAIL`. |
+
+Percent-encode special characters in a password, such as `@` as `%40`.
+
+### Static files and media
+
+| Variable | Default | Sets |
+|---|---|---|
+| `MEDIA_URL` | `<BACKEND_URL>/media/` | `MEDIA_URL`. |
+| `MEDIA_ROOT` | `<base_dir>/media` | `MEDIA_ROOT`. |
+| `MEDIA_MAX_UPLOAD_SIZE` | `52428800` (50 MB) | [`MEDIA_LIBRARY_MAX_UPLOAD_SIZE`](/docs/settings#media_library_max_upload_size), in bytes. |
+| `S3_BUCKET` | unset | Stores media in this S3 bucket with django-storages (the `[s3]` extra). |
+| `S3_ACCESS_KEY_ID`, `S3_SECRET_ACCESS_KEY` | unset | The bucket's credentials. |
+| `S3_REGION` | unset | The bucket's region. |
+| `S3_ENDPOINT_URL` | unset | The endpoint of an S3-compatible service other than AWS. |
+| `S3_QUERYSTRING_AUTH` | `0` | Signed, expiring URLs for media, for a private bucket. |
+| `S3_PUBLIC_URL` | unset | The public base URL of the files, such as `https://cdn.example.com/media`, when it is not the endpoint. It also sets `MEDIA_URL`. |
+| `S3_CUSTOM_DOMAIN` | unset | The files' domain, such as `cdn.example.com`, served over HTTPS. It also sets `MEDIA_URL`. `S3_PUBLIC_URL` wins when both are set. |
+
+Static files are collected into `<base_dir>/staticfiles` and served from
+`/static/`. With WhiteNoise installed and `DEBUG` off, they are stored hashed
+and compressed (`CompressedManifestStaticFilesStorage`); add WhiteNoise's
+middleware to serve them.
+
+### Security
+
+| Variable | Default | Sets |
+|---|---|---|
+| `NUM_PROXIES` | `0` | The number of proxies in front of Django. Any number trusts the proxy's `X-Forwarded-Proto` header (`SECURE_PROXY_SSL_HEADER`) and sets Django REST Framework's `NUM_PROXIES`, which the login limits use to find the client's IP address. |
+| `SECURE_HSTS_SECONDS` | `31536000` (one year) | HSTS, when `SITE_URL` is `https`. |
+| `SECURE_HSTS_INCLUDE_SUBDOMAINS` | `0` | HSTS for every subdomain too. |
+| `SECURE_HSTS_PRELOAD` | `0` | Allows the domain on the browsers' HSTS preload list. |
+| `SECURE_SSL_REDIRECT` | `0` | Redirects HTTP to HTTPS in Django. Leave it off when the proxy redirects: a Django redirect breaks healthchecks on the internal network. |
+
+These are always on: an `HttpOnly`, `SameSite=Lax` session cookie,
+`X-Content-Type-Options: nosniff`, the `strict-origin-when-cross-origin`
+referrer policy and `X_FRAME_OPTIONS = "DENY"`. When `SITE_URL` is `https`,
+the session and CSRF cookies are `Secure`.
+
+`configure()` silences the deploy checks that do not apply:
+`security.W005` and `security.W021` on `https` (subdomains and preloading
+are a choice for the whole domain), `security.W008` behind a proxy with
+`SECURE_SSL_REDIRECT` off, and `security.W009`, which
+[`content_studio.W040`](#system-checks) replaces.
+
+### Content Studio defaults
+
+`configure()` sets these keys of `CONTENT_STUDIO`; set any of them before the
+call to change it.
+
+| Key | Value |
+|---|---|
+| `MEDIA_LIBRARY_MODEL` | `"content_studio.media_library.models.Media"` |
+| `MEDIA_LIBRARY_FOLDER_MODEL` | `"content_studio.media_library.models.Folder"` |
+| `MEDIA_LIBRARY_MAX_UPLOAD_SIZE` | `MEDIA_MAX_UPLOAD_SIZE` |
+| `IMAGE_SIZES` | With Pillow installed: `thumbnail` (400×400, cover), `card` (800×500, cover), `content` (1200 wide), `hero` (2000 wide) and `share` (1200×630, cover, JPEG). |
+| `ADMIN_URL` | `<BACKEND_URL>/admin/` |
+| `NOTIFICATION_EMAIL_DIGEST` | `True` |
+
+The allowed file types stay Content Studio's
+[default list](/docs/settings#media_library_allowed_extensions). Add
+`content_studio.media_library` to `INSTALLED_APPS` for the media library
+models.
+
+## Your own sections
+
+`configure()` builds the settings in sections, in order: core, database,
+cache, tasks, mail, storage, security and Content Studio. Pass your own
+sections to read more variables in the same way. A section is a function that
+takes a `Context` and returns settings:
+
+```python
+# config/settings.py
+from content_studio.contrib.settings import Context, configure
+
+
+def search(ctx: Context) -> dict:
+    return {
+        "SEARCH_URL": ctx.env.str("SEARCH_URL", "http://localhost:7700"),
+        "CONTENT_STUDIO": {"PREVIEW_MAX_AGE": ctx.env.int("PREVIEW_MAX_AGE", 3600)},
+    }
+
+
+configure(globals(), base_dir=BASE_DIR, sections=[search])
+```
+
+Your sections run after the built-in ones. A setting they return replaces an
+earlier one, except `CONTENT_STUDIO`, `REST_FRAMEWORK` and `HEADLESS`, whose
+keys are added to the earlier ones. The dictionaries you assign before the
+call still win.
+
+The `Context` has:
+
+- `env`: an `Env` with `str(name, default, required=False)`,
+  `bool(name, default)`, `int(name, default)` and `list(name, default)`;
+- `base_dir`, the `base_dir` you passed, as a `Path`;
+- `namespace`: your settings module before the call, read-only;
+- `settings`: what the sections before it returned, read-only;
+- `debug`, `project_name`, `site_url`, `backend_url` and `secure` (whether
+  `SITE_URL` is `https`).
+
+## System checks
+
+With `content_studio.contrib.settings` installed, `manage.py check --deploy`
+also reports:
+
+| ID | Reports |
+|---|---|
+| `content_studio.E065` | `DEBUG` is on. Debug pages show your settings and source code. |
+| `content_studio.W040` | `SECRET_KEY` looks like a placeholder, such as `change-me` or a `django-insecure-` key, is shorter than 50 characters or has fewer than 5 different characters. The hint shows how to generate one. |
+| `content_studio.W041` | The default cache is per process (`locmem://` or `dummy://`), so login limits, ended sessions and presence are not shared. |
+| `content_studio.W042` | `SITE_URL` is `https`, but `NUM_PROXIES` is not set, so Django does not see that requests came in over HTTPS. |
+
+Generate a secret key with:
+
+```bash
+python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+```

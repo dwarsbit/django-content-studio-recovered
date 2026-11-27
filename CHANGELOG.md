@@ -55,6 +55,29 @@
   with JSON or plain lines and the request ID; `JsonFormatter`,
   `PlainFormatter`, `RequestIdFilter` and `get_request_id()` work in your
   own.
+- **Environment settings.** `content_studio.contrib.settings.configure()`
+  builds a project's settings from environment variables with one call near
+  the top of `settings.py`: `configure(globals(), base_dir=BASE_DIR)`.
+  `DJANGO_SECRET_KEY` is required. `DJANGO_DEBUG`, `SITE_URL`,
+  `BACKEND_URL` and `ALLOWED_HOSTS` set the hosts and CSRF origins.
+  `DATABASE_URL` (`postgres://`, `sqlite:///`) sets the database, with psycopg's
+  pool for `DATABASE_POOL=1`, and `CACHE_URL` (`locmem://`, `db://`,
+  `redis://`, `valkey://`) the cache. `TASKS_URL` (`db://`, `redis://`,
+  `immediate://`) sets Huey and Django's `TASKS`, and a `db://` queue keeps
+  its `huey_*` tables in the database. `EMAIL_URL` (`console://`, `smtp://`,
+  `smtp+tls://`, `smtps://`) sets mail, and `MEDIA_URL`, `MEDIA_ROOT` and the
+  `S3_*` variables set storage, with WhiteNoise for static files. HTTPS
+  settings follow `SITE_URL` and `NUM_PROXIES`, and the media library, image
+  sizes and `ADMIN_URL` get defaults. Settings assigned after the call
+  override it, and `CONTENT_STUDIO`, `REST_FRAMEWORK` and `HEADLESS`
+  assigned before it are merged over the defaults one level deep. Your own
+  sections read more variables (`sections=[...]`). Installing the
+  `content_studio.contrib.settings` app creates the `db://` cache and queue
+  tables on `migrate` and adds the deploy checks `content_studio.E065`
+  (`DEBUG` on), `W040` (a placeholder or weak secret key, in place of
+  Django's `security.W009`), `W041` (a per-process cache) and `W042`
+  (`https` without `NUM_PROXIES`). New extras: `[server]` (psycopg with its
+  pool, the Redis client and WhiteNoise) and `[s3]` (django-storages).
 
 ## 1.23.0 (2026-11-27)
 
