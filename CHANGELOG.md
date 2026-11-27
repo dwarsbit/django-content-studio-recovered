@@ -1,5 +1,36 @@
 # Changelog
 
+## 1.24.0 (unreleased)
+
+### Features
+
+- **Health checks.** Include `content_studio.health.urls` at the root of
+  your site for the endpoints a container orchestrator calls: `/healthz`
+  answers when the process is up, `/readyz` checks the database
+  (`SELECT 1`) and the cache (a set and a get), and `/statusz` adds the
+  worker. Each check answers `ok`, `error` or `off`, only `error` makes the
+  answer `503`, and the answers need no login and carry no details.
+  `content_studio.health.middleware.HealthCheckMiddleware`, placed above
+  `SecurityMiddleware`, answers `/healthz` and `/readyz` before Django
+  checks the Host header, so a healthcheck on the container's internal IP
+  works. A worker heartbeat stamps the cache every minute and when a worker
+  starts; with Huey it runs on Huey's consumer by itself, stays out of the
+  recent runs and periodic tasks on the task dashboard and status page, and
+  out of Huey's stats records. Other backends call
+  `content_studio.health.beat()` from their own scheduler. The worker is
+  `off` when tasks run in the request or the cache is per process, and an
+  `error` when its heartbeat is older than `HEALTH_WORKER_STALE_AFTER`
+  (180 seconds). `manage.py content_studio_worker_alive` exits with `1`
+  then, for the worker container's healthcheck. The system status page
+  gains a Worker row and its Database and Cache rows run the same checks.
+  `TaskAdapter` has three new optional methods,
+  `register_periodic_task()`, `on_worker_startup()` and
+  `runs_in_request()`, which `HueyAdapter` implements. `manage.py check`
+  warns with `content_studio.W036` when the middleware comes after
+  `SecurityMiddleware` or `CommonMiddleware`, and with
+  `content_studio.W037` when tasks run on workers but the default cache is
+  per process.
+
 ## 1.23.0 (2026-11-27)
 
 ### Features

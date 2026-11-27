@@ -89,6 +89,26 @@ class TaskHealth:
     message: str = ""
 
 
+# The keys of tasks registered with hidden=True (see
+# TaskAdapter.register_periodic_task): left out of every task list, so a
+# task that runs every minute, like the worker heartbeat, never pushes
+# the real runs out.
+_hidden_tasks: set[str] = set()
+
+
+def hide_task(key: str) -> None:
+    """Leave the task with this key out of the task lists."""
+    _hidden_tasks.add(key)
+
+
+def hidden_tasks() -> frozenset[str]:
+    return frozenset(_hidden_tasks)
+
+
+def without_hidden(rows: list["TaskRow"]) -> list["TaskRow"]:
+    return [row for row in rows if row.key not in _hidden_tasks]
+
+
 # The statistics a task dashboard knows: their title, whether they count
 # over the adapter's window, and whether a rise is good (1) or bad (-1).
 STATISTICS = {
@@ -130,6 +150,18 @@ class TaskAdapter:
       that are queued or running, for the status page.
     - get_health(): a TaskHealth, for the status page's task queue row.
 
+    And, so Content Studio can run its own tasks on the backend's workers
+    (the worker heartbeat of content_studio.health):
+
+    - register_periodic_task(key, func, minutes=1, hidden=False): run
+      func() every `minutes` minutes on a worker, as the task `key`. With
+      hidden=True, call hide_task(key) and leave the task out of the
+      lists the adapter returns.
+    - on_worker_startup(key, func): run func() once whenever a worker
+      starts.
+    - runs_in_request(): True when tasks run in the request that enqueues
+      them (an immediate mode), so there is no worker.
+
     A task dashboard leaves out the widgets of the methods an adapter
     does not implement. Every method but get_health gets the request, so
     an adapter can show each user or tenant their own tasks.
@@ -161,6 +193,17 @@ class TaskAdapter:
         raise NotImplementedError
 
     def get_health(self) -> TaskHealth:
+        raise NotImplementedError
+
+    def register_periodic_task(
+        self, key: str, func, minutes: int = 1, hidden: bool = False
+    ) -> None:
+        raise NotImplementedError
+
+    def on_worker_startup(self, key: str, func) -> None:
+        raise NotImplementedError
+
+    def runs_in_request(self) -> bool:
         raise NotImplementedError
 
     def check(self) -> list[tuple[str, str]]:
@@ -269,8 +312,9 @@ class TaskListWidget(ScheduledTasksWidget):
 
     def get_tasks(self, request) -> list[TaskRow]:
         if self.kind == "recent":
-            return self.adapter.get_recent_tasks(request, self.limit)[: self.limit]
-        return self.adapter.get_periodic_tasks(request)
+            rows = self.adapter.get_recent_tasks(request, self.limit)
+            return without_hidden(rows)[: self.limit]
+        return without_hidden(self.adapter.get_periodic_tasks(request))
 
     def get_data(self, request) -> Any:
         return ScheduledTasksWidgetSerializer(

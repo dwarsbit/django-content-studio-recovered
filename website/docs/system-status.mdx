@@ -55,10 +55,11 @@ service.
 
 | Service | What is checked | Not checked when |
 |---------|-----------------|------------------|
-| Database | Every database in `DATABASES` answers. An answer that takes more than a second is degraded. | |
+| Database | Every database in `DATABASES` answers `SELECT 1`. An answer that takes more than a second is degraded. | |
 | Cache | A value can be stored in the default cache and read back. | The cache is Django's dummy cache. |
 | Media storage | The default file storage answers. More than two seconds is degraded. | |
 | Task queue | What the task adapter reports, see [Tasks](#tasks). | No task backend is connected, or its adapter has no `get_health()`. |
+| Worker | The [worker heartbeat](/docs/health-checks#worker-heartbeat) is less than three minutes old; the row shows when the worker last beat. | Tasks run in the request, no task backend is connected, or the cache is per process. |
 | Email | The SMTP server accepts a connection and the login. No email is sent. With the [email activity app](/docs/email-activity#on-the-status-page) installed, the row links to the sent emails and is degraded when any failed in the last 24 hours. | The email backend is not SMTP. |
 | Migrations | Every migration is applied. Unapplied migrations are degraded. | |
 | Database backups | With the [backups app](/docs/backups#on-the-status-page) installed: the latest backup is not overdue and did not fail. | `BACKUP_SCHEDULE` is `None`. |

@@ -172,6 +172,15 @@ def register_task_adapter(adapter) -> None:
     if not any(adapter is known for known in _adapters):
         _adapters.append(adapter)
 
+    from django.apps import apps
+
+    if apps.models_ready:
+        # Registered from an AppConfig.ready() after Content Studio's:
+        # schedule the worker heartbeat on it too.
+        from ...health.heartbeat import connect_adapters
+
+        connect_adapters()
+
 
 def register_recurring_task(
     key: str,

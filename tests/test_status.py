@@ -83,6 +83,7 @@ def test_builtin_services_are_registered():
         "content_studio.cache",
         "content_studio.media_storage",
         "content_studio.task_queue",
+        "content_studio.worker",
         "content_studio.email",
         "content_studio.migrations",
         # Registered by the backups app, installed in the tests.

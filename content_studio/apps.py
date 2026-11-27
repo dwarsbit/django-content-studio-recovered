@@ -97,6 +97,12 @@ class DjangoContentStudioConfig(AppConfig):
         register_status()
         register_periodic_task()
 
+        # The worker heartbeat of the health checks, on the task
+        # adapters' workers (Huey's consumer).
+        from .health.heartbeat import connect_adapters
+
+        connect_adapters()
+
         # Warnings and errors of Content Studio's loggers show in the
         # developer tools while they are on.
         install_log_handler()
