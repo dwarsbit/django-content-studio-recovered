@@ -54,6 +54,8 @@ export interface AdminInfo {
   index_title: string;
   site_url: string;
   health_check: null;
+  // The site's branding (content_studio.branding); every value may be null.
+  branding?: Branding;
   // The help texts of the project's AUTH_PASSWORD_VALIDATORS.
   password_rules: string[];
   // Null without the password reset app.
@@ -71,6 +73,18 @@ export interface AdminInfo {
     // (RECOVERY_MAX_AGE).
     recovery_max_age?: number;
   };
+}
+
+export type BadgeTone = "gray" | "blue" | "green" | "yellow" | "red" | "purple";
+
+export interface Branding {
+  // URLs of the square logo, and of the one the dark theme shows instead.
+  logo: string | null;
+  logo_dark: string | null;
+  // The line under the login page's title.
+  login_text: string | null;
+  // The environment badge; null in production and without ENVIRONMENT.
+  environment: { label: string; color: BadgeTone } | null;
 }
 
 export type LoginBackend = UsernamePasswordBackend;

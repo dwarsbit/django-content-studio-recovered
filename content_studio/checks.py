@@ -4103,6 +4103,61 @@ def check_error_reports(app_configs=None, **kwargs) -> list[checks.CheckMessage]
     return messages
 
 
+@checks.register()
+def check_branding(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
+    """
+    The site's branding: an accent color that is not a color, or an
+    ENVIRONMENT that cannot be shown (E067); a logo or favicon no static
+    files finder has (W044); an accent color with less than 3:1 contrast
+    against the background (W045).
+    """
+    from . import branding
+
+    site = cs_settings.ADMIN_SITE
+    messages: list[checks.CheckMessage] = []
+
+    for attr, value in branding.accent_errors(site):
+        messages.append(
+            checks.Error(
+                f"{type(site).__name__}.{attr} must be an opaque CSS color "
+                f"(hex, rgb() or hsl()), not {value!r}.",
+                id="content_studio.E067",
+            )
+        )
+
+    for error in branding.environment_errors(cs_settings.ENVIRONMENT):
+        messages.append(checks.Error(error, id="content_studio.E067"))
+
+    for attr, path in branding.missing_static_files(site):
+        messages.append(
+            checks.Warning(
+                f"{type(site).__name__}.{attr} names the static file {path!r}, "
+                "which no static files finder has.",
+                hint="Put the file in an app's static folder or STATICFILES_DIRS, "
+                "or give a URL.",
+                id="content_studio.W044",
+            )
+        )
+
+    for attr, theme, ratio in branding.accent_warnings(site):
+        messages.append(
+            checks.Warning(
+                f"{type(site).__name__}.{attr} has a contrast of {ratio:.1f}:1 "
+                f"against the {theme} theme's background; buttons and the focus "
+                f"ring need at least {branding.MIN_ACCENT_CONTRAST}:1.",
+                hint=(
+                    "Set accent_color_dark to a lighter color for the dark theme."
+                    if theme == "dark" and attr == "accent_color"
+                    else "Pick a darker color for the light theme, or a lighter "
+                    "one for the dark theme."
+                ),
+                id="content_studio.W045",
+            )
+        )
+
+    return messages
+
+
 def login_throttle_errors() -> list[str]:
     """
     Login rate limits that cannot be read, which would fail every login:

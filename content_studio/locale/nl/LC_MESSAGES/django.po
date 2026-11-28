@@ -2504,3 +2504,23 @@ msgstr "Dagelijks om 04:30 UTC"
 #: notifications/tasks.py
 msgid "Daily at 04:30"
 msgstr "Dagelijks om 04:30"
+
+#: branding.py
+msgid "Local"
+msgstr "Lokaal"
+
+#: branding.py
+msgid "Development"
+msgstr "Ontwikkeling"
+
+#: branding.py
+msgid "Test"
+msgstr "Test"
+
+#: branding.py
+msgid "Staging"
+msgstr "Staging"
+
+#: branding.py
+msgid "Acceptance"
+msgstr "Acceptatie"

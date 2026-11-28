@@ -16,6 +16,7 @@ const sidebars: SidebarsConfig = {
     "block-fields",
     "media-library",
     "dashboard",
+    "branding",
     "extensions",
     "analytics",
     "permissions",

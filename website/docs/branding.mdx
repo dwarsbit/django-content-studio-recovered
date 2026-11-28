@@ -1,0 +1,136 @@
+# 🎨 Branding
+
+Give the admin your own name, logo, favicon and accent color, put your own
+line on the login page, and show editors which environment they are in, so
+nobody edits production thinking it is staging. Everything here is
+optional: without it the admin looks as it always has.
+
+## The site
+
+Branding lives on your [admin site](/docs/dashboard), next to
+`site_header` and `site_title`:
+
+```python
+# mysite/studio.py
+from django.utils.translation import gettext_lazy as _
+
+from content_studio.admin import ContentStudioSite
+
+
+class NorthboundSite(ContentStudioSite):
+    site_header = "Northbound"
+    site_title = "Northbound CMS"
+    site_logo = "northbound/logo.svg"
+    site_logo_dark = "northbound/logo-dark.svg"
+    site_favicon = "northbound/favicon.png"
+    accent_color = "#4f46e5"
+    accent_color_dark = "#818cf8"
+    login_text = _("Use your Northbound account.")
+
+
+admin_site = NorthboundSite()
+```
+
+Point the [`ADMIN_SITE`](/docs/settings#admin_site) setting at it:
+
+```python
+# mysite/settings.py
+CONTENT_STUDIO = {
+    "ADMIN_SITE": "mysite.studio.admin_site",
+}
+```
+
+| Attribute | Default | What it does |
+|---|---|---|
+| `site_header` | `"Content Studio"` | The name at the top of the main menu. |
+| `site_title` | `"Content Studio"` | The browser tab's title, the login page's title ("Log in to …") and the name in emails. |
+| `site_logo` | `None` | A square logo, shown beside `site_header` in the main menu, alone in the collapsed menu and on the login pages. Without it, the menu shows the first letter of `site_header` and the login pages the Content Studio logo. |
+| `site_logo_dark` | `None` | The logo the dark theme shows instead of `site_logo`. |
+| `site_favicon` | `None` | The browser tab's icon. Without it, the Content Studio icon. |
+| `accent_color` | `None` | Replaces the admin's primary color: buttons, the focus ring and other accents, in both themes. |
+| `accent_color_dark` | `None` | Replaces `accent_color` in the dark theme. |
+| `login_text` | `None` | Replaces the line under the login page's title, such as who to ask for an account. |
+
+Logos and the favicon are paths of [static files](https://docs.djangoproject.com/en/stable/howto/static-files/),
+such as `"northbound/logo.svg"` in an app's `static` folder, or URLs.
+Make the logo square, at least 80 pixels; SVG keeps it sharp.
+
+## The accent color
+
+`accent_color` is a CSS color in hex, `rgb()` or `hsl()`, without
+transparency. The text on it is black or white, whichever reads better, so
+you only pick the one color. The admin draws it on white in the light
+theme and on near black in the dark theme: a dark brand color, such as
+navy, barely shows in the dark theme, so give a lighter one in
+`accent_color_dark`.
+
+The color is part of the page Django renders, so the admin never flashes
+its own colors first.
+
+## The environment badge
+
+Set [`ENVIRONMENT`](/docs/settings#environment) to show a badge with the
+environment's name beside `site_header`, on the login pages and in front of
+the browser tab's title ("[Staging] Northbound CMS"). In the collapsed main
+menu it is a dot on the logo.
+
+```python
+# mysite/settings.py
+CONTENT_STUDIO = {
+    "ENVIRONMENT": "staging",
+}
+```
+
+A name picks the label and color:
+
+| Name | Badge |
+|---|---|
+| `"local"` | Local, blue |
+| `"development"`, `"dev"` | Development, blue |
+| `"test"`, `"testing"` | Test, yellow |
+| `"staging"` | Staging, yellow |
+| `"acceptance"` | Acceptance, yellow |
+| `"production"`, `"prod"`, `"live"` | No badge |
+| Any other name | The name, gray |
+
+Production shows no badge, so editors notice when one is there. Give a dict
+for your own label and color, which shows on production too:
+
+```python
+CONTENT_STUDIO = {
+    "ENVIRONMENT": {"label": "Production", "color": "red"},
+}
+```
+
+The colors are `gray`, `blue`, `green`, `yellow`, `red` and `purple`.
+
+With [environment settings](/docs/environment-settings), set the
+`ENVIRONMENT` variable instead (`ENVIRONMENT=staging`); it sets
+[`SENTRY_ENVIRONMENT`](/docs/settings#sentry_environment) too, so error
+reports are filed under the same name.
+
+The badge also shows on the login pages, which anyone can open, so keep its
+label to the environment's name.
+
+### Per request
+
+Override `get_environment` on the site to pick the environment per
+request, for example by host name when one deployment serves several:
+
+```python
+class NorthboundSite(ContentStudioSite):
+    def get_environment(self, request):
+        if request.get_host().startswith("preview."):
+            return {"label": "Preview", "color": "purple"}
+        return super().get_environment(request)
+```
+
+It returns what `ENVIRONMENT` takes, or `None` for no badge.
+
+## System checks
+
+| ID | Reports |
+|---|---|
+| `content_studio.E067` | An `accent_color` or `accent_color_dark` that is not an opaque CSS color, or an `ENVIRONMENT` that is not a name or a dict with a `label` and one of the colors. The value is left out until it is fixed. |
+| `content_studio.W044` | A `site_logo`, `site_logo_dark` or `site_favicon` static file that no static files finder has. |
+| `content_studio.W045` | An accent color with less than 3:1 contrast against a theme's background, so buttons and the focus ring are hard to see. |

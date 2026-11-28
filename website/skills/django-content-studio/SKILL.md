@@ -664,6 +664,14 @@ Each is optional and has its own page:
   failed challenges;
   checks E066, W043):
   https://djangocontentstudio.org/docs/captcha.md
+- Branding (on the site: `site_logo`, `site_logo_dark`, `site_favicon` as
+  static paths or URLs, `accent_color` and `accent_color_dark` as CSS
+  colors, `login_text`; the `ENVIRONMENT` setting, a name such as
+  `"staging"` or `{"label": ..., "color": ...}`, shows a badge in the menu,
+  on the login pages and in the tab title, none for production;
+  `get_environment(request)` on the site overrides it; `configure()` reads
+  `ENVIRONMENT`; checks E067, W044, W045):
+  https://djangocontentstudio.org/docs/branding.md
 - Logging (`content_studio.logs`: `RequestIdMiddleware` first in
   `MIDDLEWARE` for request IDs and an access log, `LOGGING =
   logging_settings("json")`, `get_request_id()`; `configure()` reads

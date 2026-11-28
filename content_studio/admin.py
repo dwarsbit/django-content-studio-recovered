@@ -827,6 +827,20 @@ class ContentStudioSite:
     index_title: Optional[StrOrPromise] = None
     site_url: str = "/"
 
+    # Branding (content_studio.branding). The logo is a square mark beside
+    # site_header in the main menu and on the login pages; site_logo_dark
+    # replaces it in the dark theme. Logos and the favicon are static
+    # file paths or URLs. accent_color replaces the primary color (buttons,
+    # links, the focus ring) in both themes, accent_color_dark in the dark
+    # theme; the text on it is black or white, whichever reads best.
+    # login_text replaces the line under the login page's title.
+    site_logo: Optional[str] = None
+    site_logo_dark: Optional[str] = None
+    site_favicon: Optional[str] = None
+    accent_color: Optional[str] = None
+    accent_color_dark: Optional[str] = None
+    login_text: Optional[StrOrPromise] = None
+
     token_backend: TokenBackendManager = TokenBackendManager()
 
     login_backend: LoginBackendManager = LoginBackendManager()
@@ -1097,6 +1111,14 @@ class ContentStudioSite:
                 NotificationViewSet,
                 basename="content_studio_notifications",
             )
+
+    def get_environment(self, request: HttpRequest) -> Any:
+        """
+        The environment the badge shows: the ENVIRONMENT setting unless
+        overridden. A name ("staging"), a dict with a "label" and a
+        "color" (a badge tone), or None for no badge.
+        """
+        return cs_settings.ENVIRONMENT
 
     def has_status_permission(self, request: HttpRequest) -> bool:
         """

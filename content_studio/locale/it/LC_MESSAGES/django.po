@@ -2493,3 +2493,23 @@ msgstr "Ogni giorno alle 04:30 UTC"
 #: notifications/tasks.py
 msgid "Daily at 04:30"
 msgstr "Ogni giorno alle 04:30"
+
+#: branding.py
+msgid "Local"
+msgstr "Locale"
+
+#: branding.py
+msgid "Development"
+msgstr "Sviluppo"
+
+#: branding.py
+msgid "Test"
+msgstr "Test"
+
+#: branding.py
+msgid "Staging"
+msgstr "Staging"
+
+#: branding.py
+msgid "Acceptance"
+msgstr "Collaudo"
