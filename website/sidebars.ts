@@ -34,6 +34,7 @@ const sidebars: SidebarsConfig = {
     "email-activity",
     "error-reports",
     "logging",
+    "captcha",
     "languages",
     "command-palette",
     "environment-settings",

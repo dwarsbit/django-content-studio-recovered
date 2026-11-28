@@ -29,6 +29,8 @@ The public API consists of:
 - the [system check](/docs/deployment#system-checks) IDs, but not their messages;
 - `content_studio.urls` and the `content_studio.contrib.password_reset` app,
   as a whole;
+- `content_studio.contrib.captcha.urls`, its URL names and the Cap protocol
+  its endpoints answer;
 - the media library's `content_studio_media_metadata`,
   `content_studio_thumbnails` and `content_studio_image_sizes` commands,
   with their `--all` option;
@@ -135,6 +137,39 @@ widgets it feeds and the page that shows them.
 - `TaskStatistic`
 - `TaskStatisticWidget`
 - `TaskStatus`
+
+## `content_studio.contrib.captcha`
+
+The [captcha](/docs/captcha): checking a token anywhere.
+
+- `verify_captcha`
+
+## `content_studio.contrib.captcha.forms`
+
+The captcha in a Django form, and what a Content-Security-Policy must allow
+for its widget.
+
+- `CAPTCHA_CSP`
+- `CaptchaField`
+- `CaptchaWidget`
+
+## `content_studio.contrib.captcha.dashboard`
+
+The captcha's solved and failed challenges on the dashboard.
+
+- `CaptchaStatisticWidget`
+
+## `content_studio.contrib.captcha.fields`
+
+The captcha in a Django REST Framework serializer.
+
+- `CaptchaField`
+
+## `content_studio.contrib.captcha.testing`
+
+A valid token for your own tests.
+
+- `captcha_token`
 
 ## `content_studio.contrib.huey`
 

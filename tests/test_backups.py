@@ -222,6 +222,16 @@ def test_backup_leaves_out_password_reset_codes():
 
 
 @pytest.mark.django_db
+def test_backup_leaves_out_captcha_tokens():
+    from content_studio.contrib.captcha.models import Challenge, Token
+
+    assert "content_studio_captcha" in backups.get_excludes()
+    models = backups.get_models("default", backups.get_excludes())
+    assert Challenge not in models
+    assert Token not in models
+
+
+@pytest.mark.django_db
 def test_backup_leaves_out_backup_exclude():
     Article.objects.create(title="Left out")
 

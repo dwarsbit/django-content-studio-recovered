@@ -2486,3 +2486,29 @@ msgstr "Estado de la respuesta"
 #: webhooks/models.py:147
 msgid "Response"
 msgstr "Respuesta"
+
+#: contrib/captcha/apps.py contrib/captcha/forms.py
+msgid "Captcha"
+msgstr "Captcha"
+
+#: contrib/captcha/dashboard.py
+msgid "Captcha solves"
+msgstr "Captchas resueltos"
+
+#: contrib/captcha/dashboard.py
+#, python-format
+msgid "%(count)d failed"
+msgid_plural "%(count)d failed"
+msgstr[0] "%(count)d fallido"
+msgstr[1] "%(count)d fallidos"
+msgstr[2] "%(count)d fallidos"
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid "Verify that you are human."
+msgstr "Verifica que eres humano."
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid ""
+"The captcha is not valid or has expired. Verify that you are human and try "
+"again."
+msgstr "El captcha no es válido o ha caducado. Verifica que eres humano e inténtalo de nuevo."

@@ -204,6 +204,16 @@ are a choice for the whole domain), `security.W008` behind a proxy with
 `SECURE_SSL_REDIRECT` off, and `security.W009`, which
 [`content_studio.W040`](#system-checks) replaces.
 
+### Captcha
+
+| Variable | Default | Sets |
+|---|---|---|
+| `CAPTCHA` | `on` | [`CAPTCHA`](/docs/settings#captcha): `on` or `off`. Any other value stops the start with an error. |
+| `CAPTCHA_THROTTLE_RATE` | `30/minute` | [`CAPTCHA_THROTTLE_RATE`](/docs/settings#captcha_throttle_rate). |
+
+They take effect with [`content_studio.contrib.captcha`](/docs/captcha) in
+`INSTALLED_APPS`.
+
 ### Logging
 
 | Variable | Default | Sets |
@@ -229,6 +239,8 @@ call to change it.
 | `IMAGE_SIZES` | With Pillow installed: `thumbnail` (400×400, cover), `card` (800×500, cover), `content` (1200 wide), `hero` (2000 wide) and `share` (1200×630, cover, JPEG). |
 | `ADMIN_URL` | `<BACKEND_URL>/admin/` |
 | `NOTIFICATION_EMAIL_DIGEST` | `True` |
+| `CAPTCHA` | `CAPTCHA` is `on` |
+| `CAPTCHA_THROTTLE_RATE` | `CAPTCHA_THROTTLE_RATE` |
 
 The allowed file types stay Content Studio's
 [default list](/docs/settings#media_library_allowed_extensions). Add

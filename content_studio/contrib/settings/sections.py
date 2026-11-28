@@ -420,6 +420,15 @@ def content_studio(ctx: Context) -> dict[str, Any]:
         "NOTIFICATION_EMAIL_DIGEST": True,
     }
 
+    # The captcha of content_studio.contrib.captcha: on, or off.
+    captcha = ctx.env.str("CAPTCHA", "on")
+    if captcha not in ("on", "off"):
+        raise ImproperlyConfigured(f"CAPTCHA must be on or off, not {captcha!r}.")
+    defaults["CAPTCHA"] = captcha == "on"
+    defaults["CAPTCHA_THROTTLE_RATE"] = ctx.env.str(
+        "CAPTCHA_THROTTLE_RATE", "30/minute"
+    )
+
     if _installed("PIL"):
         defaults["IMAGE_SIZES"] = deepcopy(DEFAULT_IMAGE_SIZES)
 

@@ -53,10 +53,12 @@ DEFAULT_EXCLUDE = [
     "content_studio_backups",
 ]
 
-# Left out when their app is installed: password reset codes are
-# short-lived, and a backup should not hold codes that are still valid.
+# Left out when their app is installed: password reset codes and
+# captcha challenges and tokens are short-lived, and a backup should not
+# hold codes or tokens that are still valid.
 DEFAULT_EXCLUDE_IF_INSTALLED = {
     "content_studio.contrib.password_reset": "password_reset.PasswordResetCode",
+    "content_studio.contrib.captcha": "content_studio_captcha",
 }
 
 # A backup still queued or running after this long did not finish.
