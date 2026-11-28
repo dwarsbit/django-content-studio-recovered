@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs";
 import type { Config } from "@docusaurus/types";
 import type * as Preset from "@docusaurus/preset-classic";
 
+import checkYaml from "./plugins/check-yaml";
 import llmsTxt from "./plugins/llms-txt";
 import sidebars from "./sidebars";
 
@@ -30,6 +31,7 @@ const config: Config = {
   customFields: { version, releaseUrl },
   themes: [],
   plugins: [
+    checkYaml,
     [
       llmsTxt,
       {
@@ -164,7 +166,7 @@ const config: Config = {
       ],
     },
     prism: {
-      additionalLanguages: ["python", "bash", "json"],
+      additionalLanguages: ["python", "bash", "json", "docker"],
     },
   },
   presets: [

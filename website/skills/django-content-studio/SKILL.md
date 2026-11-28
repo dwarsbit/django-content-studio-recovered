@@ -675,6 +675,10 @@ Each is optional and has its own page:
   then the browser, then `LANGUAGE_CODE`; no `LocaleMiddleware` needed;
   Django's `LANGUAGES` limits them; mark your own labels with
   `gettext_lazy`): https://djangocontentstudio.org/docs/languages.md
+- Docker Compose (copyable `Dockerfile`, `entrypoint.sh`, `compose.yaml`,
+  `compose.ports.yaml`, `caddy/Caddyfile`, `.env`; `COMPOSE_PROFILES=dev,db`
+  or `prod,db`, Caddy for HTTPS, the settings package `config`):
+  https://djangocontentstudio.org/docs/docker-compose.md
 - Presence, the command palette, deployment and every system check:
   https://djangocontentstudio.org/docs/presence.md,
   https://djangocontentstudio.org/docs/command-palette.md,

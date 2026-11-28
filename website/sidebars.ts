@@ -39,6 +39,7 @@ const sidebars: SidebarsConfig = {
     "command-palette",
     "environment-settings",
     "deployment",
+    "docker-compose",
     "developer-tools",
     "settings",
     "public-api",

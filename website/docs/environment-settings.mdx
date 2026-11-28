@@ -83,6 +83,9 @@ DEFAULT_FROM_EMAIL="Blog <hello@example.com>"
 NUM_PROXIES=1
 ```
 
+[Docker Compose](/docs/docker-compose) runs a project with these settings in
+containers, which read them from an `.env` file.
+
 ## How settings combine
 
 - **Settings assigned after the call override it.** `configure()` writes into

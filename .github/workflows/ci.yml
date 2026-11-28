@@ -93,6 +93,27 @@ jobs:
         working-directory: frontend
         run: npm audit --omit=dev
 
+  # The docs site, as the Website workflow builds it: broken MDX or a YAML
+  # block that does not parse fails here, before the merge.
+  website:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: website/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+        working-directory: website
+
+      - name: Build website
+        run: npm run build
+        working-directory: website
+
   frontend:
     name: frontend
     runs-on: ubuntu-latest

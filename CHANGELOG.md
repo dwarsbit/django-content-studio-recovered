@@ -41,6 +41,15 @@
 - The scheduled publishing run showed twice on the system status page with
   Huey: once by its Huey name and once as Scheduled publishing.
 
+### Documentation
+
+- **Docker Compose.** A new docs page runs a Content Studio site with
+  Docker Compose, in development and in production behind Caddy, with
+  complete files to copy: a multi-stage `Dockerfile`, `entrypoint.sh`, one
+  `compose.yaml` for both environments (chosen with `COMPOSE_PROFILES`),
+  `compose.ports.yaml`, a `Caddyfile` and an `.env` example. The docs build
+  now fails on a YAML block that does not parse.
+
 ## 1.25.0 (2026-11-27)
 
 ### Features

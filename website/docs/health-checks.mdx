@@ -127,6 +127,9 @@ services:
       retries: 3
 ```
 
+[Docker Compose](/docs/docker-compose) has the complete files, with these
+healthchecks.
+
 `content_studio_worker_alive` exits with `1` when the heartbeat is missing
 or stale, and with `0` when it is fresh or when the worker check is off.
 It only reads the cache, so it is cheap to run often.
