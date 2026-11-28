@@ -19,6 +19,29 @@ class ClientIPMixin:
         return super().get_ident(request)
 
 
+def client_ip(request):
+    """
+    The client's IP address by the same rule as the throttles
+    (ClientIPMixin): REMOTE_ADDR, or with NUM_PROXIES the address the
+    proxies added. None when it is not a valid address.
+    """
+    import ipaddress
+
+    from rest_framework.throttling import BaseThrottle
+
+    request = getattr(request, "_request", request)
+
+    if api_settings.NUM_PROXIES is None:
+        address = request.META.get("REMOTE_ADDR")
+    else:
+        address = BaseThrottle().get_ident(request)
+
+    try:
+        return str(ipaddress.ip_address((address or "").strip()))
+    except ValueError:
+        return None
+
+
 def parse_rate(rate):
     """
     A rate such as "10/min" or "20/hour" as (count, seconds), the way

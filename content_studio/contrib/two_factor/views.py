@@ -14,7 +14,14 @@ from rest_framework.response import Response
 from rest_framework.throttling import UserRateThrottle
 from rest_framework.viewsets import ViewSet
 
-from ...login import finish_login, has_two_factor, issue_session, two_factor_required
+from ...login import (
+    finish_login,
+    has_two_factor,
+    issue_session,
+    SignInViewMixin,
+    mark_sign_in,
+    two_factor_required,
+)
 from ...permissions import IsActiveStaff
 from ...settings import cs_settings
 from ...signals import record_change
@@ -58,7 +65,7 @@ def _login_throttles():
     return [LoginRateThrottle()] if cs_settings.LOGIN_THROTTLE_RATE else []
 
 
-class TwoFactorLoginViewSet(ViewSet):
+class TwoFactorLoginViewSet(SignInViewMixin, ViewSet):
     """
     The code step after the password. The challenge from the password
     step is the gate; a right code starts the session.
@@ -71,14 +78,17 @@ class TwoFactorLoginViewSet(ViewSet):
     def get_throttles(self):
         return _login_throttles()
 
-    def _wrong(self, request, user, nonce, message):
+    def _wrong(self, request, user, nonce, message, *, recovery_code=False):
         """Count a wrong code; audit tools hear of it as a failed login."""
         count_account_failure(user)
         left = count_wrong_code(nonce)
+        mark_sign_in(request)
         user_login_failed.send(
             sender=__name__,
             credentials={"username": user.get_username()},
             request=request._request,
+            method="recovery_code" if recovery_code else "two_factor",
+            reason="wrong_recovery_code" if recovery_code else "wrong_code",
         )
 
         if left == 0:
@@ -116,7 +126,11 @@ class TwoFactorLoginViewSet(ViewSet):
         if recovery_code:
             if not service.check_recovery_code(user, recovery_code):
                 return self._wrong(
-                    request, user, nonce, _("That recovery code is not right.")
+                    request,
+                    user,
+                    nonce,
+                    _("That recovery code is not right."),
+                    recovery_code=True,
                 )
         elif not service.check_code(user, _text(request, "code")):
             return self._wrong(request, user, nonce, _("That code is not right."))
@@ -124,7 +138,12 @@ class TwoFactorLoginViewSet(ViewSet):
         if not use_challenge(nonce):
             return _expired()
 
-        return finish_login(user, request, two_factor=True)
+        return finish_login(
+            user,
+            request,
+            two_factor=True,
+            method="recovery_code" if recovery_code else "two_factor",
+        )
 
     @action(methods=["post"], detail=False, url_path="setup")
     def setup(self, request):
@@ -172,7 +191,7 @@ class TwoFactorLoginViewSet(ViewSet):
         # Recorded as the user's own change: the login is theirs.
         request.user = user
         record_change(request, user, "updated", "Turned on two-factor login.")
-        response = finish_login(user, request, two_factor=True)
+        response = finish_login(user, request, two_factor=True, method="two_factor")
         response.data["recovery_codes"] = codes
 
         return response

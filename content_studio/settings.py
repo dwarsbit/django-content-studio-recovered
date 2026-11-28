@@ -195,6 +195,10 @@ DEFAULTS = {
     "EMAIL_ACTIVITY_KEEP_DAYS": 30,
     # Store recipients masked (s***@example.com) and leave out subjects.
     "EMAIL_ACTIVITY_MASK": False,
+    # Audit log (content_studio.contrib.audit_log): days activity log
+    # entries and sign-in events are kept; None keeps them. Pruning an
+    # entry also removes its history version.
+    "AUDIT_LOG_KEEP_DAYS": None,
     # Error reports (content_studio.error_reports), only while DEBUG is
     # off: "email" mails each new error to ERROR_EMAIL (or the active
     # superusers) and notifies the superusers, "sentry" sends errors to

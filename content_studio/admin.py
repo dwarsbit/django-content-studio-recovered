@@ -1094,6 +1094,14 @@ class ContentStudioSite:
 
             set_up_email_activity_router()
 
+        # The Audit log page, with the optional app installed.
+        if apps.is_installed("content_studio.contrib.audit_log"):
+            from .contrib.audit_log.views import (
+                set_up_router as set_up_audit_log_router,
+            )
+
+            set_up_audit_log_router()
+
         # Comments on objects, with the optional app installed.
         if apps.is_installed("content_studio.comments"):
             from .comments.viewsets import CommentViewSet
@@ -1139,6 +1147,15 @@ class ContentStudioSite:
         Who may open the Email activity page
         (content_studio.contrib.email_activity) and send test emails:
         superusers, unless overridden.
+        """
+        return bool(request.user.is_active and request.user.is_superuser)
+
+    def has_audit_log_permission(self, request: HttpRequest) -> bool:
+        """
+        Who may open the Audit log page (content_studio.contrib.audit_log)
+        and export it: superusers, unless overridden. Whoever it lets in
+        sees the sign-ins of every user and the changes on every model
+        they may view.
         """
         return bool(request.user.is_active and request.user.is_superuser)
 

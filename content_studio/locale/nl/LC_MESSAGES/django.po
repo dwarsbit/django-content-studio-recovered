@@ -2524,3 +2524,108 @@ msgstr "Staging"
 #: branding.py
 msgid "Acceptance"
 msgstr "Acceptatie"
+
+#: contrib/audit_log
+msgid "Audit log"
+msgstr "Auditlog"
+
+#: contrib/audit_log
+msgid "This cursor is not valid."
+msgstr "Deze cursor is ongeldig."
+
+#: contrib/audit_log
+msgid "Signed in"
+msgstr "Ingelogd"
+
+#: contrib/audit_log
+msgid "Failed sign-in"
+msgstr "Mislukte inlogpoging"
+
+#: contrib/audit_log
+msgid "Signed out"
+msgstr "Uitgelogd"
+
+#: contrib/audit_log
+msgid "username"
+msgstr "gebruikersnaam"
+
+#: contrib/audit_log
+msgid "method"
+msgstr "methode"
+
+#: contrib/audit_log
+msgid "reason"
+msgstr "reden"
+
+#: contrib/audit_log
+msgid "IP address"
+msgstr "IP-adres"
+
+#: contrib/audit_log
+msgid "user agent"
+msgstr "user-agent"
+
+#: contrib/audit_log
+msgid "sign-in event"
+msgstr "inloggebeurtenis"
+
+#: contrib/audit_log
+msgid "sign-in events"
+msgstr "inloggebeurtenissen"
+
+#: contrib/audit_log
+msgid "action"
+msgstr "actie"
+
+#: contrib/audit_log
+msgid "entry action"
+msgstr "actie van item"
+
+#: contrib/audit_log
+msgid "entry actions"
+msgstr "acties van items"
+
+#: contrib/audit_log
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(browser)s op %(system)s"
+
+#: contrib/audit_log
+msgid "Time"
+msgstr "Tijd"
+
+#: contrib/audit_log
+msgid "Action"
+msgstr "Actie"
+
+#: contrib/audit_log
+msgid "Object"
+msgstr "Object"
+
+#: contrib/audit_log
+msgid "Object ID"
+msgstr "Object-ID"
+
+#: contrib/audit_log
+msgid "Message"
+msgstr "Bericht"
+
+#: contrib/audit_log
+msgid "Username"
+msgstr "Gebruikersnaam"
+
+#: contrib/audit_log
+msgid "Method"
+msgstr "Methode"
+
+#: contrib/audit_log
+msgid "Reason"
+msgstr "Reden"
+
+#: contrib/audit_log
+msgid "Browser"
+msgstr "Browser"
+
+#: contrib/audit_log
+msgid "Changed"
+msgstr "Gewijzigd"

@@ -91,7 +91,8 @@
     "profile": "Profilo",
     "status": "Stato del sistema",
     "language": "Lingua",
-    "language_failed": "Non è stato possibile cambiare la lingua."
+    "language_failed": "Non è stato possibile cambiare la lingua.",
+    "audit_log": "Registro attività"
   },
   "editor": {
     "title_create": "Crea {{modelName}}",
@@ -611,7 +612,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "Ancora nessuna attività registrata"
+      "empty": "Ancora nessuna attività registrata",
+      "view_all": "Vedi tutto"
     },
     "seo_preview": {
       "no_title": "Titolo della pagina",
@@ -1680,5 +1682,86 @@
       "failed": "L'email di prova non è stata inviata",
       "cancel": "Annulla"
     }
+  },
+  "audit_log": {
+    "title": "Registro attività",
+    "unavailable_title": "Il registro attività non è disponibile",
+    "unavailable_description": "Non puoi aprire il registro attività, oppure non è stato possibile caricarlo.",
+    "list_title": "Modifiche e accessi",
+    "list_description": "Ogni modifica fatta nell'admin e ogni accesso, dai più recenti.",
+    "search": "Cerca oggetti, messaggi, nomi utente o un indirizzo IP",
+    "filters": {
+      "action": "Azione",
+      "all_actions": "Tutte le azioni",
+      "user": "Utente",
+      "all_users": "Tutti gli utenti",
+      "model": "Modello",
+      "all_models": "Tutti i modelli",
+      "period": "Periodo"
+    },
+    "periods": {
+      "all": "Sempre",
+      "today": "Oggi",
+      "7": "Ultimi 7 giorni",
+      "30": "Ultimi 30 giorni"
+    },
+    "actions": {
+      "created": "Creato",
+      "updated": "Modificato",
+      "deleted": "Eliminato",
+      "restored": "Ripristinato",
+      "reordered": "Spostato",
+      "published": "Pubblicato",
+      "unpublished": "Ritirato",
+      "signed_in": "Accesso",
+      "sign_in_failed": "Accesso non riuscito",
+      "signed_out": "Disconnessione"
+    },
+    "verbs": {
+      "created": "ha creato",
+      "updated": "ha modificato",
+      "deleted": "ha eliminato",
+      "restored": "ha ripristinato",
+      "reordered": "ha spostato",
+      "published": "ha pubblicato",
+      "unpublished": "ha ritirato",
+      "signed_in": "ha effettuato l'accesso",
+      "sign_in_failed": "non è riuscito ad accedere",
+      "signed_out": "si è disconnesso"
+    },
+    "methods": {
+      "password": "Password",
+      "two_factor": "Codice a due fattori",
+      "recovery_code": "Codice di recupero",
+      "link": "Link per la password"
+    },
+    "reasons": {
+      "wrong_password": "Nome utente o password errati",
+      "not_allowed": "Non autorizzato ad accedere",
+      "locked": "Account bloccato dopo troppi tentativi",
+      "wrong_code": "Codice a due fattori errato",
+      "wrong_recovery_code": "Codice di recupero errato"
+    },
+    "no_such_user": "(utente inesistente)",
+    "unknown_user": "Qualcuno",
+    "today": "Oggi",
+    "yesterday": "Ieri",
+    "object_filter": "Le modifiche a {{name}}",
+    "object_filter_clear": "Mostra tutto",
+    "empty_title": "Ancora nulla di registrato",
+    "empty_description": "Modifiche e accessi compaiono qui man mano che avvengono.",
+    "no_matches_title": "Nessun risultato",
+    "no_matches_description": "Nessuna voce corrisponde a questi filtri.",
+    "clear_filters": "Cancella filtri",
+    "showing_one": "{{count}} voce",
+    "showing_other": "{{count}} voci",
+    "showing_many": "{{count}} voci",
+    "showing_days_one": "{{count}} voce · conservate per {{days}} giorni",
+    "showing_days_other": "{{count}} voci · conservate per {{days}} giorni",
+    "showing_days_many": "{{count}} voci · conservate per {{days}} giorni",
+    "load_more": "Carica altro",
+    "open_change": "Mostra cosa è cambiato",
+    "open_object": "Apri",
+    "object_deleted": "Questo oggetto è stato eliminato."
   }
 }

@@ -48,7 +48,7 @@ content_studio/
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E064, E068, W001-W039, W044-W045; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha)
+├── checks.py            # System checks (content_studio.E001-E064, E068, W001-W039, W044-W045; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha; E067 for contrib/audit_log)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
@@ -97,6 +97,7 @@ content_studio/
 │   ├── huey.py          # HueyAdapter: the task dashboard for a Huey queue
 │   ├── backups/         # Optional automatic backups: the Backup and Restore records (models.py), dumping/pruning/restoring fixtures (backup.py), reading dumpdata files for a restore (fixtures.py), BACKUP_SCHEDULE cron parsing (schedule.py), Huey's periodic task (huey.py), the status page rows (status.py), the Backups page endpoints (views.py), content_studio_backup/content_studio_restore
 │   ├── captcha/         # Optional self-hosted captcha (the Cap protocol, ported from DjangoStack): Challenge and Token (models.py), Cap's proof of work (pow.py), one-time tokens and verify_captcha() (tokens.py), the challenge/redeem/solver.wasm endpoints and CaptchaThrottle (views.py, urls.py included by the project at any path, reversed by name), the DRF CaptchaField (fields.py), the forms CaptchaField/CaptchaWidget and CAPTCHA_CSP (forms.py), captcha_token() (testing.py), DailyCount solved/failed per day (counts.py) and CaptchaStatisticWidget (dashboard.py), E066/W043 (checks.py); vendored @cap.js/widget and @cap.js/wasm (Apache-2.0, NOTICE)
+│   ├── audit_log/       # Optional audit log page: SignInEvent and EntryAction (models.py), the sign-in signal receivers, record_action(), pruning and describe_user_agent() (recording.py), filters and the merged cursor-paged timeline (entries.py), the list/change/export endpoints (views.py), content_studio_prune_audit_log, E067 in content_studio/checks.py
 │   ├── email_activity/  # Optional email log: the logging EmailBackend that records each email (no body) and delivers it with EMAIL_DELIVERY_BACKEND (backends.py), SentEmail (models.py), writing/masking/pruning and the status row summary (log.py), kinds and email_kind() (kinds.py), the Email activity page and Send test email endpoints (views.py), content_studio_prune_emails
 │   ├── status/          # Optional system status page: register_service/register_task_adapter/register_recurring_task (registry.py), the built-in checks (builtin.py), running and caching the checks (runner.py), the task lists from the task adapters (tasks.py), the endpoints (views.py)
 │   └── password_reset/  # Password reset functionality

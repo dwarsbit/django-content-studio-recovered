@@ -145,6 +145,11 @@ def record_change(
         change_message=message,
     )
 
+    if apps.is_installed("content_studio.contrib.audit_log"):
+        from .contrib.audit_log.recording import record_action
+
+        record_action(entry, action)
+
     if after is not None and apps.is_installed("content_studio.history"):
         from .history.recording import save_version
 

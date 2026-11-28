@@ -2513,3 +2513,108 @@ msgstr "Staging"
 #: branding.py
 msgid "Acceptance"
 msgstr "Collaudo"
+
+#: contrib/audit_log
+msgid "Audit log"
+msgstr "Registro di controllo"
+
+#: contrib/audit_log
+msgid "This cursor is not valid."
+msgstr "Questo cursore non è valido."
+
+#: contrib/audit_log
+msgid "Signed in"
+msgstr "Accesso eseguito"
+
+#: contrib/audit_log
+msgid "Failed sign-in"
+msgstr "Accesso non riuscito"
+
+#: contrib/audit_log
+msgid "Signed out"
+msgstr "Disconnesso"
+
+#: contrib/audit_log
+msgid "username"
+msgstr "nome utente"
+
+#: contrib/audit_log
+msgid "method"
+msgstr "metodo"
+
+#: contrib/audit_log
+msgid "reason"
+msgstr "motivo"
+
+#: contrib/audit_log
+msgid "IP address"
+msgstr "Indirizzo IP"
+
+#: contrib/audit_log
+msgid "user agent"
+msgstr "user agent"
+
+#: contrib/audit_log
+msgid "sign-in event"
+msgstr "evento di accesso"
+
+#: contrib/audit_log
+msgid "sign-in events"
+msgstr "eventi di accesso"
+
+#: contrib/audit_log
+msgid "action"
+msgstr "azione"
+
+#: contrib/audit_log
+msgid "entry action"
+msgstr "azione della voce"
+
+#: contrib/audit_log
+msgid "entry actions"
+msgstr "azioni delle voci"
+
+#: contrib/audit_log
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(browser)s su %(system)s"
+
+#: contrib/audit_log
+msgid "Time"
+msgstr "Ora"
+
+#: contrib/audit_log
+msgid "Action"
+msgstr "Azione"
+
+#: contrib/audit_log
+msgid "Object"
+msgstr "Oggetto"
+
+#: contrib/audit_log
+msgid "Object ID"
+msgstr "ID oggetto"
+
+#: contrib/audit_log
+msgid "Message"
+msgstr "Messaggio"
+
+#: contrib/audit_log
+msgid "Username"
+msgstr "Nome utente"
+
+#: contrib/audit_log
+msgid "Method"
+msgstr "Metodo"
+
+#: contrib/audit_log
+msgid "Reason"
+msgstr "Motivo"
+
+#: contrib/audit_log
+msgid "Browser"
+msgstr "Browser"
+
+#: contrib/audit_log
+msgid "Changed"
+msgstr "Modificato"

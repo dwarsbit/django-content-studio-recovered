@@ -33,6 +33,7 @@ const sidebars: SidebarsConfig = {
     "health-checks",
     "backups",
     "email-activity",
+    "audit-log",
     "error-reports",
     "logging",
     "captcha",

@@ -2548,3 +2548,108 @@ msgstr "Preproducción"
 #: branding.py
 msgid "Acceptance"
 msgstr "Aceptación"
+
+#: contrib/audit_log
+msgid "Audit log"
+msgstr "Registro de auditoría"
+
+#: contrib/audit_log
+msgid "This cursor is not valid."
+msgstr "Este cursor no es válido."
+
+#: contrib/audit_log
+msgid "Signed in"
+msgstr "Sesión iniciada"
+
+#: contrib/audit_log
+msgid "Failed sign-in"
+msgstr "Inicio de sesión fallido"
+
+#: contrib/audit_log
+msgid "Signed out"
+msgstr "Sesión cerrada"
+
+#: contrib/audit_log
+msgid "username"
+msgstr "nombre de usuario"
+
+#: contrib/audit_log
+msgid "method"
+msgstr "método"
+
+#: contrib/audit_log
+msgid "reason"
+msgstr "motivo"
+
+#: contrib/audit_log
+msgid "IP address"
+msgstr "Dirección IP"
+
+#: contrib/audit_log
+msgid "user agent"
+msgstr "agente de usuario"
+
+#: contrib/audit_log
+msgid "sign-in event"
+msgstr "evento de inicio de sesión"
+
+#: contrib/audit_log
+msgid "sign-in events"
+msgstr "eventos de inicio de sesión"
+
+#: contrib/audit_log
+msgid "action"
+msgstr "acción"
+
+#: contrib/audit_log
+msgid "entry action"
+msgstr "acción de entrada"
+
+#: contrib/audit_log
+msgid "entry actions"
+msgstr "acciones de entrada"
+
+#: contrib/audit_log
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(browser)s en %(system)s"
+
+#: contrib/audit_log
+msgid "Time"
+msgstr "Hora"
+
+#: contrib/audit_log
+msgid "Action"
+msgstr "Acción"
+
+#: contrib/audit_log
+msgid "Object"
+msgstr "Objeto"
+
+#: contrib/audit_log
+msgid "Object ID"
+msgstr "ID del objeto"
+
+#: contrib/audit_log
+msgid "Message"
+msgstr "Mensaje"
+
+#: contrib/audit_log
+msgid "Username"
+msgstr "Nombre de usuario"
+
+#: contrib/audit_log
+msgid "Method"
+msgstr "Método"
+
+#: contrib/audit_log
+msgid "Reason"
+msgstr "Motivo"
+
+#: contrib/audit_log
+msgid "Browser"
+msgstr "Navegador"
+
+#: contrib/audit_log
+msgid "Changed"
+msgstr "Modificado"

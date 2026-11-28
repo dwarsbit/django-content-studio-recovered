@@ -30,6 +30,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.status",
     "content_studio.contrib.backups",
     "content_studio.contrib.email_activity",
+    "content_studio.contrib.audit_log",
     "content_studio.contrib.captcha",
     "content_studio.notifications",
     "content_studio.history",

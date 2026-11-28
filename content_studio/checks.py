@@ -1526,6 +1526,28 @@ def email_activity_errors() -> list[tuple[str, str]]:
     return [("content_studio.E062", error) for error in errors]
 
 
+def audit_log_errors() -> list[tuple[str, str]]:
+    """An AUDIT_LOG_KEEP_DAYS that is not a whole number of 1 or more (E067)."""
+    from django.apps import apps
+
+    if not apps.is_installed("content_studio.contrib.audit_log"):
+        return []
+
+    days = cs_settings.AUDIT_LOG_KEEP_DAYS
+
+    if days is not None and (
+        not isinstance(days, int) or isinstance(days, bool) or days < 1
+    ):
+        return [
+            (
+                "content_studio.E067",
+                "AUDIT_LOG_KEEP_DAYS must be a whole number of 1 or more, or None.",
+            )
+        ]
+
+    return []
+
+
 def email_activity_warnings() -> list[tuple[str, str]]:
     """
     The email activity app installed while the site sends without the
@@ -5041,6 +5063,9 @@ def check_content_studio(app_configs=None, **kwargs) -> list[checks.CheckMessage
         messages.append(
             checks.Warning(warning, obj=site.__class__.__name__, id=check_id)
         )
+
+    for check_id, error in audit_log_errors():
+        messages.append(checks.Error(error, obj=site.__class__.__name__, id=check_id))
 
     for check_id, warning in preview_middleware_warnings():
         messages.append(checks.Warning(warning, id=check_id))

@@ -4,6 +4,27 @@
 
 ### Features
 
+- **Audit log.** A new page, `content_studio.contrib.audit_log`, puts every
+  change in the activity log and every sign-in on one timeline, newest
+  first: who created, changed, deleted, restored, moved, published or
+  unpublished what, and who signed in, failed to sign in (with the reason)
+  or signed out, with the method, IP address and browser. Filter by user,
+  model, object, action, period and text (the filters live in the URL),
+  open an update's field changes with the history app, also for deleted
+  objects, and export what the filters show as CSV or Excel. Superusers
+  open it from the user menu; the dashboard's Activity widget and the
+  edit page's Activity card link to it with **View all**. Override
+  `has_audit_log_permission(request)` on the admin site to let others in.
+  While the app is installed, new activity log entries keep their real
+  action (Django's flags tell only added, changed and deleted apart).
+  New setting `AUDIT_LOG_KEEP_DAYS` (`None`, keep everything) prunes old
+  entries, sign-ins and their history versions after a sign-in, at most
+  hourly, and with `manage.py content_studio_prune_audit_log`.
+  `manage.py check` reports a setting that cannot work with
+  `content_studio.E067`.
+- Content Studio's login views now send `user_logged_in` and
+  `user_login_failed` with `method` and `reason` arguments, send
+  `user_logged_out` on sign-out, and run outside `ATOMIC_REQUESTS`.
 - **Branding.** The admin site takes a `site_logo` (and `site_logo_dark`
   for the dark theme), a `site_favicon`, an `accent_color` (and
   `accent_color_dark`) and a `login_text`. The logo replaces the letter
