@@ -271,6 +271,12 @@ class AdminApiViewSet(ViewSet):
             and bool(self.admin_site.has_email_activity_permission(request)),
         }
 
+        # The Audit log page (content_studio.contrib.audit_log).
+        data["audit_log"] = {
+            "enabled": apps.is_installed("content_studio.contrib.audit_log")
+            and bool(self.admin_site.has_audit_log_permission(request)),
+        }
+
         # What MapWidget's map shows and searches with.
         data["map"] = {
             "tile_url": cs_settings.MAP_TILE_URL,

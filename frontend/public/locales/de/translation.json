@@ -90,7 +90,8 @@
     "profile": "Profil",
     "status": "Systemstatus",
     "language": "Sprache",
-    "language_failed": "Die Sprache konnte nicht geändert werden."
+    "language_failed": "Die Sprache konnte nicht geändert werden.",
+    "audit_log": "Audit-Log"
   },
   "editor": {
     "title_create": "{{modelName}} erstellen",
@@ -602,7 +603,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "Noch keine Aktivität erfasst"
+      "empty": "Noch keine Aktivität erfasst",
+      "view_all": "Alle anzeigen"
     },
     "seo_preview": {
       "no_title": "Seitentitel",
@@ -1617,5 +1619,84 @@
       "failed": "Die Test-E-Mail wurde nicht gesendet",
       "cancel": "Abbrechen"
     }
+  },
+  "audit_log": {
+    "title": "Audit-Log",
+    "unavailable_title": "Das Audit-Log ist nicht verfügbar",
+    "unavailable_description": "Du darfst das Audit-Log nicht öffnen, oder es konnte nicht geladen werden.",
+    "list_title": "Änderungen und Anmeldungen",
+    "list_description": "Jede Änderung im Admin und jede Anmeldung, neueste zuerst.",
+    "search": "Objekte, Meldungen, Benutzernamen oder eine IP-Adresse suchen",
+    "filters": {
+      "action": "Aktion",
+      "all_actions": "Alle Aktionen",
+      "user": "Benutzer",
+      "all_users": "Alle Benutzer",
+      "model": "Modell",
+      "all_models": "Alle Modelle",
+      "period": "Zeitraum"
+    },
+    "periods": {
+      "all": "Gesamter Zeitraum",
+      "today": "Heute",
+      "7": "Letzte 7 Tage",
+      "30": "Letzte 30 Tage"
+    },
+    "actions": {
+      "created": "Erstellt",
+      "updated": "Geändert",
+      "deleted": "Gelöscht",
+      "restored": "Wiederhergestellt",
+      "reordered": "Verschoben",
+      "published": "Veröffentlicht",
+      "unpublished": "Zurückgezogen",
+      "signed_in": "Angemeldet",
+      "sign_in_failed": "Fehlgeschlagene Anmeldung",
+      "signed_out": "Abgemeldet"
+    },
+    "verbs": {
+      "created": "hat erstellt:",
+      "updated": "hat geändert:",
+      "deleted": "hat gelöscht:",
+      "restored": "hat wiederhergestellt:",
+      "reordered": "hat verschoben:",
+      "published": "hat veröffentlicht:",
+      "unpublished": "hat zurückgezogen:",
+      "signed_in": "hat sich angemeldet",
+      "sign_in_failed": "konnte sich nicht anmelden",
+      "signed_out": "hat sich abgemeldet"
+    },
+    "methods": {
+      "password": "Passwort",
+      "two_factor": "Zwei-Faktor-Code",
+      "recovery_code": "Wiederherstellungscode",
+      "link": "Passwort-Link"
+    },
+    "reasons": {
+      "wrong_password": "Falscher Benutzername oder falsches Passwort",
+      "not_allowed": "Darf sich nicht anmelden",
+      "locked": "Konto nach zu vielen Versuchen gesperrt",
+      "wrong_code": "Falscher Zwei-Faktor-Code",
+      "wrong_recovery_code": "Falscher Wiederherstellungscode"
+    },
+    "no_such_user": "(unbekannter Benutzer)",
+    "unknown_user": "Jemand",
+    "today": "Heute",
+    "yesterday": "Gestern",
+    "object_filter": "Änderungen an {{name}}",
+    "object_filter_clear": "Alle anzeigen",
+    "empty_title": "Noch nichts aufgezeichnet",
+    "empty_description": "Änderungen und Anmeldungen erscheinen hier, sobald sie passieren.",
+    "no_matches_title": "Keine Treffer",
+    "no_matches_description": "Keine Einträge passen zu diesen Filtern.",
+    "clear_filters": "Filter zurücksetzen",
+    "showing_one": "{{count}} Eintrag",
+    "showing_other": "{{count}} Einträge",
+    "showing_days_one": "{{count}} Eintrag · {{days}} Tage aufbewahrt",
+    "showing_days_other": "{{count}} Einträge · {{days}} Tage aufbewahrt",
+    "load_more": "Mehr laden",
+    "open_change": "Änderungen anzeigen",
+    "open_object": "Öffnen",
+    "object_deleted": "Dieses Objekt wurde gelöscht."
   }
 }

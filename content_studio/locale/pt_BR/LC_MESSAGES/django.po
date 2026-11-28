@@ -2494,3 +2494,108 @@ msgstr "Diariamente às 04:30 UTC"
 #: notifications/tasks.py
 msgid "Daily at 04:30"
 msgstr "Diariamente às 04:30"
+
+#: contrib/audit_log
+msgid "Audit log"
+msgstr "Log de auditoria"
+
+#: contrib/audit_log
+msgid "This cursor is not valid."
+msgstr "Este cursor não é válido."
+
+#: contrib/audit_log
+msgid "Signed in"
+msgstr "Entrou"
+
+#: contrib/audit_log
+msgid "Failed sign-in"
+msgstr "Falha ao entrar"
+
+#: contrib/audit_log
+msgid "Signed out"
+msgstr "Saiu"
+
+#: contrib/audit_log
+msgid "username"
+msgstr "nome de usuário"
+
+#: contrib/audit_log
+msgid "method"
+msgstr "método"
+
+#: contrib/audit_log
+msgid "reason"
+msgstr "motivo"
+
+#: contrib/audit_log
+msgid "IP address"
+msgstr "Endereço IP"
+
+#: contrib/audit_log
+msgid "user agent"
+msgstr "agente de usuário"
+
+#: contrib/audit_log
+msgid "sign-in event"
+msgstr "evento de login"
+
+#: contrib/audit_log
+msgid "sign-in events"
+msgstr "eventos de login"
+
+#: contrib/audit_log
+msgid "action"
+msgstr "ação"
+
+#: contrib/audit_log
+msgid "entry action"
+msgstr "ação da entrada"
+
+#: contrib/audit_log
+msgid "entry actions"
+msgstr "ações das entradas"
+
+#: contrib/audit_log
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(browser)s no %(system)s"
+
+#: contrib/audit_log
+msgid "Time"
+msgstr "Hora"
+
+#: contrib/audit_log
+msgid "Action"
+msgstr "Ação"
+
+#: contrib/audit_log
+msgid "Object"
+msgstr "Objeto"
+
+#: contrib/audit_log
+msgid "Object ID"
+msgstr "ID do objeto"
+
+#: contrib/audit_log
+msgid "Message"
+msgstr "Mensagem"
+
+#: contrib/audit_log
+msgid "Username"
+msgstr "Nome de usuário"
+
+#: contrib/audit_log
+msgid "Method"
+msgstr "Método"
+
+#: contrib/audit_log
+msgid "Reason"
+msgstr "Motivo"
+
+#: contrib/audit_log
+msgid "Browser"
+msgstr "Navegador"
+
+#: contrib/audit_log
+msgid "Changed"
+msgstr "Alterado"

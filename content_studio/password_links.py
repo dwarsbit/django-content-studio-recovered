@@ -294,4 +294,4 @@ class SetPasswordView(APIView):
         # Setting the password logs the user in, as Django's login()
         # would (last_login, audit tools); with two-factor login on, after
         # the code step.
-        return complete_login(user, request)
+        return complete_login(user, request, method="link")

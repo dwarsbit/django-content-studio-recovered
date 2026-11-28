@@ -413,6 +413,7 @@ class JsonWebTokenViewSet(ViewSet):
         # cleared when the request carries it: SameSite=Lax keeps it off
         # cross-site POSTs, so another site cannot sign the user out.
         refresh_token = request.COOKIES.get(REFRESH_COOKIE_NAME)
+        signed_out = None
 
         for token, token_type in (
             (refresh_token, REFRESH_TOKEN_TYPE),
@@ -426,8 +427,13 @@ class JsonWebTokenViewSet(ViewSet):
                 continue
             if payload["token_type"] != token_type:
                 continue
+            if signed_out is None:
+                signed_out = _signed_out_user(payload)
             _revoke_jti(payload)
             _revoke_session(payload)
+
+        if signed_out is not None:
+            _send_logged_out(request, signed_out)
 
         response = Response(status=status.HTTP_204_NO_CONTENT)
         if refresh_token is not None:
@@ -436,6 +442,26 @@ class JsonWebTokenViewSet(ViewSet):
             )
 
         return response
+
+
+def _signed_out_user(payload):
+    """The user a logout ends a live session of, else None."""
+    try:
+        _check_not_revoked(payload, check_jti=False)
+        return _get_user(payload)
+    except AuthenticationFailed:
+        return None
+
+
+def _send_logged_out(request, user):
+    """Django's user_logged_out signal, for audit tools."""
+    from django.contrib.auth.signals import user_logged_out
+
+    from ..login import mark_sign_in
+
+    django_request = getattr(request, "_request", request)
+    mark_sign_in(django_request)
+    user_logged_out.send(sender=user.__class__, request=django_request, user=user)
 
 
 def _bearer_token(request):

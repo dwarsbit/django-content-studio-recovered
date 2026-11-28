@@ -1,0 +1,151 @@
+# 🕵️ Audit log
+
+The audit log app puts every change made in the admin and every sign-in on
+one page: who created, changed, deleted, restored, moved, published or
+unpublished what, and who signed in, failed to sign in or signed out, from
+which IP address and browser. Filter it by user, model, action, period and
+text, open the field changes of an update, and export what the filters show
+as a CSV or Excel file.
+
+Changes come from the activity log Django already keeps (`LogEntry`), the
+same entries the dashboard's Activity widget and each edit page's
+[Activity card](/docs/history) show. Sign-ins are kept in the app's own
+table.
+
+## Setup
+
+Add the app to `INSTALLED_APPS` and migrate:
+
+```python
+# settings.py
+INSTALLED_APPS = [
+    # ...
+    "content_studio",
+    "content_studio.history",  # Optional: the field changes of each update
+    "content_studio.contrib.audit_log",
+]
+```
+
+```bash
+python manage.py migrate
+```
+
+Superusers open the page from the user menu, under **Audit log**. The
+dashboard's Activity widget and the Activity card on edit pages get a
+**View all** link to it; the card's link shows the changes to that object
+only.
+
+## What is recorded
+
+**Changes.** Every change Content Studio records in the activity log:
+creating (also by duplicating), changing (with the fields that changed),
+deleting, restoring from the trash, moving, publishing and unpublishing.
+Changes made in the classic Django admin are in the same table and show
+too.
+
+Django's activity log tells only three actions apart: added, changed and
+deleted. While the app is installed, Content Studio keeps the real action
+with each new entry, so the page can filter on Restored, Moved, Published
+and Unpublished. Entries from before the app was installed show as
+Created, Changed or Deleted.
+
+**Sign-ins.** Each sign-in, failed sign-in and sign-out through Content
+Studio's login, with:
+
+| Field | What it holds |
+|-------|---------------|
+| User | The user, when the username matches one. A failed sign-in keeps the username as typed. |
+| Method | Password, two-factor code, recovery code, a password link (reset or invite), or the login backend's name. |
+| Reason | For a failed sign-in: a wrong username or password, a user who may not sign in (not active or not staff), an account locked after too many wrong passwords, or a wrong two-factor or recovery code. |
+| IP address | The client's address, by the same rule as the login rate limit: `REMOTE_ADDR`, or with `REST_FRAMEWORK["NUM_PROXIES"]` set, the address your proxies added. |
+| Browser | The browser and system, such as "Firefox on macOS", read from the user agent. The full user agent is kept too. |
+
+Passwords and codes are never stored. Sign-ins through your site's own
+login forms send the same Django signals but are not recorded: only
+Content Studio's login views mark their requests for the audit log. The
+login views run outside `ATOMIC_REQUESTS`, so a refused sign-in is not
+rolled back with its error response.
+
+Content Studio sends Django's `user_logged_in`, `user_login_failed` and
+`user_logged_out` signals with two extra arguments, `method` and `reason`,
+which other receivers can read from `**kwargs`.
+
+## The Audit log page
+
+Entries are listed newest first, grouped by day, 50 at a time with **Load
+more**. Each change links to its object while it exists. With the
+[history app](/docs/history), clicking a change opens what it did, field by
+field, also for objects that have since been deleted. The dialog is
+read-only: to restore an earlier version, open the object and use its
+Activity card.
+
+The filters live in the page's URL, so a filtered view can be bookmarked or
+shared:
+
+| Parameter | Filters on |
+|-----------|-----------|
+| `user` | The user's primary key. |
+| `model` | `app_label.model`, such as `blog.article`. Shows changes only. |
+| `object` | An object's primary key, with `model`. |
+| `action` | `created`, `updated`, `deleted`, `restored`, `reordered`, `published`, `unpublished`, `signed_in`, `sign_in_failed` or `signed_out`. |
+| `period` | `today`, `7` or `30` (days). |
+| `q` | The object's name or the change message; for sign-ins, the username, or an exact IP address. |
+
+**Export** downloads the entries the filters show, as CSV or, with the
+`excel` extra, as an Excel workbook, up to 100,000 rows.
+
+## Who can open it
+
+Superusers. Override `has_audit_log_permission(request)` on your admin site
+([`ADMIN_SITE`](/docs/settings#admin_site)) to let others in:
+
+```python
+from content_studio.admin import ContentStudioSite
+
+
+class BlogStudioSite(ContentStudioSite):
+    def has_audit_log_permission(self, request):
+        return request.user.groups.filter(name="Auditors").exists()
+```
+
+Whoever it lets in sees the sign-ins of every user, and the changes on the
+models they may view. On a [multi-tenant](/docs/multi-tenancy) site, changes
+on tenant-scoped models show only while the object exists in the request's
+tenant, as on the dashboard. Sign-ins are not tenant-scoped.
+
+## Keeping entries
+
+Entries are kept until you set
+[`AUDIT_LOG_KEEP_DAYS`](/docs/settings#audit_log_keep_days). With it,
+entries and sign-ins older than that many days are deleted after a sign-in,
+at most once an hour, and when you run:
+
+```bash
+python manage.py content_studio_prune_audit_log
+```
+
+Pruning deletes activity log entries, so the history versions kept with
+them go too: after that, the edit page's Activity card no longer lists
+those changes, and they cannot be restored.
+
+```python
+CONTENT_STUDIO = {
+    # ...
+    "AUDIT_LOG_KEEP_DAYS": 365,
+}
+```
+
+`manage.py check` reports an `AUDIT_LOG_KEEP_DAYS` that is not a whole
+number of 1 or more with `content_studio.E067`.
+
+## Settings
+
+| Setting | Default | What it does |
+|---------|---------|--------------|
+| [`AUDIT_LOG_KEEP_DAYS`](/docs/settings#audit_log_keep_days) | `None` | Days entries and sign-ins are kept; `None` keeps them. |
+
+## System checks
+
+| ID | What it reports |
+|----|-----------------|
+| `content_studio.E067` | `AUDIT_LOG_KEEP_DAYS` is not a whole number of 1 or more, or `None`. |

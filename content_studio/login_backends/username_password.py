@@ -8,6 +8,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.viewsets import ViewSet
 
 from .. import login_failures
+from ..login import SignInViewMixin
 from ..utils import MAX_PASSWORD_LENGTH
 
 
@@ -34,7 +35,7 @@ class UsernamePasswordSerializer(serializers.Serializer):
         return fields
 
 
-class UsernamePasswordViewSet(ViewSet):
+class UsernamePasswordViewSet(SignInViewMixin, ViewSet):
     """
     View set for username and password endpoints.
     """
@@ -52,6 +53,11 @@ class UsernamePasswordViewSet(ViewSet):
         # and signal receivers such as django-axes expect the former.
         django_request = request._request
 
+        from ..login import mark_sign_in
+
+        # The audit log records the sign-in signals of this request.
+        mark_sign_in(django_request)
+
         # Too many wrong passwords for this username, from any address:
         # refused before the password is checked, so guessing on cannot
         # tell a right password either (see login_failures.py).
@@ -60,6 +66,7 @@ class UsernamePasswordViewSet(ViewSet):
                 sender=__name__,
                 credentials={"username": username},
                 request=django_request,
+                reason="locked",
             )
 
             raise Throttled(
@@ -82,6 +89,7 @@ class UsernamePasswordViewSet(ViewSet):
                     sender=__name__,
                     credentials={"username": username},
                     request=django_request,
+                    reason="not_allowed",
                 )
 
             login_failures.count_failure(username)
@@ -98,6 +106,8 @@ class UsernamePasswordViewSet(ViewSet):
 
 class UsernamePasswordBackend:
     name = "Username password"
+    # How the audit log names its sign-ins.
+    audit_method = "password"
     view_set = UsernamePasswordViewSet
 
     @classmethod
