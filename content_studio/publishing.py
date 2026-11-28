@@ -700,7 +700,7 @@ def register_periodic_task(huey=None):
 
     from huey import crontab
 
-    _periodic = huey.periodic_task(crontab(), name="content_studio.publishing")(
+    _periodic = huey.periodic_task(crontab(), name="scheduled_publishing")(
         close_db(scheduled_publishing)
     )
     return _periodic
@@ -718,7 +718,8 @@ def register_status() -> None:
     from .contrib.status import register_recurring_task
 
     register_recurring_task(
-        "content_studio.publishing",
+        # The Huey task's dotted path, so the two show as one row.
+        "content_studio.publishing.scheduled_publishing",
         _("Scheduled publishing"),
         schedule=_("Every minute"),
         get_last_run=get_last_run,

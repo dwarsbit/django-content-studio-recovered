@@ -1,14 +1,16 @@
 from django.core.management.base import BaseCommand, CommandError
 
 from ...digest import DEFAULT_DELAY, digest_available, send_digests
+from ...tasks import DIGEST_TASK, record_run
 
 
 class Command(BaseCommand):
     help = (
         "Email every editor the notifications they have not read, once: "
         "unread ones that did not change for --delay minutes and were not "
-        "mailed before. Needs NOTIFICATION_EMAIL_DIGEST and ADMIN_URL. Run "
-        "it periodically, for example hourly from cron."
+        "mailed before. Needs NOTIFICATION_EMAIL_DIGEST and ADMIN_URL. "
+        "Huey's worker runs it every hour at :10; without Huey, run it "
+        "hourly from cron."
     )
 
     def add_arguments(self, parser):
@@ -32,5 +34,11 @@ class Command(BaseCommand):
         if delay < 0:
             raise CommandError("--delay must be 0 or more minutes.")
 
-        emails, notifications = send_digests(delay=delay)
+        try:
+            emails, notifications = send_digests(delay=delay)
+        except Exception as error:
+            record_run(DIGEST_TASK, error)
+            raise
+
+        record_run(DIGEST_TASK)
         self.stdout.write(f"Sent {emails} emails with {notifications} notifications.")

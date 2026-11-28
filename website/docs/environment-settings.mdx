@@ -150,6 +150,11 @@ them; the web process never creates tables on import. It needs a Postgres or
 SQLite `DATABASE_URL`. Without Huey installed (the `[huey]` extra), tasks run
 in the request whatever `TASKS_URL` says.
 
+The worker also runs Content Studio's own periodic tasks: the
+[scheduled publishing](/docs/publishing#the-scheduled-run) run, and with
+the notifications app the [digest and pruning](/docs/notifications). So a
+`db://` queue needs only the database, with no cron.
+
 With a Postgres database, `HUEY_STATS` stores Huey's task statistics there,
 so the web and worker processes share them, unless you set `HUEY_STATS`
 before the call.

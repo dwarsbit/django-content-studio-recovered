@@ -2527,3 +2527,19 @@ msgid ""
 "The captcha is not valid or has expired. Verify that you are human and try "
 "again."
 msgstr "Le captcha n'est pas valide ou a expiré. Vérifiez que vous êtes humain et réessayez."
+
+#: notifications/tasks.py
+msgid "Notification pruning"
+msgstr "Nettoyage des notifications"
+
+#: notifications/tasks.py
+msgid "Every hour at :10"
+msgstr "Toutes les heures à :10"
+
+#: notifications/tasks.py
+msgid "Daily at 04:30 UTC"
+msgstr "Tous les jours à 04:30 UTC"
+
+#: notifications/tasks.py
+msgid "Daily at 04:30"
+msgstr "Tous les jours à 04:30"

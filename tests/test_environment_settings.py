@@ -6,6 +6,8 @@ made after migrate and the deploy checks (E065, W040-W042).
 
 from pathlib import Path
 
+from unittest import mock
+
 import pytest
 from django.core.exceptions import ImproperlyConfigured
 from django.core.management import call_command
@@ -632,6 +634,30 @@ def test_migrate_creates_the_queue_tables(settings, tmp_path, monkeypatch):
     monkeypatch.setattr(djhuey, "HUEY", huey)
     call_command("migrate", verbosity=0)
     assert set(huey.storage.database.get_tables()) >= {"huey_task", "huey_kv"}
+
+
+@pytest.mark.parametrize(
+    "using,huey_class",
+    [("other", sections.SQL_HUEY), ("default", "huey.RedisHuey")],
+)
+def test_queue_tables_only_for_the_sql_queue_on_default(
+    settings, tmp_path, monkeypatch, using, huey_class
+):
+    from huey.contrib import djhuey
+
+    from content_studio.contrib.settings import apps as settings_apps
+
+    huey = SqlHuey(
+        "site", database=f"sqlite:///{tmp_path / 'queue.db'}", create_tables=False
+    )
+    settings.HUEY = {"huey_class": huey_class}
+    monkeypatch.setattr(djhuey, "HUEY", huey)
+
+    with mock.patch("django.core.management.call_command") as command:
+        settings_apps.create_tables(sender=None, using=using)
+
+    command.assert_called_once_with("createcachetable", database=using, verbosity=0)
+    assert huey.storage.database.get_tables() == []
 
 
 # Deploy checks

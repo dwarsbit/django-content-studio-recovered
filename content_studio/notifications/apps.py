@@ -17,3 +17,11 @@ class ContentStudioNotificationsConfig(AppConfig):
         content_changed.connect(
             notify_changes, dispatch_uid="content_studio_notifications"
         )
+
+        # The digest and pruning on Huey's worker, and on the status page.
+        from .tasks import register_periodic_tasks, register_status
+
+        huey = register_periodic_tasks()
+
+        if huey is not None:
+            register_status(huey)

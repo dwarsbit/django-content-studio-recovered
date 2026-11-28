@@ -26,6 +26,20 @@
   with `content_studio.E066`, and the app's URLs missing with
   `content_studio.W043`. The widget (`@cap.js/widget` 0.1.58) and solver
   (`@cap.js/wasm` 0.0.8) are vendored under the Apache License 2.0.
+- **Notification digest and pruning on Huey.** With Huey installed, the
+  worker sends the notification digest every hour at :10 (when
+  `NOTIFICATION_EMAIL_DIGEST` and `ADMIN_URL` are set) and prunes
+  notifications daily at 04:30 (`NOTIFICATION_RETENTION`), each under a lock
+  so two workers never run it at once. With `TASKS_URL=db://` a project now
+  needs only its database: no Redis and no cron. Both tasks show on the
+  system status page with their last run, from Huey or cron. Remove the cron
+  lines for `content_studio_send_notification_digest` and
+  `content_studio_prune_notifications` when you move to Huey.
+
+### Fixes
+
+- The scheduled publishing run showed twice on the system status page with
+  Huey: once by its Huey name and once as Scheduled publishing.
 
 ## 1.25.0 (2026-11-27)
 
