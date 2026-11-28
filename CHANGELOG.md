@@ -20,7 +20,7 @@
   and a dict sets your own label and color. Override `get_environment` on
   the site to pick it per request. Environment settings read the
   `ENVIRONMENT` variable and use it for `SENTRY_ENVIRONMENT` too.
-- New checks: `content_studio.E067` (an accent color or `ENVIRONMENT` that
+- New checks: `content_studio.E068` (an accent color or `ENVIRONMENT` that
   cannot be shown), `content_studio.W044` (a logo or favicon static file
   that does not exist) and `content_studio.W045` (an accent color with less
   than 3:1 contrast against a theme's background).

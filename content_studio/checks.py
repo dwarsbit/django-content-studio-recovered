@@ -4107,7 +4107,7 @@ def check_error_reports(app_configs=None, **kwargs) -> list[checks.CheckMessage]
 def check_branding(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
     """
     The site's branding: an accent color that is not a color, or an
-    ENVIRONMENT that cannot be shown (E067); a logo or favicon no static
+    ENVIRONMENT that cannot be shown (E068); a logo or favicon no static
     files finder has (W044); an accent color with less than 3:1 contrast
     against the background (W045).
     """
@@ -4121,12 +4121,12 @@ def check_branding(app_configs=None, **kwargs) -> list[checks.CheckMessage]:
             checks.Error(
                 f"{type(site).__name__}.{attr} must be an opaque CSS color "
                 f"(hex, rgb() or hsl()), not {value!r}.",
-                id="content_studio.E067",
+                id="content_studio.E068",
             )
         )
 
     for error in branding.environment_errors(cs_settings.ENVIRONMENT):
-        messages.append(checks.Error(error, id="content_studio.E067"))
+        messages.append(checks.Error(error, id="content_studio.E068"))
 
     for attr, path in branding.missing_static_files(site):
         messages.append(

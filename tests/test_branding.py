@@ -210,12 +210,12 @@ class BrandingChecksTests(SimpleTestCase):
             self.settings(CONTENT_STUDIO={"ENVIRONMENT": {"label": "Staging"}}),
         ):
             self.assertEqual(
-                ids(check_branding()), ["content_studio.E067", "content_studio.W044"]
+                ids(check_branding()), ["content_studio.E068", "content_studio.W044"]
             )
 
         with self.settings(CONTENT_STUDIO={"ENVIRONMENT": {"color": "orange"}}):
             self.assertEqual(
-                ids(check_branding()), ["content_studio.E067", "content_studio.E067"]
+                ids(check_branding()), ["content_studio.E068", "content_studio.E068"]
             )
 
         with mock.patch.object(admin_site, "accent_color", "#fde68a"):

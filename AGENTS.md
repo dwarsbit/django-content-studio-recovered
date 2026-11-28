@@ -48,7 +48,7 @@ content_studio/
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E064, E067, W001-W039, W044-W045; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha)
+├── checks.py            # System checks (content_studio.E001-E064, E068, W001-W039, W044-W045; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)
