@@ -26,12 +26,16 @@ email digest sends editors the ones they leave unread.
 
 2. Run `manage.py migrate` to create its tables.
 3. Schedule the prune command, which removes old notifications and the
-   follows of objects that no longer exist. For example, once a night from
-   cron:
+   follows of objects that no longer exist:
 
-   ```text
-   0 3 * * * /srv/mysite/venv/bin/python /srv/mysite/manage.py content_studio_prune_notifications
-   ```
+   - **With Huey** (`huey.contrib.djhuey` in `INSTALLED_APPS`), the worker
+     runs it daily at 04:30 (UTC by default, Huey's `utc` setting). Nothing
+     to set up.
+   - **With cron** or any scheduler, run it once a night:
+
+     ```text
+     0 3 * * * /srv/mysite/venv/bin/python /srv/mysite/manage.py content_studio_prune_notifications
+     ```
 
 The main menu then shows **Notifications** under the dashboard, and every
 editor gets a notification settings page.
@@ -89,11 +93,19 @@ page; editors without an email address get none.
    }
    ```
 
-3. Schedule the digest command, for example every hour from cron:
+3. Schedule the digest command:
 
-   ```text
-   0 * * * * /srv/mysite/venv/bin/python /srv/mysite/manage.py content_studio_send_notification_digest
-   ```
+   - **With Huey**, the worker runs it every hour at :10. Nothing to set up.
+   - **With cron** or any scheduler, run it every hour:
+
+     ```text
+     0 * * * * /srv/mysite/venv/bin/python /srv/mysite/manage.py content_studio_send_notification_digest
+     ```
+
+   On Huey, each task runs under a lock, so two workers never send the
+   digest twice. Both are listed on the [status page](/docs/system-status)
+   with their last run, from Huey or cron. If you move to Huey, remove the
+   cron lines.
 
 `--delay` sets how many minutes a notification stays unread and unchanged
 before it is mailed, 60 by default. The emails are written in your

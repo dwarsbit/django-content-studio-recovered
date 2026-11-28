@@ -2479,3 +2479,19 @@ msgstr "Antwortstatus"
 #: webhooks/models.py:147
 msgid "Response"
 msgstr "Antwort"
+
+#: notifications/tasks.py
+msgid "Notification pruning"
+msgstr "Bereinigung der Benachrichtigungen"
+
+#: notifications/tasks.py
+msgid "Every hour at :10"
+msgstr "Stündlich um :10"
+
+#: notifications/tasks.py
+msgid "Daily at 04:30 UTC"
+msgstr "Täglich um 04:30 UTC"
+
+#: notifications/tasks.py
+msgid "Daily at 04:30"
+msgstr "Täglich um 04:30"
