@@ -4,7 +4,7 @@
 
 **Django Content Studio** is a modern, flexible alternative to the Django admin interface. It provides a React-based frontend with a Django REST Framework backend, offering a more contemporary and customizable admin experience.
 
-- **Repository**: https://github.com/dwarsbit/django-content-studio
+- **Repository**: https://github.com/dwarsbit/djangocontentstudio
 - **Package**: https://pypi.org/project/django-content-studio/
 - **License**: MIT
 - **Author**: Leon van der Grient (leon@dwarsbit.nl)
@@ -548,8 +548,8 @@ that every language has every string; see CONTRIBUTING.md, Translations.
 
 ## Contributing
 
-- **Issues**: https://github.com/dwarsbit/django-content-studio/issues
-- **Discussions**: https://github.com/dwarsbit/django-content-studio/discussions
+- **Issues**: https://github.com/dwarsbit/djangocontentstudio/issues
+- **Discussions**: https://github.com/dwarsbit/djangocontentstudio/discussions
 - **Email**: leon@dwarsbit.nl
 
 ---

@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/dwarsbit/django-content-studio/main/website/static/img/logo.svg" alt="Django Content Studio" width="96">
+  <img src="https://raw.githubusercontent.com/dwarsbit/djangocontentstudio/main/website/static/img/logo.svg" alt="Django Content Studio" width="96">
 </p>
 
 <h1 align="center">Django Content Studio</h1>
@@ -8,7 +8,7 @@
   <a href="https://badge.fury.io/py/django-content-studio"><img src="https://badge.fury.io/py/django-content-studio.svg" alt="PyPI version"></a>
   <a href="https://pypi.org/project/django-content-studio/"><img src="https://img.shields.io/pypi/pyversions/django-content-studio.svg" alt="Python versions"></a>
   <a href="https://pypi.org/project/django-content-studio/"><img src="https://img.shields.io/pypi/frameworkversions/django/django-content-studio.svg" alt="Django versions"></a>
-  <a href="https://github.com/dwarsbit/django-content-studio/actions/workflows/ci.yml"><img src="https://github.com/dwarsbit/django-content-studio/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://github.com/dwarsbit/djangocontentstudio/actions/workflows/ci.yml"><img src="https://github.com/dwarsbit/djangocontentstudio/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-green.svg" alt="License"></a>
 </p>
 
@@ -20,8 +20,8 @@ models help with content-driven projects.
 <p align="center"><strong>Documentation: <a href="https://djangocontentstudio.org/">djangocontentstudio.org</a></strong></p>
 
 <picture>
-  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dwarsbit/django-content-studio/main/website/static/img/screenshots/dashboard-dark.webp">
-  <img src="https://raw.githubusercontent.com/dwarsbit/django-content-studio/main/website/static/img/screenshots/dashboard-light.webp" alt="The Content Studio dashboard with statistics, content lists and recent activity">
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/dwarsbit/djangocontentstudio/main/website/static/img/screenshots/dashboard-dark.webp">
+  <img src="https://raw.githubusercontent.com/dwarsbit/djangocontentstudio/main/website/static/img/screenshots/dashboard-light.webp" alt="The Content Studio dashboard with statistics, content lists and recent activity">
 </picture>
 
 ## Features
@@ -134,7 +134,7 @@ from one command.
 ## Contributing and support
 
 - Read [CONTRIBUTING.md](CONTRIBUTING.md) to set up the project and propose a change.
-- Report bugs in [GitHub Issues](https://github.com/dwarsbit/django-content-studio/issues) and ask questions in [GitHub Discussions](https://github.com/dwarsbit/django-content-studio/discussions).
+- Report bugs in [GitHub Issues](https://github.com/dwarsbit/djangocontentstudio/issues) and ask questions in [GitHub Discussions](https://github.com/dwarsbit/djangocontentstudio/discussions).
 - Report security problems privately; see [SECURITY.md](SECURITY.md).
 
 ## License

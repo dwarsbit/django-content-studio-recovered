@@ -10,7 +10,7 @@ release candidate is supported; from 1.0, the latest 1.x release is.
 Please do **not** open a public issue for a security problem. Report it
 privately instead:
 
-- through GitHub's [private vulnerability reporting](https://github.com/dwarsbit/django-content-studio/security/advisories/new), or
+- through GitHub's [private vulnerability reporting](https://github.com/dwarsbit/djangocontentstudio/security/advisories/new), or
 - by email to leon@dwarsbit.nl.
 
 Include what you found, the affected version, and the steps or a proof of

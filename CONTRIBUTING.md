@@ -9,8 +9,8 @@ The backend is a Django app managed with Poetry; the admin's frontend is a
 React application in `frontend/`, built into the package's static files.
 
 ```bash
-git clone https://github.com/dwarsbit/django-content-studio.git
-cd django-content-studio
+git clone https://github.com/dwarsbit/djangocontentstudio.git
+cd djangocontentstudio
 
 # Backend
 poetry install
@@ -80,5 +80,5 @@ To add a language:
 
 ## Questions and security
 
-Ask questions in [GitHub Discussions](https://github.com/dwarsbit/django-content-studio/discussions).
+Ask questions in [GitHub Discussions](https://github.com/dwarsbit/djangocontentstudio/discussions).
 Report security problems privately, as described in [SECURITY.md](SECURITY.md).
