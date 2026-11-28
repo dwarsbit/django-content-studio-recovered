@@ -237,6 +237,15 @@ DEFAULTS = {
     # "20/hour"; the account cannot log in once it is reached, until the
     # period has passed. None turns the limit off.
     "LOGIN_ACCOUNT_THROTTLE_RATE": "20/hour",
+    # The captcha (content_studio.contrib.captcha): False makes every
+    # check pass and renders no widget. A challenge has CAPTCHA_CHALLENGES
+    # puzzles of CAPTCHA_DIFFICULTY hex characters each (about
+    # 16^difficulty hashes a puzzle). CAPTCHA_THROTTLE_RATE limits
+    # challenges and redeems together, per IP; None turns the limit off.
+    "CAPTCHA": True,
+    "CAPTCHA_CHALLENGES": 50,
+    "CAPTCHA_DIFFICULTY": 4,
+    "CAPTCHA_THROTTLE_RATE": "30/minute",
     # Who must log in with two-factor login (the two-factor app,
     # content_studio.contrib.two_factor): None (nobody, optional for
     # everyone), "superusers" or "all".

@@ -2454,6 +2454,31 @@ msgstr "Status da resposta"
 msgid "Response"
 msgstr "Resposta"
 
+#: contrib/captcha/apps.py contrib/captcha/forms.py
+msgid "Captcha"
+msgstr "Captcha"
+
+#: contrib/captcha/dashboard.py
+msgid "Captcha solves"
+msgstr "Captchas resolvidos"
+
+#: contrib/captcha/dashboard.py
+#, python-format
+msgid "%(count)d failed"
+msgid_plural "%(count)d failed"
+msgstr[0] "%(count)d com falha"
+msgstr[1] "%(count)d com falha"
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid "Verify that you are human."
+msgstr "Verifique se você é humano."
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid ""
+"The captcha is not valid or has expired. Verify that you are human and try "
+"again."
+msgstr "O captcha não é válido ou expirou. Verifique se você é humano e tente novamente."
+
 #: notifications/tasks.py
 msgid "Notification pruning"
 msgstr "Limpeza de notificações"

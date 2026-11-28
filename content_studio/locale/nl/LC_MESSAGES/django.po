@@ -2464,6 +2464,31 @@ msgstr "Antwoordstatus"
 msgid "Response"
 msgstr "Antwoord"
 
+#: contrib/captcha/apps.py contrib/captcha/forms.py
+msgid "Captcha"
+msgstr "Captcha"
+
+#: contrib/captcha/dashboard.py
+msgid "Captcha solves"
+msgstr "Opgeloste captcha's"
+
+#: contrib/captcha/dashboard.py
+#, python-format
+msgid "%(count)d failed"
+msgid_plural "%(count)d failed"
+msgstr[0] "%(count)d mislukt"
+msgstr[1] "%(count)d mislukt"
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid "Verify that you are human."
+msgstr "Bevestig dat je een mens bent."
+
+#: contrib/captcha/fields.py contrib/captcha/forms.py
+msgid ""
+"The captcha is not valid or has expired. Verify that you are human and try "
+"again."
+msgstr "De captcha is ongeldig of verlopen. Bevestig dat je een mens bent en probeer het opnieuw."
+
 #: notifications/tasks.py
 msgid "Notification pruning"
 msgstr "Opschonen van meldingen"

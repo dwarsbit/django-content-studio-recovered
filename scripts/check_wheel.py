@@ -41,6 +41,15 @@ def main():
                 for locale in ("en", "de", "es", "fr", "it", "nl", "pt-BR")
             },
             "content_studio/viewsets.py": ("the python package itself"),
+            "content_studio/contrib/captcha/solver.wasm": (
+                "the captcha's vendored solver"
+            ),
+            "content_studio/contrib/captcha/static/content_studio/captcha/cap.min.js": (
+                "the captcha's vendored widget"
+            ),
+            "content_studio/contrib/captcha/NOTICE": (
+                "the notice of the captcha's Apache-2.0 files"
+            ),
             "content_studio/py.typed": (
                 "the PEP 561 marker that lets type checkers use the hints"
             ),

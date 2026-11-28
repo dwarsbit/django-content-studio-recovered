@@ -569,6 +569,32 @@ which leaves it to Sentry.
 The share of requests Sentry traces for performance, from `0` to `1`.
 Default: `0`, none.
 
+## Captcha
+
+These settings take effect with
+[`content_studio.contrib.captcha`](/docs/captcha) in `INSTALLED_APPS`.
+
+### CAPTCHA {#captcha}
+
+Whether the captcha checks tokens. Default: `True`. `False` makes every
+check pass and renders no widget, for local development and end-to-end
+tests.
+
+### CAPTCHA_CHALLENGES {#captcha_challenges}
+
+How many puzzles a challenge has, from `1` to `500`. Default: `50`.
+
+### CAPTCHA_DIFFICULTY {#captcha_difficulty}
+
+How many hex characters each puzzle's hash must start with, from `1` to `8`.
+Default: `4`. Each step makes a puzzle 16 times as much work.
+
+### CAPTCHA_THROTTLE_RATE {#captcha_throttle_rate}
+
+Rate limit for the captcha's challenges and answers together, per IP
+address, such as `"30/minute"`. Default: `"30/minute"`. `None` turns the
+limit off.
+
 ## Notifications
 
 ### NOTIFICATION_RETENTION {#notification_retention}

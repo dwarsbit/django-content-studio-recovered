@@ -26,6 +26,7 @@ INSTALLED_APPS = [
     "content_studio.contrib.status",
     "content_studio.contrib.backups",
     "content_studio.contrib.email_activity",
+    "content_studio.contrib.captcha",
     "content_studio.contrib.settings",
     "content_studio.media_library",
     "content_studio.webhooks",
@@ -49,7 +50,7 @@ MIDDLEWARE = [
     "content_studio.previews.middleware.PreviewMiddleware",
 ]
 
-ROOT_URLCONF = "content_studio.urls"
+ROOT_URLCONF = "tests.urls"
 
 TEMPLATES = [
     {
