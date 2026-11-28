@@ -1,0 +1,36 @@
+name: Docker Compose docs
+
+# Runs the files of the Docker Compose docs page in a fresh project, in
+# development and in production behind Caddy.
+on:
+  pull_request:
+    paths:
+      - "website/docs/docker-compose.mdx"
+      - "scripts/test_docker_compose_docs.py"
+      - ".github/workflows/docker-compose-docs.yml"
+  push:
+    branches: [main]
+    paths:
+      - "website/docs/docker-compose.mdx"
+      - "scripts/test_docker_compose_docs.py"
+      - ".github/workflows/docker-compose-docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compose:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.13"
+
+      - name: Install uv
+        run: pipx install uv
+
+      - name: Run the page's files
+        run: python scripts/test_docker_compose_docs.py "$RUNNER_TEMP/mysite"

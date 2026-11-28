@@ -1,0 +1,812 @@
+# 🐳 Docker Compose
+
+This page runs a Content Studio site with Docker Compose, in development
+and in production, from one set of files. Production runs Gunicorn behind
+[Caddy](https://caddyserver.com/), which gets the HTTPS certificate by
+itself, with every container hardened. Copy the files into your project as
+they are: the walkthrough below says what to change.
+
+## Before you start
+
+The files expect a project with this layout, with the settings package
+`config`:
+
+```text
+mysite/
+├── config/
+│   ├── asgi.py
+│   ├── settings.py
+│   └── urls.py
+├── manage.py
+├── pyproject.toml
+└── uv.lock
+```
+
+The images install the dependencies with [uv](https://docs.astral.sh/uv/)
+from `pyproject.toml` and `uv.lock`. Add the server extras, Huey, Gunicorn
+and its Uvicorn worker, and commit `uv.lock`:
+
+```bash
+uv add "django-content-studio[server,huey]" gunicorn uvicorn-worker
+```
+
+The project also needs:
+
+- **Settings from the environment**, with `configure()` and
+  `content_studio.contrib.settings` in `INSTALLED_APPS`: see
+  [environment settings](/docs/environment-settings). Every container reads
+  its settings from `.env`.
+- **The health checks**: `content_studio.health.urls` in your URLs and its
+  middleware, as on [Health checks](/docs/health-checks). Docker uses
+  `/readyz` and `manage.py content_studio_worker_alive`.
+- **Huey**: `huey.contrib.djhuey` in `INSTALLED_APPS`, for the worker's
+  `manage.py run_huey`.
+- **The request ID and WhiteNoise middleware**, which tie Django's log
+  lines to Caddy's and serve the static files:
+
+```python
+# config/settings.py (a fragment)
+MIDDLEWARE = [
+    "content_studio.logs.RequestIdMiddleware",
+    "content_studio.health.middleware.HealthCheckMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
+    "django.contrib.sessions.middleware.SessionMiddleware",
+    "django.middleware.common.CommonMiddleware",
+    "django.middleware.csrf.CsrfViewMiddleware",
+    "django.contrib.auth.middleware.AuthenticationMiddleware",
+    "django.contrib.messages.middleware.MessageMiddleware",
+    "django.middleware.clickjacking.XFrameOptionsMiddleware",
+]
+```
+
+With another settings package than `config`, change `config.asgi` in the
+`Dockerfile`.
+
+## The files
+
+Put these next to `manage.py`:
+
+```text
+mysite/
+├── caddy/
+│   └── Caddyfile
+├── .dockerignore
+├── .env
+├── compose.ports.yaml
+├── compose.yaml
+├── Dockerfile
+└── entrypoint.sh
+```
+
+### Dockerfile
+
+One image for the backend and the worker. The `deps` stage installs the
+dependencies and stays cached until `uv.lock` changes. `dev` runs Django's
+development server; `prod` collects the static files, runs as the `app`
+user and starts Gunicorn. The Postgres client matches the server's major
+version, so `pg_dump` works against it.
+
+```docker title="Dockerfile"
+# syntax=docker/dockerfile:1
+
+# The `dev` target runs Django's development server with the code mounted;
+# `prod` runs Gunicorn with Uvicorn workers.
+FROM python:3.13-slim AS base
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    UV_COMPILE_BYTECODE=1 \
+    UV_LINK_MODE=copy \
+    UV_PROJECT_ENVIRONMENT=/venv \
+    PATH="/venv/bin:$PATH"
+COPY --from=ghcr.io/astral-sh/uv:0.11 /uv /bin/uv
+# The Postgres client (pg_dump and psql) from the PostgreSQL apt
+# repository. Its major version must match the server's, as pg_dump refuses
+# a newer server: change it together with the db image in compose.yaml.
+ARG POSTGRES_VERSION=18
+RUN apt-get update \
+    && apt-get install --yes --no-install-recommends postgresql-common \
+    && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y \
+    && apt-get install --yes --no-install-recommends "postgresql-client-${POSTGRES_VERSION}" \
+    && rm -rf /var/lib/apt/lists/*
+RUN groupadd --system app && useradd --system --gid app --home-dir /app app
+WORKDIR /app
+
+# The dependencies alone, so this layer stays cached until uv.lock changes.
+FROM base AS deps
+COPY pyproject.toml uv.lock ./
+RUN uv sync --locked --no-dev --no-install-project --no-cache
+
+# Development runs as root, so files the container writes into the mounted
+# code (such as new migrations) work on every host. Production does not.
+# The entrypoint runs with sh, so it needs no executable bit.
+FROM deps AS dev
+RUN uv sync --locked --no-install-project --no-cache
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
+FROM base AS prod
+COPY --from=deps /venv /venv
+# The code is owned by root: the app user can read it, not change it.
+COPY . .
+# collectstatic needs a secret key, not the real one.
+RUN DJANGO_SECRET_KEY=collectstatic-only python manage.py collectstatic --noinput \
+    && mkdir -p /app/media && chown app:app /app/media
+USER app
+EXPOSE 8000
+HEALTHCHECK --interval=10s --timeout=5s --start-period=30s --retries=5 \
+    CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=4)"
+ENTRYPOINT ["sh", "/app/entrypoint.sh"]
+CMD ["gunicorn", "config.asgi:application", "--worker-class", "uvicorn_worker.UvicornWorker", "--bind", "0.0.0.0:8000", "--workers", "3", "--no-control-socket"]
+```
+
+### .dockerignore
+
+Keeps your secrets and local files out of the production image:
+
+```text title=".dockerignore"
+.env
+.git
+.venv
+media
+staticfiles
+**/__pycache__
+db.sqlite3
+```
+
+### entrypoint.sh
+
+Runs before every command. The backend migrates the database before it
+starts; in production, it stops first when `manage.py check --deploy`
+finds an error. Compose starts the backend only once Postgres answers, so
+the script needs no wait of its own.
+
+```bash title="entrypoint.sh"
+#!/bin/sh
+# Runs before every command of the backend and worker containers.
+#
+# DJANGO_MIGRATE=1 (the backend services): migrate the database before
+# Django starts. With DJANGO_CHECK_DEPLOY=1 (production), stop first when
+# Django's deploy checks find an error.
+set -eu
+
+if [ "${DJANGO_MIGRATE:-0}" = "1" ]; then
+  if [ "${DJANGO_CHECK_DEPLOY:-0}" = "1" ]; then
+    python manage.py check --deploy --fail-level ERROR
+  fi
+  python manage.py migrate --noinput
+fi
+
+exec "$@"
+```
+
+### compose.yaml
+
+One file for both environments. `COMPOSE_PROFILES` in `.env` picks the
+services:
+
+| Profile | Services |
+|---|---|
+| `dev` | `backend` (the development server, with your code mounted), `worker` (`manage.py run_huey`) and `mailpit`, on `127.0.0.1` ports |
+| `prod` | `backend-prod` (Gunicorn), `worker-prod` and `proxy` (Caddy) |
+| `db` | `db`, Postgres. Leave it out to use an external Postgres. |
+| `valkey` | `valkey`, an optional cache and task queue in memory |
+
+Every service restarts after a crash or a reboot, and keeps at most five log
+files of 10 MB. The production services also run with a read-only file
+system, a `tmpfs` at `/tmp`, `no-new-privileges`, no Linux capabilities
+(Caddy gets back only the one to bind ports 80 and 443) and a memory limit.
+
+```yaml title="compose.yaml"
+# One Compose file for development and production. COMPOSE_PROFILES in .env
+# picks the services:
+#   dev,db    `docker compose up` on your machine: Django's development
+#             server at http://localhost:8000 and Mailpit at
+#             http://localhost:8025, with the code mounted.
+#   prod,db   `docker compose up -d --build` on a server: Gunicorn behind
+#             Caddy, with automatic HTTPS for SITE_URL.
+# Leave out `db` to use an external Postgres through DATABASE_URL. Add
+# `valkey` for the Valkey service (CACHE_URL or TASKS_URL redis://valkey).
+
+# Every service: restarted after a crash or a reboot, and at most 5 log
+# files of 10 MB, so logs never fill the disk.
+x-service: &service
+  restart: unless-stopped
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: "5"
+
+# Production containers: a read-only file system, no privileges.
+x-hardened: &hardened
+  read_only: true
+  tmpfs:
+    - /tmp
+  security_opt:
+    - no-new-privileges:true
+  cap_drop:
+    - ALL
+
+# The bundled Postgres, unless DATABASE_URL in .env points elsewhere.
+x-backend-env: &backend-env
+  DATABASE_URL: ${DATABASE_URL:-postgres://${POSTGRES_USER:-app}:${POSTGRES_PASSWORD:-}@db:5432/${POSTGRES_DB:-app}}
+
+# Wait for the services of the profiles that run; skip the others.
+x-backend-depends: &backend-depends
+  db:
+    condition: service_healthy
+    required: false
+  valkey:
+    condition: service_healthy
+    required: false
+
+x-backend-health: &backend-health
+  test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/readyz', timeout=4)"]
+  interval: 5s
+  timeout: 5s
+  start_period: 60s
+  retries: 30
+
+# The worker stamps a heartbeat every minute; unhealthy when it stops.
+x-worker-health: &worker-health
+  test: ["CMD", "python", "manage.py", "content_studio_worker_alive"]
+  interval: 30s
+  timeout: 20s
+  start_period: 120s
+  retries: 3
+
+services:
+  # Development ------------------------------------------------------------
+
+  backend:
+    <<: *service
+    profiles: [dev]
+    build:
+      context: .
+      target: dev
+    env_file: .env
+    environment:
+      <<: *backend-env
+      DJANGO_MIGRATE: "1"
+    volumes:
+      - .:/app
+    ports:
+      - "127.0.0.1:${BACKEND_PORT:-8000}:8000"
+    depends_on: *backend-depends
+    healthcheck: *backend-health
+
+  worker:
+    <<: *service
+    profiles: [dev]
+    build:
+      context: .
+      target: dev
+    env_file: .env
+    environment: *backend-env
+    command: ["python", "manage.py", "run_huey"]
+    volumes:
+      - .:/app
+    # 0 with TASKS_URL=immediate://: tasks run in the request.
+    deploy:
+      replicas: ${TASK_WORKERS:-1}
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck: *worker-health
+
+  # Catches all mail: EMAIL_URL=smtp://mailpit:1025 in .env.
+  mailpit:
+    <<: *service
+    profiles: [dev]
+    image: axllent/mailpit:v1.27
+    ports:
+      - "127.0.0.1:${MAIL_PORT:-8025}:8025"
+
+  # Production -------------------------------------------------------------
+
+  backend-prod:
+    <<: [*service, *hardened]
+    profiles: [prod]
+    build:
+      context: .
+      target: prod
+    env_file: .env
+    environment:
+      <<: *backend-env
+      DJANGO_DEBUG: "0"
+      DJANGO_MIGRATE: "1"
+      DJANGO_CHECK_DEPLOY: "1"
+      NUM_PROXIES: ${NUM_PROXIES:-1}
+    volumes:
+      - media:/app/media
+    depends_on: *backend-depends
+    healthcheck: *backend-health
+    # Explicit on every production service: a platform that attaches the
+    # services to a network of its own would otherwise drop `default`,
+    # where the aliases live, and Caddy would answer 502.
+    networks:
+      default:
+        aliases: [backend]
+    deploy:
+      resources:
+        limits:
+          memory: 768M
+
+  worker-prod:
+    <<: [*service, *hardened]
+    profiles: [prod]
+    build:
+      context: .
+      target: prod
+    env_file: .env
+    environment:
+      <<: *backend-env
+      DJANGO_DEBUG: "0"
+      NUM_PROXIES: ${NUM_PROXIES:-1}
+    command: ["python", "manage.py", "run_huey"]
+    volumes:
+      - media:/app/media
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    healthcheck: *worker-health
+    networks: [default]
+    deploy:
+      replicas: ${TASK_WORKERS:-1}
+      resources:
+        limits:
+          memory: 512M
+
+  # HTTPS for SITE_URL, with a certificate Caddy gets and renews by itself.
+  # It publishes no ports here: on a server of your own, compose.ports.yaml
+  # publishes 80 and 443 (COMPOSE_FILE in .env).
+  proxy:
+    <<: [*service, *hardened]
+    profiles: [prod]
+    image: caddy:2.11-alpine
+    cap_add:
+      - NET_BIND_SERVICE
+    environment:
+      CADDY_ADDRESS: ${CADDY_ADDRESS:-${SITE_URL}}
+      TRUSTED_PROXIES: ${TRUSTED_PROXIES:-127.0.0.1/32}
+      FRONTEND: ${FRONTEND:-backend:8000}
+    volumes:
+      # The directory, not the file, so an edited Caddyfile is picked up.
+      - ./caddy:/etc/caddy:ro
+      - media:/srv/media:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    networks: [default]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+  # Shared -----------------------------------------------------------------
+
+  db:
+    <<: *service
+    profiles: [db]
+    # A new major version needs a dump and a restore: see the docs.
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-app}
+      POSTGRES_USER: ${POSTGRES_USER:-app}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-}
+    volumes:
+      - pgdata:/var/lib/postgresql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [default]
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          memory: 1G
+
+  # A cache and task queue in memory. Only keys with an expiry are evicted
+  # when memory runs out, so queued tasks are never dropped.
+  valkey:
+    <<: [*service, *hardened]
+    profiles: [valkey]
+    image: valkey/valkey:8-alpine
+    user: valkey
+    command: ["valkey-server", "--save", "", "--appendonly", "no", "--maxmemory", "200mb", "--maxmemory-policy", "volatile-lru"]
+    healthcheck:
+      test: ["CMD", "valkey-cli", "ping"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+    networks: [default]
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+
+volumes:
+  pgdata:
+  media:
+  caddy_data:
+  caddy_config:
+```
+
+### compose.ports.yaml
+
+Publishes Caddy's ports 80, 443 and 443/udp (HTTP/3) on a server of your
+own. Load it with `COMPOSE_FILE=compose.yaml:compose.ports.yaml` in `.env`.
+Without it, nothing is published, and a platform's proxy reaches Caddy over
+the Docker network on port 80 (see [Behind another proxy](#behind-another-proxy)).
+
+```yaml title="compose.ports.yaml"
+# Caddy's ports on the host, for a server of your own. Load it with
+# COMPOSE_FILE=compose.yaml:compose.ports.yaml in .env. Without it, a
+# platform's proxy reaches Caddy over the Docker network instead.
+services:
+  proxy:
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+      - "${HTTPS_PORT:-443}:443/udp"
+```
+
+### caddy/Caddyfile
+
+Caddy gets and renews the certificate for `SITE_URL`, compresses the
+responses and sets default security headers: each with `?`, so the headers
+Django sets win. It gives every request a new `X-Request-ID`, which
+Django's [log lines](/docs/logging) carry too, serves uploads from the media
+volume with scripts blocked, and answers `404` for the health checks, which
+are for Docker and your monitoring, not the public.
+
+```text title="caddy/Caddyfile"
+# The reverse proxy of the prod profile. Caddy gets and renews the HTTPS
+# certificate for SITE_URL by itself. Django serves /admin, /api and
+# /static, Caddy serves uploads from /media, and everything else goes to
+# FRONTEND: Django itself, or a frontend of your own.
+
+{
+	servers {
+		trusted_proxies static {$TRUSTED_PROXIES}
+	}
+}
+
+{$CADDY_ADDRESS} {
+	encode zstd gzip
+
+	# Defaults for every response; Django sets its own where it needs them.
+	# One directive per header: Caddy skips a whole block of `?` headers
+	# when any one of them is already set.
+	header ?Strict-Transport-Security "max-age=31536000"
+	header ?X-Content-Type-Options "nosniff"
+	header ?Referrer-Policy "strict-origin-when-cross-origin"
+	header ?X-Frame-Options "DENY"
+	header -Server
+
+	# A new request ID for every request, replacing one the client sent.
+	# Django adds it to its log lines and returns it in X-Request-ID;
+	# Caddy's own log line carries it as request_id.
+	request_header X-Request-ID {http.request.uuid}
+	log_append request_id {http.request.uuid}
+
+	# The health checks are for Docker and your monitoring, not the public.
+	@health path /healthz /readyz /statusz
+	handle @health {
+		respond 404
+	}
+
+	# Uploads, when media is stored on the server instead of S3. No scripts
+	# run from uploaded files, whatever their type.
+	handle_path /media/* {
+		root * /srv/media
+		header Content-Security-Policy "script-src 'none'; object-src 'none'"
+		header Cache-Control "public, max-age=604800"
+		file_server
+	}
+
+	@django path /admin /admin/* /api /api/* /static/*
+	handle @django {
+		reverse_proxy backend:8000
+	}
+
+	handle {
+		reverse_proxy {$FRONTEND:backend:8000}
+	}
+
+	log {
+		output stdout
+		format json
+	}
+}
+```
+
+### .env
+
+The settings of both environments, read by Compose and by Django. These are
+the development values; the [environment settings](/docs/environment-settings)
+page lists every other variable. Never commit this file.
+
+```bash title=".env"
+# Never commit this file: it holds the secrets.
+
+# Which services run (see compose.yaml): dev,db on your machine, prod,db on
+# a server. Leave out `db` for an external Postgres; add `valkey` for the
+# Valkey service.
+COMPOSE_PROFILES=dev,db
+# On a server of your own, also load compose.ports.yaml, which publishes
+# Caddy's ports 80 and 443.
+# COMPOSE_FILE=compose.yaml:compose.ports.yaml
+
+PROJECT_NAME=mysite
+# The public URL of the site. In production, https://your-domain: Caddy gets
+# the certificate for it.
+SITE_URL=http://localhost:8000
+
+# A long random value: python -c "import secrets; print(secrets.token_urlsafe(50))"
+DJANGO_SECRET_KEY=change-me
+DJANGO_DEBUG=1
+
+# The bundled Postgres (the db profile). Use letters and digits only in the
+# password, as it becomes part of a URL: openssl rand -hex 32
+POSTGRES_DB=app
+POSTGRES_USER=app
+POSTGRES_PASSWORD=change-me
+# An external Postgres instead: leave out `db` above and set its URL (add
+# ?sslmode=require for a server on another host).
+# DATABASE_URL=postgres://user:password@host:5432/name
+# DATABASE_POOL=1
+
+# Cache and task queue: db:// keeps them in tables of the database, so
+# nothing else runs. With the valkey profile: redis://valkey:6379/0 for the
+# cache and redis://valkey:6379/1 for the tasks.
+CACHE_URL=db://
+TASKS_URL=db://
+# Worker containers. 0 with TASKS_URL=immediate://, which runs tasks in the
+# request.
+TASK_WORKERS=1
+
+# Mail. Mailpit in development; in production your SMTP server, such as
+# smtp+tls://user:password@smtp.example.com:587.
+EMAIL_URL=smtp://mailpit:1025
+# DEFAULT_FROM_EMAIL=My site <hello@example.com>
+
+# Behind Caddy, Django trusts one proxy for the client's address and the
+# scheme. The prod services use 1 when this is not set.
+# NUM_PROXIES=1
+```
+
+## Development
+
+1. Set `DJANGO_SECRET_KEY` and `POSTGRES_PASSWORD` in `.env`.
+2. Start everything:
+
+   ```bash
+   docker compose up
+   ```
+
+   The backend migrates the database and starts on
+   `http://localhost:8000`. Code changes reload the server. Mail lands in
+   Mailpit at `http://localhost:8025`.
+
+3. Create your first staff user:
+
+   ```bash
+   docker compose exec backend python manage.py createsuperuser
+   ```
+
+4. Open `http://localhost:8000/admin/` and log in.
+
+`BACKEND_PORT` and `MAIL_PORT` in `.env` move the ports when they are in
+use. Run other `manage.py` commands the same way, such as
+`docker compose exec backend python manage.py makemigrations`. After a
+change to `pyproject.toml`, rebuild with `docker compose up --build`.
+
+## Production on a server
+
+You need a server with Docker and a domain whose DNS points to it, with
+ports 80 and 443 open.
+
+1. Copy the project to the server, for example with `git clone`.
+2. Write `.env` there, with fresh secrets:
+
+   ```bash
+   # .env
+   COMPOSE_PROFILES=prod,db
+   COMPOSE_FILE=compose.yaml:compose.ports.yaml
+
+   PROJECT_NAME=mysite
+   SITE_URL=https://example.com
+
+   DJANGO_SECRET_KEY=a-long-random-value
+   POSTGRES_PASSWORD=a-random-hex-value
+
+   CACHE_URL=db://
+   TASKS_URL=db://
+   TASK_WORKERS=1
+
+   EMAIL_URL=smtp+tls://apikey:secret@smtp.example.com:587
+   DEFAULT_FROM_EMAIL=My site <hello@example.com>
+   ```
+
+3. Build and start:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+   The backend runs the deploy checks, migrates the database and starts;
+   then Caddy gets the certificate for `SITE_URL`.
+
+4. Create your first staff user:
+
+   ```bash
+   docker compose exec backend-prod python manage.py createsuperuser
+   ```
+
+To deploy a new version, pull the code and run `docker compose up -d
+--build` again. `docker compose ps` shows whether every service is healthy,
+and `docker compose logs -f` follows the logs, one JSON object per line.
+
+The production services always run with `DJANGO_DEBUG=0` and
+`NUM_PROXIES=1`, so Django takes the client's address and the scheme from
+Caddy. Uploads are kept in the `media` volume and served by Caddy; with
+`S3_BUCKET` set they go to S3 instead (see
+[environment settings](/docs/environment-settings#static-files-and-media)).
+To try production on your own machine, set `SITE_URL=https://site.localhost`:
+Caddy signs a certificate for `.localhost` names with its own local
+authority.
+
+### Behind another proxy
+
+When a platform's proxy gets the certificate and forwards to Caddy, leave
+`COMPOSE_FILE` out and set:
+
+```bash
+# .env
+CADDY_ADDRESS=:80
+TRUSTED_PROXIES=private_ranges
+NUM_PROXIES=2
+```
+
+Caddy then serves plain HTTP on port 80 to that proxy and keeps the client
+address and scheme it forwards.
+
+## An external Postgres
+
+To use a managed or shared Postgres instead of the `db` service, leave `db`
+out of `COMPOSE_PROFILES` and set its URL:
+
+```bash
+# .env
+COMPOSE_PROFILES=prod
+DATABASE_URL=postgres://mysite:secret@db.example.com:5432/mysite?sslmode=require
+DATABASE_POOL=1
+```
+
+Set `POSTGRES_VERSION` in the `Dockerfile` to the server's major version,
+so `pg_dump` works against it.
+
+## Valkey
+
+`db://` keeps the cache and the task queue in tables of the database, so
+nothing else runs. For a cache in memory, add `valkey` to
+`COMPOSE_PROFILES` and point the URLs at it:
+
+```bash
+# .env
+COMPOSE_PROFILES=prod,db,valkey
+CACHE_URL=redis://valkey:6379/0
+TASKS_URL=redis://valkey:6379/1
+```
+
+Valkey keeps nothing on disk: a restart empties the cache and drops tasks
+that are still queued. When memory runs out, it evicts only keys with an
+expiry (`volatile-lru`), so queued tasks are never evicted.
+
+To run tasks in the request instead of on a worker, set
+`TASKS_URL=immediate://` and `TASK_WORKERS=0`.
+
+## A frontend
+
+When another application renders your site's pages, Caddy sends it every
+path except `/admin`, `/api`, `/static` and `/media`. Add its service to
+`compose.yaml`, under `services:`, with a `Dockerfile` in `frontend/` whose
+`prod` stage listens on port 3000:
+
+```yaml
+# compose.yaml (a fragment)
+  frontend-prod:
+    profiles: [prod]
+    build:
+      context: ./frontend
+      target: prod
+    environment:
+      SITE_URL: ${SITE_URL}
+      API_URL: http://backend:8000/api
+    depends_on:
+      backend-prod:
+        condition: service_healthy
+    networks:
+      default:
+        aliases: [frontend]
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "5"
+```
+
+Then point Caddy at it in `.env`:
+
+```bash
+# .env
+FRONTEND=frontend:3000
+```
+
+## Postgres major upgrades
+
+A new major version of Postgres cannot read the data files of the previous
+one, so an upgrade, such as from 18 to 19, is a dump and a restore:
+
+1. Stop the site, but not the database:
+
+   ```bash
+   docker compose stop proxy backend-prod worker-prod
+   ```
+
+2. Dump the database:
+
+   ```bash
+   docker compose exec -T db sh -c 'pg_dump -U "$POSTGRES_USER" -Fc "$POSTGRES_DB"' > app.dump
+   ```
+
+3. Stop everything and remove the database volume. Its name starts with the
+   project's name, the directory's by default; `docker volume ls` lists it.
+
+   ```bash
+   docker compose down
+   docker volume rm mysite_pgdata
+   ```
+
+4. Change the version in two places: `image: postgres:19-alpine` in
+   `compose.yaml` and `ARG POSTGRES_VERSION=19` in the `Dockerfile`.
+5. Start the new database and restore the dump:
+
+   ```bash
+   docker compose up -d --wait db
+   docker compose exec -T db sh -c 'pg_restore -U "$POSTGRES_USER" -d "$POSTGRES_DB" --no-owner' < app.dump
+   ```
+
+6. Start the site:
+
+   ```bash
+   docker compose up -d --build
+   ```
+
+Keep `app.dump` until the site works on the new version.
+
+## Related pages
+
+- [Environment settings](/docs/environment-settings): every variable in `.env`.
+- [Health checks](/docs/health-checks): `/readyz`, `/statusz` and the worker heartbeat.
+- [Logging](/docs/logging): JSON logs and request IDs.
+- [Deployment](/docs/deployment): the checklist before you go live.
