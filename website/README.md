@@ -1,6 +1,6 @@
 # Django Content Studio — documentation website
 
-The documentation site for [Django Content Studio](https://github.com/dwarsbit/django-content-studio),
+The documentation site for [Django Content Studio](https://github.com/dwarsbit/djangocontentstudio),
 built with [Docusaurus](https://docusaurus.io/) and hosted on GitHub Pages at
 [djangocontentstudio.org](https://djangocontentstudio.org/).
 

@@ -11,7 +11,7 @@ import sidebars from "./sidebars";
 // before it redeploys the website.
 const pyproject = readFileSync(new URL("../pyproject.toml", import.meta.url), "utf8");
 const version = pyproject.match(/^version = "(.+)"$/m)![1];
-const releaseUrl = `https://github.com/dwarsbit/django-content-studio/releases/tag/v${version}`;
+const releaseUrl = `https://github.com/dwarsbit/djangocontentstudio/releases/tag/v${version}`;
 
 const config: Config = {
   title: "Django Content Studio",
@@ -20,7 +20,7 @@ const config: Config = {
   url: "https://djangocontentstudio.org",
   baseUrl: "/",
   organizationName: "dwarsbit",
-  projectName: "django-content-studio",
+  projectName: "djangocontentstudio",
   onBrokenLinks: "throw",
   markdown: {
     hooks: {
@@ -104,7 +104,7 @@ const config: Config = {
           position: "right",
         },
         {
-          href: "https://github.com/dwarsbit/django-content-studio",
+          href: "https://github.com/dwarsbit/djangocontentstudio",
           label: "GitHub",
           position: "right",
         },
@@ -138,7 +138,7 @@ const config: Config = {
           items: [
             {
               label: "GitHub",
-              href: "https://github.com/dwarsbit/django-content-studio",
+              href: "https://github.com/dwarsbit/djangocontentstudio",
             },
             {
               label: "PyPI",
@@ -146,7 +146,7 @@ const config: Config = {
             },
             {
               label: "Changelog",
-              href: "https://github.com/dwarsbit/django-content-studio/blob/main/CHANGELOG.md",
+              href: "https://github.com/dwarsbit/djangocontentstudio/blob/main/CHANGELOG.md",
             },
           ],
         },
@@ -177,7 +177,7 @@ const config: Config = {
           routeBasePath: "docs",
           sidebarPath: "./sidebars.ts",
           editUrl:
-            "https://github.com/dwarsbit/django-content-studio/edit/main/website/",
+            "https://github.com/dwarsbit/djangocontentstudio/edit/main/website/",
           showLastUpdateTime: true,
         },
         blog: false,

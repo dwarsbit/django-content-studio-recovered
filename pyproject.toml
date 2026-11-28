@@ -48,9 +48,9 @@ classifiers = [
 [project.urls]
 Homepage = "https://djangocontentstudio.org/"
 Documentation = "https://djangocontentstudio.org/docs/intro"
-Repository = "https://github.com/dwarsbit/django-content-studio"
-Issues = "https://github.com/dwarsbit/django-content-studio/issues"
-Changelog = "https://github.com/dwarsbit/django-content-studio/blob/main/CHANGELOG.md"
+Repository = "https://github.com/dwarsbit/djangocontentstudio"
+Issues = "https://github.com/dwarsbit/djangocontentstudio/issues"
+Changelog = "https://github.com/dwarsbit/djangocontentstudio/blob/main/CHANGELOG.md"
 
 [project.optional-dependencies]
 excel = ["openpyxl (>=3.1,<4)"]
