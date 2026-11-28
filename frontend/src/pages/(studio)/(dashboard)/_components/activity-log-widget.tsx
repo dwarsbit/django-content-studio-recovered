@@ -9,13 +9,14 @@ import { PiMinusBold, PiPencilSimpleBold, PiPlusBold } from "react-icons/pi";
 import { Link } from "react-router";
 
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { useAuditLogEnabled } from "@/hooks/use-audit-log";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { cn } from "@/lib/utils";
 import { type ActivityLogEntry, type DashboardWidget } from "@/types";
 
 import { widgetRefetchInterval } from "./refresh";
-import { Widget, WidgetEmpty, WidgetLoading } from "./widget";
+import { ViewAll, Widget, WidgetEmpty, WidgetLoading } from "./widget";
 
 dayjs.extend(relativeTime);
 dayjs.extend(localizedFormat);
@@ -30,6 +31,7 @@ export function ActivityLogWidget({ widget }: { widget: DashboardWidget }) {
   const http = useHttp();
   const { t } = useTranslation();
   const { data: discover } = useDiscover();
+  const auditLogEnabled = useAuditLogEnabled();
   const { data } = useQuery({
     retry: false,
     refetchInterval: widgetRefetchInterval(widget),
@@ -52,6 +54,7 @@ export function ActivityLogWidget({ widget }: { widget: DashboardWidget }) {
     <Widget
       title={t("dashboard.widgets.activity_log.title")}
       description={t("dashboard.widgets.activity_log.subtitle")}
+      action={auditLogEnabled ? <ViewAll to="/audit-log" /> : undefined}
     >
       {!data ? (
         <WidgetLoading />

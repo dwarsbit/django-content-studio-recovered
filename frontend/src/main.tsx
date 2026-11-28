@@ -14,6 +14,7 @@ import { ResetPasswordPage } from "@/pages/(auth)/reset-password/page";
 import { SetPasswordPage } from "@/pages/(auth)/set-password/page";
 import { DashboardPage } from "@/pages/(studio)/(dashboard)/page";
 import { CatchAllPage } from "@/pages/(studio)/[...slug]/page";
+import { AuditLogPage } from "@/pages/(studio)/audit-log/page";
 import { BackupsPage } from "@/pages/(studio)/backups/page";
 import { ContentEditorPage } from "@/pages/(studio)/content/[model]/[id]/page";
 import { ModelListLayout } from "@/pages/(studio)/content/[model]/layout";
@@ -76,6 +77,10 @@ const router = createBrowserRouter(
                 {
                   path: "email-activity",
                   element: <EmailActivityPage />,
+                },
+                {
+                  path: "audit-log",
+                  element: <AuditLogPage />,
                 },
                 {
                   path: "content/:model",

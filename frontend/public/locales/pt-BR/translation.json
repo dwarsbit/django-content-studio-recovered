@@ -91,7 +91,8 @@
     "profile": "Perfil",
     "status": "Status do sistema",
     "language": "Idioma",
-    "language_failed": "Não foi possível alterar o idioma."
+    "language_failed": "Não foi possível alterar o idioma.",
+    "audit_log": "Log de auditoria"
   },
   "editor": {
     "title_create": "Criar {{modelName}}",
@@ -611,7 +612,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "Nenhuma atividade registrada ainda"
+      "empty": "Nenhuma atividade registrada ainda",
+      "view_all": "Ver tudo"
     },
     "seo_preview": {
       "no_title": "Título da página",
@@ -1680,5 +1682,86 @@
       "failed": "O e-mail de teste não foi enviado",
       "cancel": "Cancelar"
     }
+  },
+  "audit_log": {
+    "title": "Log de auditoria",
+    "unavailable_title": "O log de auditoria não está disponível",
+    "unavailable_description": "Você não pode abrir o log de auditoria, ou ele não pôde ser carregado.",
+    "list_title": "Alterações e acessos",
+    "list_description": "Cada alteração feita no admin e cada acesso, os mais recentes primeiro.",
+    "search": "Buscar objetos, mensagens, nomes de usuário ou um endereço IP",
+    "filters": {
+      "action": "Ação",
+      "all_actions": "Todas as ações",
+      "user": "Usuário",
+      "all_users": "Todos os usuários",
+      "model": "Modelo",
+      "all_models": "Todos os modelos",
+      "period": "Período"
+    },
+    "periods": {
+      "all": "Todo o período",
+      "today": "Hoje",
+      "7": "Últimos 7 dias",
+      "30": "Últimos 30 dias"
+    },
+    "actions": {
+      "created": "Criado",
+      "updated": "Alterado",
+      "deleted": "Excluído",
+      "restored": "Restaurado",
+      "reordered": "Movido",
+      "published": "Publicado",
+      "unpublished": "Despublicado",
+      "signed_in": "Entrou",
+      "sign_in_failed": "Falha ao entrar",
+      "signed_out": "Saiu"
+    },
+    "verbs": {
+      "created": "criou",
+      "updated": "alterou",
+      "deleted": "excluiu",
+      "restored": "restaurou",
+      "reordered": "moveu",
+      "published": "publicou",
+      "unpublished": "despublicou",
+      "signed_in": "entrou",
+      "sign_in_failed": "não conseguiu entrar",
+      "signed_out": "saiu"
+    },
+    "methods": {
+      "password": "Senha",
+      "two_factor": "Código de dois fatores",
+      "recovery_code": "Código de recuperação",
+      "link": "Link de senha"
+    },
+    "reasons": {
+      "wrong_password": "Usuário ou senha incorretos",
+      "not_allowed": "Sem permissão para entrar",
+      "locked": "Conta bloqueada após tentativas demais",
+      "wrong_code": "Código de dois fatores incorreto",
+      "wrong_recovery_code": "Código de recuperação incorreto"
+    },
+    "no_such_user": "(usuário inexistente)",
+    "unknown_user": "Alguém",
+    "today": "Hoje",
+    "yesterday": "Ontem",
+    "object_filter": "As alterações em {{name}}",
+    "object_filter_clear": "Mostrar tudo",
+    "empty_title": "Nada registrado ainda",
+    "empty_description": "Alterações e acessos aparecem aqui à medida que acontecem.",
+    "no_matches_title": "Nenhum resultado",
+    "no_matches_description": "Nenhuma entrada corresponde a estes filtros.",
+    "clear_filters": "Limpar filtros",
+    "showing_one": "{{count}} entrada",
+    "showing_other": "{{count}} entradas",
+    "showing_many": "{{count}} entradas",
+    "showing_days_one": "{{count}} entrada · mantidas por {{days}} dias",
+    "showing_days_other": "{{count}} entradas · mantidas por {{days}} dias",
+    "showing_days_many": "{{count}} entradas · mantidas por {{days}} dias",
+    "load_more": "Carregar mais",
+    "open_change": "Ver o que mudou",
+    "open_object": "Abrir",
+    "object_deleted": "Este objeto foi excluído."
   }
 }

@@ -48,6 +48,9 @@ export function useDiscover() {
         // The Email activity page, when the user may open it; absent
         // from older servers.
         email_activity?: { enabled: boolean };
+        // The Audit log page, when the user may open it; absent from
+        // older servers.
+        audit_log?: { enabled: boolean };
         multitenancy: {
           enabled: boolean;
           tenant_model: string | null;

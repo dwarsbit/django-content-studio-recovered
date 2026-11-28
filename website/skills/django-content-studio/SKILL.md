@@ -647,6 +647,14 @@ Each is optional and has its own page:
   test email from the status page's Email row,
   `has_email_activity_permission`):
   https://djangocontentstudio.org/docs/email-activity.md
+- Audit log (`content_studio.contrib.audit_log`: one page with every
+  activity log change, with seven actions kept from install on, and every
+  sign-in, failed sign-in and sign-out through Content Studio's login with
+  IP address and browser; filters in the URL, CSV/Excel export; superusers
+  by default, `has_audit_log_permission`; `AUDIT_LOG_KEEP_DAYS` (None) and
+  `content_studio_prune_audit_log` prune entries and their history versions;
+  check E067):
+  https://djangocontentstudio.org/docs/audit-log.md
 - Error reports (off by default; `ERROR_REPORTS = "email"` mails each new
   error at `ERROR` or above to `ERROR_EMAIL` or the active superusers, at
   most once an hour per error, and notifies the superusers with the

@@ -6,6 +6,7 @@ import {
   PiCaretDownBold,
   PiCaretRightBold,
   PiCaretUpDownBold,
+  PiClockCounterClockwiseBold,
   PiFileTextBold,
   PiHouseSimpleBold,
   PiImageBold,
@@ -50,6 +51,7 @@ import {
 } from "@/components/ui/tooltip";
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAdminInfo } from "@/hooks/use-admin-info";
+import { useAuditLogEnabled } from "@/hooks/use-audit-log";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { useMe } from "@/hooks/use-me";
@@ -543,6 +545,7 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
   ]);
 
   const statusEnabled = useStatusEnabled();
+  const auditLogEnabled = useAuditLogEnabled();
   const { data: summary } = useStatusSummary();
   // A dot on the avatar and the menu item while a service is degraded
   // or down.
@@ -644,6 +647,14 @@ function UserMenu({ collapsed }: { collapsed: boolean }) {
                     )}
                   </span>
                   <PiPulseBold />
+                </Link>
+              </DropdownMenuItem>
+            )}
+            {auditLogEnabled && (
+              <DropdownMenuItem asChild>
+                <Link to="/audit-log">
+                  {t("main_menu.audit_log")}
+                  <PiClockCounterClockwiseBold />
                 </Link>
               </DropdownMenuItem>
             )}

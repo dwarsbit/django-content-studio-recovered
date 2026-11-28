@@ -13,6 +13,7 @@ import inspect
 
 from django.apps import apps
 from django.contrib.auth.signals import user_logged_in
+from django.db import transaction
 from rest_framework.response import Response
 
 from .settings import cs_settings
@@ -106,18 +107,60 @@ def issue_session(user, request, *, two_factor: bool = False):
     return method(user, request)
 
 
-def finish_login(user, request, *, two_factor: bool = False):
+class SignInViewMixin:
     """
-    The user is logged in: Django's user_logged_in signal (last_login,
-    audit tools) and the session.
+    For login views: outside ATOMIC_REQUESTS, so what a refused login
+    records (the failed sign-in in the audit log) is not rolled back
+    with the error response.
+    """
+
+    @transaction.non_atomic_requests
+    def dispatch(self, request, *args, **kwargs):
+        return super().dispatch(request, *args, **kwargs)
+
+
+def mark_sign_in(request):
+    """
+    Mark the request as a sign-in through Content Studio, for the audit
+    log (content_studio.contrib.audit_log), which records the sign-in
+    signals of marked requests only.
     """
     django_request = getattr(request, "_request", request)
-    user_logged_in.send(sender=user.__class__, request=django_request, user=user)
+
+    try:
+        django_request._content_studio_sign_in = True
+    except AttributeError:
+        pass
+
+
+def finish_login(user, request, *, two_factor: bool = False, method: str = "password"):
+    """
+    The user is logged in: Django's user_logged_in signal (last_login,
+    audit tools) and the session. method says how: "password",
+    "two_factor", "recovery_code", "link" or a login backend's name.
+    """
+    django_request = getattr(request, "_request", request)
+    mark_sign_in(django_request)
+    user_logged_in.send(
+        sender=user.__class__, request=django_request, user=user, method=method
+    )
 
     return issue_session(user, request, two_factor=two_factor)
 
 
-def complete_login(user, request, *, backend=None):
+def login_method(backend) -> str:
+    """How a login backend signs users in, as the audit log names it."""
+    if backend is None:
+        return "password"
+
+    return str(
+        getattr(backend, "audit_method", None)
+        or getattr(backend, "name", None)
+        or backend.__name__
+    )
+
+
+def complete_login(user, request, *, backend=None, method: str | None = None):
     """
     The answer to a login whose first factor (the password, a link) is
     right: the session, or the challenge for the code step. A login
@@ -125,7 +168,7 @@ def complete_login(user, request, *, backend=None):
     handles_two_factor = True and skips the code step.
     """
     if getattr(backend, "handles_two_factor", False) or not needs_two_factor(user):
-        return finish_login(user, request)
+        return finish_login(user, request, method=method or login_method(backend))
 
     from .contrib.two_factor.challenges import make_challenge
 

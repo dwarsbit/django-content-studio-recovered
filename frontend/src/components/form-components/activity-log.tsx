@@ -5,10 +5,12 @@ import * as R from "ramda";
 import { useContext, useState } from "react";
 import { useFormContext } from "react-hook-form";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router";
 
 import { ResourcePathContext } from "@/components/content-editor/resource-path";
 import { Spinner } from "@/components/ui/spinner";
 import { UserAvatar } from "@/components/ui/user-avatar";
+import { useAuditLogEnabled } from "@/hooks/use-audit-log";
 import { useHttp } from "@/hooks/use-http";
 import { cn } from "@/lib/utils";
 import type { ActivityLogEntry, FormField, Model } from "@/types";
@@ -39,6 +41,7 @@ export function ActivityLog({
   const resourcePath =
     useContext(ResourcePathContext) ?? `/content/${model.label}`;
   const [openEntry, setOpenEntry] = useState<number | null>(null);
+  const auditLogEnabled = useAuditLogEnabled();
 
   const { data } = useQuery({
     enabled: Boolean(id),
@@ -56,7 +59,20 @@ export function ActivityLog({
   return (
     !R.isNil(id) && (
       <div>
-        <h2 className="font-semibold">{formField.title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="font-semibold flex-1 min-w-0">{formField.title}</h2>
+          {auditLogEnabled && (
+            <Link
+              className="text-xs text-muted-foreground hover:text-foreground hover:underline shrink-0"
+              to={`/audit-log?${new URLSearchParams({
+                model: model.label,
+                object: String(id),
+              }).toString()}`}
+            >
+              {t("form_components.activity.view_all")}
+            </Link>
+          )}
+        </div>
         {!data ? (
           <div className="py-6 flex items-center justify-center">
             <Spinner />

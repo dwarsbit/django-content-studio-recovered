@@ -192,6 +192,7 @@ probably not as you intended. Neither stops the server from starting, but
 | `content_studio.E064` | An [error report](/docs/error-reports) setting that cannot work: an unknown `ERROR_REPORTS` mode, an invalid address in `ERROR_EMAIL`, a `SENTRY_TRACES_SAMPLE_RATE` outside 0 to 1, or Sentry mode without the `[sentry]` extra. Nothing is reported until it is fixed. |
 | `content_studio.E065` | `DEBUG` is on in a deployment check (`manage.py check --deploy`), with [environment settings](/docs/environment-settings#system-checks) installed. |
 | `content_studio.E066` | A [captcha](/docs/captcha#system-checks) setting that cannot work: `CAPTCHA` that is not `True` or `False`, `CAPTCHA_CHALLENGES` or `CAPTCHA_DIFFICULTY` out of range, or a `CAPTCHA_THROTTLE_RATE` that is not a rate or `None`. |
+| `content_studio.E067` | An [`AUDIT_LOG_KEEP_DAYS`](/docs/settings#audit_log_keep_days) that is not a whole number of 1 or more, or `None`. |
 
 ### Warnings
 

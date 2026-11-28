@@ -300,18 +300,26 @@ def csv_response(studio, request, queryset) -> StreamingHttpResponse:
     The export as a streamed CSV file, UTF-8 with a byte order mark so
     spreadsheet applications detect the encoding.
     """
+    return rows_csv_response(
+        iter_rows(studio, request, queryset), get_filename(studio, CSV)
+    )
+
+
+def rows_csv_response(rows, filename: str) -> StreamingHttpResponse:
+    """
+    Rows (the header first) as a streamed CSV download, UTF-8 with a byte
+    order mark so spreadsheet applications detect the encoding.
+    """
     writer = csv.writer(_Echo())
 
     def stream():
-        yield "﻿"
+        yield "\ufeff"
 
-        for row in iter_rows(studio, request, queryset):
+        for row in rows:
             yield writer.writerow(row)
 
     response = StreamingHttpResponse(stream(), content_type=CONTENT_TYPES[CSV])
-    response["Content-Disposition"] = content_disposition_header(
-        True, get_filename(studio, CSV)
-    )
+    response["Content-Disposition"] = content_disposition_header(True, filename)
     return response
 
 
@@ -320,6 +328,19 @@ def xlsx_response(studio, request, queryset) -> HttpResponse:
     The export as an Excel workbook with one sheet. Numbers and dates are
     native cells; dates show in ISO format.
     """
+    return rows_xlsx_response(
+        iter_rows(studio, request, queryset, native=True),
+        get_filename(studio, XLSX),
+        capfirst(str(studio.model._meta.verbose_name_plural)),
+    )
+
+
+def rows_xlsx_response(rows, filename: str, title: str) -> HttpResponse:
+    """
+    Rows (the header first, in bold) as an Excel workbook with one sheet
+    named title. Numbers and dates are native cells; dates show in ISO
+    format, and text is never a formula.
+    """
     from openpyxl import Workbook
     from openpyxl.cell import WriteOnlyCell
     from openpyxl.cell.cell import ILLEGAL_CHARACTERS_RE
@@ -327,11 +348,7 @@ def xlsx_response(studio, request, queryset) -> HttpResponse:
 
     workbook = Workbook(write_only=True)
     # Sheet titles are at most 31 characters, without []:*?/\.
-    title = "".join(
-        char
-        for char in capfirst(str(studio.model._meta.verbose_name_plural))
-        if char not in "[]:*?/\\"
-    )
+    title = "".join(char for char in title if char not in "[]:*?/\\")
     sheet = workbook.create_sheet(title=title[:31] or "Export")
     bold = Font(bold=True)
 
@@ -355,7 +372,7 @@ def xlsx_response(studio, request, queryset) -> HttpResponse:
 
         return result
 
-    rows = iter_rows(studio, request, queryset, native=True)
+    rows = iter(rows)
     sheet.append([cell(header, header=True) for header in next(rows)])
 
     for row in rows:
@@ -365,9 +382,7 @@ def xlsx_response(studio, request, queryset) -> HttpResponse:
     workbook.save(output)
 
     response = HttpResponse(output.getvalue(), content_type=CONTENT_TYPES[XLSX])
-    response["Content-Disposition"] = content_disposition_header(
-        True, get_filename(studio, XLSX)
-    )
+    response["Content-Disposition"] = content_disposition_header(True, filename)
     return response
 
 

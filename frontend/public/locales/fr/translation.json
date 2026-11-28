@@ -91,7 +91,8 @@
     "profile": "Profil",
     "status": "État du système",
     "language": "Langue",
-    "language_failed": "La langue n’a pas pu être modifiée."
+    "language_failed": "La langue n’a pas pu être modifiée.",
+    "audit_log": "Journal d'audit"
   },
   "editor": {
     "title_create": "Créer : {{modelName}}",
@@ -611,7 +612,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "Aucune activité enregistrée pour l’instant"
+      "empty": "Aucune activité enregistrée pour l’instant",
+      "view_all": "Tout voir"
     },
     "seo_preview": {
       "no_title": "Titre de la page",
@@ -1680,5 +1682,86 @@
       "failed": "L'e-mail de test n'a pas été envoyé",
       "cancel": "Annuler"
     }
+  },
+  "audit_log": {
+    "title": "Journal d'audit",
+    "unavailable_title": "Le journal d'audit n'est pas disponible",
+    "unavailable_description": "Vous n'avez pas accès au journal d'audit, ou il n'a pas pu être chargé.",
+    "list_title": "Modifications et connexions",
+    "list_description": "Chaque modification faite dans l'admin et chaque connexion, les plus récentes d'abord.",
+    "search": "Rechercher des objets, messages, noms d'utilisateur ou une adresse IP",
+    "filters": {
+      "action": "Action",
+      "all_actions": "Toutes les actions",
+      "user": "Utilisateur",
+      "all_users": "Tous les utilisateurs",
+      "model": "Modèle",
+      "all_models": "Tous les modèles",
+      "period": "Période"
+    },
+    "periods": {
+      "all": "Depuis toujours",
+      "today": "Aujourd'hui",
+      "7": "7 derniers jours",
+      "30": "30 derniers jours"
+    },
+    "actions": {
+      "created": "Créé",
+      "updated": "Modifié",
+      "deleted": "Supprimé",
+      "restored": "Restauré",
+      "reordered": "Déplacé",
+      "published": "Publié",
+      "unpublished": "Dépublié",
+      "signed_in": "Connexion",
+      "sign_in_failed": "Connexion échouée",
+      "signed_out": "Déconnexion"
+    },
+    "verbs": {
+      "created": "a créé",
+      "updated": "a modifié",
+      "deleted": "a supprimé",
+      "restored": "a restauré",
+      "reordered": "a déplacé",
+      "published": "a publié",
+      "unpublished": "a dépublié",
+      "signed_in": "s'est connecté(e)",
+      "sign_in_failed": "n'a pas pu se connecter",
+      "signed_out": "s'est déconnecté(e)"
+    },
+    "methods": {
+      "password": "Mot de passe",
+      "two_factor": "Code à deux facteurs",
+      "recovery_code": "Code de récupération",
+      "link": "Lien de mot de passe"
+    },
+    "reasons": {
+      "wrong_password": "Nom d'utilisateur ou mot de passe incorrect",
+      "not_allowed": "Non autorisé à se connecter",
+      "locked": "Compte bloqué après trop de tentatives",
+      "wrong_code": "Code à deux facteurs incorrect",
+      "wrong_recovery_code": "Code de récupération incorrect"
+    },
+    "no_such_user": "(utilisateur inconnu)",
+    "unknown_user": "Quelqu'un",
+    "today": "Aujourd'hui",
+    "yesterday": "Hier",
+    "object_filter": "Les modifications de {{name}}",
+    "object_filter_clear": "Tout afficher",
+    "empty_title": "Rien d'enregistré pour l'instant",
+    "empty_description": "Les modifications et connexions apparaissent ici au fur et à mesure.",
+    "no_matches_title": "Aucun résultat",
+    "no_matches_description": "Aucune entrée ne correspond à ces filtres.",
+    "clear_filters": "Effacer les filtres",
+    "showing_one": "{{count}} entrée",
+    "showing_other": "{{count}} entrées",
+    "showing_many": "{{count}} entrées",
+    "showing_days_one": "{{count}} entrée · conservée {{days}} jours",
+    "showing_days_other": "{{count}} entrées · conservées {{days}} jours",
+    "showing_days_many": "{{count}} entrées · conservées {{days}} jours",
+    "load_more": "Charger plus",
+    "open_change": "Voir ce qui a changé",
+    "open_object": "Ouvrir",
+    "object_deleted": "Cet objet a été supprimé."
   }
 }

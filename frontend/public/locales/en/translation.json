@@ -90,7 +90,8 @@
     "profile": "Profile",
     "status": "System status",
     "language": "Language",
-    "language_failed": "The language could not be changed."
+    "language_failed": "The language could not be changed.",
+    "audit_log": "Audit log"
   },
   "editor": {
     "title_create": "Create {{modelName}}",
@@ -602,7 +603,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "No activity recorded yet"
+      "empty": "No activity recorded yet",
+      "view_all": "View all"
     },
     "seo_preview": {
       "no_title": "Page title",
@@ -1617,5 +1619,84 @@
       "failed": "The test email was not sent",
       "cancel": "Cancel"
     }
+  },
+  "audit_log": {
+    "title": "Audit log",
+    "unavailable_title": "The audit log is not available",
+    "unavailable_description": "You may not open the audit log, or it could not be loaded.",
+    "list_title": "Changes and sign-ins",
+    "list_description": "Every change made in the admin and every sign-in, newest first.",
+    "search": "Search objects, messages, usernames or an IP address",
+    "filters": {
+      "action": "Action",
+      "all_actions": "All actions",
+      "user": "User",
+      "all_users": "All users",
+      "model": "Model",
+      "all_models": "All models",
+      "period": "Period"
+    },
+    "periods": {
+      "all": "All time",
+      "today": "Today",
+      "7": "Last 7 days",
+      "30": "Last 30 days"
+    },
+    "actions": {
+      "created": "Created",
+      "updated": "Changed",
+      "deleted": "Deleted",
+      "restored": "Restored",
+      "reordered": "Reordered",
+      "published": "Published",
+      "unpublished": "Unpublished",
+      "signed_in": "Signed in",
+      "sign_in_failed": "Failed sign-in",
+      "signed_out": "Signed out"
+    },
+    "verbs": {
+      "created": "created",
+      "updated": "changed",
+      "deleted": "deleted",
+      "restored": "restored",
+      "reordered": "moved",
+      "published": "published",
+      "unpublished": "unpublished",
+      "signed_in": "signed in",
+      "sign_in_failed": "failed to sign in",
+      "signed_out": "signed out"
+    },
+    "methods": {
+      "password": "Password",
+      "two_factor": "Two-factor code",
+      "recovery_code": "Recovery code",
+      "link": "Password link"
+    },
+    "reasons": {
+      "wrong_password": "Wrong username or password",
+      "not_allowed": "Not allowed to sign in",
+      "locked": "Account locked after too many attempts",
+      "wrong_code": "Wrong two-factor code",
+      "wrong_recovery_code": "Wrong recovery code"
+    },
+    "no_such_user": "(no such user)",
+    "unknown_user": "Someone",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "object_filter": "Showing the changes to {{name}}",
+    "object_filter_clear": "Show all",
+    "empty_title": "Nothing recorded yet",
+    "empty_description": "Changes and sign-ins show here as they happen.",
+    "no_matches_title": "Nothing matches",
+    "no_matches_description": "No entries match these filters.",
+    "clear_filters": "Clear filters",
+    "showing_one": "Showing {{count}} entry",
+    "showing_other": "Showing {{count}} entries",
+    "showing_days_one": "Showing {{count}} entry · kept for {{days}} days",
+    "showing_days_other": "Showing {{count}} entries · kept for {{days}} days",
+    "load_more": "Load more",
+    "open_change": "Show what changed",
+    "open_object": "Open",
+    "object_deleted": "This object has been deleted."
   }
 }

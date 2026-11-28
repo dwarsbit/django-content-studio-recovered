@@ -90,7 +90,8 @@
     "profile": "Profiel",
     "status": "Systeemstatus",
     "language": "Taal",
-    "language_failed": "De taal kon niet worden gewijzigd."
+    "language_failed": "De taal kon niet worden gewijzigd.",
+    "audit_log": "Auditlog"
   },
   "editor": {
     "title_create": "Maak {{modelName}} aan",
@@ -602,7 +603,8 @@
   },
   "form_components": {
     "activity": {
-      "empty": "Nog geen activiteit vastgelegd"
+      "empty": "Nog geen activiteit vastgelegd",
+      "view_all": "Alles bekijken"
     },
     "seo_preview": {
       "no_title": "Paginatitel",
@@ -1617,5 +1619,84 @@
       "failed": "De test-e-mail is niet verstuurd",
       "cancel": "Annuleren"
     }
+  },
+  "audit_log": {
+    "title": "Auditlog",
+    "unavailable_title": "Het auditlog is niet beschikbaar",
+    "unavailable_description": "Je mag het auditlog niet openen, of het kon niet worden geladen.",
+    "list_title": "Wijzigingen en aanmeldingen",
+    "list_description": "Elke wijziging in de admin en elke aanmelding, nieuwste eerst.",
+    "search": "Zoek objecten, berichten, gebruikersnamen of een IP-adres",
+    "filters": {
+      "action": "Actie",
+      "all_actions": "Alle acties",
+      "user": "Gebruiker",
+      "all_users": "Alle gebruikers",
+      "model": "Model",
+      "all_models": "Alle modellen",
+      "period": "Periode"
+    },
+    "periods": {
+      "all": "Altijd",
+      "today": "Vandaag",
+      "7": "Afgelopen 7 dagen",
+      "30": "Afgelopen 30 dagen"
+    },
+    "actions": {
+      "created": "Aangemaakt",
+      "updated": "Gewijzigd",
+      "deleted": "Verwijderd",
+      "restored": "Teruggezet",
+      "reordered": "Verplaatst",
+      "published": "Gepubliceerd",
+      "unpublished": "Gedepubliceerd",
+      "signed_in": "Aangemeld",
+      "sign_in_failed": "Mislukte aanmelding",
+      "signed_out": "Afgemeld"
+    },
+    "verbs": {
+      "created": "maakte aan:",
+      "updated": "wijzigde",
+      "deleted": "verwijderde",
+      "restored": "zette terug:",
+      "reordered": "verplaatste",
+      "published": "publiceerde",
+      "unpublished": "depubliceerde",
+      "signed_in": "meldde zich aan",
+      "sign_in_failed": "kon zich niet aanmelden",
+      "signed_out": "meldde zich af"
+    },
+    "methods": {
+      "password": "Wachtwoord",
+      "two_factor": "Tweestapscode",
+      "recovery_code": "Herstelcode",
+      "link": "Wachtwoordlink"
+    },
+    "reasons": {
+      "wrong_password": "Verkeerde gebruikersnaam of wachtwoord",
+      "not_allowed": "Mag zich niet aanmelden",
+      "locked": "Account geblokkeerd na te veel pogingen",
+      "wrong_code": "Verkeerde tweestapscode",
+      "wrong_recovery_code": "Verkeerde herstelcode"
+    },
+    "no_such_user": "(onbekende gebruiker)",
+    "unknown_user": "Iemand",
+    "today": "Vandaag",
+    "yesterday": "Gisteren",
+    "object_filter": "De wijzigingen aan {{name}}",
+    "object_filter_clear": "Alles tonen",
+    "empty_title": "Nog niets vastgelegd",
+    "empty_description": "Wijzigingen en aanmeldingen verschijnen hier zodra ze gebeuren.",
+    "no_matches_title": "Niets gevonden",
+    "no_matches_description": "Geen regels voldoen aan deze filters.",
+    "clear_filters": "Filters wissen",
+    "showing_one": "{{count}} regel",
+    "showing_other": "{{count}} regels",
+    "showing_days_one": "{{count}} regel · {{days}} dagen bewaard",
+    "showing_days_other": "{{count}} regels · {{days}} dagen bewaard",
+    "load_more": "Meer laden",
+    "open_change": "Bekijk wat er veranderde",
+    "open_object": "Openen",
+    "object_deleted": "Dit object is verwijderd."
   }
 }

@@ -532,6 +532,19 @@ at most once an hour, and by `content_studio_prune_emails`. Default: `30`.
 Store email addresses masked (`s***@example.com`) and leave subjects out.
 Default: `False`.
 
+## Audit log
+
+This setting takes effect with
+[`content_studio.contrib.audit_log`](/docs/audit-log) in `INSTALLED_APPS`.
+
+### AUDIT_LOG_KEEP_DAYS {#audit_log_keep_days}
+
+How many days activity log entries and sign-ins are kept. Older ones are
+deleted after a sign-in, at most once an hour, and by
+`content_studio_prune_audit_log`; the history versions of deleted entries go
+with them. Default: `None`, which keeps every entry. Anything other than a
+whole number of 1 or more or `None` is reported as `content_studio.E067`.
+
 ## Error reports
 
 See [Error reports](/docs/error-reports). Each of these settings accepts the

@@ -2543,3 +2543,108 @@ msgstr "Tous les jours à 04:30 UTC"
 #: notifications/tasks.py
 msgid "Daily at 04:30"
 msgstr "Tous les jours à 04:30"
+
+#: contrib/audit_log
+msgid "Audit log"
+msgstr "Journal d’audit"
+
+#: contrib/audit_log
+msgid "This cursor is not valid."
+msgstr "Ce curseur n’est pas valide."
+
+#: contrib/audit_log
+msgid "Signed in"
+msgstr "Connexion"
+
+#: contrib/audit_log
+msgid "Failed sign-in"
+msgstr "Connexion échouée"
+
+#: contrib/audit_log
+msgid "Signed out"
+msgstr "Déconnexion"
+
+#: contrib/audit_log
+msgid "username"
+msgstr "nom d’utilisateur"
+
+#: contrib/audit_log
+msgid "method"
+msgstr "méthode"
+
+#: contrib/audit_log
+msgid "reason"
+msgstr "raison"
+
+#: contrib/audit_log
+msgid "IP address"
+msgstr "Adresse IP"
+
+#: contrib/audit_log
+msgid "user agent"
+msgstr "agent utilisateur"
+
+#: contrib/audit_log
+msgid "sign-in event"
+msgstr "événement de connexion"
+
+#: contrib/audit_log
+msgid "sign-in events"
+msgstr "événements de connexion"
+
+#: contrib/audit_log
+msgid "action"
+msgstr "action"
+
+#: contrib/audit_log
+msgid "entry action"
+msgstr "action d’entrée"
+
+#: contrib/audit_log
+msgid "entry actions"
+msgstr "actions d’entrée"
+
+#: contrib/audit_log
+#, python-format
+msgid "%(browser)s on %(system)s"
+msgstr "%(browser)s sur %(system)s"
+
+#: contrib/audit_log
+msgid "Time"
+msgstr "Heure"
+
+#: contrib/audit_log
+msgid "Action"
+msgstr "Action"
+
+#: contrib/audit_log
+msgid "Object"
+msgstr "Objet"
+
+#: contrib/audit_log
+msgid "Object ID"
+msgstr "ID de l’objet"
+
+#: contrib/audit_log
+msgid "Message"
+msgstr "Message"
+
+#: contrib/audit_log
+msgid "Username"
+msgstr "Nom d’utilisateur"
+
+#: contrib/audit_log
+msgid "Method"
+msgstr "Méthode"
+
+#: contrib/audit_log
+msgid "Reason"
+msgstr "Raison"
+
+#: contrib/audit_log
+msgid "Browser"
+msgstr "Navigateur"
+
+#: contrib/audit_log
+msgid "Changed"
+msgstr "Modifié"
