@@ -96,7 +96,10 @@ export function UsernamePasswordBackend({
       title={t("login.title", {
         site: adminInfo?.site_title || "Content Studio",
       })}
-      description={t(emailField ? "login.subtitle_email" : "login.subtitle")}
+      description={
+        adminInfo?.branding?.login_text ||
+        t(emailField ? "login.subtitle_email" : "login.subtitle")
+      }
       footer={t("login.no_account")}
     >
       <form

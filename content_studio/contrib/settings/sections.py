@@ -406,7 +406,8 @@ def security(ctx: Context) -> dict[str, Any]:
 def content_studio(ctx: Context) -> dict[str, Any]:
     """
     Content Studio's defaults: the media library, its image sizes (with
-    Pillow installed, which makes them) and the admin's URL for emails.
+    Pillow installed, which makes them), the admin's URL for emails and
+    the environment badge (ENVIRONMENT).
     """
     defaults: dict[str, Any] = {
         "MEDIA_LIBRARY_MODEL": "content_studio.media_library.models.Media",
@@ -428,6 +429,13 @@ def content_studio(ctx: Context) -> dict[str, Any]:
     defaults["CAPTCHA_THROTTLE_RATE"] = ctx.env.str(
         "CAPTCHA_THROTTLE_RATE", "30/minute"
     )
+
+    # The environment badge, and Sentry's environment with it, so the two
+    # never disagree.
+    environment = (ctx.env.str("ENVIRONMENT") or "").strip()
+    if environment:
+        defaults["ENVIRONMENT"] = environment
+        defaults["SENTRY_ENVIRONMENT"] = environment
 
     if _installed("PIL"):
         defaults["IMAGE_SIZES"] = deepcopy(DEFAULT_IMAGE_SIZES)

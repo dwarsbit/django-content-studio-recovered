@@ -222,6 +222,12 @@ are a choice for the whole domain), `security.W008` behind a proxy with
 They take effect with [`content_studio.contrib.captcha`](/docs/captcha) in
 `INSTALLED_APPS`.
 
+### Environment
+
+| Variable | Default | Sets |
+|---|---|---|
+| `ENVIRONMENT` | none | [`ENVIRONMENT`](/docs/settings#environment), the admin's [environment badge](/docs/branding#the-environment-badge), and [`SENTRY_ENVIRONMENT`](/docs/settings#sentry_environment): a name such as `staging`. `production` shows no badge. |
+
 ### Logging
 
 | Variable | Default | Sets |
@@ -249,6 +255,7 @@ call to change it.
 | `NOTIFICATION_EMAIL_DIGEST` | `True` |
 | `CAPTCHA` | `CAPTCHA` is `on` |
 | `CAPTCHA_THROTTLE_RATE` | `CAPTCHA_THROTTLE_RATE` |
+| `ENVIRONMENT`, `SENTRY_ENVIRONMENT` | `ENVIRONMENT`, when it is set |
 
 The allowed file types stay Content Studio's
 [default list](/docs/settings#media_library_allowed_extensions). Add

@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 
+import { EnvironmentBadge, SiteLogo } from "@/components/branding";
+import { useHasLogo } from "@/hooks/use-branding";
 import { cn } from "@/lib/utils";
 
 /**
@@ -21,16 +23,25 @@ export function AuthCard({
   footer?: ReactNode;
   children?: ReactNode;
 }) {
+  const hasLogo = useHasLogo();
+
   return (
     <div className="w-full max-w-[400px] overflow-hidden rounded-2xl border bg-card text-card-foreground shadow-xl">
       <div className="flex flex-col gap-6 p-6 sm:p-8">
         <div className="flex items-center justify-between gap-3">
-          <img
-            src={`${window.DCS_STATIC_PREFIX ?? ""}img/icon.svg`}
-            alt=""
-            className="size-10"
-          />
-          {aside}
+          {hasLogo ? (
+            <SiteLogo className="size-10 rounded-lg" />
+          ) : (
+            <img
+              src={`${window.DCS_STATIC_PREFIX ?? ""}img/icon.svg`}
+              alt=""
+              className="size-10"
+            />
+          )}
+          <div className="flex items-center gap-3">
+            {aside}
+            <EnvironmentBadge />
+          </div>
         </div>
         <div className="flex flex-col gap-1">
           <h1 className="text-xl leading-tight font-semibold tracking-tight">

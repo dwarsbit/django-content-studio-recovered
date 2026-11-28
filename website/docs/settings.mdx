@@ -19,8 +19,17 @@ CONTENT_STUDIO = {
 
 The site the admin runs on, as an import path string. Default:
 `"content_studio.admin.admin_site"`, a site without customizations. To add
-a dashboard, extensions, tenants or media library hooks, subclass
-`ContentStudioSite` and point this setting at your instance.
+a dashboard, extensions, tenants, [branding](/docs/branding) or media library
+hooks, subclass `ContentStudioSite` and point this setting at your instance.
+
+### ENVIRONMENT {#environment}
+
+The environment the admin shows a [badge](/docs/branding#the-environment-badge)
+for, in the main menu, on the login pages and in the browser tab's title.
+Default: `None`, no badge. A name such as `"staging"` or `"development"`
+picks the label and color, and `"production"` shows none; a dict such as
+`{"label": "Production", "color": "red"}` sets both. The site's
+`get_environment(request)` returns it unless overridden.
 
 ## Login and sessions
 
@@ -571,6 +580,8 @@ nothing (`content_studio.W039`).
 ### SENTRY_ENVIRONMENT {#sentry_environment}
 
 The environment Sentry files the events under. Default: `"production"`.
+[Environment settings](/docs/environment-settings) set it from the
+`ENVIRONMENT` variable, like [`ENVIRONMENT`](#environment).
 
 ### SENTRY_RELEASE {#sentry_release}
 

@@ -18,7 +18,7 @@ from rest_framework.renderers import JSONRenderer
 from rest_framework.response import Response
 from rest_framework.viewsets import ViewSet
 
-from . import __version__, devtools
+from . import __version__, branding, devtools
 from .admin import AdminSerializer, ModelStudio, ModelGroup
 from .exceptions import NotConfigured
 from .extensions import MainMenuButton
@@ -65,6 +65,11 @@ class ContentStudioWebAppView(TemplateView):
         # with the version but does not reveal it, and the debug tools
         # learn they are on from discover, behind sign-in.
         context["asset_token"] = asset_token()
+        # The browser tab and the accent color, right before the app loads.
+        site = cs_settings.ADMIN_SITE
+        context["page_title"] = branding.get_page_title(site, self.request)
+        context["favicon"] = branding.asset_url(site.site_favicon)
+        context["accent_css"] = branding.accent_css(site)
         # The editor's language (content_studio.languages picked it) and
         # the ones the language picker offers.
         language = get_language()
@@ -113,6 +118,8 @@ class AdminApiViewSet(ViewSet):
             "index_title": self.admin_site.index_title,
             "site_url": self.admin_site.site_url,
             "health_check": get_health_check_path(),
+            # The logo, the login page's text and the environment badge.
+            "branding": branding.get_branding(self.admin_site, request),
             # What the password pages show: the rules a new password must
             # meet, and how long a reset code stays valid.
             "password_rules": password_validators_help_texts(),

@@ -27,6 +27,11 @@ import {
 import { toast } from "sonner";
 
 import { useAuth } from "@/auth";
+import {
+  EnvironmentBadge,
+  EnvironmentDot,
+  SiteLogo,
+} from "@/components/branding";
 import { NotificationsMenuItem } from "@/components/notifications/menu-item";
 import { type Theme, useTheme } from "@/components/theme-provider";
 import { Button } from "@/components/ui/button";
@@ -52,6 +57,7 @@ import {
 import { UserAvatar } from "@/components/ui/user-avatar";
 import { useAdminInfo } from "@/hooks/use-admin-info";
 import { useAuditLogEnabled } from "@/hooks/use-audit-log";
+import { useEnvironment, useHasLogo } from "@/hooks/use-branding";
 import { useDiscover } from "@/hooks/use-discover";
 import { useHttp } from "@/hooks/use-http";
 import { useMe } from "@/hooks/use-me";
@@ -154,7 +160,10 @@ export function MainMenu({ onOpenPalette }: { onOpenPalette(): void }) {
         )}
       >
         {tenant ? (
-          <TenantSelector collapsed={collapsed} />
+          <>
+            <TenantSelector collapsed={collapsed} />
+            {!collapsed && <EnvironmentBadge />}
+          </>
         ) : (
           <Brand
             collapsed={collapsed}
@@ -265,11 +274,25 @@ function Brand({
   onExpand?: () => void;
 }) {
   const { t } = useTranslation();
+  const environment = useEnvironment();
+  const hasLogo = useHasLogo();
   const mark = (
-    <div className="size-6 shrink-0 rounded-md bg-gradient-to-tl from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 text-gray-50 dark:text-gray-900 flex items-center justify-center text-xs font-black">
-      {name[0]}
+    <div className="relative size-6 shrink-0">
+      {hasLogo ? (
+        <SiteLogo className="size-6 rounded-md" />
+      ) : (
+        <div className="size-6 rounded-md bg-gradient-to-tl from-gray-900 to-gray-600 dark:from-gray-100 dark:to-gray-400 text-gray-50 dark:text-gray-900 flex items-center justify-center text-xs font-black">
+          {name[0]}
+        </div>
+      )}
+      {collapsed && <EnvironmentDot className="absolute -top-1 -right-1" />}
     </div>
   );
+  // The collapsed menu has no room for the badge: its label goes in the
+  // tooltip and the accessible name.
+  const expandLabel = environment
+    ? `${t("main_menu.expand")} · ${environment.label}`
+    : t("main_menu.expand");
 
   if (collapsed && onExpand) {
     return (
@@ -277,26 +300,32 @@ function Brand({
         <TooltipTrigger asChild>
           <button
             type="button"
-            aria-label={t("main_menu.expand")}
+            aria-label={expandLabel}
             className="rounded-md outline-none focus-visible:ring-3 focus-visible:ring-ring cursor-pointer"
             onClick={onExpand}
           >
             {mark}
           </button>
         </TooltipTrigger>
-        <TooltipContent side="right">{t("main_menu.expand")}</TooltipContent>
+        <TooltipContent side="right">{expandLabel}</TooltipContent>
       </Tooltip>
     );
   }
 
   if (collapsed) {
-    return mark;
+    return (
+      <span title={environment?.label}>
+        {mark}
+        {environment && <span className="sr-only">{environment.label}</span>}
+      </span>
+    );
   }
 
   return (
     <div className="flex-1 min-w-0 flex items-center gap-2">
       {mark}
       <h2 className="font-semibold text-base truncate">{name}</h2>
+      <EnvironmentBadge />
     </div>
   );
 }

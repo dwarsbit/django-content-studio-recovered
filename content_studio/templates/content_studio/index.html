@@ -4,8 +4,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <link rel="icon" href={% static 'content_studio/img/favicon.png' %}>
-    <title>Django Content Studio</title>
+    <link rel="icon" href="{% if favicon %}{{ favicon }}{% else %}{% static 'content_studio/img/favicon.png' %}{% endif %}">
+    <title>{{ page_title|default:"Django Content Studio" }}</title>
     <script>
         window.DCS_STATIC_PREFIX = "{% get_static_prefix %}content_studio/";
         window.DCS_BASENAME = "{% url 'content_studio_web' %}";
@@ -16,6 +16,7 @@
     <link rel="stylesheet" crossorigin href="{% static 'content_studio/assets/index.css' %}?v={{ asset_token }}">
     <link rel="stylesheet" crossorigin href="{% static 'content_studio/fonts/inter/index.css' %}?v={{ asset_token }}">
     <link rel="stylesheet" crossorigin href="{% static 'content_studio/icons/pi/style.css' %}?v={{ asset_token }}">
+    {% if accent_css %}<style id="dcs-accent">{{ accent_css }}</style>{% endif %}
     {{ languages|json_script:"dcs-languages" }}
 </head>
 <body>

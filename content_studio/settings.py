@@ -298,6 +298,10 @@ DEFAULTS = {
     # The languages content is written in, as (code, name) pairs; the
     # first is the default. None uses settings.LANGUAGES.
     "CONTENT_LANGUAGES": None,
+    # The environment the admin shows a badge for: None (no badge), a
+    # name such as "staging" (production shows none) or a dict with a
+    # "label" and a "color" (gray, blue, green, yellow, red or purple).
+    "ENVIRONMENT": None,
 }
 
 

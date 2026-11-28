@@ -44,10 +44,11 @@ content_studio/
 ├── file_types.py        # Upload types never accepted (HTML, SVG, XML, scripts), by every extension and the mimetypes table; used by the FileWidget uploads (uploads.py, UPLOAD_ALLOWED_EXTENSIONS) and the media library
 ├── uniqueness.py        # Duplicate check for unique_together and multi-field UniqueConstraints
 ├── validators.py        # Field validators (JSONSchemaValidator, ChoiceOptionsValidator, ColorValidator)
+├── branding.py          # Branding: the site's logo, favicon, accent color (CSS variables rendered in index.html, black or white text by contrast) and login text, the ENVIRONMENT badge (names, tones, get_environment) and the tab title; sent in api/info as branding
 ├── colors.py            # Color parsing and conversion (hex/rgb/hsl) for ColorField; mirrored by frontend/src/lib/colors.ts
 ├── widgets.py           # Widget definitions for field rendering
 ├── formats.py           # Format definitions for field display
-├── checks.py            # System checks (content_studio.E001-E064, W001-W039; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha; E067 for contrib/audit_log)
+├── checks.py            # System checks (content_studio.E001-E064, E068, W001-W039, W044-W045; E065/W040-W042 in contrib/settings, E066/W043 in contrib/captcha; E067 for contrib/audit_log)
 ├── utils.py             # Utility functions
 ├── actions.py           # Bulk actions (@bulk_action decorator, resolution), row_actions and edit_actions
 ├── action_forms.py      # Action input forms: fields= on @bulk_action/Button, serialized for the dialog and validated (model fields through the serializer, form fields through form_field.clean)

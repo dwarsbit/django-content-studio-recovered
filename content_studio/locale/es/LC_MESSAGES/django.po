@@ -2529,6 +2529,26 @@ msgstr "Cada día a las 04:30 UTC"
 msgid "Daily at 04:30"
 msgstr "Cada día a las 04:30"
 
+#: branding.py
+msgid "Local"
+msgstr "Local"
+
+#: branding.py
+msgid "Development"
+msgstr "Desarrollo"
+
+#: branding.py
+msgid "Test"
+msgstr "Pruebas"
+
+#: branding.py
+msgid "Staging"
+msgstr "Preproducción"
+
+#: branding.py
+msgid "Acceptance"
+msgstr "Aceptación"
+
 #: contrib/audit_log
 msgid "Audit log"
 msgstr "Registro de auditoría"

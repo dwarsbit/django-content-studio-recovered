@@ -25,6 +25,31 @@
 - Content Studio's login views now send `user_logged_in` and
   `user_login_failed` with `method` and `reason` arguments, send
   `user_logged_out` on sign-out, and run outside `ATOMIC_REQUESTS`.
+- **Branding.** The admin site takes a `site_logo` (and `site_logo_dark`
+  for the dark theme), a `site_favicon`, an `accent_color` (and
+  `accent_color_dark`) and a `login_text`. The logo replaces the letter
+  mark in the main menu and the Content Studio logo on the login pages; the
+  accent color replaces the primary color in both themes, with black or
+  white text, whichever reads better, and is rendered with the page so the
+  admin never flashes its own colors first; the login text replaces the
+  line under the login page's title.
+- **Environment badge.** The new `ENVIRONMENT` setting shows a badge with
+  the environment's name beside the site header, on the login pages and in
+  front of the browser tab's title ("[Staging] Northbound CMS"), and a dot
+  on the logo in the collapsed menu. A name such as `"staging"` or
+  `"development"` picks the label and color, `"production"` shows none,
+  and a dict sets your own label and color. Override `get_environment` on
+  the site to pick it per request. Environment settings read the
+  `ENVIRONMENT` variable and use it for `SENTRY_ENVIRONMENT` too.
+- New checks: `content_studio.E068` (an accent color or `ENVIRONMENT` that
+  cannot be shown), `content_studio.W044` (a logo or favicon static file
+  that does not exist) and `content_studio.W045` (an accent color with less
+  than 3:1 contrast against a theme's background).
+
+### Fixes
+
+- The browser tab shows the site's `site_title` instead of always "Django
+  Content Studio".
 
 ## 1.26.0 (2026-11-28)
 
